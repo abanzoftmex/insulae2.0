@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Insulae 2.0 Valquirico
 
-## Getting Started
+Base técnica para migrar Insulae legacy (PHP/MySQL) a una plataforma moderna con Next.js, PostgreSQL y arquitectura hexagonal.
 
-First, run the development server:
+## Objetivo
+
+- Migrar datos y procesos críticos del legacy de forma incremental.
+- Mantener alcance exclusivo Valquirico (sin multi-sitio).
+- Estabilizar dominio y casos de uso antes de construir vistas finales.
+
+## Stack
+
+- Next.js App Router + TypeScript
+- Prisma + PostgreSQL
+- Tailwind CSS
+- Arquitectura hexagonal (domain/application/infrastructure/presentation)
+
+## Estructura base
+
+- `src/modules/*`: módulos de negocio.
+- `src/shared/*`: contratos y utilidades transversales.
+- `src/config/project-scope.ts`: configuración de alcance Valquirico-only.
+- `prisma/schema.prisma`: modelo relacional objetivo para migración.
+- `docs/*`: artefactos de auditoría y estrategia de migración.
+
+## Desarrollo local
+
+1. Instalar dependencias:
+
+```bash
+npm install
+```
+
+2. Definir variables de entorno en `.env`:
+
+```env
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB"
+```
+
+3. Ejecutar entorno local:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Abrir `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Prisma
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Comandos útiles:
 
-## Learn More
+```bash
+npx prisma format
+npx prisma validate
+npx prisma generate
+```
 
-To learn more about Next.js, take a look at the following resources:
+Cuando exista base de datos objetivo:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx prisma migrate dev --name init-valquirico
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Pipeline de migracion de datos
 
-## Deploy on Vercel
+El pipeline ETL incremental (staging + validacion + promocion) se documenta en:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- docs/migration-pipeline.md
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Comandos principales:
+
+```bash
+# dry run
+npm run migration:run -- --runName=baseline-dry --dryRun=true --sourceSnapshot=2026-03-28
+
+# cutover
+npm run migration:run -- --runName=baseline-cutover --dryRun=false --sourceSnapshot=2026-03-28
+
+# validacion por corrida
+npm run migration:validate -- --runId=<RUN_ID>
+```
+
+## Guardrails de runtime (Neon-only)
+
+Antes de crear nuevas vistas, valida que el runtime no dependa de artefactos legacy:
+
+```bash
+npm run guard:runtime-db-boundary
+```
+
+Este check revisa `src/app`, `src/modules`, `src/shared` y `src/config` para bloquear:
+
+- Referencias a `data/legacy-export` o `docs/raw-db/full_dump.sql`.
+- Imports de `fs`/`fs/promises` en capas de runtime.
+
+Los módulos ETL/migración (`src/modules/migration*`) se excluyen de esta validación por diseño.
+
+## Siguiente fase
+
+- Implementar adapters Prisma por módulo.
+- Definir pipeline ETL por lotes desde tablas legacy prioritarias.
+- Construir vistas por dominio sobre casos de uso estables.

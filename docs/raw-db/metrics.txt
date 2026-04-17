@@ -1,0 +1,9 @@
+tables=      79
+total_rows=76360
+php_files=803
+sql_lines=902
+include_lines=661
+global_markers=1902
+unused_tables=8
+zero_row_tables=19
+tables_without_pk=2

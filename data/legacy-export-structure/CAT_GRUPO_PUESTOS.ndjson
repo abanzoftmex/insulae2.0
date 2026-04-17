@@ -1,0 +1,15 @@
+{"id_cat_grupo_puestos":1,"nombre":"Regente","activo":0,"posicion":1,"tipo":0}
+{"id_cat_grupo_puestos":2,"nombre":"Administración General del Condominio Val´Quirico","activo":1,"posicion":7,"tipo":0}
+{"id_cat_grupo_puestos":3,"nombre":"Consejo de administracion","activo":1,"posicion":1,"tipo":1}
+{"id_cat_grupo_puestos":4,"nombre":"Consejo de vigilancia","activo":0,"posicion":3,"tipo":1}
+{"id_cat_grupo_puestos":5,"nombre":"Comisión de arquitectura\t","activo":1,"posicion":2,"tipo":2}
+{"id_cat_grupo_puestos":6,"nombre":"Comisión de Actividad Económica","activo":1,"posicion":3,"tipo":2}
+{"id_cat_grupo_puestos":7,"nombre":"Comisión de Movilidad e Infraestructura","activo":1,"posicion":4,"tipo":2}
+{"id_cat_grupo_puestos":8,"nombre":"Comisión de Seguridad","activo":1,"posicion":5,"tipo":2}
+{"id_cat_grupo_puestos":9,"nombre":"Comité de protección civil","activo":0,"posicion":9,"tipo":3}
+{"id_cat_grupo_puestos":10,"nombre":"Comité de Seguridad Publica\t","activo":0,"posicion":10,"tipo":3}
+{"id_cat_grupo_puestos":11,"nombre":"Administrador director","activo":0,"posicion":4,"tipo":0}
+{"id_cat_grupo_puestos":12,"nombre":"Vocalias de Seguridad","activo":1,"posicion":6,"tipo":2}
+{"id_cat_grupo_puestos":13,"nombre":"","activo":1,"posicion":0,"tipo":0}
+{"id_cat_grupo_puestos":14,"nombre":"","activo":1,"posicion":0,"tipo":0}
+{"id_cat_grupo_puestos":15,"nombre":"","activo":1,"posicion":0,"tipo":0}

@@ -1,0 +1,661 @@
+/Users/gabrielhernandez/projects/valquirico/insulae/funciones-bd.php:40:		include($configFile);
+/Users/gabrielhernandez/projects/valquirico/insulae/recupera.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/recupera.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/recupera.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/recupera.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_saldo_favor.php:4:include("conexion.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_migration_tipo_cuota_ingresos.php:12:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_contacto.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_contacto.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_contacto.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_contacto.php:12:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_contacto.php:45:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:6:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_notificaciones.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_notificaciones.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_notificaciones.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_notificaciones.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_notificaciones.php:73:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:11:    include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:21:    include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:12:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:13:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:78:			<?php include("navsections.php"); ?> 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:76:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:109:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:122:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:11:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:12:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:13:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:88:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:101:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_presupuesto_2025.php:5:require_once("clase.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado-organigrama.php:8:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarVotos.php:6:include("DatabaseConnection.php"); // <!-- IMPORTANT --> NUEVA CADENA DE CONEXION PARA REESTRUCTURA DE BASE DE DATOS.
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:15:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_historico_pagos.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_historico_pagos.php:11:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_historico_pagos.php:12:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_historico_pagos.php:13:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_historico_pagos.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_historico_pagos.php:64:			<?php include("navsections.php"); ?> 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_zonas.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_zonas.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_zonas.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_zonas.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_zonas.php:73:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/index.php:3:include("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/index.php:42:	<? include("login-header.php"); ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/index.php:106:<? include("login-footer.php"); ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico.php:58:			<div class="sectionActive"><?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_presupuesto.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_presupuesto.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_presupuesto.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_presupuesto.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_presupuesto.php:77:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:90:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:126:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:195:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:287:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:6:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:7:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:8:include("thumb.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:462:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:595:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles-bckp.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles-bckp.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles-bckp.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles-bckp.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles-bckp.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles-bckp.php:100:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles-bckp.php:194:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:5:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:6:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:7:include("thumb.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_payment_435_00259.php:4:include("conexion.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero.php:72:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-gastos.php:11:    include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-gastos.php:21:    include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_fix_435_00259.php:4:include("conexion.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/inicio.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/inicio.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/inicio.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/inicio.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoImg.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoImg.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoImg.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoImg.php:12:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoImg.php:13:include_once("thumb.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:4:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:7:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:80:			<div class="sectionActive"><?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/check_roles.php:2:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_roles_condominal.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_roles_condominal.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_roles_condominal.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_roles_condominal.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_roles_condominal.php:75:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:5:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:6:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:7:include("thumb.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-newTask.php:3:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama.php:48:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/test_payment_cancellation.php:10:include("conexion.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:119:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-cobroHistorico_completo.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-cobroHistorico_completo.php:10:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-cobroHistorico_completo.php:11:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-recuperarPass.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-recuperarPass.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-recuperarPass.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-recuperarPass.php:15:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-recuperarPass.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:6:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:13:include_once("config.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_proyecto.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_proyecto.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_proyecto.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_proyecto.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_proyecto.php:68:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-directorioFC.php:7:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-directorioFC.php:8:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-Tareas.php:7:include("DatabaseConnection.php"); // <!-- IMPORTANT --> NUEVA CADENA DE CONEXION PARA REESTRUCTURA DE BASE DE DATOS.
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_ingresos.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_ingresos.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_ingresos.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_ingresos.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_ingresos.php:161:            <?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorioMoral.php:7:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorioMoral.php:8:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_sancion.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_sancion.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_sancion.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_sancion.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_sancion.php:69:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:6:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:15:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:92:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorio.php:7:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorio.php:8:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_gasto.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_gasto.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_gasto.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_gasto.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_gasto.php:62:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:108:				<?php //include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:120:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:268:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:64:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:13:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:19:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:20:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:21:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:22:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_sanciones.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_sanciones.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_sanciones.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_sanciones.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_sanciones.php:73:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_directorio.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_directorio.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_directorio.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_directorio.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_directorio.php:85:			<div class="sectionActive"><?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_llamado.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_llamado.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_llamado.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_llamado.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_llamado.php:75:				<?php #include("navsections.php") ?> Convocatoria</div>
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama_editar.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama_editar.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama_editar.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama_editar.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama_editar.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama_editar.php:66:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_nvopass.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_nvopass.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_nvopass.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_nvopass.php:12:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_nvopass.php:39:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:77:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:170:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_presupuesto.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_presupuesto.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_presupuesto.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_presupuesto.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_presupuesto.php:173:            <?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:17:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:84:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:226:				<?php include("navsections.php")?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:12:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:13:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-directorioComercio.php:7:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-directorioComercio.php:8:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:129:				<?php #include("navsections.php") ?> Convocatoria</div>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:458:			<? include("llamarA_consulta.php"); ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_varios.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_varios.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_varios.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_varios.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_varios.php:51:			<div class="sectionActive"><?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_fusion.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_fusion.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_fusion.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_fusion.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_fusion.php:97:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/eliminacion-datos.php:6:include("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/eliminacion-datos.php:7:include("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:11:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:12:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:13:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_arrendamiento.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_arrendamiento.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_arrendamiento.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_arrendamiento.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_arrendamiento.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_arrendamiento.php:102:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_reglamentos.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_reglamentos.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_reglamentos.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_reglamentos.php:12:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_reglamentos.php:43:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_imp.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_imp.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_imp.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_imp.php:12:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_imp.php:13:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/disponibilidad_uso_suelo.php:10:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:6:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:15:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:92:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/cron_intereses.php:2:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico_completo.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico_completo.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico_completo.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico_completo.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico_completo.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico_completo.php:58:			<div class="sectionActive"><?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatos.php:5:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatos.php:6:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatos.php:7:include("thumb.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/verificarPass.php:4:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado_2.php:5:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado_2.php:6:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado_2.php:7:include("thumb.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado_2.php:8:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/index.php:3:include("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/log-in.php:3:include("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/inicio.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/inicio.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/inicio.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/inicio.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/inicio.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/edo_cuenta_general.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/edo_cuenta_general.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/edo_cuenta_general.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/edo_cuenta_general.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/edo_cuenta_general.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedades.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedades.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedades.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedades.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedades.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_info.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_info.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_info.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_info.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_info.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/ajax-modal.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/ajax-modal.php:11:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/ajax-modal.php:12:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/ajax-modal.php:13:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/ajax-modal.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle2.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle2.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle2.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle2.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle2.php:16:include_once("../permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/notifications.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/notifications.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/notifications.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/notifications.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/notifications.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/autentificacion.php:2:include("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/autentificacion.php:12:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/permisos.php:5:include_once("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings-password.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings-password.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings-password.php:14:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings-password.php:15:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings-password.php:16:include_once("../permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:12:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:13:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarAsistenciaAsamblea.php:8:include("DatabaseConnection.php"); // <!-- IMPORTANT --> NUEVA CADENA DE CONEXION PARA REESTRUCTURA DE BASE DE DATOS.
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:149:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:275:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_gasto.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_gasto.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_gasto.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_gasto.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_gasto.php:66:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/script_limpiar_area_privativa.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/script_limpiar_area_privativa.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado-estructura.php:8:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/prueba.php:4:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/prueba.php:5:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/prueba.php:6:include("thumb.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_rol_condominal.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_rol_condominal.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_rol_condominal.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_rol_condominal.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_rol_condominal.php:73:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:8:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:16:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:17:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:18:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:19:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:22:include_once("includes/resumen_financiero/_config.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:78:            <?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:102:            <?php include("includes/resumen_financiero/seccion_ordinarias_ingresos.php"); ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:103:            <?php include("includes/resumen_financiero/seccion_ordinarias_otros_ingresos.php"); ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:104:            <?php include("includes/resumen_financiero/seccion_ordinarias_egresos.php"); ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_notificacion.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_notificacion.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_notificacion.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_notificacion.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_notificacion.php:61:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ingreso.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ingreso.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ingreso.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ingreso.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ingreso.php:74:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/autentificacion.php:2:include("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/autentificacion.php:12:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol.php:6:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol.php:162:				<?php include("navsections.php")?>
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:12:include_once("config.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:15:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:129:				<?php include("navsections.php"); ?> 
+/Users/gabrielhernandez/projects/valquirico/insulae/frm_sub_dominio.php:6:include_once("../config.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/frm_sub_dominio.php:7:include_once("../general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/frm_sub_dominio.php:8:include_once("../includes/funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/frm_sub_dominio.php:9:include_once("../includes/permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/frm_sub_dominio.php:11:require_once('config-database/db_valquirico_config.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/frm_sub_dominio.php:12:require_once('config-database/db_base_config.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/frm_sub_dominio.php:13:require_once('config-database/db_sia_config.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_condominal.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_condominal.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_condominal.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_condominal.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_condominal.php:73:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/test_ajax.php:20:include('ajax-guardado.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_departamentos_tickets.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_departamentos_tickets.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_departamentos_tickets.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_departamentos_tickets.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_departamentos_tickets.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_departamentos_tickets.php:74:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_departamentos_tickets.php:156:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:131:				<?php //include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-ingresos.php:11:    include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-ingresos.php:21:    include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:6:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:15:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:92:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_imagenes.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_imagenes.php:10:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_imagenes.php:11:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_imagenes.php:12:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_imagenes.php:45:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/delete-apole-from-sub-project.php:10:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/frm_sub_dominio.php:6:include_once("../config.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/frm_sub_dominio.php:7:include_once("../general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/frm_sub_dominio.php:8:include_once("../includes/funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/frm_sub_dominio.php:9:include_once("../includes/permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/frm_sub_dominio.php:11:require_once('config-database/db_valquirico_config.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/frm_sub_dominio.php:12:require_once('config-database/db_base_config.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/frm_sub_dominio.php:13:require_once('config-database/db_sia_config.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-new-apoleMAR.php:4:	include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-sub-condominio.php:6:require_once('../config-database/db_valquirico_config.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-sub-condominio.php:7:require_once('../config-database/db_sia_config.php');
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_futuros.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_futuros.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_futuros.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_futuros.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_futuros.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_futuros.php:60:			<div class="sectionActive"><?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_gastos.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_gastos.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_gastos.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_gastos.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_gastos.php:162:            <?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero2.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero2.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero2.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero2.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero2.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero2.php:72:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-varios.php:7:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-varios.php:8:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-TasksUpdate.php:7:include("DatabaseConnection.php"); // <!-- IMPORTANT --> NUEVA CADENA DE CONEXION PARA REESTRUCTURA DE BASE DE DATOS.
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:6:include("../Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:12:include_once("../general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:13:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:14:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/fusion.php:6:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria.php:117:				<?php #include("navsections.php") ?> Convocatoria</div>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria.php:261:		<? include("llamarA.php"); ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_notificacion.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_notificacion.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_notificacion.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_notificacion.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_notificacion.php:62:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:96:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorioLegal.php:7:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorioLegal.php:8:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_presupuesto.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_presupuesto.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_presupuesto.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_presupuesto.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_presupuesto.php:79:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-cobroHistorico.php:2:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:143:            <?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_gastos.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_gastos.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_gastos.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_gastos.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_gastos.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_gastos.php:74:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_gastos.php:154:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_notificaciones.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_notificaciones.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_notificaciones.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_notificaciones.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_notificaciones.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_notificaciones.php:74:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_notificaciones.php:154:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptAPZonas.php:5:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptAPZonas.php:6:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptAPZonas.php:7:include("thumb.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/verificarCE.php:5:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:97:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-conceptos-presupuesto.php:4:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/permisos.php:5:include_once("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_zona.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_zona.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_zona.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_zona.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_zona.php:69:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:99:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:111:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:133:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:166:	include('class.kpaginate.php') ;
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:6:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:13:include_once("config.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:12:include_once("config.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:13:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:14:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:15:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:116:				<?php include("navsections.php"); ?> 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:14:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:15:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:79:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax_nuevaOpcion.php:7:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax_nuevaOpcion.php:8:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/imp-estado.php:4:include_once("../general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/imp-estado.php:5:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/imp-estado.php:6:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:6:include("../Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:12:include_once("../general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:13:include_once("../funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:14:include_once("../funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/php-svg-lib/src/Svg/Surface/CPdf.php:2128:            $this->fonts[$font] = require($fontcache . $cache_name);
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/Cpdf.php:2441:            $this->fonts[$font] = require($fontcache . '/' . $cache_name);
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_condominal.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_condominal.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_condominal.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_condominal.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_condominal.php:79:				<?php include("navsections.php") ?>
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptArrendatarios.php:4:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptArrendatarios.php:11:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptArrendatarios.php:12:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptArrendatarios.php:13:include_once("funciones.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptArrendatarios.php:14:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_departamentos_tickets.php:5:include("Auth/nxs_auth.inc.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_departamentos_tickets.php:12:include_once("general.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_departamentos_tickets.php:13:include_once("funciones-bd.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_departamentos_tickets.php:16:include_once("permisos.php");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_departamentos_tickets.php:62:				<?php include("navsections.php") ?>

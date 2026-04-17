@@ -1,0 +1,37 @@
+{"id_cat_puestos":1,"id_cat_grupo_puestos":1,"nombre":"Regente","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":2,"id_cat_grupo_puestos":2,"nombre":"Administrador Director","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":3,"id_cat_grupo_puestos":2,"nombre":"Coordinador de Contabilidad","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":4,"id_cat_grupo_puestos":2,"nombre":"Coordinador de Cobranza","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":29,"id_cat_grupo_puestos":2,"nombre":"Apoyo a Cobranza","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":30,"id_cat_grupo_puestos":2,"nombre":"Secretariado General de VQ/Asistente de Dirección","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":31,"id_cat_grupo_puestos":2,"nombre":"Coordinador de Operación y Gobernanza","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":32,"id_cat_grupo_puestos":2,"nombre":"Apoyo a Comisiones","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":33,"id_cat_grupo_puestos":2,"nombre":"Sustentabilidad Urbana","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":34,"id_cat_grupo_puestos":2,"nombre":"Coordinador de Mantenimiento","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":35,"id_cat_grupo_puestos":3,"nombre":"Presidente del Consejo de Administración","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":36,"id_cat_grupo_puestos":3,"nombre":"Consejero de Administración","activo":1,"cantidad":3,"suplente":0}
+{"id_cat_puestos":37,"id_cat_grupo_puestos":3,"nombre":"Consejero Ejecutivo","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":38,"id_cat_grupo_puestos":3,"nombre":"Consejero Independiente","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":39,"id_cat_grupo_puestos":4,"nombre":"Presidente","activo":0,"cantidad":1,"suplente":0}
+{"id_cat_puestos":40,"id_cat_grupo_puestos":4,"nombre":"Vocal","activo":0,"cantidad":2,"suplente":0}
+{"id_cat_puestos":41,"id_cat_grupo_puestos":5,"nombre":"Comisionado de Arquitectura","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":42,"id_cat_grupo_puestos":5,"nombre":"Vocal","activo":1,"cantidad":11,"suplente":0}
+{"id_cat_puestos":43,"id_cat_grupo_puestos":6,"nombre":"Comisionado de Actividad Económica","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":44,"id_cat_grupo_puestos":6,"nombre":"Vocales","activo":1,"cantidad":8,"suplente":0}
+{"id_cat_puestos":45,"id_cat_grupo_puestos":6,"nombre":"Vocal ","activo":0,"cantidad":-1,"suplente":0}
+{"id_cat_puestos":46,"id_cat_grupo_puestos":7,"nombre":"Comisionado de Movilidad e Infraestructura","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":47,"id_cat_grupo_puestos":7,"nombre":"Vocales","activo":1,"cantidad":9,"suplente":0}
+{"id_cat_puestos":48,"id_cat_grupo_puestos":7,"nombre":"Vocal ","activo":0,"cantidad":-1,"suplente":0}
+{"id_cat_puestos":49,"id_cat_grupo_puestos":8,"nombre":"Comisionado de Seguridad","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":50,"id_cat_grupo_puestos":8,"nombre":"Vocales","activo":1,"cantidad":9,"suplente":0}
+{"id_cat_puestos":51,"id_cat_grupo_puestos":8,"nombre":"Comisionado","activo":0,"cantidad":1,"suplente":0}
+{"id_cat_puestos":52,"id_cat_grupo_puestos":8,"nombre":"Vocal","activo":0,"cantidad":-1,"suplente":0}
+{"id_cat_puestos":53,"id_cat_grupo_puestos":9,"nombre":"XX","activo":0,"cantidad":1,"suplente":0}
+{"id_cat_puestos":54,"id_cat_grupo_puestos":10,"nombre":"xx","activo":0,"cantidad":1,"suplente":0}
+{"id_cat_puestos":55,"id_cat_grupo_puestos":2,"nombre":"Recepción","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":56,"id_cat_grupo_puestos":11,"nombre":"Administrador Director","activo":0,"cantidad":1,"suplente":0}
+{"id_cat_puestos":57,"id_cat_grupo_puestos":3,"nombre":"Administrador Director","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":58,"id_cat_grupo_puestos":2,"nombre":"Servicio Paramedico/Protección Civil","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":59,"id_cat_grupo_puestos":2,"nombre":"Encargado de Expansión Territorial","activo":1,"cantidad":1,"suplente":0}
+{"id_cat_puestos":60,"id_cat_grupo_puestos":12,"nombre":"Vocales","activo":1,"cantidad":10,"suplente":0}
+{"id_cat_puestos":61,"id_cat_grupo_puestos":12,"nombre":"PRUEBA","activo":0,"cantidad":1,"suplente":0}

@@ -1,0 +1,9 @@
+CUPONES_TOUR
+PASSWORD_RESET_TOKENS
+REGISTROS_VISITANTES
+TOURS
+artistas
+campos_contacto
+disponibilidad_artistas
+presentaciones_artistas
+used_tables=71 unused_tables=8

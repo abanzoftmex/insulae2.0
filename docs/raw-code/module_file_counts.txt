@@ -1,0 +1,12 @@
+  20 areas_uso_arrendamientos
+  16 auth_roles_permisos
+  14 cuotas_y_cobros
+  12 tickets_notificaciones_tareas
+  11 convocatorias
+  10 presupuestos
+   9 resumenes_financieros
+   9 ingresos
+   9 directorio
+   8 documentos_proyectos_reportes
+   7 estructura_roles
+   7 egresos

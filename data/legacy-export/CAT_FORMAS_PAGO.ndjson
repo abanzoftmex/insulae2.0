@@ -1,0 +1,6 @@
+{"id_cat_formas_pago":1,"nombre":"N/A","activo":1}
+{"id_cat_formas_pago":2,"nombre":"Efectivo","activo":1}
+{"id_cat_formas_pago":3,"nombre":"Transferencia","activo":1}
+{"id_cat_formas_pago":4,"nombre":"Cheque","activo":1}
+{"id_cat_formas_pago":5,"nombre":"Terminal Bancaria","activo":1}
+{"id_cat_formas_pago":6,"nombre":"Pago domiciliado","activo":1}

@@ -1,0 +1,31 @@
+export interface CondominiumOverview {
+  condominiumId: string;
+  condominiumName: string;
+  condominiumSlug: string;
+  projectId: string | null;
+  projectName: string | null;
+  projectInitials: string | null;
+  projectDescription: string | null;
+  privacyNoticeText: string | null;
+  startYear: number | null;
+  condominiumFormatId: number | null;
+  totalM2: number;
+  totalApoles: number;
+  commonAreasM2: number;
+  condominiumLogoUrl: string | null;
+  condominiumImageUrl: string | null;
+  footerLogoUrl: string | null;
+  privacyNoticePdfUrl: string | null;
+  footerLeft: string | null;
+  footerRight: string | null;
+  developedBy: string | null;
+  usesLandUseFormula: boolean;
+  hasVccc: boolean;
+  activePrivateAreas: number;
+  inactivePrivateAreas: number;
+  privateAreasWithUseType: number;
+  totalPrivateAreaM2: number;
+  activeUsers: number;
+  projectDocumentCount: number;
+  lastUpdatedAt: Date;
+}

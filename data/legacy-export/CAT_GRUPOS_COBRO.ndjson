@@ -1,0 +1,7 @@
+{"id_cat_grupos_cobro":1,"nombre":"Saldo inicial","activo":1,"tiempo":1,"interes":"0.00","adicional":0,"aplica_presupuesto":0,"hijos":0,"selecobra_padres":0,"noCambiar_sad":0,"ordenamiento":0}
+{"id_cat_grupos_cobro":2,"nombre":"Cuotas ordinarias","activo":1,"tiempo":1,"interes":"1.56","adicional":0,"aplica_presupuesto":1,"hijos":0,"selecobra_padres":0,"noCambiar_sad":1,"ordenamiento":1}
+{"id_cat_grupos_cobro":3,"nombre":"Cuotas extraordinarias - Condóminos","activo":1,"tiempo":2,"interes":"1.00","adicional":0,"aplica_presupuesto":1,"hijos":1,"selecobra_padres":1,"noCambiar_sad":2,"ordenamiento":2}
+{"id_cat_grupos_cobro":4,"nombre":"Cuotas STC","activo":1,"tiempo":2,"interes":"0.00","adicional":0,"aplica_presupuesto":1,"hijos":0,"selecobra_padres":0,"noCambiar_sad":0,"ordenamiento":4}
+{"id_cat_grupos_cobro":5,"nombre":"Sanción","activo":1,"tiempo":1,"interes":"0.00","adicional":1,"aplica_presupuesto":1,"hijos":0,"selecobra_padres":0,"noCambiar_sad":4,"ordenamiento":5}
+{"id_cat_grupos_cobro":6,"nombre":"Cuota extraordinaria - Comercios","activo":1,"tiempo":1,"interes":"0.00","adicional":0,"aplica_presupuesto":1,"hijos":0,"selecobra_padres":0,"noCambiar_sad":3,"ordenamiento":3}
+{"id_cat_grupos_cobro":7,"nombre":"Comodato","activo":1,"tiempo":1,"interes":"0.00","adicional":0,"aplica_presupuesto":1,"hijos":0,"selecobra_padres":0,"noCambiar_sad":0,"ordenamiento":6}

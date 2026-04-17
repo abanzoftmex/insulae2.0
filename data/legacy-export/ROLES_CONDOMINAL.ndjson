@@ -1,0 +1,21 @@
+{"id_roles_condominal":1,"nombre":"Master ","activo":1,"descripcion":"Administrador","general":0,"tabla":"","campo":"","idGral":0}
+{"id_roles_condominal":2,"nombre":"Dominio pleno","activo":1,"descripcion":null,"general":1,"tabla":"AREAS_PRIVATIVAS","campo":"id_areas_privativas","idGral":1}
+{"id_roles_condominal":3,"nombre":"Ficha de contacto","activo":1,"descripcion":"Visualización","general":1,"tabla":"DIRECTORIO","campo":"id_directorio","idGral":2}
+{"id_roles_condominal":4,"nombre":"Solo Minisitio","activo":1,"descripcion":"Visualización","general":0,"tabla":"","campo":"","idGral":5}
+{"id_roles_condominal":5,"nombre":"Arrendatario","activo":1,"descripcion":"Visualización","general":1,"tabla":"ARRENDAMIENTOS","campo":"id_arrendamientos","idGral":3}
+{"id_roles_condominal":6,"nombre":"ss","activo":0,"descripcion":"ss","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":7,"nombre":"Auxiliar administrativo Ingresos-Egresos","activo":1,"descripcion":"Visualización","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":8,"nombre":"Auxiliar administrativo","activo":0,"descripcion":"Visualización","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":9,"nombre":"11","activo":0,"descripcion":"ee","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":10,"nombre":"dd","activo":0,"descripcion":"dd","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":11,"nombre":"Coordinador de Contabilidad","activo":1,"descripcion":"Acceso completo","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":12,"nombre":"Operaciones Valquirico","activo":1,"descripcion":"Visualización","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":13,"nombre":"Administrador de subcondominio","activo":1,"descripcion":null,"general":1,"tabla":"AREAS_PRIVATIVAS","campo":"id_areas_privativas","idGral":4}
+{"id_roles_condominal":14,"nombre":"Asistente de Dirección General","activo":1,"descripcion":"Visualización","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":15,"nombre":"Recepción de Condominio","activo":1,"descripcion":"Visualización","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":16,"nombre":"Paramédicos","activo":1,"descripcion":"Visualización","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":17,"nombre":"Mantenimiento y COMINFRA","activo":1,"descripcion":"Visualización","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":18,"nombre":"Becario","activo":1,"descripcion":"Visualización","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":19,"nombre":"Areas privativas","activo":1,"descripcion":"xx","general":0,"tabla":null,"campo":null,"idGral":0}
+{"id_roles_condominal":20,"nombre":"DueÃ±o Legal","activo":1,"descripcion":null,"general":1,"tabla":"AREAS_PRIVATIVAS","campo":"id_areas_privativas","idGral":6}
+{"id_roles_condominal":21,"nombre":"DueÃ±o Moral","activo":1,"descripcion":null,"general":1,"tabla":"AREAS_PRIVATIVAS","campo":"id_areas_privativas","idGral":7}

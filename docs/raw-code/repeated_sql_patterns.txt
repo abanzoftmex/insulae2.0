@@ -1,0 +1,80 @@
+ 121  $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+  35 INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+  24 /* Aquí va el JOIN solo si se cumple la condición */
+  19  INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+  12 $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+  10  JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+   9 JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+   9  $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+   7 INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+   7  SELECT DISTINCT id_areas_privativas_padre
+   7  INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+   6  $sql='INSERT INTO `PRESUPUESTO_MES` (`mes`, `id_presupuesto_detalle`) VALUES ('.$m.', '.$presupuesto[0]['id_presupuesto_detalle'].');';
+   6  $sql = "SELECT SUM(P.monto) AS montoS, SUM(P.montoAbonado) AS montoSA,
+   6  $sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE id_areas_privativas=".$area[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+   5 $sqlUltimaActualizacion = "SELECT DATE_FORMAT(MAX(COALESCE(UPDATE_TIME, CREATE_TIME)),'%d/%m/%Y %H:%i') AS ultima_actualizacion
+   5  JOIN DIRECTORIO_HAS_CAT_PUESTOS dhcp ON dhcp.id_directorio = d.id_directorio
+   5  INNER JOIN ROLES_CONDOMINAL r ON a.id_roles_condominal = r.id_roles_condominal
+   4 JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+   4 $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=" . $_SESSION['id_reinosINS25'] . " limit 1";
+   4  SELECT id_cat_grupos_presupuesto, nombre 
+   4  JOIN DCAT_USO_SUELO d ON d.id_dcat_uso_suelo = s.id_dcat_uso_suelo
+   4  $sql="SELECT MAX(id_areas_privativas) AS id_areas_privativas,
+   3 $sql="SELECT * FROM AREAS_PRIVATIVAS WHERE id_areas_privativas=".$historico[0]['id_areas_privativas']." LIMIT 1";
+   3  // ( SELECT DISTINCT id_areas_privativas_padre FROM AREAS_PRIVATIVAS WHERE 
+   3  // $sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE ap.activo and ap.id_cat_status=1 and 
+   3  $sql='INSERT INTO `PRESUPUESTO` (`anio`, `id_cat_status_presupuesto`) VALUES ( '.$anioSeleccionado.', 1);';
+   3  $sql='INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, id_cat_grupos_presupuesto,id_presupuesto) VALUES ('.$anioSeleccionado.', '.$conceptos[$c]['id_cat_conceptos_presupuesto'].', '.$hijos[$h]['id_cat_grupos_presupuesto'].','.$presupuestoID.').';
+   3  $sql='INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, id_cat_grupos_presupuesto,id_presupuesto) VALUES ('.$anioSeleccionado.', '.$conceptos[$c]['id_cat_conceptos_presupuesto'].', '.$grupos[$i]['id_cat_grupos_presupuesto'].','.$presupuestoID.').';
+   3  $sql="SELECT email,telefono, CASE WHEN id_cat_tipos_directorio = 1 THEN CONCAT(nombre, ' ', COALESCE(apaterno, ''), ' ', COALESCE(amaterno, '')) WHEN id_cat_tipos_directorio = 2 THEN nombre_comercial ELSE NULL END AS nombre FROM DIRECTORIO where id_directorio=".$duenosMoral[$dm]['id_directorio']." and activo=1 limit 1";
+   3  $sql="SELECT email,telefono, CASE WHEN id_cat_tipos_directorio = 1 THEN CONCAT(nombre, ' ', COALESCE(apaterno, ''), ' ', COALESCE(amaterno, '')) WHEN id_cat_tipos_directorio = 2 THEN nombre_comercial ELSE NULL END AS nombre FROM DIRECTORIO where id_directorio=".$duenosLegal[$dl]['id_directorio']." and activo=1 limit 1";
+   3  $sql="SELECT d.id_directorio, COALESCE(NULLIF(d.email_fiscal,''), NULLIF(d.email,'')) AS email_mostrado
+   3  $sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE ap.activo and ap.id_cat_status=1 ";
+   3  $sql="SELECT SUM(indivisoAsamblea) as total FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] ." and activo=1";
+   3  $sql = "SELECT monto, formaAplicacion FROM DCAT_USO_SUELO_HISTORICO 
+   3  $sql = "SELECT * FROM `REINOS` WHERE activo = 1 ";
+   3  $sql = "SELECT * FROM VOTACIONES_CONVOCATORIAS WHERE id = " . $convocados[$av]['id'] . " AND id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] . " AND id_temas = " . $idTema;
+   3  $sql = "SELECT * FROM TEMAS WHERE activo = 1 AND id_convocatorias = " . $fechaConvocatoria[0]['id_convocatorias'] . " LIMIT " . $startAt . "," . $perPage;
+   3  $sql = " SELECT COUNT(*) AS total_votos FROM VOTACIONES_CONVOCATORIAS WHERE id_cat_tipos_votaciones = " . $idTipoVotacion . " AND id_temas = " . $idTema;
+   3  $result = $conexion->query("SELECT anio, COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO GROUP BY anio");
+   2 $sqlmtc="SELECT COUNT(*) AS total,d.nombre
+   2 $sqlmtc = "SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+   2 $sql="SELECT * FROM HISTORICO_PAGOS WHERE folio='435-00259' LIMIT 1";
+   2 $sql = "SELECT * FROM REINOS WHERE activo=1 and id_reinos=".(int)$_SESSION['id_reinosINS25']." limit 1";
+   2  SELECT id_cat_grupos_presupuesto, nombre, activo 
+   2  SELECT id_cat_conceptos_presupuesto, id_cat_grupos_presupuesto, nombre, orden
+   2  SELECT 1 FROM DIRECTORIO_HAS_ASIGNACIONES dha
+   2  LEFT JOIN CAT_GRUPOS_PRESUPUESTO gp ON gp.id_cat_grupos_presupuesto = cg.id_cat_grupos_presupuesto_padre
+   2  JOIN ROLES_CONDOMINAL r ON r.id_roles_condominal = dha.id_roles_condominal
+   2  JOIN DIRECTORIO d ON dha.id_directorio = d.id_directorio
+   2  JOIN DIRECTORIO d ON d.id_directorio = dha.id_directorio
+   2  JOIN CAT_GRUPOS_PRESUPUESTO g ON c.id_cat_grupos_presupuesto = g.id_cat_grupos_presupuesto
+   2  JOIN CAT_GRUPOS_COBRO cc ON cc.id_cat_grupos_cobro = cg.id_cat_grupos_cobro
+   2  JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+   2  INNER JOIN ROLES_CONDOMINAL r ON d.id_roles_condominal = r.id_roles_condominal 
+   2  INNER JOIN PAGOS p ON hp.id_pagos = p.id_pagos
+   2  $sqlmtc="SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+   2  $sqlmtc="SELECT COUNT(*) AS total, sum(m2_totales) as m2totales
+   2  $sqlmtc = "SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+   2  $sql_check = "SELECT id_cat_formas_pago FROM CAT_FORMAS_PAGO WHERE id_cat_formas_pago = $id_forma_pago AND activo = 1";
+   2  $sql_check = "SELECT id_cat_conceptos_presupuesto FROM CAT_CONCEPTOS_PRESUPUESTO WHERE id_cat_conceptos_presupuesto = $id_concepto AND activo = 1";
+   2  $sql="SELECT * FROM ASISTENCIAS_CONVOCATORIA s WHERE s.id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas']." and activo=1" ;
+   2  $sql="SELECT * FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] . " AND id =".$propietario[$pp]['id_directorio'];
+   2  $sql="INSERT INTO `HISTORICO_PAGOS_HAS_PAGOS` (id_historico_pagos,id_historico_pagos_detalle,id_pagos,monto,parcialidad) VALUES (".$ultimo.",".$dato[$d]['id_historico_pagos_detalle'].", ".$totalpagos[$ix]['id_pagos'].",".$abo.",1);";
+   2  $sql = "SELECT sum(a.monto) as total FROM GASTOS a, CAT_CONCEPTOS_PRESUPUESTO c, CAT_GRUPOS_PRESUPUESTO cg, CAT_GRUPOS_COBRO cc 
+   2  $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_POST['reino']." limit 1";
+   2  $sql = "INSERT INTO tbl_logs (id, id_user, accion, fecha) VALUES ('', '{$_SESSION[iconv_mime_decode("Subject: =?UTF-8?B?UHLDvGZ1bmcgUHLDvGZ1bmc=?=",
+   2  $sql = "INSERT INTO CAT_GRUPOS_PRESUPUESTO (nombre, id_cat_grupos_presupuesto_padre, id_cat_grupos_cobro, anio, activo) 
+   2  $sql = "INSERT INTO CAT_CONCEPTOS_PRESUPUESTO (nombre, id_cat_grupos_presupuesto, id_cat_tipos_concepto, orden, anio, activo) 
+   2  $result = $conn->query("SELECT COUNT(*) as total FROM INGRESOS WHERE activo=1");
+   2  $result = $conexion->query("SELECT anio, COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO GROUP BY anio");
+   2  $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2026");
+   2  $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2025 AND activo=1");
+   2  $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2026");
+   2  $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2025 AND activo=1");
+   1 LEFT JOIN HISTORICO_PAGOS_HAS_PAGOS hp ON h.id_historico_pagos = hp.id_historico_pagos
+   1 LEFT JOIN HISTORICO_PAGOS_DETALLE d ON h.id_historico_pagos = d.id_historico_pagos
+   1 LEFT JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+   1 JOIN HISTORICO_PAGOS_DETALLE d ON h.id_historico_pagos = d.id_historico_pagos
+   1 $sqlmtc="SELECT ROUND(SUM((a.m2Original / p.totalM2) * p.areasComunes), 4) AS M2_area_formula
+   1 $sql='UPDATE HISTORICO_PAGOS_DETALLE SET activo=0 WHERE id_historico_pagos='.$historico[0]['id_historico_pagos'];

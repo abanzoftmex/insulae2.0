@@ -1,0 +1,675 @@
+AREAS_PRIVATIVAS	id_areas_privativas	1	int(11)	NO	NULL	PRI	auto_increment
+AREAS_PRIVATIVAS	id_dcat_zonas	2	int(11)	YES	NULL	MUL	
+AREAS_PRIVATIVAS	id_dcat_subzonas	3	int(11)	YES	NULL	MUL	
+AREAS_PRIVATIVAS	id_areas_privativas_padre	4	int(11)	YES	0	MUL	
+AREAS_PRIVATIVAS	id_cat_status	5	int(11)	NO	1	MUL	
+AREAS_PRIVATIVAS	nombre	6	varchar(100)	NO	NULL		
+AREAS_PRIVATIVAS	iniciales	7	varchar(10)	YES	NULL		
+AREAS_PRIVATIVAS	m2_totales	8	decimal(10,4)	NO	0.0000		
+AREAS_PRIVATIVAS	es_fusion	9	tinyint(4)	NO	0		
+AREAS_PRIVATIVAS	indiviso	10	decimal(10,4)	YES	0.0000		
+AREAS_PRIVATIVAS	activo	11	tinyint(4)	NO	1		
+AREAS_PRIVATIVAS	direccion	12	text	YES	NULL		
+AREAS_PRIVATIVAS	m2_construccion	13	decimal(10,4)	YES	NULL		
+AREAS_PRIVATIVAS	id_dcat_calles	14	int(11)	YES	NULL		
+AREAS_PRIVATIVAS	vcc	15	decimal(10,4)	YES	0.0000		
+AREAS_PRIVATIVAS	indivisoParticular	16	int(11)	YES	NULL		
+AREAS_PRIVATIVAS	indivisoParticularMadruela	17	decimal(10,4)	YES	NULL		
+AREAS_PRIVATIVAS	m2_construccionHijos	18	decimal(10,4)	YES	NULL		
+AREAS_PRIVATIVAS	totalHijosApoles	19	int(11)	NO	0		
+AREAS_PRIVATIVAS	id_areas_privativas_hijo	20	int(11)	YES	NULL		
+AREAS_PRIVATIVAS	ordenamiento	21	int(11)	NO	0		
+AREAS_PRIVATIVAS	m2_area_comun	22	float(10,4)	NO	0.0000		
+AREAS_PRIVATIVAS	m2_areaComunHijos	23	decimal(10,4)	NO	0.0000		
+AREAS_PRIVATIVAS	saldoAFavor	24	decimal(30,2)	NO	0.00		
+AREAS_PRIVATIVAS	m2Original	25	decimal(10,4)	NO	0.0000		
+AREAS_PRIVATIVAS	saldoAFavorComercio	26	decimal(30,2)	NO	0.00		
+AREAS_PRIVATIVAS_HAS_CUOTAS	id_areas_privativas_has_cuotas	1	int(11)	NO	NULL	PRI	auto_increment
+AREAS_PRIVATIVAS_HAS_CUOTAS	id_areas_privativas	2	int(11)	NO	NULL	MUL	
+AREAS_PRIVATIVAS_HAS_CUOTAS	id_cat_grupos_cobro	3	int(11)	NO	NULL	MUL	
+AREAS_PRIVATIVAS_HAS_CUOTAS	monto	4	decimal(30,2)	NO	0.00		
+AREAS_PRIVATIVAS_HAS_CUOTAS	anio	5	int(11)	NO	NULL		
+AREAS_PRIVATIVAS_HAS_CUOTAS	activo	6	tinyint(1)	NO	1		
+AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO	id_areas_privativas_has_dcat_uso_suelo	1	int(11)	NO	NULL	PRI	auto_increment
+AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO	id_areas_privativas	2	int(11)	NO	NULL	MUL	
+AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO	id_dcat_uso_suelo	3	int(11)	NO	NULL	MUL	
+AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO	activo	4	tinyint(4)	NO	1		
+AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO	created_at	5	datetime	YES	NULL		
+AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO	updated_at	6	datetime	YES	NULL		
+AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO	deleted_at	7	datetime	YES	NULL		
+AREAS_PRIVATIVAS_IMAGENES	id_areas_privativas_imagenes	1	int(11)	NO	NULL	PRI	auto_increment
+AREAS_PRIVATIVAS_IMAGENES	id_areas_privativas	2	int(11)	NO	NULL	MUL	
+AREAS_PRIVATIVAS_IMAGENES	pie	3	text	YES	NULL		
+AREAS_PRIVATIVAS_IMAGENES	archivo	4	varchar(50)	NO	NULL		
+AREAS_PRIVATIVAS_IMAGENES	activo	5	tinyint(1)	NO	1		
+ARRENDAMIENTOS	id_arrendamientos	1	int(11)	NO	NULL	PRI	auto_increment
+ARRENDAMIENTOS	id_directorio_has_comercios	2	int(11)	YES	NULL	MUL	
+ARRENDAMIENTOS	nombre_comercio	3	varchar(100)	YES	NULL		
+ARRENDAMIENTOS	razon_social_comercio	4	varchar(100)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_clases_comercios	5	int(11)	YES	NULL	MUL	
+ARRENDAMIENTOS	id_cat_status_comercios	6	int(11)	YES	NULL	MUL	
+ARRENDAMIENTOS	uso_marca	7	tinyint(1)	YES	0		
+ARRENDAMIENTOS	observaciones	8	text	YES	NULL		
+ARRENDAMIENTOS	fecha_inscripcion_f861	9	date	YES	NULL		
+ARRENDAMIENTOS	fecha_vigencia_f861	10	date	YES	NULL		
+ARRENDAMIENTOS	folio_861	11	varchar(100)	YES	NULL		
+ARRENDAMIENTOS	activo	12	tinyint(1)	NO	1		
+ARRENDAMIENTOS	created_at	13	datetime	YES	NULL		
+ARRENDAMIENTOS	updated_at	14	datetime	YES	NULL		
+ARRENDAMIENTOS	deleted_at	15	datetime	YES	NULL		
+ARRENDAMIENTOS	id_areas_privativas	16	int(11)	YES	NULL	MUL	
+ARRENDAMIENTOS	fecha_inicio	17	date	YES	NULL		
+ARRENDAMIENTOS	id_dcat_giros0	18	int(11)	YES	NULL	MUL	
+ARRENDAMIENTOS	id_dcat_categorias_comercial0	19	int(11)	YES	NULL	MUL	
+ARRENDAMIENTOS	id_dcat_subcategorias_comercial0	20	int(11)	YES	NULL	MUL	
+ARRENDAMIENTOS	id_dcat_giros1	21	int(11)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_categorias_comercial1	22	int(11)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_subcategorias_comercial1	23	int(11)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_giros2	24	int(11)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_categorias_comercial2	25	int(11)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_subcategorias_comercial2	26	int(11)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_giros3	27	int(11)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_categorias_comercial3	28	int(11)	YES	NULL		
+ARRENDAMIENTOS	id_dcat_subcategorias_comercial3	29	int(11)	YES	NULL		
+artistas	id	1	int(11)	NO	NULL	PRI	auto_increment
+artistas	nombre	2	varchar(150)	NO	NULL	MUL	
+artistas	foto	3	varchar(500)	YES	NULL		
+artistas	tel	4	varchar(40)	YES	NULL		
+artistas	email	5	varchar(190)	YES	NULL	UNI	
+artistas	activo	6	tinyint(1)	NO	1	MUL	
+artistas	created_at	7	timestamp	NO	CURRENT_TIMESTAMP		
+artistas	updated_at	8	timestamp	NO	CURRENT_TIMESTAMP		on update CURRENT_TIMESTAMP
+ASISTENCIAS_CONVOCATORIA	id_asistencias_asamblea	1	int(11)	NO	NULL	PRI	auto_increment
+ASISTENCIAS_CONVOCATORIA	id	2	int(11)	NO	NULL	MUL	
+ASISTENCIAS_CONVOCATORIA	id_convocatorias_fechas	3	int(11)	NO	NULL	MUL	
+ASISTENCIAS_CONVOCATORIA	activo	4	tinyint(4)	NO	1		
+ASISTENCIAS_CONVOCATORIA	created_at	5	datetime	YES	NULL		
+ASISTENCIAS_CONVOCATORIA	updated_at	6	datetime	YES	NULL		
+ASISTENCIAS_CONVOCATORIA	deleted_at	7	datetime	YES	NULL		
+ASISTENCIAS_CONVOCATORIA	indivisoAsamblea	8	decimal(10,4)	NO	0.0000		
+campos_contacto	id	1	int(11)	NO	NULL	PRI	auto_increment
+campos_contacto	icono	2	varchar(50)	NO	NULL		
+campos_contacto	color	3	varchar(50)	NO	blue		
+campos_contacto	titulo	4	varchar(100)	NO	NULL		
+campos_contacto	contenido	5	text	NO	NULL		
+campos_contacto	enlace	6	text	YES	NULL		
+campos_contacto	target	7	varchar(20)	YES	_self		
+campos_contacto	orden	8	int(11)	NO	0	MUL	
+campos_contacto	activo	9	tinyint(1)	NO	1	MUL	
+campos_contacto	created_at	10	timestamp	NO	CURRENT_TIMESTAMP		
+campos_contacto	updated_at	11	timestamp	NO	CURRENT_TIMESTAMP		on update CURRENT_TIMESTAMP
+CAT_CONCEPTOS_PRESUPUESTO	id_cat_conceptos_presupuesto	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_CONCEPTOS_PRESUPUESTO	id_cat_grupos_presupuesto	2	int(11)	NO	NULL	MUL	
+CAT_CONCEPTOS_PRESUPUESTO	nombre	3	varchar(200)	NO	NULL		
+CAT_CONCEPTOS_PRESUPUESTO	activo	4	tinyint(1)	NO	1		
+CAT_CONCEPTOS_PRESUPUESTO	id_cat_tipos_concepto	5	int(11)	NO	0		
+CAT_CONCEPTOS_PRESUPUESTO	anio	6	int(11)	NO	2025	MUL	
+CAT_CONCEPTOS_PRESUPUESTO	orden	7	int(11)	NO	0		
+CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203	id_cat_conceptos_presupuesto	1	int(11)	NO	0		
+CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203	id_cat_grupos_presupuesto	2	int(11)	NO	NULL		
+CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203	nombre	3	varchar(200)	NO	NULL		
+CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203	activo	4	tinyint(1)	NO	1		
+CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203	id_cat_tipos_concepto	5	int(11)	NO	0		
+CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203	orden	6	int(11)	NO	0		
+CAT_FORMAS_PAGO	id_cat_formas_pago	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_FORMAS_PAGO	nombre	2	varchar(30)	NO	NULL		
+CAT_FORMAS_PAGO	activo	3	tinyint(1)	NO	1		
+CAT_GRUPOS_COBRO	id_cat_grupos_cobro	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_GRUPOS_COBRO	nombre	2	varchar(50)	NO	NULL		
+CAT_GRUPOS_COBRO	activo	3	tinyint(1)	NO	1		
+CAT_GRUPOS_COBRO	tiempo	4	int(11)	NO	NULL		
+CAT_GRUPOS_COBRO	interes	5	decimal(10,2)	NO	NULL		
+CAT_GRUPOS_COBRO	adicional	6	tinyint(1)	NO	0		
+CAT_GRUPOS_COBRO	aplica_presupuesto	7	tinyint(1)	NO	0		
+CAT_GRUPOS_COBRO	hijos	8	tinyint(1)	NO	0		
+CAT_GRUPOS_COBRO	selecobra_padres	9	tinyint(1)	NO	0		
+CAT_GRUPOS_COBRO	noCambiar_sad	10	tinyint(1)	NO	0		
+CAT_GRUPOS_COBRO	ordenamiento	11	int(11)	NO	0		
+CAT_GRUPOS_COBRO_HISTORICO	id_cat_grupos_cobro_historico	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_GRUPOS_COBRO_HISTORICO	id_cat_grupos_cobro	2	int(11)	NO	NULL	MUL	
+CAT_GRUPOS_COBRO_HISTORICO	anio	3	int(11)	NO	NULL		
+CAT_GRUPOS_COBRO_HISTORICO	interes	4	decimal(10,2)	NO	NULL		
+CAT_GRUPOS_COBRO_HISTORICO	activo	5	tinyint(1)	NO	1		
+CAT_GRUPOS_PRESUPUESTO	id_cat_grupos_presupuesto	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_GRUPOS_PRESUPUESTO	nombre	2	varchar(100)	NO	NULL		
+CAT_GRUPOS_PRESUPUESTO	activo	3	tinyint(1)	NO	1		
+CAT_GRUPOS_PRESUPUESTO	id_cat_grupos_presupuesto_padre	4	int(11)	YES	NULL		
+CAT_GRUPOS_PRESUPUESTO	css	5	varchar(15)	YES	NULL		
+CAT_GRUPOS_PRESUPUESTO	id_cat_grupos_cobro	6	int(11)	YES	NULL		
+CAT_GRUPOS_PRESUPUESTO	anio	7	int(11)	NO	2025	MUL	
+CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203	id_cat_grupos_presupuesto	1	int(11)	NO	0		
+CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203	nombre	2	varchar(100)	NO	NULL		
+CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203	activo	3	tinyint(1)	NO	1		
+CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203	id_cat_grupos_presupuesto_padre	4	int(11)	YES	NULL		
+CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203	css	5	varchar(15)	YES	NULL		
+CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203	id_cat_grupos_cobro	6	int(11)	YES	NULL		
+CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203	anio	7	int(11)	NO	2025		
+CAT_GRUPO_PUESTOS	id_cat_grupo_puestos	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_GRUPO_PUESTOS	nombre	2	varchar(200)	NO	NULL		
+CAT_GRUPO_PUESTOS	activo	3	tinyint(1)	NO	1		
+CAT_GRUPO_PUESTOS	posicion	4	int(11)	YES	NULL		
+CAT_GRUPO_PUESTOS	tipo	5	int(11)	NO	NULL		
+CAT_LLAMAR_A	id_cat_llamar_a	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_LLAMAR_A	nombre	2	varchar(100)	NO	NULL		
+CAT_LLAMAR_A	activo	3	tinyint(1)	NO	1		
+CAT_LLAMAR_A	tipoVoto	4	int(11)	NO	NULL		
+CAT_MODULOS	id_cat_modulos	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_MODULOS	nombre	2	varchar(100)	NO	NULL		
+CAT_MODULOS	es_especial	3	tinyint(4)	NO	0		
+CAT_MODULOS	activo	4	tinyint(4)	NO	1		
+CAT_PUESTOS	id_cat_puestos	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_PUESTOS	id_cat_grupo_puestos	2	int(11)	NO	NULL		
+CAT_PUESTOS	nombre	3	varchar(200)	NO	NULL		
+CAT_PUESTOS	activo	4	tinyint(1)	NO	1		
+CAT_PUESTOS	cantidad	5	int(11)	NO	1		
+CAT_PUESTOS	suplente	6	tinyint(1)	NO	0		
+CAT_SANCIONES	id_cat_sanciones	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_SANCIONES	nombre	2	varchar(30)	NO	NULL		
+CAT_SANCIONES	activo	3	int(11)	NO	1		
+CAT_SANCIONES	id_cat_grupos_cobro	4	int(11)	NO	5	MUL	
+CAT_SANCIONES	articulo	5	text	YES	NULL		
+CAT_SUBTIPOS_CONVOCATORIAS	id_cat_subtipos_convocatorias	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_SUBTIPOS_CONVOCATORIAS	id_cat_tipos_convocatoria	2	int(11)	NO	NULL	MUL	
+CAT_SUBTIPOS_CONVOCATORIAS	nombre	3	varchar(100)	NO	NULL		
+CAT_SUBTIPOS_CONVOCATORIAS	activo	4	tinyint(4)	NO	1		
+CAT_SUBTIPOS_CONVOCATORIAS	created_at	5	datetime	YES	NULL		
+CAT_SUBTIPOS_CONVOCATORIAS	updated_at	6	datetime	YES	NULL		
+CAT_SUBTIPOS_CONVOCATORIAS	deleted_at	7	datetime	YES	NULL		
+CAT_SUBTIPOS_CONVOCATORIAS	id_cat_llamar_a	8	int(11)	NO	1		
+CAT_TIPOS_CONCEPTO	id_cat_tipos_concepto	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_TIPOS_CONCEPTO	nombre	2	varchar(100)	NO	NULL		
+CAT_TIPOS_CONCEPTO	activo	3	tinyint(1)	NO	1		
+CAT_TIPOS_CONVOCATORIAS	id_cat_tipos_convocatoria	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_TIPOS_CONVOCATORIAS	nombre	2	varchar(100)	NO	NULL		
+CAT_TIPOS_CONVOCATORIAS	activo	3	tinyint(4)	NO	1		
+CAT_TIPOS_CONVOCATORIAS	created_at	4	datetime	YES	NULL		
+CAT_TIPOS_CONVOCATORIAS	updated_at	5	datetime	YES	NULL		
+CAT_TIPOS_CONVOCATORIAS	deleted_at	6	datetime	YES	NULL		
+CAT_TIPOS_NOTIFICACIONES	id_cat_tipos_notificaciones	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_TIPOS_NOTIFICACIONES	nombre	2	varchar(45)	NO	NULL		
+CAT_TIPOS_NOTIFICACIONES	activo	3	tinyint(4)	NO	1		
+CAT_TIPOS_NOTIFICACIONES	fijo	4	tinyint(1)	NO	1		
+CAT_TIPOS_TEMAS	idcat_tipos_temas	1	int(11)	NO	NULL	PRI	auto_increment
+CAT_TIPOS_TEMAS	nombre	2	varchar(100)	NO	NULL		
+CAT_TIPOS_TEMAS	activo	3	tinyint(1)	NO	1		
+CONTACTOS	id_contactos	1	int(11)	NO	NULL	PRI	auto_increment
+CONTACTOS	id_cat_tipos_contacto	2	int(11)	NO	NULL		
+CONTACTOS	nombre	3	varchar(200)	NO	NULL		
+CONTACTOS	dato	4	varchar(200)	NO	NULL		
+CONTACTOS	activo	5	tinyint(1)	NO	1		
+CONTACTOS	enlace	6	text	YES	NULL		
+CONTACTOS	target	7	varchar(20)	YES	_self		
+CONTACTOS	orden	8	int(11)	NO	0		
+CONTACTOS	principal	9	tinyint(1)	NO	0		
+CONVOCADOS	id_convocados	1	int(11)	NO	NULL	PRI	auto_increment
+CONVOCADOS	id_convocatorias	2	int(11)	NO	NULL	MUL	
+CONVOCADOS	id	3	int(11)	NO	NULL		
+CONVOCADOS	activo	4	tinyint(4)	NO	1		
+CONVOCADOS	created_at	5	datetime	YES	NULL		
+CONVOCADOS	updated_at	6	datetime	YES	NULL		
+CONVOCADOS	deleted_at	7	datetime	YES	NULL		
+CONVOCADOS	id_cat_llamar_a	8	int(11)	NO	NULL		
+CONVOCADOS	porcentaje	9	int(11)	NO	0		
+CONVOCATORIAS	id_convocatorias	1	int(11)	NO	NULL	PRI	auto_increment
+CONVOCATORIAS	id_cat_tipos_convocatoria	2	int(11)	NO	NULL	MUL	
+CONVOCATORIAS	id_cat_subtipos_convocatorias	3	int(11)	NO	NULL	MUL	
+CONVOCATORIAS	id_cat_status_convocatoria	4	int(11)	NO	NULL	MUL	
+CONVOCATORIAS	nombre	5	varchar(100)	NO	NULL		
+CONVOCATORIAS	activo	6	tinyint(4)	NO	1		
+CONVOCATORIAS	comentarios	7	text	YES	NULL		
+CONVOCATORIAS	invitados	8	text	YES	NULL		
+CONVOCATORIAS	total_esperado	9	int(11)	NO	0		
+CONVOCATORIAS	total_asistencia	10	int(11)	NO	0		
+CONVOCATORIAS	indiviso_asistencia	11	decimal(10,4)	NO	0.0000		
+CONVOCATORIAS	created_at	12	datetime	YES	NULL		
+CONVOCATORIAS	updated_at	13	datetime	YES	NULL		
+CONVOCATORIAS	deleted_at	14	datetime	YES	NULL		
+CONVOCATORIAS	pdf	15	varchar(30)	YES	NULL		
+CONVOCATORIAS	puestoConvoca	16	varchar(200)	YES	NULL		
+CONVOCATORIAS	id_directorioConvoca	17	int(11)	YES	NULL		
+CONVOCATORIAS	puestoModerador	18	varchar(200)	YES	NULL		
+CONVOCATORIAS	id_directorioModerador	19	int(11)	YES	NULL		
+CONVOCATORIAS_FECHAS	id_convocatorias_fechas	1	int(11)	NO	NULL	PRI	auto_increment
+CONVOCATORIAS_FECHAS	id_convocatorias	2	int(11)	NO	NULL	MUL	
+CONVOCATORIAS_FECHAS	id_dcat_tipos_fechas_convocatorias	3	int(11)	NO	NULL	MUL	
+CONVOCATORIAS_FECHAS	id_cat_status_convocatorias_fechas	4	int(11)	NO	NULL	MUL	
+CONVOCATORIAS_FECHAS	fecha	5	date	NO	NULL		
+CONVOCATORIAS_FECHAS	hora	6	time	NO	NULL		
+CONVOCATORIAS_FECHAS	lugar	7	varchar(100)	NO	NULL		
+CONVOCATORIAS_FECHAS	activo	8	tinyint(4)	NO	1		
+CONVOCATORIAS_FECHAS	created_at	9	datetime	YES	NULL		
+CONVOCATORIAS_FECHAS	updated_at	10	datetime	YES	NULL		
+CONVOCATORIAS_FECHAS	deleted_at	11	datetime	YES	NULL		
+CONVOCATORIAS_HAS_INVITADOS_ESPECIALES	id_convocatorias_has_invitados_especiales	1	int(11)	NO	NULL	PRI	auto_increment
+CONVOCATORIAS_HAS_INVITADOS_ESPECIALES	id_convocatorias	2	int(11)	NO	NULL	MUL	
+CONVOCATORIAS_HAS_INVITADOS_ESPECIALES	id_invitados_especiales	3	int(11)	NO	NULL	MUL	
+CONVOCATORIAS_HAS_INVITADOS_ESPECIALES	activo	4	tinyint(4)	NO	1		
+CONVOCATORIAS_HAS_INVITADOS_ESPECIALES	created_at	5	datetime	YES	NULL		
+CONVOCATORIAS_HAS_INVITADOS_ESPECIALES	updated_at	6	datetime	YES	NULL		
+CONVOCATORIAS_HAS_INVITADOS_ESPECIALES	deleted_at	7	datetime	YES	NULL		
+CONVOCATORIAS_INVITADOS	id_convocatorias_invitados	1	int(11)	NO	NULL	PRI	auto_increment
+CONVOCATORIAS_INVITADOS	id_convocatorias	2	int(11)	NO	NULL		
+CONVOCATORIAS_INVITADOS	id_cat_puestos	3	int(11)	NO	NULL		
+CONVOCATORIAS_INVITADOS	activo	4	tinyint(1)	NO	1		
+CUPONES_TOUR	id	1	int(11)	NO	NULL	PRI	auto_increment
+CUPONES_TOUR	id_lugar	2	int(11)	NO	NULL	MUL	
+CUPONES_TOUR	titulo	3	varchar(255)	NO	NULL		
+CUPONES_TOUR	descripcion	4	text	YES	NULL		
+CUPONES_TOUR	vigencia	5	date	NO	NULL	MUL	
+CUPONES_TOUR	es_exclusivo_tour	6	tinyint(1)	YES	1	MUL	
+CUPONES_TOUR	activo	7	tinyint(1)	YES	1	MUL	
+CUPONES_TOUR	created_at	8	timestamp	NO	CURRENT_TIMESTAMP		
+CUPONES_TOUR	updated_at	9	timestamp	NO	CURRENT_TIMESTAMP		on update CURRENT_TIMESTAMP
+DCAT_CALLES	id_dcat_calles	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_CALLES	id_dcat_zonas	2	int(11)	NO	NULL		
+DCAT_CALLES	nombre	3	varchar(200)	NO	NULL		
+DCAT_CALLES	activo	4	tinyint(1)	NO	1		
+DCAT_CATEGORIAS_COMERCIAL	id_dcat_categorias_comercial	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_CATEGORIAS_COMERCIAL	id_dcat_giros	2	int(11)	NO	NULL	MUL	
+DCAT_CATEGORIAS_COMERCIAL	nombre	3	varchar(100)	NO	NULL		
+DCAT_CATEGORIAS_COMERCIAL	activo	4	tinyint(4)	NO	1		
+DCAT_CATEGORIAS_COMERCIAL	created_at	5	datetime	YES	NULL		
+DCAT_CATEGORIAS_COMERCIAL	updated_at	6	datetime	YES	NULL		
+DCAT_CATEGORIAS_COMERCIAL	deleted_at	7	datetime	YES	NULL		
+DCAT_CATEGORIAS_COMERCIAL	clave	8	varchar(100)	NO	NULL		
+DCAT_CATEGORIAS_GASTOS	id_dcat_categorias_gastos	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_CATEGORIAS_GASTOS	nombre	2	varchar(100)	NO	NULL		
+DCAT_CATEGORIAS_GASTOS	activo	3	tinyint(1)	NO	1		
+DCAT_CATEGORIAS_NOTIFICACIONES	id_dcat_categorias_notificaciones	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_CATEGORIAS_NOTIFICACIONES	nombre	2	varchar(60)	NO	NULL		
+DCAT_CATEGORIAS_NOTIFICACIONES	activo	3	tinyint(4)	NO	1		
+DCAT_CATEGORIAS_NOTIFICACIONES	sad	4	int(11)	NO	0		
+DCAT_CLASES_COMERCIOS	id_dcat_clases_comercios	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_CLASES_COMERCIOS	nombre	2	varchar(100)	NO	NULL		
+DCAT_CLASES_COMERCIOS	activo	3	tinyint(1)	YES	1		
+DCAT_GIROS	id_dcat_giros	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_GIROS	nombre	2	varchar(100)	NO	NULL		
+DCAT_GIROS	activo	3	tinyint(4)	NO	1		
+DCAT_GIROS	created_at	4	datetime	YES	NULL		
+DCAT_GIROS	updated_at	5	datetime	YES	NULL		
+DCAT_GIROS	deleted_at	6	datetime	YES	NULL		
+DCAT_GIROS	id_proyectos	7	int(11)	NO	NULL		
+DCAT_GIROS	clave	8	varchar(10)	YES	NULL		
+DCAT_SUBCATEGORIAS_COMERCIAL	id_dcat_subcategorias_comercial	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_SUBCATEGORIAS_COMERCIAL	id_dcat_categorias_comercial	2	int(11)	NO	NULL	MUL	
+DCAT_SUBCATEGORIAS_COMERCIAL	id_dcat_giros	3	int(11)	NO	NULL	MUL	
+DCAT_SUBCATEGORIAS_COMERCIAL	nombre	4	varchar(100)	NO	NULL		
+DCAT_SUBCATEGORIAS_COMERCIAL	activo	5	tinyint(4)	NO	1		
+DCAT_SUBCATEGORIAS_COMERCIAL	created_at	6	datetime	YES	NULL		
+DCAT_SUBCATEGORIAS_COMERCIAL	updated_at	7	datetime	YES	NULL		
+DCAT_SUBCATEGORIAS_COMERCIAL	deleted_at	8	datetime	YES	NULL		
+DCAT_SUBCATEGORIAS_COMERCIAL	clave	9	varchar(10)	YES	NULL		
+DCAT_SUBZONAS	id_dcat_subzonas	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_SUBZONAS	id_dcat_zonas	2	int(11)	NO	NULL	MUL	
+DCAT_SUBZONAS	nombre	3	varchar(100)	NO	NULL		
+DCAT_SUBZONAS	iniciales	4	varchar(5)	YES	NULL		
+DCAT_SUBZONAS	activo	5	tinyint(4)	NO	1		
+DCAT_SUBZONAS	created_at	6	datetime	YES	NULL		
+DCAT_SUBZONAS	updated_at	7	datetime	YES	NULL		
+DCAT_SUBZONAS	deleted_at	8	datetime	YES	NULL		
+DCAT_TIPOS_FECHAS_CONVOCATORIAS	id_dcat_tipos_fechas_convocatorias	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_TIPOS_FECHAS_CONVOCATORIAS	nombre	2	varchar(100)	NO	NULL		
+DCAT_TIPOS_FECHAS_CONVOCATORIAS	activo	3	tinyint(4)	NO	1		
+DCAT_TIPOS_FECHAS_CONVOCATORIAS	created_at	4	datetime	YES	NULL		
+DCAT_TIPOS_FECHAS_CONVOCATORIAS	updated_at	5	datetime	YES	NULL		
+DCAT_TIPOS_FECHAS_CONVOCATORIAS	deleted_at	6	datetime	YES	NULL		
+DCAT_TIPOS_FECHAS_CONVOCATORIAS	porcentaje	7	decimal(10,4)	NO	0.0000		
+DCAT_USO_SUELO	id_dcat_uso_suelo	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_USO_SUELO	nombre	2	varchar(200)	NO	NULL		
+DCAT_USO_SUELO	activo	3	tinyint(4)	NO	1		
+DCAT_USO_SUELO	created_at	4	datetime	YES	NULL		
+DCAT_USO_SUELO	updated_at	5	datetime	YES	NULL		
+DCAT_USO_SUELO	deleted_at	6	datetime	YES	NULL		
+DCAT_USO_SUELO	iniciales	7	varchar(10)	NO	NULL		
+DCAT_USO_SUELO	sol_sombra	8	int(11)	NO	0		
+DCAT_USO_SUELO	ponderador	9	decimal(10,2)	NO	0.00		
+DCAT_USO_SUELO	porcentaje	10	decimal(30,4)	NO	0.0000		
+DCAT_USO_SUELO	orden	11	int(11)	NO	0		
+DCAT_USO_SUELO_HISTORICO	id_dcat_uso_suelo_historico	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_USO_SUELO_HISTORICO	id_dcat_uso_suelo	2	int(11)	NO	NULL		
+DCAT_USO_SUELO_HISTORICO	anio	3	int(11)	NO	NULL		
+DCAT_USO_SUELO_HISTORICO	monto	4	decimal(10,2)	NO	0.00		
+DCAT_USO_SUELO_HISTORICO	id_cat_grupos_cobro	5	int(11)	NO	NULL		
+DCAT_USO_SUELO_HISTORICO	formaAplicacion	6	tinyint(1)	NO	0		
+DCAT_VARIOS	id_dcat_varios	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_VARIOS	nombre	2	varchar(100)	NO	NULL		
+DCAT_VARIOS	activo	3	tinyint(1)	NO	1		
+DCAT_VARIOS	id_cat_grupos_cobro	4	int(11)	NO	2		
+DCAT_ZONAS	id_dcat_zonas	1	int(11)	NO	NULL	PRI	auto_increment
+DCAT_ZONAS	nombre	2	varchar(100)	NO	NULL		
+DCAT_ZONAS	iniciales	3	varchar(5)	YES	NULL		
+DCAT_ZONAS	activo	4	tinyint(4)	NO	1		
+DCAT_ZONAS	created_at	5	datetime	YES	NULL		
+DCAT_ZONAS	updated_at	6	datetime	YES	NULL		
+DCAT_ZONAS	deleted_at	7	datetime	YES	NULL		
+DCAT_ZONAS	id_proyectos	8	int(11)	NO	1		
+DCAT_ZONAS	ponderador	9	decimal(10,2)	NO	0.00		
+DCAT_ZONAS	valor_mkt	10	decimal(10,2)	NO	0.00		
+DIRECTORIO	id_directorio	1	int(11)	NO	NULL	PRI	auto_increment
+DIRECTORIO	id_cat_tipos_directorio	2	int(11)	NO	NULL	MUL	
+DIRECTORIO	nombre	3	varchar(100)	NO	NULL		
+DIRECTORIO	apaterno	4	varchar(100)	YES	NULL		
+DIRECTORIO	amaterno	5	varchar(100)	YES	NULL		
+DIRECTORIO	user	6	varchar(50)	YES	NULL		
+DIRECTORIO	pass	7	varchar(150)	YES	NULL		
+DIRECTORIO	email	8	varchar(150)	YES	NULL		
+DIRECTORIO	telefono	9	varchar(30)	YES	NULL		
+DIRECTORIO	direccion	10	text	YES	NULL		
+DIRECTORIO	passProvisional	11	varchar(150)	YES	NULL		
+DIRECTORIO	fechaProvissional	12	date	YES	NULL		
+DIRECTORIO	curp	13	varchar(45)	YES	NULL		
+DIRECTORIO	razon_social	14	varchar(200)	YES	NULL		
+DIRECTORIO	rfc	15	varchar(45)	YES	NULL		
+DIRECTORIO	direccion_fiscal	16	text	YES	NULL		
+DIRECTORIO	activo	17	tinyint(4)	NO	1		
+DIRECTORIO	created_at	18	datetime	YES	NULL		
+DIRECTORIO	updated_at	19	datetime	YES	NULL		
+DIRECTORIO	deleted_at	20	datetime	YES	NULL		
+DIRECTORIO	nombre_comercial	21	varchar(150)	YES	NULL		
+DIRECTORIO	email_fiscal	22	varchar(150)	YES	NULL		
+DIRECTORIO	telefono_comercial	23	varchar(100)	YES	NULL		
+DIRECTORIO	id_roles_condominal	24	int(11)	NO	2	MUL	
+DIRECTORIO	aceptoAvisoPrivacidad	25	tinyint(1)	NO	0		
+DIRECTORIO	fechaAceptoAvisoPrivacidad	26	datetime	YES	NULL		
+DIRECTORIO	requiereFactura	27	tinyint(1)	NO	0		
+DIRECTORIO	constanciaFiscal	28	varchar(50)	YES	NULL		
+DIRECTORIO_HAS_ASIGNACIONES	id_directorio_has_asignaciones	1	int(11)	NO	NULL	PRI	auto_increment
+DIRECTORIO_HAS_ASIGNACIONES	id_directorio	2	int(11)	NO	NULL	MUL	
+DIRECTORIO_HAS_ASIGNACIONES	id_roles_condominal	3	int(11)	NO	NULL	MUL	
+DIRECTORIO_HAS_ASIGNACIONES	id	4	int(11)	YES	NULL		
+DIRECTORIO_HAS_ASIGNACIONES	porcentaje	5	decimal(10,4)	NO	0.0000		
+DIRECTORIO_HAS_ASIGNACIONES	activo	6	tinyint(4)	NO	1		
+DIRECTORIO_HAS_ASIGNACIONES	created_at	7	datetime	YES	NULL		
+DIRECTORIO_HAS_ASIGNACIONES	updated_at	8	datetime	YES	NULL		
+DIRECTORIO_HAS_ASIGNACIONES	deleted_at	9	datetime	YES	NULL		
+DIRECTORIO_HAS_CAT_PUESTOS	id_directorio_has_cat_puestos	1	int(11)	NO	NULL	PRI	auto_increment
+DIRECTORIO_HAS_CAT_PUESTOS	id_directorio	2	int(11)	NO	NULL		
+DIRECTORIO_HAS_CAT_PUESTOS	id_cat_puestos	3	int(11)	NO	NULL		
+DIRECTORIO_HAS_CAT_PUESTOS	activo	4	tinyint(1)	NO	1		
+DIRECTORIO_HAS_CAT_PUESTOS	suplente	5	tinyint(1)	NO	0		
+DIRECTORIO_HAS_COMERCIOS	id_directorio_has_comercios	1	int(11)	NO	NULL	PRI	auto_increment
+DIRECTORIO_HAS_COMERCIOS	id_directorio	2	int(11)	NO	NULL	MUL	
+DIRECTORIO_HAS_COMERCIOS	nombre	3	varchar(200)	NO	NULL		
+DIRECTORIO_HAS_COMERCIOS	email	4	varchar(100)	YES	NULL		
+DIRECTORIO_HAS_COMERCIOS	telefono	5	varchar(30)	YES	NULL		
+DIRECTORIO_HAS_COMERCIOS	activo	6	tinyint(1)	NO	1		
+DIRECTORIO_HAS_COMERCIOS	razonSocial	7	varchar(200)	YES	NULL		
+DIRECTORIO_HAS_COMERCIOS	rfc	8	varchar(30)	YES	NULL		
+DIRECTORIO_HAS_COMERCIOS	id_directorioAdministrativo	9	int(11)	YES	NULL		
+DIRECTORIO_HAS_COMERCIOS	id_directorioContable	10	int(11)	YES	NULL		
+disponibilidad_artistas	id	1	int(11)	NO	NULL	PRI	auto_increment
+disponibilidad_artistas	id_artista	2	int(11)	NO	NULL	MUL	
+disponibilidad_artistas	dia_semana	3	tinyint(3) unsigned	NO	NULL	MUL	
+disponibilidad_artistas	hora_inicio	4	time	NO	NULL		
+disponibilidad_artistas	hora_fin	5	time	NO	NULL		
+disponibilidad_artistas	created_at	6	timestamp	NO	CURRENT_TIMESTAMP		
+disponibilidad_artistas	updated_at	7	timestamp	NO	CURRENT_TIMESTAMP		on update CURRENT_TIMESTAMP
+GASTOS	id_gastos	1	int(11)	NO	NULL	PRI	auto_increment
+GASTOS	fecha	2	date	NO	NULL		
+GASTOS	monto	3	decimal(30,2)	NO	NULL		
+GASTOS	comentarios	4	text	NO	NULL		
+GASTOS	comprobante	5	varchar(50)	YES	NULL		
+GASTOS	activo	6	tinyint(1)	NO	1		
+GASTOS	id_cat_conceptos_presupuesto	7	int(11)	YES	NULL	MUL	
+GASTOS	id_cat_formas_pago	8	int(11)	NO	1		
+GASTOS	recibo	9	varchar(50)	YES	NULL		
+GASTOS	proyecto	10	text	YES	NULL		
+HISTORICO_PAGOS	id_historico_pagos	1	int(11)	NO	NULL	PRI	auto_increment
+HISTORICO_PAGOS	fechaPago	2	date	NO	NULL		
+HISTORICO_PAGOS	monto	3	decimal(30,2)	YES	NULL		
+HISTORICO_PAGOS	id_cat_status_historico_pagos	4	int(11)	NO	NULL	MUL	
+HISTORICO_PAGOS	id_directorio	5	int(11)	NO	NULL	MUL	
+HISTORICO_PAGOS	id_areas_privativas	6	int(11)	NO	NULL	MUL	
+HISTORICO_PAGOS	activo	7	tinyint(4)	NO	1		
+HISTORICO_PAGOS	folio	8	varchar(50)	NO	NULL		
+HISTORICO_PAGOS	id_cat_formas_pago	9	int(11)	NO	NULL	MUL	
+HISTORICO_PAGOS	comprobante	10	varchar(30)	YES	NULL		
+HISTORICO_PAGOS	saldoAFavor	11	decimal(30,2)	NO	0.00		
+HISTORICO_PAGOS	aplicacionSaldoAFavor	12	tinyint(1)	NO	0		
+HISTORICO_PAGOS	comentarios	13	text	NO	NULL		
+HISTORICO_PAGOS	id_opcion_estado_cuenta	14	int(11)	NO	1		
+HISTORICO_PAGOS	id_arrendamientos	15	int(11)	YES	NULL		
+HISTORICO_PAGOS_DETALLE	id_historico_pagos_detalle	1	int(11)	NO	NULL	PRI	auto_increment
+HISTORICO_PAGOS_DETALLE	id_historico_pagos	2	int(11)	NO	NULL		
+HISTORICO_PAGOS_DETALLE	monto	3	decimal(30,2)	NO	0.00		
+HISTORICO_PAGOS_DETALLE	id_cat_grupos_cobro	4	int(11)	NO	NULL		
+HISTORICO_PAGOS_DETALLE	activo	5	tinyint(1)	NO	1		
+HISTORICO_PAGOS_DETALLE	saldoAFavor	6	decimal(30,2)	NO	0.00		
+HISTORICO_PAGOS_HAS_PAGOS	id_historico_Pagos_has_pagos	1	int(11)	NO	NULL	PRI	auto_increment
+HISTORICO_PAGOS_HAS_PAGOS	id_historico_pagos	2	int(11)	NO	NULL	MUL	
+HISTORICO_PAGOS_HAS_PAGOS	id_historico_pagos_detalle	3	int(11)	NO	NULL		
+HISTORICO_PAGOS_HAS_PAGOS	id_pagos	4	int(11)	NO	NULL	MUL	
+HISTORICO_PAGOS_HAS_PAGOS	monto	5	decimal(30,2)	NO	NULL		
+HISTORICO_PAGOS_HAS_PAGOS	activo	6	tinyint(1)	NO	1		
+HISTORICO_PAGOS_HAS_PAGOS	parcialidad	7	tinyint(1)	NO	NULL		
+INGRESOS	id_ingresos	1	int(11)	NO	NULL	PRI	auto_increment
+INGRESOS	fecha	2	date	NO	NULL		
+INGRESOS	monto	3	decimal(30,2)	NO	0.00		
+INGRESOS	activo	4	tinyint(4)	NO	1		
+INGRESOS	id_cat_formas_pago	5	int(11)	NO	NULL	MUL	
+INGRESOS	comprobante	6	varchar(30)	YES	NULL		
+INGRESOS	comentarios	7	text	NO	NULL		
+INGRESOS	id_dcat_varios	8	int(11)	YES	NULL	MUL	
+INGRESOS	id_cat_grupos_cobro	9	int(11)	YES	NULL	MUL	
+INGRESOS	id_areas_privativas	10	int(11)	YES	NULL	MUL	
+INGRESOS	confirmado	11	tinyint(1)	NO	0	MUL	
+INVITADOS_ESPECIALES	id_invitados_especiales	1	int(11)	NO	NULL	PRI	auto_increment
+INVITADOS_ESPECIALES	nombre	2	varchar(100)	NO	NULL		
+INVITADOS_ESPECIALES	email	3	varchar(150)	YES	NULL		
+INVITADOS_ESPECIALES	telefono	4	varchar(45)	YES	NULL		
+INVITADOS_ESPECIALES	activo	5	tinyint(4)	NO	1		
+INVITADOS_ESPECIALES	created_at	6	datetime	YES	NULL		
+INVITADOS_ESPECIALES	updated_at	7	datetime	YES	NULL		
+INVITADOS_ESPECIALES	deleted_at	8	datetime	YES	NULL		
+NOTIFICACIONES	id_notificaciones	1	int(11)	NO	NULL	PRI	auto_increment
+NOTIFICACIONES	id_cat_tipos_notificaciones	2	int(11)	NO	NULL	MUL	
+NOTIFICACIONES	nombre	3	varchar(150)	NO	NULL		
+NOTIFICACIONES	descripcion	4	text	NO	NULL		
+NOTIFICACIONES	pdf	5	varchar(45)	YES	NULL		
+NOTIFICACIONES	imagen	6	varchar(45)	YES	NULL		
+NOTIFICACIONES	fechaPublicar	7	date	NO	NULL		
+NOTIFICACIONES	fechaAlta	8	datetime	NO	NULL		
+NOTIFICACIONES	activo	9	tinyint(4)	NO	1		
+NOTIFICACIONES	id_directorio	10	int(11)	NO	NULL	MUL	
+NOTIFICACIONES	id_dcat_categorias_notificaciones	11	int(11)	NO	NULL	MUL	
+NOTIFICACIONES	fechaVigencia	12	date	YES	NULL		
+PAGOS	id_pagos	1	int(11)	NO	NULL	PRI	auto_increment
+PAGOS	monto	2	decimal(30,2)	NO	NULL		
+PAGOS	fechaPago	3	date	NO	NULL		
+PAGOS	montoAbonado	4	decimal(30,2)	NO	0.00		
+PAGOS	id_opcion_estado_cuenta	5	int(11)	NO	1		
+PAGOS	id_arrendamientos	6	int(11)	YES	NULL		
+PAGOS	activo	7	tinyint(4)	NO	1		
+PAGOS	id_cat_grupos_cobro	8	int(11)	NO	NULL		
+PAGOS	concepto	9	varchar(300)	NO	NULL		
+PAGOS	id_areas_privativas	10	int(11)	NO	NULL	MUL	
+PAGOS	id_cat_status_pago	11	int(11)	NO	NULL		
+PAGOS	fechaLiquidacion	12	date	YES	NULL		
+PAGOS	comentarios	13	text	YES	NULL		
+PAGOS	fechaAlta	14	datetime	NO	CURRENT_TIMESTAMP		
+PAGOS	fechaVigencia	15	date	YES	NULL		
+PAGOS	id_cat_sanciones	16	int(11)	YES	NULL		
+PAGOS	intereses	17	decimal(30,2)	NO	0.00		
+PAGOS	ultimaActualizacionCron	18	datetime	YES	NULL		
+PAGOS	descuento_aplicado	19	decimal(30,2)	NO	0.00		
+PASSWORD_RESET_TOKENS	id	1	int(11)	NO	NULL	PRI	auto_increment
+PASSWORD_RESET_TOKENS	id_directorio	2	int(11)	NO	NULL	MUL	
+PASSWORD_RESET_TOKENS	token	3	varchar(255)	NO	NULL	MUL	
+PASSWORD_RESET_TOKENS	email	4	varchar(255)	NO	NULL	MUL	
+PASSWORD_RESET_TOKENS	created_at	5	timestamp	NO	CURRENT_TIMESTAMP		
+PASSWORD_RESET_TOKENS	expires_at	6	timestamp	YES	NULL		
+PASSWORD_RESET_TOKENS	used	7	tinyint(1)	YES	0		
+PASSWORD_RESET_TOKENS	used_at	8	timestamp	YES	NULL		
+presentaciones_artistas	id	1	int(11)	NO	NULL	PRI	auto_increment
+presentaciones_artistas	id_artista	2	int(11)	NO	NULL	MUL	
+presentaciones_artistas	id_escenario	3	varchar(191)	NO	NULL	MUL	
+presentaciones_artistas	fecha_hora_inicio	4	datetime	NO	NULL	MUL	
+presentaciones_artistas	fecha_hora_fin	5	datetime	NO	NULL		
+presentaciones_artistas	estado	6	enum('programada','cancelada','finalizada')	NO	programada		
+presentaciones_artistas	created_at	7	timestamp	NO	CURRENT_TIMESTAMP		
+presentaciones_artistas	updated_at	8	timestamp	NO	CURRENT_TIMESTAMP		on update CURRENT_TIMESTAMP
+PRESUPUESTO	id_presupuesto	1	int(11)	NO	NULL	PRI	auto_increment
+PRESUPUESTO	anio	2	int(11)	NO	NULL		
+PRESUPUESTO	id_cat_status_presupuesto	3	int(11)	NO	NULL		
+PRESUPUESTO	documento	4	varchar(100)	YES	NULL		
+PRESUPUESTO	activo	5	tinyint(1)	NO	1		
+PRESUPUESTO	fondoReserva	6	int(11)	NO	0		
+PRESUPUESTO_DETALLE	id_presupuesto_detalle	1	int(11)	NO	NULL	PRI	auto_increment
+PRESUPUESTO_DETALLE	anio	2	int(11)	NO	NULL		
+PRESUPUESTO_DETALLE	id_cat_conceptos_presupuesto	3	int(11)	NO	NULL	MUL	
+PRESUPUESTO_DETALLE	activo	4	tinyint(1)	NO	1		
+PRESUPUESTO_DETALLE	id_cat_grupos_presupuesto	5	int(11)	NO	NULL	MUL	
+PRESUPUESTO_DETALLE	id_presupuesto	6	int(11)	NO	NULL		
+PRESUPUESTO_MES	id_presupuesto_mes	1	int(11)	NO	NULL	PRI	auto_increment
+PRESUPUESTO_MES	mes	2	int(11)	NO	NULL		
+PRESUPUESTO_MES	activo	3	tinyint(1)	NO	1		
+PRESUPUESTO_MES	gastoReal	4	decimal(30,2)	NO	0.00		
+PRESUPUESTO_MES	id_presupuesto_detalle	5	int(11)	NO	NULL		
+PRESUPUESTO_MES	costoMensual	6	decimal(30,2)	NO	0.00		
+PRESUPUESTO_MES_CERRADO	id_presupuesto_mes_cerrado	1	int(11)	NO	NULL	PRI	auto_increment
+PRESUPUESTO_MES_CERRADO	mes	2	int(11)	NO	NULL		
+PRESUPUESTO_MES_CERRADO	activo	3	tinyint(1)	NO	1		
+PRESUPUESTO_MES_CERRADO	fechaAlta	4	datetime	YES	CURRENT_TIMESTAMP		
+PRESUPUESTO_MES_CERRADO	id_presupuesto	5	int(11)	NO	NULL		
+PROYECTOS	id_proyectos	1	int(11)	NO	NULL	PRI	auto_increment
+PROYECTOS	id_cat_estados	2	int(11)	NO	NULL	MUL	
+PROYECTOS	id_cat_municipios	3	int(11)	NO	NULL	MUL	
+PROYECTOS	nombre	4	varchar(100)	NO	NULL		
+PROYECTOS	iniciales	5	varchar(5)	YES	NULL		
+PROYECTOS	imagen_sad	6	varchar(45)	YES	NULL		
+PROYECTOS	logo	7	varchar(45)	YES	NULL		
+PROYECTOS	activo	8	tinyint(4)	NO	1		
+PROYECTOS	id_cat_formas_proyectos	9	int(11)	NO	NULL		
+PROYECTOS	id_cat_tipos_proyectos	10	int(11)	NO	NULL		
+PROYECTOS	totalM2	11	decimal(10,4)	NO	0.0000		
+PROYECTOS	totalApoles	12	int(11)	NO	0		
+PROYECTOS	totalHijosM2	13	decimal(10,4)	NO	NULL		
+PROYECTOS	totalHijosApoles	14	int(11)	NO	NULL		
+PROYECTOS	areasComunes	15	decimal(10,4)	NO	NULL		
+PROYECTOS	valor_mkt_general	16	decimal(10,2)	NO	0.00		
+PROYECTOS	formulasUsodeSuelo	17	tinyint(1)	NO	0		
+PROYECTOS	imagen_pie	18	varchar(50)	YES	NULL		
+PROYECTOS	anioArranque	19	int(11)	NO	0		
+PROYECTOS	manejovccc	20	tinyint(1)	NO	0		
+PROYECTOS	pie_izquierda	21	text	YES	NULL		
+PROYECTOS	pie_derecha	22	text	YES	NULL		
+PROYECTOS	pie_desarrollado	23	text	YES	NULL		
+PROYECTOS	aviso_privacidad	24	text	YES	NULL		
+PROYECTOS	correoEnvio	25	varchar(50)	YES	NULL		
+PROYECTOS	clave	26	varchar(50)	YES	NULL		
+PROYECTOS	claveSecreta	27	varchar(50)	YES	NULL		
+PROYECTOS	link_gaceta	28	text	YES	NULL		
+PROYECTOS	tituloGaceta	29	text	YES	NULL		
+PROYECTOS	sintesisAviso	30	text	YES	NULL		
+PROYECTOS	pdfAviso	31	varchar(30)	YES	NULL		
+PROYECTOS_DOCUMENTOS	id_proyectos_documentos	1	int(11)	NO	NULL	PRI	auto_increment
+PROYECTOS_DOCUMENTOS	id_proyectos	2	int(11)	NO	NULL		
+PROYECTOS_DOCUMENTOS	nombre	3	varchar(300)	NO	NULL		
+PROYECTOS_DOCUMENTOS	archivo	4	varchar(100)	NO	NULL		
+PROYECTOS_DOCUMENTOS	activo	5	tinyint(1)	NO	1		
+PROYECTOS_DOCUMENTOS	id_cat_tipos_documento	6	int(11)	NO	1		
+PROYECTOS_FOLIO	id_proyectos_folio	1	int(11)	NO	NULL	PRI	auto_increment
+PROYECTOS_FOLIO	anio	2	int(11)	NO	NULL		
+PROYECTOS_FOLIO	folio	3	int(11)	NO	1		
+REGISTROS_VISITANTES	id	1	int(11)	NO	NULL	PRI	auto_increment
+REGISTROS_VISITANTES	id_tour	2	int(11)	NO	NULL	MUL	
+REGISTROS_VISITANTES	nombre_adulto	3	varchar(255)	NO	NULL		
+REGISTROS_VISITANTES	telefono	4	varchar(20)	YES	NULL		
+REGISTROS_VISITANTES	num_menores	5	int(11)	YES	0		
+REGISTROS_VISITANTES	hash_unico	6	varchar(64)	NO	NULL	UNI	
+REGISTROS_VISITANTES	validado	7	tinyint(1)	YES	0	MUL	
+REGISTROS_VISITANTES	fecha_validacion	8	timestamp	YES	NULL		
+REGISTROS_VISITANTES	created_at	9	timestamp	NO	CURRENT_TIMESTAMP		
+REGISTROS_VISITANTES	updated_at	10	timestamp	NO	CURRENT_TIMESTAMP		on update CURRENT_TIMESTAMP
+RESUMEN_FINANCIERO	id_resumen_financiero	1	int(11)	NO	NULL	PRI	auto_increment
+RESUMEN_FINANCIERO	anio	2	int(11)	NO	NULL		
+RESUMEN_FINANCIERO	activo	3	tinyint(1)	NO	1		
+RESUMEN_FINANCIERO	id_presupuesto	4	int(11)	NO	NULL		
+RESUMEN_FINANCIERO_MES	id_resumen_financiero_mes	1	int(11)	NO	NULL	PRI	auto_increment
+RESUMEN_FINANCIERO_MES	id_resumen_financiero	2	int(11)	NO	NULL		
+RESUMEN_FINANCIERO_MES	patrocinadores	3	decimal(30,2)	NO	0.00		
+RESUMEN_FINANCIERO_MES	comisionesBancarias	4	decimal(30,2)	NO	0.00		
+RESUMEN_FINANCIERO_MES	activo	5	tinyint(1)	NO	1		
+RESUMEN_FINANCIERO_MES	mes	6	int(11)	NO	NULL		
+ROLES_CONDOMINAL	id_roles_condominal	1	int(11)	NO	NULL	PRI	auto_increment
+ROLES_CONDOMINAL	nombre	2	varchar(100)	NO	NULL		
+ROLES_CONDOMINAL	activo	3	tinyint(1)	NO	1		
+ROLES_CONDOMINAL	descripcion	4	text	YES	NULL		
+ROLES_CONDOMINAL	general	5	tinyint(1)	NO	0		
+ROLES_CONDOMINAL	tabla	6	varchar(20)	YES	NULL		
+ROLES_CONDOMINAL	campo	7	varchar(20)	YES	NULL		
+ROLES_CONDOMINAL	idGral	8	int(11)	NO	0		
+ROLES_CONDOMINAL_HAS_CAT_MODULOS	id_roles_condominal_has_cat_modulos	1	int(11)	NO	NULL	PRI	auto_increment
+ROLES_CONDOMINAL_HAS_CAT_MODULOS	id_roles_condominal	2	int(11)	NO	NULL	MUL	
+ROLES_CONDOMINAL_HAS_CAT_MODULOS	id_cat_modulos	3	int(11)	NO	NULL	MUL	
+ROLES_CONDOMINAL_HAS_CAT_MODULOS	permiso	4	varchar(45)	NO	NULL		
+ROLES_CONDOMINAL_HAS_CAT_MODULOS	activo	5	tinyint(4)	NO	1		
+TAREAS	id_tareas	1	int(11)	NO	NULL	PRI	auto_increment
+TAREAS	id_temas	2	int(11)	NO	NULL	MUL	
+TAREAS	descripcion	3	text	NO	NULL		
+TAREAS	activo	4	tinyint(4)	NO	1		
+TAREAS	fecha_final	5	date	YES	NULL		
+TAREAS	involucrado	6	varchar(255)	YES	NULL		
+TAREAS	created_at	7	datetime	YES	NULL		
+TAREAS	updated_at	8	datetime	YES	CURRENT_TIMESTAMP		
+TAREAS	deleted_at	9	datetime	YES	NULL		
+TAREAS	estatus_tarea	10	int(11)	NO	0		
+TAREAS_ASIGNACIONES	id_tareas_asignaciones	1	int(11)	NO	NULL	PRI	auto_increment
+TAREAS_ASIGNACIONES	id_tareas	2	int(11)	NO	NULL	MUL	
+TAREAS_ASIGNACIONES	id_cat_puestos	3	int(11)	NO	NULL		
+TAREAS_ASIGNACIONES	id	4	int(11)	YES	NULL		
+TAREAS_ASIGNACIONES	activo	5	tinyint(4)	NO	1		
+TAREAS_ASIGNACIONES	created_at	6	datetime	YES	NULL		
+TAREAS_ASIGNACIONES	updated_at	7	datetime	YES	NULL		
+TAREAS_ASIGNACIONES	deleted_at	8	datetime	YES	NULL		
+TEMAS	id_temas	1	int(11)	NO	NULL	PRI	auto_increment
+TEMAS	id_convocatorias	2	int(11)	NO	NULL	MUL	
+TEMAS	tema	3	text	NO	NULL		
+TEMAS	conclusiones	4	text	YES	NULL		
+TEMAS	total_favor	5	int(11)	NO	0		
+TEMAS	total_contra	6	int(11)	NO	0		
+TEMAS	total_abstencion	7	int(11)	NO	0		
+TEMAS	activo	8	tinyint(4)	NO	1		
+TEMAS	created_at	9	datetime	YES	NULL		
+TEMAS	updated_at	10	datetime	YES	NULL		
+TEMAS	deleted_at	11	datetime	YES	NULL		
+TEMAS	id_cat_status_temas	12	int(11)	NO	1		
+TEMAS	idcat_tipos_temas	13	int(11)	NO	1		
+TEMAS	tiempo	14	int(11)	NO	0		
+TEMAS	id_directorio	15	int(11)	YES	NULL		
+TICKETS	id_tickets	1	int(11)	NO	NULL	PRI	auto_increment
+TICKETS	id_tickets_departamentos	2	int(11)	NO	NULL	MUL	
+TICKETS	nombre	3	varchar(150)	YES	NULL		
+TICKETS	descripcion	4	text	NO	NULL		
+TICKETS	fecha	5	datetime	NO	CURRENT_TIMESTAMP		
+TICKETS	activo	6	tinyint(4)	NO	1		
+TICKETS	id_directorio	7	int(11)	NO	NULL	MUL	
+TICKETS	id_cat_status_tickets	8	int(11)	NO	1		
+TICKETS	respuesta	9	text	YES	NULL		
+TICKETS	respuesta_usuario	10	longtext	YES	NULL		
+TICKETS	fecha_respuesta_usuario	11	datetime	YES	NULL		
+TICKETS	pdf_respuesta	12	varchar(100)	YES	NULL		
+TICKETS	imagen_respuesta	13	varchar(100)	YES	NULL		
+TICKETS_DEPARTAMENTOS	id_tickets_departamentos	1	int(11)	NO	NULL	PRI	auto_increment
+TICKETS_DEPARTAMENTOS	nombre	2	varchar(150)	NO	NULL		
+TICKETS_DEPARTAMENTOS	email	3	varchar(50)	NO	NULL		
+TICKETS_DEPARTAMENTOS	activo	4	tinyint(4)	NO	1		
+TOURS	id	1	int(11)	NO	NULL	PRI	auto_increment
+TOURS	nombre_encargado	2	varchar(255)	NO	NULL	MUL	
+TOURS	nombre_tour	3	varchar(255)	NO	NULL		
+TOURS	camion_placa	4	varchar(50)	YES	NULL		
+TOURS	fecha_inicio	5	date	NO	NULL	MUL	
+TOURS	fecha_fin	6	date	NO	NULL		
+TOURS	pax_adultos	7	int(11)	YES	0		
+TOURS	pax_menores	8	int(11)	YES	0		
+TOURS	activo	9	tinyint(1)	YES	1	MUL	
+TOURS	created_at	10	timestamp	NO	CURRENT_TIMESTAMP		
+TOURS	updated_at	11	timestamp	NO	CURRENT_TIMESTAMP		on update CURRENT_TIMESTAMP
+VOTACIONES_CONVOCATORIAS	id_votaciones_convocatorias	1	int(11)	NO	NULL	PRI	auto_increment
+VOTACIONES_CONVOCATORIAS	id	2	int(11)	NO	NULL		
+VOTACIONES_CONVOCATORIAS	id_cat_tipos_votaciones	3	int(11)	NO	NULL		
+VOTACIONES_CONVOCATORIAS	id_convocatorias_fechas	4	int(11)	NO	NULL		
+VOTACIONES_CONVOCATORIAS	created_at	5	datetime	YES	NULL		
+VOTACIONES_CONVOCATORIAS	updated_at	6	datetime	YES	NULL		
+VOTACIONES_CONVOCATORIAS	deleted_at	7	datetime	YES	NULL		
+VOTACIONES_CONVOCATORIAS	id_temas	8	int(11)	NO	NULL		

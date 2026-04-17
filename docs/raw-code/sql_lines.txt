@@ -1,0 +1,902 @@
+/Users/gabrielhernandez/projects/valquirico/insulae/recupera.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/recupera.php:37:$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_saldo_favor.php:8:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_saldo_favor.php:16:$sql="SELECT id_historico_pagos, folio, monto, saldoAFavor, id_cat_status_historico_pagos, aplicacionSaldoAFavor, id_areas_privativas 
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_saldo_favor.php:30:    $sql="SELECT id_historico_pagos_detalle, id_historico_pagos, monto, saldoAFavor, activo 
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_saldo_favor.php:40:    $sql="SELECT sum(saldoAFavor) as saldoAFavorTotal 
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_saldo_favor.php:50:    $sql="SELECT id_historico_pagos_has_pagos, id_historico_pagos, id_pagos, monto, activo 
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_saldo_favor.php:60:    $sql="SELECT id_areas_privativas, nombre, saldoAFavor, saldoAFavorComercio 
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_migration_tipo_cuota_ingresos.php:21:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_migration_tipo_cuota_ingresos.php:82:            ON UPDATE CASCADE";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_contacto.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:10:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:48:		  // $sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE  ap.activo and ap.id_cat_status=1 and 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:50:		  // ( SELECT DISTINCT id_areas_privativas_padre FROM AREAS_PRIVATIVAS WHERE 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:52:		 	$sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE  ap.activo and ap.id_cat_status=1 ";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:54:			$sql="SELECT MAX(id_areas_privativas) AS id_areas_privativas,
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:58:					SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:67:					SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:72:						SELECT DISTINCT id_areas_privativas_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:293:		$sql="SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatosGobernanza.php:296:				SELECT DISTINCT id_areas_privativas_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_notificaciones.php:29:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:34:    $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:81:        $sql_check = "SELECT id_cat_conceptos_presupuesto FROM CAT_CONCEPTOS_PRESUPUESTO WHERE id_cat_conceptos_presupuesto = $id_concepto AND activo = 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:90:        $sql_check = "SELECT id_cat_grupos_presupuesto FROM CAT_GRUPOS_PRESUPUESTO WHERE id_cat_grupos_presupuesto = $id_grupo AND activo = 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:99:        $sql_presupuesto = "SELECT * FROM PRESUPUESTO WHERE activo=1 AND anio=$anio LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:104:            $sql = 'INSERT INTO `PRESUPUESTO` (`anio`, `id_cat_status_presupuesto`) VALUES ('.$anio.', 1);';
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:108:                $sql_presupuesto = "SELECT * FROM PRESUPUESTO WHERE activo=1 AND anio=$anio ORDER BY id_presupuesto DESC LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:119:        $sql_check = "SELECT * FROM PRESUPUESTO_DETALLE WHERE activo=1 AND id_presupuesto=$id_presupuesto AND id_cat_conceptos_presupuesto=$id_concepto AND anio=$anio AND id_cat_grupos_presupuesto=$id_grupo";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:126:            $sql = 'INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, `id_cat_grupos_presupuesto`, `id_presupuesto`) VALUES ('.$anio.', '.$id_concepto.', '.$id_grupo.', '.$id_presupuesto.');';
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:130:                $sql_get = "SELECT * FROM PRESUPUESTO_DETALLE WHERE activo=1 AND id_presupuesto=$id_presupuesto AND id_cat_conceptos_presupuesto=$id_concepto AND anio=$anio AND id_cat_grupos_presupuesto=$id_grupo ORDER BY id_presupuesto_detalle DESC LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:148:            $sql_check_mes = "SELECT * FROM PRESUPUESTO_MES WHERE activo=1 AND id_presupuesto_detalle=$id_presupuesto_detalle AND mes=$mes";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:153:                $sql = 'INSERT INTO `PRESUPUESTO_MES` (`mes`, `id_presupuesto_detalle`, `costoMensual`) VALUES ('.$mes.', '.$id_presupuesto_detalle.', '.$monto.');';
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-presupuesto.php:161:                $sql = 'UPDATE PRESUPUESTO_MES SET costoMensual='.$monto.' WHERE id_presupuesto_mes='.$existe_mes[0]['id_presupuesto_mes'].' LIMIT 1';
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:28:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:98:					$sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE  id_areas_privativas=".$area[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:101:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:116:						$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:124:				INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:415:				$sql = "SELECT nombre FROM DCAT_VARIOS WHERE activo = 1 and id_dcat_varios=".$ingresos_area[$ing]['id_dcat_varios']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos.php:419:				$sql = "SELECT nombre FROM CAT_FORMAS_PAGO WHERE activo = 1 and id_cat_formas_pago=".$ingresos_area[$ing]['id_cat_formas_pago']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:145:								$sqlAnios="SELECT DISTINCT anio FROM DCAT_USO_SUELO_HISTORICO";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:207:	$sqlmtc="SELECT COUNT(*) AS total, sum(m2_totales) as m2totales
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:209:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:220:		$sqlmtc="SELECT COUNT(*) AS total, sum(m2_construccion) as m2totales
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_usos_suelo.php:222:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:53:/*$sql="SELECT a.*
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:63:                SELECT 1
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:91:$sqlUltimaActualizacion = "SELECT DATE_FORMAT(MAX(COALESCE(UPDATE_TIME, CREATE_TIME)),'%d/%m/%Y %H:%i') AS ultima_actualizacion
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:243:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:257:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:260:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:311:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:331:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:338:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:339:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:501:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:516:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:519:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:563:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:583:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:590:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:591:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:858:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:873:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:876:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:916:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:935:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:942:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinaria.php:943:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:67:$sqlUltimaActualizacion = "SELECT DATE_FORMAT(MAX(COALESCE(UPDATE_TIME, CREATE_TIME)),'%d/%m/%Y %H:%i') AS ultima_actualizacion
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:351:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:371:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:378:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:379:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:442:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:456:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:459:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:542:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:556:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:559:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:581:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:604:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:611:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:612:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:652:								$sql = "SELECT P.monto FROM PAGOS P 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:660:								$sql = "SELECT P.monto FROM PAGOS P
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:661:								INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:703:										$sql = "SELECT SUM(P.monto) AS montoS, SUM(P.montoAbonado) AS montoSA,
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:715:										$sql = "SELECT SUM(P.monto) AS montoS, SUM(P.montoAbonado) AS montoSA,
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:718:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:755:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:774:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:781:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:782:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:980:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1001:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1008:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1009:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1079:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1094:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1097:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1163:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1178:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1181:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1250:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1272:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1279:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1280:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1319:								$sql = "SELECT monto FROM PAGOS P 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1327:								$sql = "SELECT monto FROM PAGOS P
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1328:								INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1366:										$sql = "SELECT SUM(P.monto) AS montoS, SUM(P.montoAbonado) AS montoSA,
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1378:										$sql = "SELECT SUM(P.monto) AS montoS, SUM(P.montoAbonado) AS montoSA,
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1381:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1415:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1434:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1441:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1442:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1712:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1732:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1739:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1740:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1812:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1827:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1830:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1903:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1918:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1921:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:1993:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2014:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2021:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2022:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2063:									$sql = "SELECT monto FROM PAGOS P 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2071:									$sql = "SELECT monto FROM PAGOS P
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2072:									INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2110:										$sql = "SELECT SUM(P.monto) AS montoS, SUM(P.montoAbonado) AS montoSA,
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2122:										$sql = "SELECT SUM(P.monto) AS montoS, SUM(P.montoAbonado) AS montoSA,
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2125:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2155:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2173:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2180:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas.php:2181:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_migration.php:32:        $result = $conexion->query("SELECT anio, COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO GROUP BY anio");
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_migration.php:62:        $result = $conexion->query("SELECT anio, COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO GROUP BY anio");
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_migration.php:73:        $result = $conexion->query("SELECT anio, COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO GROUP BY anio");
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_migration.php:96:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2025");
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_migration.php:100:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2026");
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_migration.php:104:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2025");
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_migration.php:108:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2026");
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_presupuesto_2025.php:14:$sql = "SELECT * FROM PRESUPUESTO WHERE anio=" . $anioSeleccionado . " AND activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_presupuesto_2025.php:25:    $sql = "SELECT * FROM CAT_GRUPOS_COBRO WHERE activo=1 AND aplica_presupuesto=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_presupuesto_2025.php:33:    $sql = "SELECT g.*, p.nombre as nombrePadre, p.hijos FROM CAT_GRUPOS_PRESUPUESTO g, CAT_GRUPOS_COBRO p WHERE g.activo=1 AND g.anio=" . $anioSeleccionado . " AND g.id_cat_grupos_presupuesto_padre IS NULL AND g.id_cat_grupos_cobro=p.id_cat_grupos_cobro GROUP BY id_cat_grupos_cobro";
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_presupuesto_2025.php:45:        $sql = "SELECT sum(m.costoMensual) as total FROM PRESUPUESTO_MES m, PRESUPUESTO_DETALLE p, CAT_GRUPOS_PRESUPUESTO cg, CAT_CONCEPTOS_PRESUPUESTO c, CAT_GRUPOS_COBRO cc WHERE 
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_presupuesto_2025.php:57:        $sql_sin_filtro = "SELECT sum(m.costoMensual) as total FROM PRESUPUESTO_MES m, PRESUPUESTO_DETALLE p, CAT_GRUPOS_PRESUPUESTO cg, CAT_CONCEPTOS_PRESUPUESTO c, CAT_GRUPOS_COBRO cc WHERE 
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_presupuesto_2025.php:69:        $sql_tabla = "SELECT DISTINCT g.*, p.nombre as nombrePadre FROM CAT_GRUPOS_PRESUPUESTO g, CAT_GRUPOS_COBRO p, PRESUPUESTO_DETALLE pd WHERE g.activo=1 AND g.anio=" . $anioSeleccionado . " AND g.id_cat_grupos_presupuesto_padre IS NULL AND g.id_cat_grupos_cobro=p.id_cat_grupos_cobro AND p.id_cat_grupos_cobro=" . $grupos1[$g]['id_cat_grupos_cobro'] . " AND pd.id_cat_grupos_presupuesto=g.id_cat_grupos_presupuesto AND pd.anio=" . $anioSeleccionado . " AND pd.activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/debug_presupuesto_2025.php:82:    $sql = "SELECT id_cat_grupos_presupuesto, id_cat_grupos_cobro, anio, nombre FROM CAT_GRUPOS_PRESUPUESTO WHERE activo=1 AND id_cat_grupos_presupuesto_padre IS NULL ORDER BY id_cat_grupos_cobro, anio";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado-organigrama.php:17:$sql = "SELECT * FROM REINOS WHERE activo=1 and id_reinos=".(int)$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarVotos.php:49:	$sql = "INSERT INTO `VOTACIONES_CONVOCATORIAS` (`id_votaciones_convocatorias`, `id`, `id_cat_tipos_votaciones`, `id_convocatorias_fechas`, `created_at`, `updated_at`, `deleted_at`, `id_temas`) VALUES (NULL, ".$idAreaPrivativa.", ".$idTipoVotaciones.", ".$idConvocatoriaFecha.", '".date("Y-m-d H:i:s")."', NULL, NULL, ".$idTemaConvocatoria.");";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarVotos.php:75:	$sql = "SELECT * FROM VOTACIONES_CONVOCATORIAS WHERE id = " . $idAreaPrivativa . " AND id_convocatorias_fechas = " . $idConvocatoriaFecha . " AND id_temas = " . $idTemaConvocatoria;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarVotos.php:94:    $sql = "UPDATE VOTACIONES_CONVOCATORIAS SET id_cat_tipos_votaciones = ? WHERE id_votaciones_convocatorias = ?;";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:19:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:30:$sql = "SELECT nombre FROM DCAT_ZONAS WHERE id_dcat_zonas=".$idZona." LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:36:$sql = "SELECT nombre FROM CAT_GRUPOS_COBRO WHERE id_cat_grupos_cobro=".$idGrupoCobro." LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:42:$sql = "SELECT a.* FROM AREAS_PRIVATIVAS a, AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO u 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:70:    $sql = "SELECT ar.*, ar.nombre_comercio as nombreComercio 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:103:    $sql = "SELECT * FROM AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO WHERE id_areas_privativas=".$idArea." AND activo=1 LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-previaCobros.php:108:        $sql = "SELECT * FROM DCAT_USO_SUELO_HISTORICO WHERE id_dcat_uso_suelo=".$tac[0]['id_dcat_uso_suelo']." AND anio=".$anioActual." AND id_cat_grupos_cobro=".$idGrupoCobro." LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_historico_pagos.php:32:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_zonas.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/index.php:8:  $sql = "SELECT * FROM `REINOS` WHERE activo = 1 ";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:81:	$sql="SELECT * FROM `AREAS_PRIVATIVAS` where activo=1 and id_areas_privativas=".$directorio[$i]['id_areas_privativas'];
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:83:$sql="SELECT * FROM `DIRECTORIO_HAS_COMERCIOS` where activo=1 and id_directorio_has_comercios=".$directorio[$i]['id_directorio_has_comercios'];
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:86:	$sql="SELECT CASE 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_rentas.php:93:	$sql="SELECT CASE 
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico.php:33:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_presupuesto.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:249:								$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:335:								$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles_seguridad.php:483:								$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:54:$sqlmtc="SELECT COUNT(*) AS total,d.nombre
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:56:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:58:JOIN DCAT_USO_SUELO d
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:70:$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:72:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:84:$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:100:$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:102:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:565:								$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:601:										$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:1048:								$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:1081:										$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:1114:										$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:1441:								$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:1475:										$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apolesDinamico.php:1509:										$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:16:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:1942:				$sql='INSERT INTO `ARRENDAMIENTOS` (`id_directorio_has_comercios`,  `id_dcat_clases_comercios`, `id_cat_status_comercios`, `uso_marca`, `observaciones`, `fecha_inscripcion_f861`, `fecha_vigencia_f861`, `folio_861`, `activo`, `created_at`, `id_areas_privativas`,fecha_inicio) VALUES ('.$_POST['id_directorio_has_comercios'].',  '.$_POST['id_dcat_clases_comercios'].', '.$_POST['id_cat_status_comercios'].', '.$_POST['uso_marca'].', "'.$_POST['observaciones'].'", "'.$_POST['fecha_inscripcion_f861'].'", "'.$_POST['fecha_vigencia_f861'].'", "'.$_POST['folio_861'].'", 1, "'.date("Y-m-d H:i:s").'",'.$_POST['id_areas_privativas'].', "'.$_POST['fecha_inicio'].'");';
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:1977:						$sql='UPDATE DIRECTORIO_HAS_ASIGNACIONES SET activo=0, deleted_at="'.date("Y-m-d H:i:s").'" where id_roles_condominal=5    and  id='.$bandrol.' ';
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2427:							$sql_arren = "SELECT id_arrendamientos FROM ARRENDAMIENTOS WHERE id_areas_privativas=" . $_POST['id_areas_privativas'] . " AND activo=1 AND id_cat_status_comercios IN (1, 2, 3, 4) LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2432:								$sql_arren = "SELECT id_arrendamientos FROM ARRENDAMIENTOS WHERE id_areas_privativas=" . $_POST['id_areas_privativas'] . " ORDER BY activo DESC, id_arrendamientos DESC LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2447:							$sql = "SELECT * FROM `PAGOS` ORDER BY id_pagos DESC LIMIT 1;";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2561:							$sql = "SELECT * FROM `HISTORICO_PAGOS` ORDER BY id_historico_pagos DESC LIMIT 1;";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2568:							$sql="INSERT INTO `HISTORICO_PAGOS_DETALLE` (id_historico_pagos,monto,id_cat_grupos_cobro) VALUES (".$ultimo.", ".$_POST['monto1'].",".$_POST['id_cat_grupos_cobro1'].");";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2578:							$sql="INSERT INTO `HISTORICO_PAGOS_DETALLE` (id_historico_pagos,monto,id_cat_grupos_cobro) VALUES (".$ultimo.", ".$_POST['monto'.$m].",".$_POST['id_cat_grupos_cobro'.$m].");";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2594:						$sql = "SELECT * FROM `HISTORICO_PAGOS_DETALLE` where id_historico_pagos=".$ultimo." and activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2623:											$sql="INSERT INTO `HISTORICO_PAGOS_HAS_PAGOS` (id_historico_pagos,id_historico_pagos_detalle,id_pagos,monto,parcialidad) VALUES (".$ultimo.",".$dato[$d]['id_historico_pagos_detalle'].", ".$totalpagos[$ix]['id_pagos'].",".$abo.",1);";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2641:											$sql="INSERT INTO `HISTORICO_PAGOS_HAS_PAGOS` (id_historico_pagos,id_historico_pagos_detalle,id_pagos,monto,parcialidad) VALUES (".$ultimo.",".$dato[$d]['id_historico_pagos_detalle'].", ".$totalpagos[$ix]['id_pagos'].",".$abo.",1);";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2661:											$sql="INSERT INTO `HISTORICO_PAGOS_HAS_PAGOS` (id_historico_pagos,id_historico_pagos_detalle,id_pagos,monto,parcialidad) VALUES (".$ultimo.",".$dato[$d]['id_historico_pagos_detalle'].",".$totalpagos[$ix]['id_pagos'].",".$abo.",0);";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:2730:								$sql="INSERT INTO `HISTORICO_PAGOS_HAS_PAGOS` (id_historico_pagos,id_historico_pagos_detalle,id_pagos,monto,parcialidad) VALUES (".$ultimo.",".$dato[$d]['id_historico_pagos_detalle'].", ".$deuda[0]['id_pagos'].",".$pagoRealizado.",".$parcialidad.");";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:3015:$sql='INSERT INTO ROLES_CONDOMINAL(nombre,descripcion,activo) VALUES ("'.$_POST['nombre'].'","'.$_POST['descripcion'].'",1);';
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:3058:$sql="INSERT INTO ROLES_CONDOMINAL_HAS_CAT_MODULOS(id_roles_condominal,id_cat_modulos,permiso) VALUES (".$bandrol.",".$pantallas[$i]['id_cat_modulos'].",'".$perm."');";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:3348:			$sql='UPDATE DIRECTORIO_HAS_ASIGNACIONES SET activo=0, deleted_at="'.date("Y-m-d H:i:s").'" where id_roles_condominal=5 and id='.intval($_POST['id_arrendamientos_actual']).' and activo=1';
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado.php:3575:		$sql='INSERT INTO DIRECTORIO(id_roles_condominal,id_cat_tipos_directorio,nombre,apaterno,amaterno, user, pass, email, telefono,direccion, curp,activo,created_at,razon_social,rfc,direccion_fiscal,nombre_comercial,email_fiscal,telefono_comercial,requiereFactura) VALUES ('.$_POST['id_roles_condominal'].','.$_POST['id_cat_tipos_directorio'].',"'.$_POST['nombre'].'","'.$_POST['apaterno'].'","'.$_POST['amaterno'].'","'.$_POST['user'].'",sha1("'.$_POST['pass'].'"),"'.$_POST['email'].'","'.$_POST['telefono'].'","'.$_POST['direccion'].'","'.$_POST['curp'].'",1,"'.date("Y-m-d H:i:s").'","'.$_POST['razon_social'].'","'.$_POST['rfc'].'","'.$_POST['direccion_fiscal'].'","'.$_POST['nombre_comercial'].'","'.$_POST['email_fiscal'].'","'.$_POST['telefono_comercial'].'",'.$_POST['requiereFactura'].');';
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:91:$sqlmtc="SELECT COUNT(*) AS total,d.nombre
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:93:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:95:JOIN DCAT_USO_SUELO d
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:108:	$sqlmtc="SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:110:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:111:	JOIN DCAT_USO_SUELO d ON d.id_dcat_uso_suelo = s.id_dcat_uso_suelo
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:121:	$sqlmtc="SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:123:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:124:	JOIN DCAT_USO_SUELO d ON d.id_dcat_uso_suelo = s.id_dcat_uso_suelo
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:135:	$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:137:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:149:	$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:166:$sqlmtc="SELECT ROUND(SUM((a.m2Original / p.totalM2) * p.areasComunes), 4) AS M2_area_formula
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:168:JOIN PROYECTOS p ON p.activo=1
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:178:	$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:180:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:189:	$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:191:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:213:			SELECT 1 FROM DCAT_ZONAS z 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:219:			SELECT 1 FROM DIRECTORIO_HAS_ASIGNACIONES dha
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:220:			JOIN DIRECTORIO d ON d.id_directorio = dha.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:221:			JOIN ROLES_CONDOMINAL r ON r.id_roles_condominal = dha.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:241:			SELECT 1 FROM AREAS_PRIVATIVAS hijo
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:249:					SELECT 1 FROM DCAT_ZONAS z_hijo
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:255:					SELECT 1 FROM DIRECTORIO_HAS_ASIGNACIONES dha_hijo
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:256:					JOIN DIRECTORIO d_hijo ON d_hijo.id_directorio = dha_hijo.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:257:					JOIN ROLES_CONDOMINAL r_hijo ON r_hijo.id_roles_condominal = dha_hijo.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:291:			SELECT 1 FROM DCAT_ZONAS z
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:297:			SELECT 1 FROM DIRECTORIO_HAS_ASIGNACIONES dha
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:298:			JOIN DIRECTORIO d ON d.id_directorio = dha.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:299:			JOIN ROLES_CONDOMINAL r ON r.id_roles_condominal = dha.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:343:	SELECT a.*
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:345:  JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO d ON d.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:357:	SELECT DISTINCT a_padre.*
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:359:  JOIN AREAS_PRIVATIVAS a_hijo 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:362:  JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO d2 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:446:$sqlUltimaActualizacion = "SELECT DATE_FORMAT(MAX(COALESCE(UPDATE_TIME, CREATE_TIME)),'%d/%m/%Y %H:%i') AS ultima_actualizacion
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:923:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:943:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:950:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:951:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1015:	$sql = "SELECT monto, formaAplicacion FROM DCAT_USO_SUELO_HISTORICO 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1032:	  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1046:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1049:	INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1133:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1147:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1150:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1172:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1195:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1202:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1203:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1242:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1256:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1259:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1307:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1326:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1333:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1377:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1396:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1403:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1404:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1508:								$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1546:									$sql="SELECT email,telefono, CASE WHEN id_cat_tipos_directorio = 1 THEN CONCAT(nombre, ' ', COALESCE(apaterno, ''), ' ', COALESCE(amaterno, '')) WHEN id_cat_tipos_directorio = 2 THEN nombre_comercial ELSE NULL END AS nombre FROM DIRECTORIO where id_directorio=".$duenosLegal[$dl]['id_directorio']." and activo=1 limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1561:									$sql="SELECT email,telefono, CASE WHEN id_cat_tipos_directorio = 1 THEN CONCAT(nombre, ' ', COALESCE(apaterno, ''), ' ', COALESCE(amaterno, '')) WHEN id_cat_tipos_directorio = 2 THEN nombre_comercial ELSE NULL END AS nombre FROM DIRECTORIO where id_directorio=".$duenosMoral[$dm]['id_directorio']." and activo=1 limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1921:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1942:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1949:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:1950:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2016:											$sql = "SELECT monto, formaAplicacion FROM DCAT_USO_SUELO_HISTORICO 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2033:											  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2048:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2051:											INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2118:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2133:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2136:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2205:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2227:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2234:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2235:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2272:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2286:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2289:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2333:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2352:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2359:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2400:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2419:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2426:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2427:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2566:									$sql="SELECT email,telefono, CASE WHEN id_cat_tipos_directorio = 1 THEN CONCAT(nombre, ' ', COALESCE(apaterno, ''), ' ', COALESCE(amaterno, '')) WHEN id_cat_tipos_directorio = 2 THEN nombre_comercial ELSE NULL END AS nombre FROM DIRECTORIO where id_directorio=".$duenosMoral[$dm]['id_directorio']." and activo=1 limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2581:									$sql="SELECT email,telefono, CASE WHEN id_cat_tipos_directorio = 1 THEN CONCAT(nombre, ' ', COALESCE(apaterno, ''), ' ', COALESCE(amaterno, '')) WHEN id_cat_tipos_directorio = 2 THEN nombre_comercial ELSE NULL END AS nombre FROM DIRECTORIO where id_directorio=".$duenosLegal[$dl]['id_directorio']." and activo=1 limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2592:									$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:2625:										$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3007:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3027:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3034:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3035:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3102:											$sql = "SELECT monto, formaAplicacion FROM DCAT_USO_SUELO_HISTORICO 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3119:											  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3134:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3137:											INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3211:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3226:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3229:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3301:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3322:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3329:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3330:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3368:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3382:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3385:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3430:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3449:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3456:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3493:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3511:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3518:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3519:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3663:									$sql="SELECT email,telefono, CASE WHEN id_cat_tipos_directorio = 1 THEN CONCAT(nombre, ' ', COALESCE(apaterno, ''), ' ', COALESCE(amaterno, '')) WHEN id_cat_tipos_directorio = 2 THEN nombre_comercial ELSE NULL END AS nombre FROM DIRECTORIO where id_directorio=".$duenosMoral[$dm]['id_directorio']." and activo=1 limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3678:									$sql="SELECT email,telefono, CASE WHEN id_cat_tipos_directorio = 1 THEN CONCAT(nombre, ' ', COALESCE(apaterno, ''), ' ', COALESCE(amaterno, '')) WHEN id_cat_tipos_directorio = 2 THEN nombre_comercial ELSE NULL END AS nombre FROM DIRECTORIO where id_directorio=".$duenosLegal[$dl]['id_directorio']." and activo=1 limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3689:									$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles.php:3721:										$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_apoles-bckp.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:12:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:194:	$sql = "SELECT * FROM `CAT_SANCIONES` WHERE activo = 1 and id_cat_grupos_cobro=".$_POST['grupo']." ";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:242:					$sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE  id_areas_privativas=".$_POST['pago']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:245:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:257:						$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:265:				INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoModal.php:466:					$sql = "SELECT * FROM `CAT_SANCIONES` WHERE activo = 1 and id_cat_grupos_cobro=".$grupoSancionModal." ";
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_payment_435_00259.php:8:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_payment_435_00259.php:15:$sql="SELECT * FROM HISTORICO_PAGOS WHERE folio='435-00259' LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_payment_435_00259.php:33:$sql="SELECT * FROM AREAS_PRIVATIVAS WHERE id_areas_privativas=".$historico[0]['id_areas_privativas']." LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_payment_435_00259.php:67:    // $sql='UPDATE AREAS_PRIVATIVAS SET saldoAFavor=saldoAFavor+'.$cantidad.' WHERE id_areas_privativas='.$historico[0]['id_areas_privativas'].' LIMIT 1';
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_payment_435_00259.php:75:$sql="SELECT * FROM HISTORICO_PAGOS_DETALLE WHERE id_historico_pagos=".$historico[0]['id_historico_pagos'];
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_payment_435_00259.php:101:    // $sql='UPDATE HISTORICO_PAGOS_DETALLE SET activo=0 WHERE id_historico_pagos='.$historico[0]['id_historico_pagos'];
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero.php:35:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-gastos.php:34:    $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-gastos.php:78:        $sql_check = "SELECT id_cat_conceptos_presupuesto FROM CAT_CONCEPTOS_PRESUPUESTO WHERE id_cat_conceptos_presupuesto = $id_concepto AND activo = 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-gastos.php:86:        $sql_check = "SELECT id_cat_formas_pago FROM CAT_FORMAS_PAGO WHERE id_cat_formas_pago = $id_forma_pago AND activo = 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-gastos.php:94:        $sql = "INSERT INTO GASTOS (fecha, monto, comentarios, id_cat_conceptos_presupuesto, recibo, id_cat_formas_pago, proyecto, activo) VALUES ('$fecha', $monto, '$comentarios', $id_concepto, '$recibo', $id_forma_pago, '$proyecto', 1)";
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_fix_435_00259.php:8:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_fix_435_00259.php:15:$sql="SELECT * FROM HISTORICO_PAGOS WHERE folio='435-00259' LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_fix_435_00259.php:24:$sql="SELECT * FROM AREAS_PRIVATIVAS WHERE id_areas_privativas=".$historico[0]['id_areas_privativas']." LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_fix_435_00259.php:43:$sql='UPDATE AREAS_PRIVATIVAS SET saldoAFavor='.$newSaldo.' WHERE id_areas_privativas='.$historico[0]['id_areas_privativas'].' LIMIT 1';
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_fix_435_00259.php:53:$sql='UPDATE HISTORICO_PAGOS_DETALLE SET activo=0 WHERE id_historico_pagos='.$historico[0]['id_historico_pagos'];
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_fix_435_00259.php:58:$sql="SELECT * FROM AREAS_PRIVATIVAS WHERE id_areas_privativas=".$historico[0]['id_areas_privativas']." LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/check_groups_structure.php:19:    $stmt = $pdo->query("SELECT * FROM CAT_GRUPOS_PRESUPUESTO WHERE id_cat_grupos_presupuesto = 23");
+/Users/gabrielhernandez/projects/valquirico/insulae/check_groups_structure.php:33:        SELECT id_cat_grupos_presupuesto, nombre, anio, activo 
+/Users/gabrielhernandez/projects/valquirico/insulae/check_groups_structure.php:47:        SELECT id_cat_grupos_presupuesto, nombre, activo 
+/Users/gabrielhernandez/projects/valquirico/insulae/check_groups_structure.php:60:        SELECT id_cat_grupos_presupuesto, nombre, activo 
+/Users/gabrielhernandez/projects/valquirico/insulae/check_groups_structure.php:88:            SELECT id_cat_conceptos_presupuesto, nombre, anio, activo, id_cat_grupos_presupuesto
+/Users/gabrielhernandez/projects/valquirico/insulae/inicio.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/DatabaseConnection.php:75:    	$sql = "SELECT * FROM DCAT_SUBZONAS WHERE activo = 1 AND id_dcat_zonas = " . $idZona;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoImg.php:18:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoImg.php:35:	$sql = 'UPDATE PROYECTOS_DOCUMENTOS SET nombre="'.$_POST['nombre'].'", id_cat_tipos_documento='.$_POST['id_cat_tipos_documento'].' WHERE id_proyectos_documentos='.$id_documento.' LIMIT 1';
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoImg.php:53:		$sql = 'UPDATE PROYECTOS_DOCUMENTOS SET archivo="'.$nueva.'" WHERE id_proyectos_documentos='.$id_documento.' LIMIT 1';
+/Users/gabrielhernandez/projects/valquirico/insulae/Auth/nxs_auth.inc.php:66:		$sql = "INSERT INTO tbl_logs (id, id_user, accion, fecha) VALUES ('', '{$_SESSION[iconv_mime_decode("Subject: =?UTF-8?B?UHLDvGZ1bmcgUHLDvGZ1bmc=?=",
+/Users/gabrielhernandez/projects/valquirico/insulae/Auth/nxs_auth.inc.php:108:		$sql = "SELECT d.* FROM DIRECTORIO d, ROLES_CONDOMINAL c WHERE d.user='$user' and d.activo=1 and c.id_roles_condominal=d.id_roles_condominal and c.idGral!=5 LIMIT 1;";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:37:$sql="SELECT * from ROLES where activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:41:$sql="SELECT * from ESTADOS where activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:45:$sql="SELECT * from GRUPOS where activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_profesional.php:64:		$sql="SELECT * from USUARIOS_has_ESTADOS  WHERE idusuarios=".$_GET['id']." 
+/Users/gabrielhernandez/projects/valquirico/insulae/check_roles.php:8:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=1 limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/check_roles.php:13:$sql = "SELECT id_roles_condominal, rol, idGral FROM ROLES_CONDOMINAL WHERE activo=1 ORDER BY idGral";
+/Users/gabrielhernandez/projects/valquirico/insulae/check_roles.php:20:$sql = "SELECT a.id_directorio_has_asignaciones, d.nombre, d.apaterno, d.nombre_comercial, r.rol, r.idGral 
+/Users/gabrielhernandez/projects/valquirico/insulae/check_roles.php:22:        JOIN DIRECTORIO d ON d.id_directorio = a.id_directorio 
+/Users/gabrielhernandez/projects/valquirico/insulae/check_roles.php:23:        JOIN ROLES_CONDOMINAL r ON r.id_roles_condominal = a.id_roles_condominal 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_roles_condominal.php:29:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:56:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:60:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:80:    if (!$conexion->query("CREATE TABLE CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203 AS SELECT * FROM CAT_GRUPOS_PRESUPUESTO")) {
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:87:    if (!$conexion->query("CREATE TABLE CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203 AS SELECT * FROM CAT_CONCEPTOS_PRESUPUESTO")) {
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:93:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203");
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:97:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203");
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:176:    $result = $conexion->query("SELECT anio, COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO GROUP BY anio");
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:182:    $result = $conexion->query("SELECT anio, COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO GROUP BY anio");
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:192:    $result = $conexion->query("SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:193:        (SELECT COUNT(*) FROM CAT_GRUPOS_PRESUPUESTO WHERE activo=1) as actual,
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:194:        (SELECT COUNT(*) FROM CAT_GRUPOS_PRESUPUESTO_BACKUP_20260203 WHERE activo=1) as backup");
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:205:    $result = $conexion->query("SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:206:        (SELECT COUNT(*) FROM CAT_CONCEPTOS_PRESUPUESTO WHERE activo=1) as actual,
+/Users/gabrielhernandez/projects/valquirico/insulae/execute_migration.php:207:        (SELECT COUNT(*) FROM CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203 WHERE activo=1) as backup");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:15:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:102:	$sql = "UPDATE CONVOCATORIAS SET id_cat_status_convocatoria=4 where id_convocatorias=".$_POST['convocatoria']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:201:				$sql="SELECT d.id_directorio,
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:205:					JOIN DIRECTORIO d ON dha.id_directorio = d.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:206:					INNER JOIN ROLES_CONDOMINAL r ON dha.id_roles_condominal = r.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:225:				$sql="SELECT  d.id_directorio,
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:229:					JOIN DIRECTORIO d ON dha.id_directorio = d.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:245:				$sql="SELECT d.id_directorio,
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:262:				$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:276:				$sql="SELECT d.id_directorio, COALESCE(NULLIF(d.email_fiscal,''), NULLIF(d.email,'')) AS email_mostrado
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:286:				$sql="SELECT d.id_directorio, COALESCE(NULLIF(d.email_fiscal,''), NULLIF(d.email,'')) AS email_mostrado
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:288:				INNER JOIN DIRECTORIO d ON d.id_directorio = dhcp.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:298:				$sql="SELECT (-1 * c.id_directorio_has_comercios) AS id_directorio, c.email AS email_mostrado
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:309:				$sql="SELECT d.id_directorio, COALESCE(NULLIF(d.email_fiscal,''), NULLIF(d.email,'')) AS email_mostrado
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:311:				INNER JOIN DIRECTORIO d ON d.id_directorio = dha.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:350:		$sql="SELECT DISTINCT
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:353:		INNER JOIN DIRECTORIO_HAS_CAT_PUESTOS dhcp ON dhcp.id_cat_puestos = ci.id_cat_puestos AND dhcp.activo=1
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:354:		INNER JOIN DIRECTORIO d ON d.id_directorio = dhcp.id_directorio AND d.activo=1
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:369:		$sql="SELECT ie.id_invitados_especiales, ie.email
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:371:		INNER JOIN INVITADOS_ESPECIALES ie ON ie.id_invitados_especiales = chie.id_invitados_especiales
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:477:	$sql = "SELECT * FROM TEMAS WHERE activo = 1 AND id_temas =  " . $idTema ;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:533:	$sql = "UPDATE TAREAS SET descripcion='".$_POST["comentarios-act".$total[$t]['id_tareas']]."', fecha_final='".$_POST["fecha-entrega-act".$total[$t]['id_tareas']]."', involucrado='".$_POST["involucrado-act".$total[$t]['id_tareas']]."', updated_at= '".date("Y-m-d H:i:s")."' where id_tareas=".$total[$t]['id_tareas']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:764:						$sql="SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:969:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:974:	$sql = "UPDATE TEMAS SET conclusiones ='"  .$comentarios . "'   WHERE id_temas = " . $idTemas;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:981:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:987:	$sql = "UPDATE CONVOCATORIAS SET id_cat_status_convocatoria = " .$newState. " WHERE id_convocatorias = " . $idConvocatoria." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:992:		$sql = "UPDATE CONVOCATORIAS_FECHAS SET id_cat_status_convocatorias_fechas = 2 WHERE id_convocatorias_fechas = " . $llamada." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:1001:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:1005:	$sql = "SELECT * FROM VOTACIONES_CONVOCATORIAS_REUNIONES WHERE id_convocatorias_fechas = " . $idConvocatoriaFecha . " AND id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:1014:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:1020:		$sql = "UPDATE TEMAS SET total_contra = " .$newAccount. " WHERE id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:1023:		$sql = "UPDATE TEMAS SET total_favor = " .$newAccount. " WHERE id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardadoGobernanza.php:1026:		$sql = "UPDATE TEMAS SET total_abstencion = " .$newAccount. " WHERE id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-newTask.php:7:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/test_payment_cancellation.php:14:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/test_payment_cancellation.php:44:$sql = "SELECT nombre, saldoAFavor FROM AREAS_PRIVATIVAS WHERE id_areas_privativas = $test_area_id";
+/Users/gabrielhernandez/projects/valquirico/insulae/test_payment_cancellation.php:98:$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/test_payment_cancellation.php:104:JOIN HISTORICO_PAGOS_DETALLE d ON h.id_historico_pagos = d.id_historico_pagos
+/Users/gabrielhernandez/projects/valquirico/insulae/test_payment_cancellation.php:131:$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/test_payment_cancellation.php:137:LEFT JOIN HISTORICO_PAGOS_DETALLE d ON h.id_historico_pagos = d.id_historico_pagos
+/Users/gabrielhernandez/projects/valquirico/insulae/test_payment_cancellation.php:138:LEFT JOIN HISTORICO_PAGOS_HAS_PAGOS hp ON h.id_historico_pagos = hp.id_historico_pagos
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:43:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:57:UPDATE CONVOCATORIAS
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias.php:60:  SELECT DISTINCT cf.id_convocatorias
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-cobroHistorico_completo.php:19:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-recuperarPass.php:37:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-recuperarPass.php:54:$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:22:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:118:										$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:133:										INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:134:										INNER JOIN ROLES_CONDOMINAL r ON a.id_roles_condominal = r.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:149:									$sql="SELECT CASE 
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:163:										JOIN DIRECTORIO_HAS_CAT_PUESTOS dhcp ON dhcp.id_directorio = d.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza.php:183:										$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_proyecto.php:33:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-directorioFC.php:11:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/update_soles_sombras.php:19:    $pattern1 = '/\$sqlmtc="SELECT COUNT\(DISTINCT a\.id_areas_privativas\) AS total\s+FROM AREAS_PRIVATIVAS a\s+JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s\s+ON s\.id_areas_privativas = a\.id_areas_privativas\s+JOIN DCAT_USO_SUELO d\s+ON d\.id_dcat_uso_suelo = s\.id_dcat_uso_suelo\s+WHERE a\.activo = 1\s+AND s\.activo = 1\s+AND d\.sol_sombra = 0\s+AND d\.id_dcat_uso_suelo != 8\s+AND \(a\.id_areas_privativas_padre IS NULL OR a\.id_areas_privativas_padre = 0 \)\s+and a\.es_fusion=0\s+AND a\.id_cat_status IN \(1, 4\)";[^\$]*\$totalesSol=\$myvar->get_arreglo\(\$sqlmtc\);/s';
+/Users/gabrielhernandez/projects/valquirico/insulae/update_soles_sombras.php:22:$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/update_soles_sombras.php:24:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/update_soles_sombras.php:35:$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/update_soles_sombras.php:48:    $pattern2 = '/\$sqlmtc="SELECT COUNT\(\*\) AS total\s+FROM AREAS_PRIVATIVAS a\s+JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO.*?\$totalesSombra=\$myvar->get_arreglo\(\$sqlmtc\);\s+\$sqlmtc="SELECT COUNT\(\*\) AS total\s+FROM AREAS_PRIVATIVAS a\s+LEFT JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO.*?\$totalesSombra2=\$myvar->get_arreglo\(\$sqlmtc\);\s+/s';
+/Users/gabrielhernandez/projects/valquirico/insulae/update_soles_sombras.php:53:    $pattern3 = '/\$sqlmtc="SELECT\s+COUNT\(\*\) AS total,\s+SUM\(m2_construccion\) AS m2construccion,\s+SUM\(m2_totales\) AS M2\s+FROM AREAS_PRIVATIVAS\s+WHERE activo = 1\s+AND id_cat_status IN \(1, 4\)\s+AND \(\s+id_areas_privativas_padre > 0\s+\);"[^\$]*\$totalesHijos=\$myvar->get_arreglo\(\$sqlmtc\);/s';
+/Users/gabrielhernandez/projects/valquirico/insulae/update_soles_sombras.php:56:$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/update_soles_sombras.php:58:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_ingresos.php:24:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorioMoral.php:11:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=" . $_SESSION['id_reinosINS25'] . " limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_sancion.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:34:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:48:		$sql='INSERT INTO `PRESUPUESTO` (`anio`, `id_cat_status_presupuesto`) VALUES ( '.$anioSeleccionado.', 1);';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:372:													$sql='INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, id_cat_grupos_presupuesto,id_presupuesto) VALUES ('.$anioSeleccionado.', '.$conceptos[$c]['id_cat_conceptos_presupuesto'].', '.$hijos[$h]['id_cat_grupos_presupuesto'].','.$presupuestoID.').';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:427:												$sql='INSERT INTO `PRESUPUESTO_MES` (`mes`, `id_presupuesto_detalle`) VALUES ('.$m.', '.$presupuesto[0]['id_presupuesto_detalle'].');';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:567:									$sql='INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, id_cat_grupos_presupuesto,id_presupuesto) VALUES ('.$anioSeleccionado.', '.$conceptos[$c]['id_cat_conceptos_presupuesto'].', '.$grupos[$i]['id_cat_grupos_presupuesto'].','.$presupuestoID.').';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_antes_tabla.php:621:												$sql='INSERT INTO `PRESUPUESTO_MES` (`mes`, `id_presupuesto_detalle`) VALUES ('.$m.', '.$presupuesto[0]['id_presupuesto_detalle'].');';
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorio.php:11:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_gasto.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:36:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:81:	$sql="SELECT * FROM  ASISTENCIAS_CONVOCATORIA  s WHERE s.id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas']." and activo=1" ;
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:85:	$sql="SELECT SUM(indivisoAsamblea) as total FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] ."  and activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:167:	$sql = "SELECT * FROM TEMAS WHERE activo = 1 AND id_convocatorias =  " . $fechaConvocatoria[0]['id_convocatorias'] . " LIMIT " . $startAt . "," . $perPage;
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:179:	$sql = "SELECT * FROM TEMAS WHERE activo = 1 AND id_convocatorias =  " . $fechaConvocatoria[0]['id_convocatorias'] . " LIMIT " . $startAt . "," . $perPage;
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:245:								$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:305:										$sql = "SELECT * FROM VOTACIONES_CONVOCATORIAS WHERE id = " . $convocados[$av]['id'] . " AND id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] . " AND id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:1316:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea.php:1322:	$sql = " SELECT COUNT(*) AS total_votos FROM VOTACIONES_CONVOCATORIAS WHERE id_cat_tipos_votaciones = " . $idTipoVotacion . " AND id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:68:				SELECT 1 FROM DCAT_VARIOS v
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:74:				SELECT 1 FROM CAT_FORMAS_PAGO f
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:80:				SELECT 1 FROM CAT_GRUPOS_COBRO g
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:86:				SELECT 1 FROM AREAS_PRIVATIVAS a
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:182:	$sql = "SELECT * FROM `DCAT_VARIOS` WHERE activo = 1 and id_dcat_varios=".$directorio[$i]['id_dcat_varios']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:184:$sql = "SELECT * FROM `CAT_FORMAS_PAGO` WHERE activo = 1 and id_cat_formas_pago=".$directorio[$i]['id_cat_formas_pago']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:190:		$sql = "SELECT nombre FROM CAT_GRUPOS_COBRO WHERE activo = 1 and id_cat_grupos_cobro=".$directorio[$i]['id_cat_grupos_cobro']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_ingresos.php:197:		$sql = "SELECT nombre FROM AREAS_PRIVATIVAS WHERE activo = 1 and id_areas_privativas=".$directorio[$i]['id_areas_privativas']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/includes/resumen_financiero/_config.php:11:    $sql = "SELECT sum(d.monto) as total 
+/Users/gabrielhernandez/projects/valquirico/insulae/includes/resumen_financiero/_config.php:32:    $sql = "SELECT sum(monto) as total 
+/Users/gabrielhernandez/projects/valquirico/insulae/includes/resumen_financiero/_config.php:48:    $sql = "SELECT sum(monto) as total 
+/Users/gabrielhernandez/projects/valquirico/insulae/includes/resumen_financiero/seccion_ordinarias_egresos.php:11:        $sql = "SELECT c.* FROM CAT_GRUPOS_PRESUPUESTO g, CAT_GRUPOS_COBRO c 
+/Users/gabrielhernandez/projects/valquirico/insulae/includes/resumen_financiero/seccion_ordinarias_egresos.php:36:                $sql = "SELECT g.* FROM CAT_GRUPOS_PRESUPUESTO g 
+/Users/gabrielhernandez/projects/valquirico/insulae/includes/resumen_financiero/seccion_ordinarias_egresos.php:58:                        $sql = "SELECT sum(a.monto) as total FROM GASTOS a, CAT_CONCEPTOS_PRESUPUESTO c, CAT_GRUPOS_PRESUPUESTO cg, CAT_GRUPOS_COBRO cc 
+/Users/gabrielhernandez/projects/valquirico/insulae/includes/resumen_financiero/seccion_ordinarias_egresos.php:71:                            $sql = "SELECT sum(a.monto) as total FROM GASTOS a, CAT_CONCEPTOS_PRESUPUESTO c, CAT_GRUPOS_PRESUPUESTO cg, CAT_GRUPOS_COBRO cc 
+/Users/gabrielhernandez/projects/valquirico/insulae/includes/resumen_financiero/seccion_ordinarias_ingresos.php:26:                $sql = "SELECT * FROM CAT_GRUPOS_COBRO WHERE activo=1 AND aplica_presupuesto=1 AND (noCambiar_sad!=2 AND noCambiar_sad!=3)";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:43:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:102:										$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:117:										INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:118:										INNER JOIN ROLES_CONDOMINAL r ON a.id_roles_condominal = r.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:133:									$sql="SELECT CASE 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:147:										JOIN DIRECTORIO_HAS_CAT_PUESTOS dhcp ON dhcp.id_directorio = d.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_convocatorias_condomino.php:162:										$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:37:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:117:					$sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE  id_areas_privativas=".$area[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:120:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:145:						$sql="SELECT CASE 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_exp.php:159:INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_sanciones.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_directorio.php:37:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_llamado.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/organigrama_editar.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_nvopass.php:18:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:110:					$sql = "SELECT * FROM `TICKETS_DEPARTAMENTOS` WHERE id_tickets_departamentos=". $roles[$a]['id_tickets_departamentos']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:115:					$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_tickets.php:127:							$sql = "SELECT * FROM `CAT_STATUS_TICKETS` WHERE id_cat_status_tickets=". $roles[$a]['id_cat_status_tickets']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_presupuesto.php:24:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:34:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:52:	$sql = "SELECT * FROM `TICKETS_DEPARTAMENTOS` WHERE id_tickets_departamentos=". $proyectos[0]['id_tickets_departamentos']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ticket.php:57:	$sql="SELECT email,telefono,
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:30:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=" . $_SESSION['id_reinosINS25'] . " limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:54:	$sqlmtc = "SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:56:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:57:	JOIN DCAT_USO_SUELO d ON d.id_dcat_uso_suelo = s.id_dcat_uso_suelo
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:67:	$sqlmtc = "SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:69:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:70:	JOIN DCAT_USO_SUELO d ON d.id_dcat_uso_suelo = s.id_dcat_uso_suelo
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:81:	$sqlmtc = "SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:83:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:95:	$sqlmtc = "SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:113:$sqlmtc = "SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:115:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:117:JOIN DCAT_USO_SUELO d
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:130:$sqlmtc = "SELECT COUNT(DISTINCT a.id_areas_privativas) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:132:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:134:JOIN DCAT_USO_SUELO d
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:148: $sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:150: JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:152: JOIN DCAT_USO_SUELO d
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:165: $sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:167: LEFT JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:183:	$sqlmtc = "SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:185:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:194:	$sqlmtc = "SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:196:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s ON s.id_areas_privativas = a.id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:207:$sqlUltimaActualizacion = "SELECT DATE_FORMAT(MAX(COALESCE(UPDATE_TIME, CREATE_TIME)),'%d/%m/%Y %H:%i') AS ultima_actualizacion
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:366:	$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:368:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:390:							$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:392:LEFT JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:449:	$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:451:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:474:								$sqlmtc="SELECT COUNT(*) AS total
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_condominio.php:476:JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:28:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:121:					$sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE  id_areas_privativas=".$area[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:124:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:149:						$sql="SELECT CASE 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_impTABLAS.php:163:INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-directorioComercio.php:11:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:36:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:189:			$sql = "SELECT * 
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:199:			$sql="SELECT SUM(indivisoAsamblea) as total FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] ."  and activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:252:					$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:268:					INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:269:					INNER JOIN ROLES_CONDOMINAL r ON a.id_roles_condominal = r.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:282:				$sql="SELECT
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:299:					JOIN DIRECTORIO_HAS_CAT_PUESTOS dhcp ON dhcp.id_directorio = d.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:318:					$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:348:					$sql="SELECT * FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechasACtual[0]['id_convocatorias_fechas'] . " AND id =".$propietario[0]['id_directorio'];
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:619:								$sql="SELECT * FROM  ASISTENCIAS_CONVOCATORIA  s WHERE s.id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas']." and activo=1" ;
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:633:										$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:685:												$sql = "SELECT * FROM VOTACIONES_CONVOCATORIAS WHERE id = " . $convocados[$av]['id'] . " AND id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] . " AND id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:1038:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria_consulta.php:1044:	$sql = " SELECT COUNT(*) AS total_votos FROM VOTACIONES_CONVOCATORIAS WHERE id_cat_tipos_votaciones = " . $idTipoVotacion . " AND id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_varios.php:32:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_fusion.php:37:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/eliminacion-datos.php:10:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/eliminacion-datos.php:151:	$sql="SELECT * FROM  CONVOCATORIAS_FECHAS  WHERE id_convocatorias_fechas = " . $_GET['id']." " ;
+/Users/gabrielhernandez/projects/valquirico/insulae/eliminacion-datos.php:154:	$sql="SELECT * FROM  CONVOCATORIAS_FECHAS  WHERE id_convocatorias = " . $fecha[0]['id_convocatorias']." and activo=1 and (id_cat_status_convocatorias_fechas=1 or  id_cat_status_convocatorias_fechas=4 )" ;
+/Users/gabrielhernandez/projects/valquirico/insulae/eliminacion-datos.php:193:	$sql='UPDATE DIRECTORIO_HAS_ASIGNACIONES SET activo=0, deleted_at="'.date("Y-m-d H:i:s").'" where id_roles_condominal=5  and  id='.$_GET['id'].' ';
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:40:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:99:					$sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE  id_areas_privativas=".$historico[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:104:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:115:						$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/imp-recibo.php:123:INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_arrendamiento.php:42:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_reglamentos.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_imp.php:28:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/disponibilidad_uso_suelo.php:14:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:34:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:48:		$sql='INSERT INTO `PRESUPUESTO` (`anio`, `id_cat_status_presupuesto`) VALUES ( '.$anioSeleccionado.', 1);';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:386:													$sql='INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, id_cat_grupos_presupuesto,id_presupuesto) VALUES ('.$anioSeleccionado.', '.$conceptos[$c]['id_cat_conceptos_presupuesto'].', '.$hijos[$h]['id_cat_grupos_presupuesto'].','.$presupuestoID.').';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:441:												$sql='INSERT INTO `PRESUPUESTO_MES` (`mes`, `id_presupuesto_detalle`) VALUES ('.$m.', '.$presupuesto[0]['id_presupuesto_detalle'].');';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:581:									$sql='INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, id_cat_grupos_presupuesto,id_presupuesto) VALUES ('.$anioSeleccionado.', '.$conceptos[$c]['id_cat_conceptos_presupuesto'].', '.$grupos[$i]['id_cat_grupos_presupuesto'].','.$presupuestoID.').';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto.php:635:												$sql='INSERT INTO `PRESUPUESTO_MES` (`mes`, `id_presupuesto_detalle`) VALUES ('.$m.', '.$presupuesto[0]['id_presupuesto_detalle'].');';
+/Users/gabrielhernandez/projects/valquirico/insulae/cron_intereses.php:9:$sql = "SELECT * FROM `REINOS` WHERE activo = 1"; // prueba con abanzoft
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_hitorico_completo.php:33:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-revisionDatos.php:10:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/verificarPass.php:8:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado_2.php:18:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings.php:35:$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/index.php:8:  $sql = "SELECT * FROM `REINOS` WHERE activo = 1 ";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/log-in.php:8:  $sql = "SELECT * FROM `REINOS` WHERE activo = 1 ";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/inicio.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/inicio.php:46:	  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/Auth/nxs_auth.inc.php:64:		$sql = "INSERT INTO tbl_logs (id, id_user, accion, fecha) VALUES ('', '{$_SESSION[iconv_mime_decode("Subject: =?UTF-8?B?UHLDvGZ1bmcgUHLDvGZ1bmc=?=",
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/Auth/nxs_auth.inc.php:106:		$sql = "SELECT * FROM DIRECTORIO WHERE user='$user' and activo=1 LIMIT 1;";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/edo_cuenta_general.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedades.php:24:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedades.php:56:	  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedades.php:264:					  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_info.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_info.php:53:					  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/ajax-modal.php:19:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle2.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/notifications.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/autentificacion.php:25:	 $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_POST['reino']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/propiedad_detalle.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/general.php:14:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINSCON25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/general.php:19:		$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/permisos.php:19:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/cliente/settings-password.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:28:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:109:					$sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE  id_areas_privativas=".$area[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:112:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:125:						$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_pagos_imp.php:140:INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarAsistenciaAsamblea.php:18:	$sql = "INSERT INTO `ASISTENCIAS_CONVOCATORIA` (`id_asistencias_asamblea`, `id`, `id_convocatorias_fechas`, `activo`, `created_at`, `updated_at`, `deleted_at`,indivisoAsamblea) VALUES (NULL, ".$idAreaPrivativa.", ".$idConvocatoriaFecha.", 1, '".date("Y-m-d H:i:s")."', NULL, NULL,".$indiviso.");";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarAsistenciaAsamblea.php:42:	$sql = "SELECT * FROM CONVOCATORIAS_FECHAS WHERE id_convocatorias_fechas = " .$idConvocatoria. " AND activo = 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarAsistenciaAsamblea.php:63:	$sql = "SELECT * FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $idConvocatoriaFechas . " AND id = " . $idAreaPrivativa;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-RegistrarAsistenciaAsamblea.php:80:    $sql = "DELETE FROM ASISTENCIAS_CONVOCATORIA WHERE id = ? AND id_convocatorias_fechas = ? ";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:48:	$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:81:	$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_directorio.php:206:$sql="SELECT * from ROLES_CONDOMINAL where id_roles_condominal=".$directorio[$i]['id_roles_condominal']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_gasto.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/script_limpiar_area_privativa.php:15:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-guardado-estructura.php:17:$sql = "SELECT * FROM REINOS WHERE activo=1 and id_reinos=".(int)$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/prueba.php:14:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/prueba.php:22:$sql = "SELECT * FROM `HISTORICO_PAGOS_DETALLE` where id_historico_pagos=".$ultimo." and activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/prueba.php:90:								$sql="INSERT INTO `HISTORICO_PAGOS_HAS_PAGOS` (id_historico_pagos,id_historico_pagos_detalle,id_pagos,monto,parcialidad,intereses, capital, descuento, saldo_restante) VALUES (".$ultimo.",".$dato[$d]['id_historico_pagos_detalle'].", ".$deuda[0]['id_pagos'].",".$monto_pago.",".$parcialidad.", ".$intereses_pagados.", ".$capital_pagado.", ".$descuento.", ".$saldo_restante.");";
+/Users/gabrielhernandez/projects/valquirico/insulae/backup_ingresos.php:40:    $result = $conn->query("SELECT COUNT(*) as total FROM INGRESOS");
+/Users/gabrielhernandez/projects/valquirico/insulae/backup_ingresos.php:54:    $result = $conn->query("SELECT * FROM INGRESOS");
+/Users/gabrielhernandez/projects/valquirico/insulae/backup_ingresos.php:85:            $backup .= "INSERT INTO `INGRESOS_BACKUP` (" . implode(", ", $columns) . ") VALUES (" . implode(", ", $values) . ");\n";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_rol_condominal.php:39:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:48:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 AND id_reinos=".$_SESSION['id_reinosINS25']." LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:52:$sql = "SELECT * FROM PROYECTOS WHERE activo=1 LIMIT 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:66:$sql = "SELECT * FROM DCAT_VARIOS WHERE activo=1 AND id_cat_grupos_cobro=2";
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero_nuevo.php:69:$sql = "SELECT * FROM DCAT_VARIOS WHERE activo=1 AND id_cat_grupos_cobro=3";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_notificacion.php:33:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_ingreso.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/autentificacion.php:25:	 $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_POST['reino']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol.php:39:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=" . $_SESSION['id_reinosINS25'] . " limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:37:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:105:	$sql="SELECT count(*) as total,  IFNULL(SUM(indivisoAsamblea), 0) AS indiviso  FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas']."" ;
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:192:										$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:208:										INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:209:										INNER JOIN ROLES_CONDOMINAL r ON a.id_roles_condominal = r.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:223:									$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:239:										JOIN DIRECTORIO_HAS_CAT_PUESTOS dhcp ON dhcp.id_directorio = d.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:258:										$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea.php:307:										$sql="SELECT * FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] . " AND id =".$propietario[$pp]['id_directorio'];
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_estructura_condominal.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_departamentos_tickets.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:20:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:24:$sql = "SELECT r.* FROM DIRECTORIO d 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:25:        INNER JOIN ROLES_CONDOMINAL r ON d.id_roles_condominal = r.id_roles_condominal 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:53:        $sql = "SELECT COUNT(*) as total, 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:63:        $sql = "SELECT COUNT(*) as conAbonos
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:71:        $sql = "SELECT COUNT(*) as relaciones
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:73:                INNER JOIN PAGOS p ON hp.id_pagos = p.id_pagos
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:79:        $sql = "SELECT concepto, 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:92:        $sql = "SELECT id_pagos, concepto, monto, fechaPago, fechaAlta, id_areas_privativas
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:118:                    INNER JOIN PAGOS p ON hp.id_pagos = p.id_pagos
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-borrado-masivo.php:127:            $sql = "DELETE FROM PAGOS 
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:36:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:82:	$sql="SELECT * FROM  ASISTENCIAS_CONVOCATORIA  s WHERE s.id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas']." and id=".$idusuario." and activo=1" ;
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:86:	$sql="SELECT SUM(indivisoAsamblea) as total FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] ."  and activo=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:97:	$sql = "SELECT COUNT(*) AS posicion
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:102:              SELECT id_temas 
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:205:	$sql = "SELECT * FROM TEMAS WHERE activo = 1 AND id_convocatorias =  " . $fechaConvocatoria[0]['id_convocatorias'] . " LIMIT " . $startAt . "," . $perPage;
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:273:								$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:322:										$sql = "SELECT * FROM VOTACIONES_CONVOCATORIAS WHERE id = " . $convocados[$av]['id'] . " AND id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] . " AND id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:823:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/FRM_VoteTopic_asamblea_condomino.php:829:	$sql = " SELECT COUNT(*) AS total_votos FROM VOTACIONES_CONVOCATORIAS WHERE id_cat_tipos_votaciones = " . $idTipoVotacion . " AND id_temas = " . $idTema;
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-ingresos.php:34:    $sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-ingresos.php:86:            $sql_check = "SELECT id_dcat_varios FROM DCAT_VARIOS WHERE id_dcat_varios = $id_categoria AND activo = 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-ingresos.php:96:            $sql_check = "SELECT id_cat_grupos_cobro FROM CAT_GRUPOS_COBRO WHERE id_cat_grupos_cobro = $id_tipo_cuota AND activo = 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-ingresos.php:105:        $sql_check = "SELECT id_cat_formas_pago FROM CAT_FORMAS_PAGO WHERE id_cat_formas_pago = $id_forma_pago AND activo = 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-importar-ingresos.php:116:        $sql = "INSERT INTO INGRESOS (fecha, monto, comentarios, id_dcat_varios, id_cat_grupos_cobro, id_cat_formas_pago, activo) VALUES ('$fecha', $monto, '$comentarios', $id_categoria_sql, $id_tipo_cuota_sql, $id_forma_pago, 1)";
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:34:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:48:		$sql='INSERT INTO `PRESUPUESTO` (`anio`, `id_cat_status_presupuesto`) VALUES ( '.$anioSeleccionado.', 1);';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:372:													$sql='INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, id_cat_grupos_presupuesto,id_presupuesto) VALUES ('.$anioSeleccionado.', '.$conceptos[$c]['id_cat_conceptos_presupuesto'].', '.$hijos[$h]['id_cat_grupos_presupuesto'].','.$presupuestoID.').';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:427:												$sql='INSERT INTO `PRESUPUESTO_MES` (`mes`, `id_presupuesto_detalle`) VALUES ('.$m.', '.$presupuesto[0]['id_presupuesto_detalle'].');';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:567:									$sql='INSERT INTO `PRESUPUESTO_DETALLE` (`anio`, `id_cat_conceptos_presupuesto`, id_cat_grupos_presupuesto,id_presupuesto) VALUES ('.$anioSeleccionado.', '.$conceptos[$c]['id_cat_conceptos_presupuesto'].', '.$grupos[$i]['id_cat_grupos_presupuesto'].','.$presupuestoID.').';
+/Users/gabrielhernandez/projects/valquirico/insulae/presupuesto_backup.php:621:												$sql='INSERT INTO `PRESUPUESTO_MES` (`mes`, `id_presupuesto_detalle`) VALUES ('.$m.', '.$presupuesto[0]['id_presupuesto_detalle'].');';
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_apol_imagenes.php:25:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/delete-apole-from-sub-project.php:14:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/delete-apole-from-sub-project.php:27:			$sql='UPDATE DIRECTORIO_HAS_ASIGNACIONES SET activo=0, deleted_at="'.date("Y-m-d H:i:s").'"  where id_roles_condominal=2  and  id='.$_GET['id_apole'].' ';
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-new-apoleMAR.php:13:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-new-apoleMAR.php:24:$sql = "SELECT * FROM `AREAS_PRIVATIVAS` WHERE  id_areas_privativas=".$_POST['apole']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-new-apoleMAR.php:32:		$sql='INSERT INTO AREAS_PRIVATIVAS(id_areas_privativas_padre,id_cat_status,nombre,activo,m2_construccion,indivisoParticular,indivisoParticularMadruela,m2_area_comun,id_dcat_zonas) VALUES ('.$_POST['apole'].',1,"'.$_POST['name_apol'].'",1,'.$_POST['m2_construccion'].','.$_POST['indiviso_AP'].','.$_POST['indiviso_APMadruela'].','.$m2AcFap.','.$zona[0]['id_dcat_zonas'].');';
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-new-apoleMAR.php:45:				$sql='INSERT INTO AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO(id_areas_privativas,id_dcat_uso_suelo,activo) VALUES ('.$bandrol.','.$uso[$i].',1);';
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-sub-condominio.php:12:    $sql = "INSERT INTO PROYECTOS (
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-sub-condominio.php:99:    $sql = "SELECT * FROM `PROYECTOS` WHERE `id_proyectos` = ? ";
+/Users/gabrielhernandez/projects/valquirico/insulae/assets-list-apoles/create-sub-condominio.php:116:    $sql = "SELECT * FROM `AREAS_PRIVATIVAS` WHERE `id_areas_privativas` = ? ";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_pagos_futuros.php:33:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/importador_gastos.php:24:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero2.php:35:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:30:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2025 AND activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:35:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2025 AND activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:40:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2026");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:45:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2026");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:56:            $conexion->query("DELETE FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2026");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:57:            $conexion->query("DELETE FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2026");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:70:    $result = $conexion->query("SELECT * FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2025 ORDER BY id_cat_grupos_presupuesto");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:100:                $sql = "INSERT INTO CAT_GRUPOS_PRESUPUESTO (nombre, id_cat_grupos_presupuesto_padre, id_cat_grupos_cobro, anio, activo) 
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:135:    $result = $conexion->query("SELECT * FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2025 ORDER BY orden");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:147:            $sql = "INSERT INTO CAT_CONCEPTOS_PRESUPUESTO (nombre, id_cat_grupos_presupuesto, id_cat_tipos_concepto, orden, anio, activo) 
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:168:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2025 AND activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:172:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_GRUPOS_PRESUPUESTO WHERE anio=2026 AND activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:176:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2025 AND activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/duplicate_2025_to_2026.php:180:    $result = $conexion->query("SELECT COUNT(*) as total FROM CAT_CONCEPTOS_PRESUPUESTO WHERE anio=2026 AND activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-varios.php:11:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-TasksUpdate.php:40:    $sql = "UPDATE `TAREAS` SET `estatus_tarea` = '" . $statusTask . "' WHERE `TAREAS`.`id_tareas` = " . $idTask;
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:83:					$sql = "SELECT * FROM ARRENDAMIENTOS WHERE  id_areas_privativas=".$area[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:89:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:115:						$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/contratoPDF.php:130:INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/fusion.php:10:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_convocatoria.php:36:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:38:    $sql = "UPDATE CAT_GRUPOS_PRESUPUESTO 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:54:    $sql = "UPDATE CAT_CONCEPTOS_PRESUPUESTO 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:71:        SELECT id_cat_grupos_presupuesto, nombre 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:84:            UPDATE CAT_GRUPOS_PRESUPUESTO 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:95:            SELECT nombre, id_cat_grupos_cobro 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:108:        $sql = "INSERT INTO CAT_GRUPOS_PRESUPUESTO (nombre, id_cat_grupos_presupuesto_padre, id_cat_grupos_cobro, anio, activo) 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:125:        DELETE FROM CAT_CONCEPTOS_PRESUPUESTO 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:132:        SELECT nombre, id_cat_tipos_concepto, orden, activo
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:146:        $sql = "INSERT INTO CAT_CONCEPTOS_PRESUPUESTO (nombre, id_cat_grupos_presupuesto, id_cat_tipos_concepto, orden, anio, activo) 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:166:        SELECT COUNT(*) as total 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:174:        SELECT COUNT(*) as total 
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_budget_2026.php:184:        SELECT id_cat_grupos_presupuesto, nombre 
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_categoria_notificacion.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:35:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:62:$sqlUltimaActualizacion = "SELECT DATE_FORMAT(MAX(COALESCE(UPDATE_TIME, CREATE_TIME)),'%d/%m/%Y %H:%i') AS ultima_actualizacion
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2356:                        $sql = "SELECT DISTINCT g.nombre AS nombreConcepto
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2358:                        JOIN CAT_GRUPOS_COBRO cc ON cc.id_cat_grupos_cobro = g.id_cat_grupos_cobro
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2368:                        $sql = "SELECT
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2374:                        JOIN CAT_CONCEPTOS_PRESUPUESTO c ON a.id_cat_conceptos_presupuesto = c.id_cat_conceptos_presupuesto
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2375:                        JOIN CAT_GRUPOS_PRESUPUESTO cg ON cg.id_cat_grupos_presupuesto = c.id_cat_grupos_presupuesto
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2376:                        LEFT JOIN CAT_GRUPOS_PRESUPUESTO gp ON gp.id_cat_grupos_presupuesto = cg.id_cat_grupos_presupuesto_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2377:                        JOIN CAT_GRUPOS_COBRO cc ON cc.id_cat_grupos_cobro = cg.id_cat_grupos_cobro
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2393:                            $sql = "SELECT
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2398:                            JOIN PRESUPUESTO_DETALLE p ON m.id_presupuesto_detalle = p.id_presupuesto_detalle
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2399:                            JOIN CAT_GRUPOS_PRESUPUESTO cg ON p.id_cat_grupos_presupuesto = cg.id_cat_grupos_presupuesto
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2400:                            LEFT JOIN CAT_GRUPOS_PRESUPUESTO gp ON gp.id_cat_grupos_presupuesto = cg.id_cat_grupos_presupuesto_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/resumen_financiero1.php:2401:                            JOIN CAT_GRUPOS_COBRO cc ON cc.id_cat_grupos_cobro = cg.id_cat_grupos_cobro
+/Users/gabrielhernandez/projects/valquirico/insulae/general.php:7:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/general.php:372:		$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/nuevoDirectorioLegal.php:11:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=" . $_SESSION['id_reinosINS25'] . " limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_presupuesto.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_migration_ingresos.php:54:    $result = $conn->query("SELECT COUNT(*) as total FROM INGRESOS WHERE activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_migration_ingresos.php:100:                ON UPDATE CASCADE";
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_migration_ingresos.php:154:    $result = $conn->query("SELECT COUNT(*) as total FROM INGRESOS WHERE activo=1");
+/Users/gabrielhernandez/projects/valquirico/insulae/apply_migration_ingresos.php:167:    $result = $conn->query("SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:20:$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:24:$sql = "SELECT r.* FROM DIRECTORIO d 
+/Users/gabrielhernandez/projects/valquirico/insulae/borrado-masivo.php:25:        INNER JOIN ROLES_CONDOMINAL r ON d.id_roles_condominal = r.id_roles_condominal 
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_gastos.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_categorias_notificaciones.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptAPZonas.php:15:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptAPZonas.php:20:	$sql="SELECT * FROM `AREAS_PRIVATIVAS` WHERE (`id_dcat_zonas` = 0 or `id_dcat_zonas`  IS NULL)  AND `id_areas_privativas_padre` > 0 AND `activo` = 1;";
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptAPZonas.php:26:		$sql="SELECT * FROM `AREAS_PRIVATIVAS` WHERE `id_areas_privativas` = ".$areasprivativas[$a]['id_areas_privativas_padre']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/verificarCE.php:10:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/verificarCE.php:23:$sql="SELECT count(*) as total FROM DIRECTORIO WHERE user='".$_POST['dato']."' ".$ban."  and activo=1 limit 1 ";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:67:	$sqlmtc="SELECT COUNT(*) AS total, sum(m2_totales) as m2totales
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:69:	JOIN AREAS_PRIVATIVAS_HAS_DCAT_USO_SUELO s 
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_usos_suelo.php:149:							$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax-conceptos-presupuesto.php:7:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/permisos.php:19:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_zona.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:53:/*$sql="SELECT a.*
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:63:                SELECT 1
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:209:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:223:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:226:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:276:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:296:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:303:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:304:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:421:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:436:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:439:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:483:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:503:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:510:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:511:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:719:										  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:734:											$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:737:										INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:777:  SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:796:	$sql = "SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:803:/* Aquí va el JOIN solo si se cumple la condición */
+/Users/gabrielhernandez/projects/valquirico/insulae/reporte_cuotas_extraordinariaCONANTICIPADO.php:804:INNER JOIN ARRENDAMIENTOS A ON P.id_arrendamientos = A.id_arrendamientos
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_budget_2026.php:27:        SELECT id_cat_grupos_presupuesto, nombre 
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_budget_2026.php:44:        SELECT id_cat_grupos_presupuesto, nombre 
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_budget_2026.php:88:        SELECT COUNT(*) as total 
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_budget_2026.php:90:        JOIN CAT_GRUPOS_PRESUPUESTO g ON c.id_cat_grupos_presupuesto = g.id_cat_grupos_presupuesto
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_budget_2026.php:99:        SELECT COUNT(*) as total 
+/Users/gabrielhernandez/projects/valquirico/insulae/verify_budget_2026.php:101:        JOIN CAT_GRUPOS_PRESUPUESTO g ON c.id_cat_grupos_presupuesto = g.id_cat_grupos_presupuesto
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:31:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:248:	//$sql = "SELECT * FROM `DCAT_CATEGORIAS_GASTOS` WHERE activo = 1 and id_dcat_categorias_gastos=".$directorio[$i]['id_dcat_categorias_gastos']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:250:	$sql = "SELECT * FROM `CAT_CONCEPTOS_PRESUPUESTO` WHERE id_cat_conceptos_presupuesto=".$directorio[$i]['id_cat_conceptos_presupuesto']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:253:	$sql = "SELECT * FROM `CAT_GRUPOS_PRESUPUESTO` WHERE id_cat_grupos_presupuesto=".$varios[0]['id_cat_grupos_presupuesto']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:256:	$sql = "SELECT * FROM `CAT_GRUPOS_COBRO` WHERE id_cat_grupos_cobro=".$conceptoTipo[0]['id_cat_grupos_cobro']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_gastos.php:259:	$sql = "SELECT * FROM `CAT_FORMAS_PAGO` WHERE id_cat_formas_pago=".$directorio[$i]['id_cat_formas_pago']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA_consulta.php:7:		    $sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE  ap.activo and ap.id_cat_status=1";
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA_consulta.php:9:			$sql="SELECT MAX(id_areas_privativas) AS id_areas_privativas,
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA_consulta.php:13:					SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA_consulta.php:22:					SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA_consulta.php:27:						SELECT DISTINCT id_areas_privativas_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA_consulta.php:227:		$sql="SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA_consulta.php:230:				SELECT DISTINCT id_areas_privativas_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:7:		  // $sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE  ap.activo and ap.id_cat_status=1 and 
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:9:		  // ( SELECT DISTINCT id_areas_privativas_padre FROM AREAS_PRIVATIVAS WHERE 
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:11:		 	$sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE  ap.activo and ap.id_cat_status=1 ";
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:13:			$sql="SELECT MAX(id_areas_privativas) AS id_areas_privativas,
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:17:					SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:26:					SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:31:						SELECT DISTINCT id_areas_privativas_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:284:		$sql="SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/llamarA.php:287:				SELECT DISTINCT id_areas_privativas_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:22:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:31:		  // $sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE  ap.activo and ap.id_cat_status=1 and 
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:33:		  // ( SELECT DISTINCT id_areas_privativas_padre FROM AREAS_PRIVATIVAS WHERE 
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:35:		 	$sql="SELECT ap.* FROM AREAS_PRIVATIVAS ap WHERE  ap.activo and ap.id_cat_status=1 ";
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:37:			$sql="SELECT MAX(id_areas_privativas) AS id_areas_privativas,
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:41:					SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:50:					SELECT *
+/Users/gabrielhernandez/projects/valquirico/insulae/detalle_gobernanza_convocatoria.php:55:						SELECT DISTINCT id_areas_privativas_padre
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:32:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:91:	$sql="SELECT count(*) as total, sum(indivisoAsamblea) as indiviso FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas']."" ;
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:170:										$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:186:										INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:187:										INNER JOIN ROLES_CONDOMINAL r ON a.id_roles_condominal = r.id_roles_condominal
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:201:									$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:217:										JOIN DIRECTORIO_HAS_CAT_PUESTOS dhcp ON dhcp.id_directorio = d.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:237:										$sql="SELECT
+/Users/gabrielhernandez/projects/valquirico/insulae/asamblea_condomino.php:285:										$sql="SELECT * FROM ASISTENCIAS_CONVOCATORIA WHERE id_convocatorias_fechas = " . $fechaConvocatoria[0]['id_convocatorias_fechas'] . " AND id =".$propietario[$pp]['id_directorio'];
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:127:							$sql = "SELECT * FROM `CAT_STATUS_COMERCIOS` WHERE  id_cat_status_comercios=".$apoles[$i]['id_cat_status_comercios']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/listado_arrendamientos.php:140:							$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/ajax_nuevaOpcion.php:11:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/imp-estado.php:12:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/imp-estado.php:64:					$sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE  id_areas_privativas=".$area[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/imp-estado.php:69:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/imp-estado.php:108:						$sql="SELECT 
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/imp-estado.php:123:INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:30:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:118:					$sql = "SELECT * FROM `ARRENDAMIENTOS` WHERE  id_areas_privativas=".$area[0]['id_areas_privativas']." and activo=1 and id_cat_status_comercios!=4 limit 1"; // 4= finalizado
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:121:					$sql = "SELECT  
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:145:						$sql="SELECT CASE 
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/contratoPDF.php:159:INNER JOIN DIRECTORIO_HAS_ASIGNACIONES a ON d.id_directorio = a.id_directorio
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/html5lib/TreeBuilder.php:95:    const IN_SELECT         = 15;
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/html5lib/TreeBuilder.php:96:    const IN_SELECT_IN_TABLE= 16;
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/html5lib/TreeBuilder.php:1416:                                $this->mode = self::IN_SELECT_IN_TABLE;
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/html5lib/TreeBuilder.php:1418:                                $this->mode = self::IN_SELECT;
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/html5lib/TreeBuilder.php:2650:            case self::IN_SELECT:
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/html5lib/TreeBuilder.php:2806:            case self::IN_SELECT_IN_TABLE:
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/html5lib/TreeBuilder.php:2840:                    $this->processWithRulesFor($token, self::IN_SELECT);
+/Users/gabrielhernandez/projects/valquirico/insulae/dompdf/dompdf/lib/html5lib/TreeBuilder.php:3501:                $this->mode = self::IN_SELECT;
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_direct.php:21:    $result = $mysqli->query("SELECT h.*, a.nombre, a.saldoAFavor FROM HISTORICO_PAGOS h JOIN AREAS_PRIVATIVAS a ON h.id_areas_privativas = a.id_areas_privativas WHERE h.folio='435-00259'");
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_direct.php:49:            $sql = "UPDATE AREAS_PRIVATIVAS SET saldoAFavor = $new_saldo WHERE id_areas_privativas = $id_areas_privativas";
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_direct.php:56:            $sql = "UPDATE HISTORICO_PAGOS_DETALLE SET activo=0 WHERE id_historico_pagos = $id_historico_pagos";
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_direct.php:63:            $sql = "UPDATE HISTORICO_PAGOS_HAS_PAGOS SET activo=0 WHERE id_historico_pagos = $id_historico_pagos";
+/Users/gabrielhernandez/projects/valquirico/insulae/fix_direct.php:74:            $result2 = $mysqli->query("SELECT saldoAFavor FROM AREAS_PRIVATIVAS WHERE id_areas_privativas = $id_areas_privativas");
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_estructura_condominal.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/investigate_budget_2025_2026.php:19:        SELECT anio, 
+/Users/gabrielhernandez/projects/valquirico/insulae/investigate_budget_2025_2026.php:35:        SELECT id_cat_conceptos_presupuesto, id_cat_grupos_presupuesto, nombre, orden
+/Users/gabrielhernandez/projects/valquirico/insulae/investigate_budget_2025_2026.php:50:        SELECT id_cat_conceptos_presupuesto, id_cat_grupos_presupuesto, nombre, orden
+/Users/gabrielhernandez/projects/valquirico/insulae/investigate_budget_2025_2026.php:97:        SELECT anio, 
+/Users/gabrielhernandez/projects/valquirico/insulae/scriptArrendatarios.php:18:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
+/Users/gabrielhernandez/projects/valquirico/insulae/formulario_departamentos_tickets.php:38:	$sql = "SELECT * FROM `REINOS` WHERE activo = 1 and id_reinos=".$_SESSION['id_reinosINS25']." limit 1";
