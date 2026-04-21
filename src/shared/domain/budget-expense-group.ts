@@ -1,0 +1,37 @@
+export const BUDGET_EXPENSE_GROUP = {
+  ADMINISTRATION: "ADMINISTRATION",
+  MAINTENANCE: "MAINTENANCE",
+  SECURITY: "SECURITY",
+  INFRASTRUCTURE: "INFRASTRUCTURE",
+  EXTRAORDINARY: "EXTRAORDINARY",
+  OTHER: "OTHER",
+} as const;
+
+export type BudgetExpenseGroup =
+  (typeof BUDGET_EXPENSE_GROUP)[keyof typeof BUDGET_EXPENSE_GROUP];
+
+export const ORDINARY_BUDGET_EXPENSE_GROUPS = new Set<BudgetExpenseGroup>([
+  BUDGET_EXPENSE_GROUP.ADMINISTRATION,
+  BUDGET_EXPENSE_GROUP.MAINTENANCE,
+  BUDGET_EXPENSE_GROUP.SECURITY,
+  BUDGET_EXPENSE_GROUP.INFRASTRUCTURE,
+]);
+
+export function toBudgetExpenseGroupFromLegacyGroupId(
+  legacyBudgetGroupId: number,
+): BudgetExpenseGroup {
+  switch (legacyBudgetGroupId) {
+    case 1:
+      return BUDGET_EXPENSE_GROUP.ADMINISTRATION;
+    case 2:
+      return BUDGET_EXPENSE_GROUP.MAINTENANCE;
+    case 3:
+      return BUDGET_EXPENSE_GROUP.SECURITY;
+    case 4:
+      return BUDGET_EXPENSE_GROUP.INFRASTRUCTURE;
+    case 16:
+      return BUDGET_EXPENSE_GROUP.EXTRAORDINARY;
+    default:
+      return BUDGET_EXPENSE_GROUP.OTHER;
+  }
+}

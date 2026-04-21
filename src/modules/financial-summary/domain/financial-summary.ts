@@ -105,7 +105,13 @@ export interface FinancialSummary {
   totals: FinancialSummaryTotals;
   blocks: FinancialSummaryBlock[];
   ordinaryIncomeMultiYearTable: FinancialSummaryMultiYearTable;
+  extraordinaryIncomeMultiYearTable: FinancialSummaryMultiYearTable;
   ordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable;
+  extraordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable;
+  extraordinaryExpensesMultiYearTable: FinancialSummaryMultiYearTable;
+  extraordinaryBalanceMultiYearTable: FinancialSummaryMultiYearTable;
+  extraordinaryReceivablesMultiYearTable: FinancialSummaryMultiYearTable;
+  extraordinaryPayablesMultiYearTable: FinancialSummaryMultiYearTable;
   ordinaryExpensesLegacyTable: FinancialSummaryMultiYearTable;
   ordinaryReceivablesTable: FinancialSummaryOrdinaryReceivableTable;
   ordinaryPayablesTable: FinancialSummaryOrdinaryPayableTable;

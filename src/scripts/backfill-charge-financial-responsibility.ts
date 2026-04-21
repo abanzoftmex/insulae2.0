@@ -49,10 +49,40 @@ function asBoolean(value: unknown, fallback = true): boolean {
   return fallback;
 }
 
+function asMonth(value: unknown): number | null {
+  const parsed = asInt(value);
+  if (parsed === null) {
+    return null;
+  }
+
+  return parsed >= 1 && parsed <= 12 ? parsed : null;
+}
+
+function toLedgerStatus(idCatStatusPago: number | null, montoAbonado: number | null, monto: number | null):
+  | "OPEN"
+  | "PARTIAL"
+  | "PAID"
+  | "CANCELED" {
+  if (idCatStatusPago === 2 || idCatStatusPago === 4) {
+    return "CANCELED";
+  }
+  if (monto !== null && montoAbonado !== null && montoAbonado >= monto) {
+    return "PAID";
+  }
+  if (montoAbonado !== null && montoAbonado > 0) {
+    return "PARTIAL";
+  }
+  return "OPEN";
+}
+
 type LegacyChargePayload = {
   id_arrendamientos?: unknown;
   id_opcion_estado_cuenta?: unknown;
+  id_cat_status_pago?: unknown;
+  anio?: unknown;
+  mes?: unknown;
   montoAbonado?: unknown;
+  monto?: unknown;
   interesMoratorio?: unknown;
   descuento?: unknown;
   activo?: unknown;
@@ -60,6 +90,10 @@ type LegacyChargePayload = {
 
 async function run(): Promise<void> {
   const applyChanges = process.argv.includes("--apply");
+  const runIdArg = process.argv
+    .find((arg) => arg.startsWith("--runId="))
+    ?.split("=")[1]
+    ?.trim();
 
   const condominium = await prisma.condominium.findFirst({
     where: {
@@ -76,20 +110,33 @@ async function run(): Promise<void> {
     throw new Error(`No se encontro condominio activo para slug ${PROJECT_SCOPE.condominiumCode}`);
   }
 
-  const latestCompletedRun = await prisma.migrationRun.findFirst({
-    where: {
-      status: "COMPLETED",
-    },
-    orderBy: {
-      completedAt: "desc",
-    },
-    select: {
-      id: true,
-    },
-  });
+  const sourceRun = runIdArg
+    ? await prisma.migrationRun.findUnique({
+        where: { id: runIdArg },
+        select: { id: true },
+      })
+    : await prisma.migrationRun.findFirst({
+        where: {
+          stagingRows: {
+            some: {
+              legacyTable: "PAGOS",
+            },
+          },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          id: true,
+        },
+      });
 
-  if (!latestCompletedRun) {
-    throw new Error("No se encontro un MigrationRun completado para traducir payload legacy de PAGOS.");
+  if (!sourceRun) {
+    throw new Error(
+      runIdArg
+        ? `No se encontro MigrationRun con id ${runIdArg}`
+        : "No se encontro un MigrationRun con staging de PAGOS para traducir payload legacy.",
+    );
   }
 
   const charges = await prisma.charge.findMany({
@@ -114,7 +161,7 @@ async function run(): Promise<void> {
 
   const stagingRows = await prisma.legacyStagingRow.findMany({
     where: {
-      runId: latestCompletedRun.id,
+      runId: sourceRun.id,
       legacyTable: "PAGOS",
       legacyId: {
         in: legacyIds,
@@ -147,7 +194,7 @@ async function run(): Promise<void> {
   if (rentalLegacyIds.length > 0) {
     const rentalMaps = await prisma.migrationIdMap.findMany({
       where: {
-        runId: latestCompletedRun.id,
+        runId: sourceRun.id,
         legacyTable: "ARRENDAMIENTOS",
         targetEntity: "Rental",
         legacyId: {
@@ -191,8 +238,13 @@ async function run(): Promise<void> {
     })();
 
     const paidAmount = asNumber(payload.montoAbonado) ?? 0;
+    const amount = asNumber(payload.monto) ?? 0;
     const interestAmount = asNumber(payload.interesMoratorio) ?? 0;
     const discountAmount = asNumber(payload.descuento) ?? 0;
+    const legacyStatusCode = asInt(payload.id_cat_status_pago);
+    const status = toLedgerStatus(legacyStatusCode, paidAmount, amount);
+    const periodYear = asInt(payload.anio);
+    const periodMonth = asMonth(payload.mes);
     const isCollectible = asBoolean(payload.activo, true);
 
     touched += 1;
@@ -210,8 +262,12 @@ async function run(): Promise<void> {
         "paidAmount" = $3,
         "interestAmount" = $4,
         "discountAmount" = $5,
-        "isCollectible" = $6
-      WHERE "id" = $7
+        "isCollectible" = $6,
+        "legacyStatusCode" = $7,
+        "status" = $8::"LedgerStatus",
+        "periodYear" = COALESCE($9, "periodYear"),
+        "periodMonth" = COALESCE($10, "periodMonth")
+      WHERE "id" = $11
       `,
       tenancyId,
       responsibility,
@@ -219,13 +275,17 @@ async function run(): Promise<void> {
       interestAmount,
       discountAmount,
       isCollectible,
+      legacyStatusCode,
+      status,
+      periodYear,
+      periodMonth,
       charge.id,
     );
   }
 
   console.log("Backfill de responsabilidad financiera de Charge");
   console.log(`Condominio: ${condominium.slug}`);
-  console.log(`Run fuente: ${latestCompletedRun.id}`);
+  console.log(`Run fuente: ${sourceRun.id}`);
   console.log(`Cargos analizados: ${charges.length}`);
   console.log(`Cargos actualizados: ${touched}`);
   console.log(`Cargos sin cambios: ${skipped}`);

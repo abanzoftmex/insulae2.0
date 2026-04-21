@@ -129,7 +129,13 @@ export interface FinancialSummaryVM {
   months: FinancialSummaryMonthVM[];
   blocks: FinancialSummaryBlockVM[];
   ordinaryIncomeMultiYearTable: FinancialSummaryMultiYearTableVM;
+  extraordinaryIncomeMultiYearTable: FinancialSummaryMultiYearTableVM;
   ordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTableVM;
+  extraordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTableVM;
+  extraordinaryExpensesMultiYearTable: FinancialSummaryMultiYearTableVM;
+  extraordinaryBalanceMultiYearTable: FinancialSummaryMultiYearTableVM;
+  extraordinaryReceivablesMultiYearTable: FinancialSummaryMultiYearTableVM;
+  extraordinaryPayablesMultiYearTable: FinancialSummaryMultiYearTableVM;
   ordinaryExpensesLegacyTable: FinancialSummaryMultiYearTableVM;
   ordinaryReceivablesTable: FinancialSummaryOrdinaryReceivableTableVM;
   ordinaryPayablesTable: FinancialSummaryOrdinaryPayableTableVM;
@@ -206,11 +212,113 @@ export function toFinancialSummaryVM(summary: FinancialSummary): FinancialSummar
         })),
       })),
     },
+    extraordinaryIncomeMultiYearTable: {
+      id: summary.extraordinaryIncomeMultiYearTable.id,
+      title: summary.extraordinaryIncomeMultiYearTable.title,
+      years: summary.extraordinaryIncomeMultiYearTable.years,
+      rows: summary.extraordinaryIncomeMultiYearTable.rows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        isTotal: row.isTotal ?? false,
+        yearly: row.yearly.map((yearSlice) => ({
+          year: yearSlice.year,
+          annualTotal: formatCurrency(yearSlice.annualTotal),
+          annualTotalValue: yearSlice.annualTotal,
+          months: yearSlice.months.map((value) => formatCurrency(value)),
+          monthsValue: yearSlice.months,
+        })),
+      })),
+    },
     ordinaryOtherIncomeMultiYearTable: {
       id: summary.ordinaryOtherIncomeMultiYearTable.id,
       title: summary.ordinaryOtherIncomeMultiYearTable.title,
       years: summary.ordinaryOtherIncomeMultiYearTable.years,
       rows: summary.ordinaryOtherIncomeMultiYearTable.rows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        isTotal: row.isTotal ?? false,
+        yearly: row.yearly.map((yearSlice) => ({
+          year: yearSlice.year,
+          annualTotal: formatCurrency(yearSlice.annualTotal),
+          annualTotalValue: yearSlice.annualTotal,
+          months: yearSlice.months.map((value) => formatCurrency(value)),
+          monthsValue: yearSlice.months,
+        })),
+      })),
+    },
+    extraordinaryOtherIncomeMultiYearTable: {
+      id: summary.extraordinaryOtherIncomeMultiYearTable.id,
+      title: summary.extraordinaryOtherIncomeMultiYearTable.title,
+      years: summary.extraordinaryOtherIncomeMultiYearTable.years,
+      rows: summary.extraordinaryOtherIncomeMultiYearTable.rows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        isTotal: row.isTotal ?? false,
+        yearly: row.yearly.map((yearSlice) => ({
+          year: yearSlice.year,
+          annualTotal: formatCurrency(yearSlice.annualTotal),
+          annualTotalValue: yearSlice.annualTotal,
+          months: yearSlice.months.map((value) => formatCurrency(value)),
+          monthsValue: yearSlice.months,
+        })),
+      })),
+    },
+    extraordinaryExpensesMultiYearTable: {
+      id: summary.extraordinaryExpensesMultiYearTable.id,
+      title: summary.extraordinaryExpensesMultiYearTable.title,
+      years: summary.extraordinaryExpensesMultiYearTable.years,
+      rows: summary.extraordinaryExpensesMultiYearTable.rows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        isTotal: row.isTotal ?? false,
+        yearly: row.yearly.map((yearSlice) => ({
+          year: yearSlice.year,
+          annualTotal: formatCurrency(yearSlice.annualTotal),
+          annualTotalValue: yearSlice.annualTotal,
+          months: yearSlice.months.map((value) => formatCurrency(value)),
+          monthsValue: yearSlice.months,
+        })),
+      })),
+    },
+    extraordinaryBalanceMultiYearTable: {
+      id: summary.extraordinaryBalanceMultiYearTable.id,
+      title: summary.extraordinaryBalanceMultiYearTable.title,
+      years: summary.extraordinaryBalanceMultiYearTable.years,
+      rows: summary.extraordinaryBalanceMultiYearTable.rows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        isTotal: row.isTotal ?? false,
+        yearly: row.yearly.map((yearSlice) => ({
+          year: yearSlice.year,
+          annualTotal: formatCurrency(yearSlice.annualTotal),
+          annualTotalValue: yearSlice.annualTotal,
+          months: yearSlice.months.map((value) => formatCurrency(value)),
+          monthsValue: yearSlice.months,
+        })),
+      })),
+    },
+    extraordinaryReceivablesMultiYearTable: {
+      id: summary.extraordinaryReceivablesMultiYearTable.id,
+      title: summary.extraordinaryReceivablesMultiYearTable.title,
+      years: summary.extraordinaryReceivablesMultiYearTable.years,
+      rows: summary.extraordinaryReceivablesMultiYearTable.rows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        isTotal: row.isTotal ?? false,
+        yearly: row.yearly.map((yearSlice) => ({
+          year: yearSlice.year,
+          annualTotal: formatCurrency(yearSlice.annualTotal),
+          annualTotalValue: yearSlice.annualTotal,
+          months: yearSlice.months.map((value) => formatCurrency(value)),
+          monthsValue: yearSlice.months,
+        })),
+      })),
+    },
+    extraordinaryPayablesMultiYearTable: {
+      id: summary.extraordinaryPayablesMultiYearTable.id,
+      title: summary.extraordinaryPayablesMultiYearTable.title,
+      years: summary.extraordinaryPayablesMultiYearTable.years,
+      rows: summary.extraordinaryPayablesMultiYearTable.rows.map((row) => ({
         id: row.id,
         label: row.label,
         isTotal: row.isTotal ?? false,

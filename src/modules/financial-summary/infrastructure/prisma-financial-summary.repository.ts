@@ -3,9 +3,13 @@ import { Prisma } from "@prisma/client";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import {
   CHARGE_GROUP_KIND,
-  resolveChargeGroupKind,
   type ChargeGroupKind,
 } from "@/shared/domain/charge-group-kind";
+import {
+  BUDGET_EXPENSE_GROUP,
+  ORDINARY_BUDGET_EXPENSE_GROUPS,
+  type BudgetExpenseGroup,
+} from "@/shared/domain/budget-expense-group";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 import type {
@@ -29,8 +33,7 @@ type ExpenseBucket = "ordinary" | "extraordinary";
 type ChargeGroupSnapshot = {
   id: string;
   legacyId: number | null;
-  name: string;
-  chargeType: string | null;
+  kind: ChargeGroupKind;
 };
 
 type PaymentDetailSnapshot = {
@@ -38,22 +41,23 @@ type PaymentDetailSnapshot = {
   chargeGroupId: string | null;
   payment: {
     paidAt: Date;
-    legacyStatusCode?: number | null;
-    isLegacyActive?: boolean | null;
-    legacyAreaIsActive?: boolean | null;
+    isVisibleInFinancialSummary?: boolean | null;
   };
 };
 
 type IncomeSnapshot = {
   amount: Prisma.Decimal | number;
   date: Date;
-  legacyChargeGroupId: number | null;
-  legacyMiscCatalogId: number | null;
+  chargeGroupId: string | null;
+  miscCatalogId: string | null;
 };
 
 type MiscIncomeCatalogSnapshot = {
-  legacyId: number | null;
+  id: string;
   name: string;
+  chargeGroup: {
+    kind: ChargeGroupKind;
+  } | null;
 };
 
 type ExpenseSnapshot = {
@@ -61,14 +65,14 @@ type ExpenseSnapshot = {
   date: Date;
   concept: string;
   notes: string | null;
-  legacyBudgetConceptId: number | null;
   legacyProjectName: string | null;
-};
-
-type CanonicalExpenseConceptGroupSnapshot = {
-  year: number;
-  legacyBudgetConceptId: number;
-  budgetGroupId: number;
+  budgetConcept: {
+    year: number;
+    name: string;
+    budgetGroup: BudgetExpenseGroup;
+    legacyBudgetConceptId: number | null;
+    isActive: boolean;
+  } | null;
 };
 
 type ChargeLedgerSnapshot = {
@@ -77,6 +81,7 @@ type ChargeLedgerSnapshot = {
   periodYear: number;
   periodMonth: number;
   chargeGroupId: string;
+  status: "OPEN" | "PARTIAL" | "PAID" | "CANCELED";
 };
 
 type BudgetMonthSnapshot = {
@@ -85,7 +90,11 @@ type BudgetMonthSnapshot = {
 };
 
 type BudgetLineSnapshot = {
-  legacyId: number | null;
+  concept: string;
+  budgetConcept: {
+    budgetGroup: BudgetExpenseGroup;
+    isActive: boolean;
+  } | null;
   months: BudgetMonthSnapshot[];
 };
 
@@ -153,35 +162,73 @@ const EXTENDED_CHARGE_KINDS = [
   CHARGE_GROUP_KIND.OTHER,
 ] as const;
 
-const LEGACY_VISIBLE_YEARS = [2024, 2025, 2026] as const;
+const REPORT_VISIBLE_YEARS = [2024, 2025, 2026] as const;
 
-const LEGACY_ORDINARY_INCOME_ROWS = [
-  { id: "ordinary-fee", label: "Cuotas ordinarias", legacyGroupId: 2 },
-  { id: "stc-fee", label: "Cuotas STC", legacyGroupId: 4 },
-  { id: "sanction-fee", label: "Sancion", legacyGroupId: 5 },
-  { id: "comodato-fee", label: "Comodato", legacyGroupId: 7 },
+const ORDINARY_RECEIVABLE_ROWS = [
+  { id: "ordinary-fee", label: "Cuotas ordinarias", kind: CHARGE_GROUP_KIND.ORDINARY },
+  { id: "stc-fee", label: "Cuotas STC", kind: CHARGE_GROUP_KIND.STC },
+  { id: "sanction-fee", label: "Sancion", kind: CHARGE_GROUP_KIND.SANCTION },
+  { id: "comodato-fee", label: "Comodato", kind: CHARGE_GROUP_KIND.COMODATO },
 ] as const;
 
-const LEGACY_ORDINARY_EXPENSE_ROWS = [
-  { id: "expense-admin", label: "Gastos administración", budgetGroupId: 1 },
-  { id: "expense-infrastructure", label: "Gastos de infraestructura", budgetGroupId: 4 },
-  { id: "expense-maintenance", label: "Gastos de mantenimiento", budgetGroupId: 2 },
-  { id: "expense-security", label: "Gastos de seguridad", budgetGroupId: 3 },
+const EXTRAORDINARY_INCOME_ROWS = [
+  {
+    id: "extra-condo",
+    label: "Cuotas extraordinarias - Condominos",
+    kind: CHARGE_GROUP_KIND.EXTRA_CONDO,
+  },
+  {
+    id: "extra-commerce",
+    label: "Cuota extraordinaria - Comercios",
+    kind: CHARGE_GROUP_KIND.EXTRA_COMMERCE,
+  },
 ] as const;
 
-const ORDINARY_BUDGET_GROUP_IDS = new Set<number>(
-  LEGACY_ORDINARY_EXPENSE_ROWS.map((row) => row.budgetGroupId),
-);
+const EXTRAORDINARY_OTHER_INCOME_KINDS = new Set<ChargeGroupKind>([
+  CHARGE_GROUP_KIND.EXTRA_CONDO,
+  CHARGE_GROUP_KIND.EXTRA_COMMERCE,
+]);
 
-type LegacyOrdinaryIncomeRow = (typeof LEGACY_ORDINARY_INCOME_ROWS)[number];
-type LegacyOrdinaryIncomeRowId = LegacyOrdinaryIncomeRow["id"];
-type LegacyOrdinaryExpenseRow = (typeof LEGACY_ORDINARY_EXPENSE_ROWS)[number];
-type LegacyOrdinaryExpenseRowId = LegacyOrdinaryExpenseRow["id"];
+const ORDINARY_EXPENSE_ROWS = [
+  {
+    id: "expense-admin",
+    label: "Gastos administración",
+    budgetGroup: BUDGET_EXPENSE_GROUP.ADMINISTRATION,
+  },
+  {
+    id: "expense-infrastructure",
+    label: "Gastos de infraestructura",
+    budgetGroup: BUDGET_EXPENSE_GROUP.INFRASTRUCTURE,
+  },
+  {
+    id: "expense-maintenance",
+    label: "Gastos de mantenimiento",
+    budgetGroup: BUDGET_EXPENSE_GROUP.MAINTENANCE,
+  },
+  {
+    id: "expense-security",
+    label: "Gastos de seguridad",
+    budgetGroup: BUDGET_EXPENSE_GROUP.SECURITY,
+  },
+] as const;
 
-type LegacyOrdinaryOtherIncomeRow = {
+type OrdinaryReceivableRowConfig = (typeof ORDINARY_RECEIVABLE_ROWS)[number];
+type OrdinaryReceivableRowId = OrdinaryReceivableRowConfig["id"];
+type ExtraordinaryIncomeRowConfig = (typeof EXTRAORDINARY_INCOME_ROWS)[number];
+type ExtraordinaryIncomeRowId = ExtraordinaryIncomeRowConfig["id"];
+type OrdinaryExpenseRow = (typeof ORDINARY_EXPENSE_ROWS)[number];
+type OrdinaryExpenseRowId = OrdinaryExpenseRow["id"];
+
+type OtherIncomeCatalogRow = {
   id: string;
   label: string;
-  legacyMiscCatalogId: number;
+  miscCatalogId: string;
+};
+
+type ExtraordinaryExpenseConceptRow = {
+  id: string;
+  label: string;
+  legacyBudgetConceptId: number;
 };
 
 type ExtendedChargeGroupKind = (typeof EXTENDED_CHARGE_KINDS)[number];
@@ -216,6 +263,10 @@ function normalizePeriodMonth(month: number): number | null {
 
   const normalized = Math.trunc(month);
   return normalized >= 1 && normalized <= 12 ? normalized : null;
+}
+
+function isConceptFallbackName(name: string): boolean {
+  return /^concepto\s+\d+$/i.test(name.trim());
 }
 
 function resolveIncomeBucket(kind: ChargeGroupKind): IncomeBucket {
@@ -320,25 +371,14 @@ function cumulativeSeries(series: number[]): number[] {
   return output;
 }
 
-function isLegacyVisiblePayment(detail: PaymentDetailSnapshot): boolean {
-  const legacyStatusCode = detail.payment.legacyStatusCode ?? null;
-  const isLegacyActive = detail.payment.isLegacyActive ?? null;
-  const legacyAreaIsActive = detail.payment.legacyAreaIsActive ?? null;
+function isPaymentVisibleInFinancialSummary(detail: PaymentDetailSnapshot): boolean {
+  const isVisibleInFinancialSummary = detail.payment.isVisibleInFinancialSummary ?? null;
 
-  const hasLegacyFlags =
-    legacyStatusCode !== null ||
-    isLegacyActive !== null ||
-    legacyAreaIsActive !== null;
-
-  if (!hasLegacyFlags) {
+  if (isVisibleInFinancialSummary === null) {
     return true;
   }
 
-  return (
-    legacyStatusCode === 1 &&
-    isLegacyActive === true &&
-    legacyAreaIsActive === true
-  );
+  return isVisibleInFinancialSummary;
 }
 
 function toYearSlice(year: number, series: number[]): FinancialSummaryYearSlice {
@@ -346,6 +386,14 @@ function toYearSlice(year: number, series: number[]): FinancialSummaryYearSlice 
     year,
     months: series,
     annualTotal: seriesAnnualTotal(series),
+  };
+}
+
+function toYearSliceWithPeriodEndTotal(year: number, series: number[]): FinancialSummaryYearSlice {
+  return {
+    year,
+    months: series,
+    annualTotal: series[11] ?? 0,
   };
 }
 
@@ -364,6 +412,21 @@ function toTableRow(
   };
 }
 
+function toTableRowWithPeriodEndTotal(
+  id: string,
+  label: string,
+  series: number[],
+  isTotal = false,
+): FinancialSummaryTableRow {
+  return {
+    id,
+    label,
+    months: series,
+    annualTotal: series[11] ?? 0,
+    isTotal,
+  };
+}
+
 function resolveExtendedKind(kind: ChargeGroupKind): ExtendedChargeGroupKind {
   if ((EXTENDED_CHARGE_KINDS as readonly string[]).includes(kind)) {
     return kind as ExtendedChargeGroupKind;
@@ -373,7 +436,7 @@ function resolveExtendedKind(kind: ChargeGroupKind): ExtendedChargeGroupKind {
 }
 
 function resolveExpenseBucket(expense: ExpenseSnapshot): ExpenseBucket {
-  if (expense.legacyBudgetConceptId === 122) {
+  if (expense.budgetConcept?.budgetGroup === BUDGET_EXPENSE_GROUP.EXTRAORDINARY) {
     return "extraordinary";
   }
 
@@ -390,45 +453,6 @@ function initMonthlyRows(): FinancialSummaryMonth[] {
     totalExpenses: 0,
     balance: 0,
   }));
-}
-
-async function loadCanonicalExpenseConceptGroups(
-  condominiumId: string,
-  years: number[],
-): Promise<CanonicalExpenseConceptGroupSnapshot[]> {
-  const maybeModel = (
-    prisma as unknown as {
-      expenseConceptGroupMap?: {
-        findMany(args: unknown): Promise<CanonicalExpenseConceptGroupSnapshot[]>;
-      };
-    }
-  ).expenseConceptGroupMap;
-
-  if (maybeModel?.findMany) {
-    return maybeModel.findMany({
-      where: {
-        condominiumId,
-        year: { in: years },
-      },
-      select: {
-        year: true,
-        legacyBudgetConceptId: true,
-        budgetGroupId: true,
-      },
-    });
-  }
-
-  const rows = await prisma.$queryRaw<CanonicalExpenseConceptGroupSnapshot[]>(Prisma.sql`
-    SELECT
-      year,
-      legacy_budget_concept_id AS "legacyBudgetConceptId",
-      budget_group_id AS "budgetGroupId"
-    FROM expense_concept_group_map
-    WHERE condominium_id = ${condominiumId}
-      AND year IN (${Prisma.join(years)})
-  `);
-
-  return rows;
 }
 
 export class PrismaFinancialSummaryRepository implements FinancialSummaryRepository {
@@ -471,8 +495,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       from: new Date(Date.UTC(requestedYear, 0, 1, 0, 0, 0, 0)),
       to: new Date(Date.UTC(nextYear + 1, 0, 1, 0, 0, 0, 0)),
     };
-    const minLegacyYear = Math.min(...LEGACY_VISIBLE_YEARS);
-    const maxLegacyYear = Math.max(...LEGACY_VISIBLE_YEARS);
+    const minLegacyYear = Math.min(...REPORT_VISIBLE_YEARS);
+    const maxLegacyYear = Math.max(...REPORT_VISIBLE_YEARS);
     const legacyRange = {
       from: new Date(Date.UTC(minLegacyYear, 0, 1, 0, 0, 0, 0)),
       to: new Date(Date.UTC(maxLegacyYear + 1, 0, 1, 0, 0, 0, 0)),
@@ -487,6 +511,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       incomesForLegacyYears,
       expenses,
       expensesForOrdinaryExpenseYears,
+      expensesForLegacyYears,
+      extraordinaryBudgetConcepts,
       paymentBounds,
       incomeBounds,
       expenseBounds,
@@ -502,23 +528,26 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         select: {
           id: true,
           legacyId: true,
-          name: true,
-          chargeType: true,
+          kind: true,
         },
       }),
       prisma.miscIncomeCatalog.findMany({
         where: {
           condominiumId: condominium.id,
           isActive: true,
-          legacyChargeGroupId: 2,
-          legacyId: { not: null },
+          chargeGroupId: { not: null },
         },
         orderBy: {
-          legacyId: "asc",
+          name: "asc",
         },
         select: {
-          legacyId: true,
+          id: true,
           name: true,
+          chargeGroup: {
+            select: {
+              kind: true,
+            },
+          },
         },
       }),
       prisma.paymentDetail.findMany({
@@ -538,9 +567,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           payment: {
             select: {
               paidAt: true,
-              legacyStatusCode: true,
-              isLegacyActive: true,
-              legacyAreaIsActive: true,
+              isVisibleInFinancialSummary: true,
             },
           },
         },
@@ -562,9 +589,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           payment: {
             select: {
               paidAt: true,
-              legacyStatusCode: true,
-              isLegacyActive: true,
-              legacyAreaIsActive: true,
+              isVisibleInFinancialSummary: true,
             },
           },
         },
@@ -581,8 +606,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         select: {
           amount: true,
           date: true,
-          legacyChargeGroupId: true,
-          legacyMiscCatalogId: true,
+          chargeGroupId: true,
+          miscCatalogId: true,
         },
       }),
       incomeModel.findMany({
@@ -597,8 +622,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         select: {
           amount: true,
           date: true,
-          legacyChargeGroupId: true,
-          legacyMiscCatalogId: true,
+          chargeGroupId: true,
+          miscCatalogId: true,
         },
       }),
       expenseModel.findMany({
@@ -615,8 +640,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           date: true,
           concept: true,
           notes: true,
-          legacyBudgetConceptId: true,
           legacyProjectName: true,
+          budgetConcept: {
+            select: {
+              year: true,
+              name: true,
+              budgetGroup: true,
+              legacyBudgetConceptId: true,
+              isActive: true,
+            },
+          },
         },
       }),
       expenseModel.findMany({
@@ -633,8 +666,68 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           date: true,
           concept: true,
           notes: true,
-          legacyBudgetConceptId: true,
           legacyProjectName: true,
+          budgetConcept: {
+            select: {
+              year: true,
+              name: true,
+              budgetGroup: true,
+              legacyBudgetConceptId: true,
+              isActive: true,
+            },
+          },
+        },
+      }),
+      expenseModel.findMany({
+        where: {
+          condominiumId: condominium.id,
+          isActive: true,
+          date: {
+            gte: legacyRange.from,
+            lt: legacyRange.to,
+          },
+        },
+        select: {
+          amount: true,
+          date: true,
+          concept: true,
+          notes: true,
+          legacyProjectName: true,
+          budgetConcept: {
+            select: {
+              year: true,
+              name: true,
+              budgetGroup: true,
+              legacyBudgetConceptId: true,
+              isActive: true,
+            },
+          },
+        },
+      }),
+      (
+        prisma as unknown as {
+          budgetExpenseConcept: {
+            findMany(args: unknown): Promise<Array<{
+              year: number;
+              name: string;
+              legacyBudgetConceptId: number | null;
+              isActive: boolean;
+            }>>;
+          };
+        }
+      ).budgetExpenseConcept.findMany({
+        where: {
+          condominiumId: condominium.id,
+          year: { in: [...REPORT_VISIBLE_YEARS] },
+          budgetGroup: BUDGET_EXPENSE_GROUP.EXTRAORDINARY,
+          isActive: true,
+          legacyBudgetConceptId: { not: null },
+        },
+        select: {
+          year: true,
+          name: true,
+          legacyBudgetConceptId: true,
+          isActive: true,
         },
       }),
       prisma.payment.aggregate({
@@ -664,8 +757,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           isCollectible: true,
           status: { not: "CANCELED" },
           periodYear: {
-            gte: Math.max(2000, requestedYear - 20),
-            lte: nextYear,
+            gte: Math.max(2000, Math.min(requestedYear - 20, minLegacyYear)),
+            lte: Math.max(nextYear, maxLegacyYear),
           },
           privateArea: {
             isActive: true,
@@ -680,6 +773,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           periodYear: true,
           periodMonth: true,
           chargeGroupId: true,
+          status: true,
         },
       }),
       prisma.budget.findUnique({
@@ -692,7 +786,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         select: {
           lines: {
             select: {
-              legacyId: true,
+              concept: true,
+              budgetConcept: {
+                select: {
+                  budgetGroup: true,
+                  isActive: true,
+                },
+              },
               months: {
                 select: {
                   month: true,
@@ -713,7 +813,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         select: {
           lines: {
             select: {
-              legacyId: true,
+              concept: true,
+              budgetConcept: {
+                select: {
+                  budgetGroup: true,
+                  isActive: true,
+                },
+              },
               months: {
                 select: {
                   month: true,
@@ -726,97 +832,140 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       }),
     ]);
 
-    const canonicalExpenseConceptGroups = await loadCanonicalExpenseConceptGroups(
-      condominium.id,
-      [...ordinaryExpenseYears],
-    );
-
     const chargeGroupKindById = new Map<string, ChargeGroupKind>();
-    const chargeGroupKindByLegacyId = new Map<number, ChargeGroupKind>();
-    const chargeGroupLegacyIdById = new Map<string, number | null>();
     const monthlyByKind = createSeriesByKind();
     const extraordinaryExpenseSeries = createZeroSeries();
     const ordinaryExpenseSeries = createZeroSeries();
-    const legacyOrdinaryRowByGroupId = new Map<number, LegacyOrdinaryIncomeRow>(
-      LEGACY_ORDINARY_INCOME_ROWS.map((row) => [row.legacyGroupId, row]),
+    const ordinaryReceivableRowByKind = new Map<ChargeGroupKind, OrdinaryReceivableRowConfig>(
+      ORDINARY_RECEIVABLE_ROWS.map((row) => [row.kind, row]),
     );
+    const extraordinaryIncomeRowByKind = new Map<
+      ChargeGroupKind,
+      ExtraordinaryIncomeRowConfig
+    >(EXTRAORDINARY_INCOME_ROWS.map((row) => [row.kind, row]));
     const ordinaryIncomeByRowAndYear = Object.fromEntries(
-      LEGACY_ORDINARY_INCOME_ROWS.map((row) => [
+      ORDINARY_RECEIVABLE_ROWS.map((row) => [
         row.id,
-        Object.fromEntries(LEGACY_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
       ]),
-    ) as Record<LegacyOrdinaryIncomeRowId, Record<number, number[]>>;
+    ) as Record<OrdinaryReceivableRowId, Record<number, number[]>>;
+    const extraordinaryIncomeByRowAndYear = Object.fromEntries(
+      EXTRAORDINARY_INCOME_ROWS.map((row) => [
+        row.id,
+        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+      ]),
+    ) as Record<ExtraordinaryIncomeRowId, Record<number, number[]>>;
+    const extraordinaryReceivableByRowAndYear = Object.fromEntries(
+      EXTRAORDINARY_INCOME_ROWS.map((row) => [
+        row.id,
+        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+      ]),
+    ) as Record<ExtraordinaryIncomeRowId, Record<number, number[]>>;
     const ordinaryOtherCatalogRows = (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
-      .filter(
-        (catalog): catalog is MiscIncomeCatalogSnapshot & { legacyId: number } =>
-          catalog.legacyId !== null,
+      .filter((catalog) => catalog.chargeGroup?.kind === CHARGE_GROUP_KIND.ORDINARY)
+      .map((catalog) => ({
+        id: `ordinary-other-${catalog.id}`,
+        label: catalog.name,
+        miscCatalogId: catalog.id,
+      })) as OtherIncomeCatalogRow[];
+    const extraordinaryOtherCatalogRows = (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
+      .filter((catalog) =>
+        catalog.chargeGroup
+          ? EXTRAORDINARY_OTHER_INCOME_KINDS.has(catalog.chargeGroup.kind)
+          : false,
       )
       .map((catalog) => ({
-        id: `ordinary-other-${catalog.legacyId}`,
+        id: `extraordinary-other-${catalog.id}`,
         label: catalog.name,
-        legacyMiscCatalogId: catalog.legacyId,
-      })) as LegacyOrdinaryOtherIncomeRow[];
-    const ordinaryOtherRowByLegacyMiscId = new Map<number, LegacyOrdinaryOtherIncomeRow>(
-      ordinaryOtherCatalogRows.map((row) => [row.legacyMiscCatalogId, row]),
+        miscCatalogId: catalog.id,
+      })) as OtherIncomeCatalogRow[];
+    const ordinaryOtherRowByMiscCatalogId = new Map<string, OtherIncomeCatalogRow>(
+      ordinaryOtherCatalogRows.map((row) => [row.miscCatalogId, row]),
+    );
+    const extraordinaryOtherRowByMiscCatalogId = new Map<string, OtherIncomeCatalogRow>(
+      extraordinaryOtherCatalogRows.map((row) => [row.miscCatalogId, row]),
     );
     const ordinaryOtherIncomeByRowAndYear = new Map<string, Record<number, number[]>>(
       ordinaryOtherCatalogRows.map((row) => [
         row.id,
-        Object.fromEntries(LEGACY_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
       ]),
     );
-    const ordinaryExpenseRowByBudgetGroupId = new Map<number, LegacyOrdinaryExpenseRow>(
-      LEGACY_ORDINARY_EXPENSE_ROWS.map((row) => [row.budgetGroupId, row]),
+    const extraordinaryOtherIncomeByRowAndYear = new Map<string, Record<number, number[]>>(
+      extraordinaryOtherCatalogRows.map((row) => [
+        row.id,
+        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+      ]),
     );
-    const budgetGroupByLegacyConceptByYear = new Map<number, Map<number, number>>(
-      ordinaryExpenseYears.map((year) => [year, new Map<number, number>()]),
+    const extraordinaryExpenseConceptEntriesByLegacyId = new Map<
+      number,
+      Array<{ year: number; name: string }>
+    >();
+
+    for (const concept of extraordinaryBudgetConcepts) {
+      if (concept.legacyBudgetConceptId === null) {
+        continue;
+      }
+
+      const entries = extraordinaryExpenseConceptEntriesByLegacyId.get(concept.legacyBudgetConceptId) ?? [];
+      entries.push({ year: concept.year, name: concept.name });
+      extraordinaryExpenseConceptEntriesByLegacyId.set(concept.legacyBudgetConceptId, entries);
+    }
+
+    for (const expense of expensesForLegacyYears as ExpenseSnapshot[]) {
+      if (resolveExpenseBucket(expense) !== "extraordinary") {
+        continue;
+      }
+
+      const legacyBudgetConceptId = expense.budgetConcept?.legacyBudgetConceptId ?? null;
+      if (legacyBudgetConceptId === null) {
+        continue;
+      }
+
+      const entries = extraordinaryExpenseConceptEntriesByLegacyId.get(legacyBudgetConceptId) ?? [];
+      entries.push({
+        year: expense.date.getUTCFullYear(),
+        name: expense.budgetConcept?.name ?? `Concepto ${legacyBudgetConceptId}`,
+      });
+      extraordinaryExpenseConceptEntriesByLegacyId.set(legacyBudgetConceptId, entries);
+    }
+
+    const extraordinaryExpenseConceptRows = Array.from(
+      extraordinaryExpenseConceptEntriesByLegacyId.entries(),
+    )
+      .sort((left, right) => left[0] - right[0])
+      .map(([legacyBudgetConceptId, entries]) => {
+        const ordered = [...entries].sort((left, right) => right.year - left.year);
+        const preferred = ordered.find((entry) => !isConceptFallbackName(entry.name)) ?? ordered[0];
+
+        return {
+          id: `extraordinary-expense-concept-${legacyBudgetConceptId}`,
+          label: preferred?.name ?? `Concepto ${legacyBudgetConceptId}`,
+          legacyBudgetConceptId,
+        };
+      }) as ExtraordinaryExpenseConceptRow[];
+    const extraordinaryExpenseRowByLegacyConceptId = new Map<number, ExtraordinaryExpenseConceptRow>(
+      extraordinaryExpenseConceptRows.map((row) => [row.legacyBudgetConceptId, row]),
+    );
+    const extraordinaryExpenseByRowAndYear = new Map<string, Record<number, number[]>>(
+      extraordinaryExpenseConceptRows.map((row) => [
+        row.id,
+        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+      ]),
+    );
+    const ordinaryExpenseRowByBudgetGroup = new Map<BudgetExpenseGroup, OrdinaryExpenseRow>(
+      ORDINARY_EXPENSE_ROWS.map((row) => [row.budgetGroup, row]),
     );
     const ordinaryExpenseByRowAndYear = Object.fromEntries(
-      LEGACY_ORDINARY_EXPENSE_ROWS.map((row) => [
+      ORDINARY_EXPENSE_ROWS.map((row) => [
         row.id,
         Object.fromEntries(ordinaryExpenseYears.map((year) => [year, createZeroSeries()])),
       ]),
-    ) as Record<LegacyOrdinaryExpenseRowId, Record<number, number[]>>;
+    ) as Record<OrdinaryExpenseRowId, Record<number, number[]>>;
 
     for (const group of chargeGroups as ChargeGroupSnapshot[]) {
-      const kind = resolveChargeGroupKind(group);
+      const kind = group.kind;
       chargeGroupKindById.set(group.id, kind);
-      chargeGroupLegacyIdById.set(group.id, group.legacyId);
-
-      if (group.legacyId !== null) {
-        chargeGroupKindByLegacyId.set(group.legacyId, kind);
-      }
-    }
-
-    for (const mapping of canonicalExpenseConceptGroups) {
-      const yearMap = budgetGroupByLegacyConceptByYear.get(mapping.year);
-      if (!yearMap) {
-        continue;
-      }
-
-      if (yearMap.has(mapping.legacyBudgetConceptId)) {
-        continue;
-      }
-
-      yearMap.set(mapping.legacyBudgetConceptId, mapping.budgetGroupId);
-    }
-
-    const requestedYearExpenseConceptMap =
-      budgetGroupByLegacyConceptByYear.get(requestedYear) ?? new Map<number, number>();
-    const nextYearExpenseConceptMap =
-      budgetGroupByLegacyConceptByYear.get(nextYear) ?? new Map<number, number>();
-
-    const ordinaryChargeGroupIdByLegacyGroupId = new Map<number, string>();
-    for (const group of chargeGroups as ChargeGroupSnapshot[]) {
-      if (group.legacyId === null) {
-        continue;
-      }
-
-      if (!legacyOrdinaryRowByGroupId.has(group.legacyId)) {
-        continue;
-      }
-
-      ordinaryChargeGroupIdByLegacyGroupId.set(group.legacyId, group.id);
     }
 
     const receivableRowsById = new Map<string, {
@@ -827,7 +976,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       monthsCurrentYear: number[];
       monthsNextYear: number[];
     }>(
-      LEGACY_ORDINARY_INCOME_ROWS.map((row) => [
+      ORDINARY_RECEIVABLE_ROWS.map((row) => [
         row.id,
         {
           id: row.id,
@@ -840,13 +989,15 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       ]),
     );
 
+    const payableExpenseCurrentSeries = createZeroSeries();
+    const payableExpenseNextSeries = createZeroSeries();
     const payableBudgetCurrentSeries = createZeroSeries();
     const payableBudgetNextSeries = createZeroSeries();
 
     const monthly = initMonthlyRows();
 
     for (const detail of paymentDetails as PaymentDetailSnapshot[]) {
-      if (!isLegacyVisiblePayment(detail)) {
+      if (!isPaymentVisibleInFinancialSummary(detail)) {
         continue;
       }
 
@@ -873,19 +1024,11 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     for (const detail of paymentDetailsForLegacyYears as PaymentDetailSnapshot[]) {
       const year = detail.payment.paidAt.getUTCFullYear();
 
-      if (!LEGACY_VISIBLE_YEARS.includes(year as (typeof LEGACY_VISIBLE_YEARS)[number])) {
+      if (!REPORT_VISIBLE_YEARS.includes(year as (typeof REPORT_VISIBLE_YEARS)[number])) {
         continue;
       }
 
-      if (detail.payment.legacyStatusCode !== 1) {
-        continue;
-      }
-
-      if (detail.payment.isLegacyActive !== true) {
-        continue;
-      }
-
-      if (detail.payment.legacyAreaIsActive !== true) {
+      if (!isPaymentVisibleInFinancialSummary(detail)) {
         continue;
       }
 
@@ -893,28 +1036,33 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
-      const legacyGroupId = chargeGroupLegacyIdById.get(detail.chargeGroupId) ?? null;
-      if (legacyGroupId === null) {
-        continue;
-      }
-
-      const legacyRow = legacyOrdinaryRowByGroupId.get(legacyGroupId);
-      if (!legacyRow) {
+      const chargeGroupKind = chargeGroupKindById.get(detail.chargeGroupId) ?? null;
+      if (chargeGroupKind === null) {
         continue;
       }
 
       const month = getMonth(detail.payment.paidAt);
       const amount = decimalToNumber(detail.amount);
 
-      addAmountToSeries(ordinaryIncomeByRowAndYear[legacyRow.id][year], month, amount);
+      const extraordinaryRow = extraordinaryIncomeRowByKind.get(chargeGroupKind);
+      if (extraordinaryRow) {
+        addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year], month, amount);
+      }
+
+      const rowConfig = ordinaryReceivableRowByKind.get(chargeGroupKind);
+      if (!rowConfig) {
+        continue;
+      }
+
+      addAmountToSeries(ordinaryIncomeByRowAndYear[rowConfig.id][year], month, amount);
     }
 
     for (const income of incomes) {
       const month = getMonth(income.date);
       const row = monthly[month - 1];
       const amount = decimalToNumber(income.amount);
-      const kind = income.legacyChargeGroupId !== null
-        ? (chargeGroupKindByLegacyId.get(income.legacyChargeGroupId) ?? CHARGE_GROUP_KIND.OTHER)
+      const kind = income.chargeGroupId !== null
+        ? (chargeGroupKindById.get(income.chargeGroupId) ?? CHARGE_GROUP_KIND.OTHER)
         : CHARGE_GROUP_KIND.OTHER;
       const extendedKind = resolveExtendedKind(kind);
       const bucket = resolveIncomeBucket(kind);
@@ -933,32 +1081,53 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     for (const income of incomesForLegacyYears as IncomeSnapshot[]) {
       const year = income.date.getUTCFullYear();
 
-      if (!LEGACY_VISIBLE_YEARS.includes(year as (typeof LEGACY_VISIBLE_YEARS)[number])) {
+      if (!REPORT_VISIBLE_YEARS.includes(year as (typeof REPORT_VISIBLE_YEARS)[number])) {
         continue;
       }
 
-      if (income.legacyMiscCatalogId === null) {
+      const incomeKind =
+        income.chargeGroupId !== null
+          ? (chargeGroupKindById.get(income.chargeGroupId) ?? null)
+          : null;
+      if (incomeKind !== null) {
+        const extraordinaryRow = extraordinaryIncomeRowByKind.get(incomeKind);
+        if (extraordinaryRow) {
+          const month = getMonth(income.date);
+          const amount = decimalToNumber(income.amount);
+          addAmountToSeries(
+            extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year],
+            month,
+            amount,
+          );
+        }
+      }
+
+      if (income.miscCatalogId === null) {
         continue;
       }
 
-      if (income.legacyChargeGroupId !== null && income.legacyChargeGroupId !== 0) {
-        continue;
-      }
-
-      const row = ordinaryOtherRowByLegacyMiscId.get(income.legacyMiscCatalogId);
-      if (!row) {
-        continue;
-      }
-
-      const byYear = ordinaryOtherIncomeByRowAndYear.get(row.id);
-      if (!byYear) {
+      if (income.chargeGroupId !== null) {
         continue;
       }
 
       const month = getMonth(income.date);
       const amount = decimalToNumber(income.amount);
 
-      addAmountToSeries(byYear[year], month, amount);
+      const ordinaryRow = ordinaryOtherRowByMiscCatalogId.get(income.miscCatalogId);
+      if (ordinaryRow) {
+        const byYear = ordinaryOtherIncomeByRowAndYear.get(ordinaryRow.id);
+        if (byYear) {
+          addAmountToSeries(byYear[year], month, amount);
+        }
+      }
+
+      const extraordinaryRow = extraordinaryOtherRowByMiscCatalogId.get(income.miscCatalogId);
+      if (extraordinaryRow) {
+        const byYear = extraordinaryOtherIncomeByRowAndYear.get(extraordinaryRow.id);
+        if (byYear) {
+          addAmountToSeries(byYear[year], month, amount);
+        }
+      }
     }
 
     for (const expense of expenses) {
@@ -968,27 +1137,29 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
       row.totalExpenses += amount;
 
-      if (expense.legacyBudgetConceptId === 122) {
+      if (resolveExpenseBucket(expense) === "extraordinary") {
         addAmountToSeries(extraordinaryExpenseSeries, month, amount);
         continue;
       }
 
-      if (expense.legacyBudgetConceptId === null) {
+      const budgetConcept = expense.budgetConcept;
+      if (!budgetConcept) {
         continue;
       }
 
-      const budgetGroupId = requestedYearExpenseConceptMap.get(expense.legacyBudgetConceptId);
-      if (budgetGroupId === undefined) {
+      if (budgetConcept.year !== requestedYear) {
         continue;
       }
 
-      if (!ordinaryExpenseRowByBudgetGroupId.has(budgetGroupId)) {
+      if (!budgetConcept.isActive) {
         continue;
       }
 
-      {
-        addAmountToSeries(ordinaryExpenseSeries, month, amount);
+      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(budgetConcept.budgetGroup)) {
+        continue;
       }
+
+      addAmountToSeries(ordinaryExpenseSeries, month, amount);
     }
 
     for (const expense of expensesForOrdinaryExpenseYears as ExpenseSnapshot[]) {
@@ -1001,21 +1172,24 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
-      if (expense.legacyBudgetConceptId === null) {
+      const budgetConcept = expense.budgetConcept;
+      if (!budgetConcept) {
         continue;
       }
 
-      const yearMap = budgetGroupByLegacyConceptByYear.get(year);
-      if (!yearMap) {
+      if (budgetConcept.year !== year) {
         continue;
       }
 
-      const budgetGroupId = yearMap.get(expense.legacyBudgetConceptId);
-      if (budgetGroupId === undefined) {
+      if (!budgetConcept.isActive) {
         continue;
       }
 
-      const rowMeta = ordinaryExpenseRowByBudgetGroupId.get(budgetGroupId);
+      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(budgetConcept.budgetGroup)) {
+        continue;
+      }
+
+      const rowMeta = ordinaryExpenseRowByBudgetGroup.get(budgetConcept.budgetGroup);
       if (!rowMeta) {
         continue;
       }
@@ -1025,12 +1199,42 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       addAmountToSeries(ordinaryExpenseByRowAndYear[rowMeta.id][year], month, amount);
     }
 
-    const ordinaryChargeGroupIds = new Set(ordinaryChargeGroupIdByLegacyGroupId.values());
+    for (const expense of expensesForLegacyYears as ExpenseSnapshot[]) {
+      const year = expense.date.getUTCFullYear();
+      if (!REPORT_VISIBLE_YEARS.includes(year as (typeof REPORT_VISIBLE_YEARS)[number])) {
+        continue;
+      }
+
+      if (resolveExpenseBucket(expense) !== "extraordinary") {
+        continue;
+      }
+
+      const legacyBudgetConceptId = expense.budgetConcept?.legacyBudgetConceptId ?? null;
+      if (legacyBudgetConceptId === null) {
+        continue;
+      }
+
+      const row = extraordinaryExpenseRowByLegacyConceptId.get(legacyBudgetConceptId);
+      if (!row) {
+        continue;
+      }
+
+      const byYear = extraordinaryExpenseByRowAndYear.get(row.id);
+      if (!byYear) {
+        continue;
+      }
+
+      const month = getMonth(expense.date);
+      const amount = decimalToNumber(expense.amount);
+      addAmountToSeries(byYear[year], month, amount);
+    }
+
     let overduePortfolioTotal = 0;
     let minOverdueYear: number | null = null;
 
     for (const charge of chargesForOrdinaryLedger as ChargeLedgerSnapshot[]) {
-      if (!ordinaryChargeGroupIds.has(charge.chargeGroupId)) {
+      const chargeGroupKind = chargeGroupKindById.get(charge.chargeGroupId) ?? null;
+      if (chargeGroupKind === null) {
         continue;
       }
 
@@ -1040,24 +1244,34 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
-      const legacyGroupId = chargeGroupLegacyIdById.get(charge.chargeGroupId) ?? null;
-      if (legacyGroupId === null) {
+      const normalizedMonth = normalizePeriodMonth(charge.periodMonth);
+      const isCanceled = charge.status === "CANCELED";
+      const extraordinaryReceivableRow = extraordinaryIncomeRowByKind.get(chargeGroupKind);
+
+      if (
+        extraordinaryReceivableRow &&
+        REPORT_VISIBLE_YEARS.includes(charge.periodYear as (typeof REPORT_VISIBLE_YEARS)[number]) &&
+        normalizedMonth !== null &&
+        !isCanceled
+      ) {
+        addAmountToSeries(
+          extraordinaryReceivableByRowAndYear[extraordinaryReceivableRow.id][charge.periodYear],
+          normalizedMonth,
+          outstandingAmount,
+        );
+      }
+
+      const rowConfig = ordinaryReceivableRowByKind.get(chargeGroupKind);
+      if (!rowConfig) {
         continue;
       }
 
-      const rowMeta = legacyOrdinaryRowByGroupId.get(legacyGroupId);
-      if (!rowMeta) {
-        continue;
-      }
-
-      const rowState = receivableRowsById.get(rowMeta.id);
+      const rowState = receivableRowsById.get(rowConfig.id);
       if (!rowState) {
         continue;
       }
 
-      const normalizedMonth = normalizePeriodMonth(charge.periodMonth);
-
-      if (charge.periodYear === requestedYear) {
+      if (charge.periodYear === requestedYear && !isCanceled) {
         rowState.periodCurrentYear += outstandingAmount;
         if (normalizedMonth !== null) {
           addAmountToSeries(rowState.monthsCurrentYear, normalizedMonth, outstandingAmount);
@@ -1065,7 +1279,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
-      if (charge.periodYear === nextYear) {
+      if (charge.periodYear === nextYear && !isCanceled) {
         rowState.periodNextYear += outstandingAmount;
         if (normalizedMonth !== null) {
           addAmountToSeries(rowState.monthsNextYear, normalizedMonth, outstandingAmount);
@@ -1073,7 +1287,10 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
-      if (charge.periodYear < requestedYear) {
+      if (
+        charge.status === "OPEN" &&
+        charge.periodYear < requestedYear - 1
+      ) {
         overduePortfolioTotal += outstandingAmount;
         minOverdueYear =
           minOverdueYear === null
@@ -1084,7 +1301,6 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
     const addBudgetSeries = (
       budgetSnapshot: BudgetSnapshot | null,
-      conceptMap: Map<number, number>,
       outputSeries: number[],
     ): void => {
       if (!budgetSnapshot) {
@@ -1092,12 +1308,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       }
 
       for (const line of budgetSnapshot.lines) {
-        if (line.legacyId === null) {
+        const budgetConcept = line.budgetConcept;
+        if (!budgetConcept) {
           continue;
         }
 
-        const budgetGroupId = conceptMap.get(line.legacyId);
-        if (budgetGroupId === undefined || !ORDINARY_BUDGET_GROUP_IDS.has(budgetGroupId)) {
+        if (!budgetConcept.isActive) {
+          continue;
+        }
+
+        if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(budgetConcept.budgetGroup)) {
           continue;
         }
 
@@ -1112,10 +1332,56 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       }
     };
 
-    addBudgetSeries(currentBudget as BudgetSnapshot | null, requestedYearExpenseConceptMap, payableBudgetCurrentSeries);
-    addBudgetSeries(nextBudget as BudgetSnapshot | null, nextYearExpenseConceptMap, payableBudgetNextSeries);
-    const payableCurrentSeries = payableBudgetCurrentSeries;
-    const payableNextSeries = payableBudgetNextSeries;
+    addBudgetSeries(
+      currentBudget as BudgetSnapshot | null,
+      payableBudgetCurrentSeries,
+    );
+    addBudgetSeries(
+      nextBudget as BudgetSnapshot | null,
+      payableBudgetNextSeries,
+    );
+
+    for (const expense of expensesForOrdinaryExpenseYears as ExpenseSnapshot[]) {
+      const year = expense.date.getUTCFullYear();
+      if (!ordinaryExpenseYears.includes(year as (typeof ordinaryExpenseYears)[number])) {
+        continue;
+      }
+
+      const budgetConcept = expense.budgetConcept;
+      if (!budgetConcept) {
+        continue;
+      }
+
+      if (budgetConcept.year !== year) {
+        continue;
+      }
+
+      if (!budgetConcept.isActive) {
+        continue;
+      }
+
+      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(budgetConcept.budgetGroup)) {
+        continue;
+      }
+
+      const month = getMonth(expense.date);
+      const amount = decimalToNumber(expense.amount);
+
+      if (year === requestedYear) {
+        addAmountToSeries(payableExpenseCurrentSeries, month, amount);
+      } else {
+        addAmountToSeries(payableExpenseNextSeries, month, amount);
+      }
+    }
+
+    const payableCurrentSeries = subtractSeries(
+      payableBudgetCurrentSeries,
+      payableExpenseCurrentSeries,
+    );
+    const payableNextSeries = subtractSeries(
+      payableBudgetNextSeries,
+      payableExpenseNextSeries,
+    );
 
     let ordinaryTotal = 0;
     let extraordinaryTotal = 0;
@@ -1155,8 +1421,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       monthlyByKind[CHARGE_GROUP_KIND.COMODATO],
     ]);
 
-    const requestedYearIsLegacyVisible = LEGACY_VISIBLE_YEARS.includes(
-      requestedYear as (typeof LEGACY_VISIBLE_YEARS)[number],
+    const requestedYearIsLegacyVisible = REPORT_VISIBLE_YEARS.includes(
+      requestedYear as (typeof REPORT_VISIBLE_YEARS)[number],
     );
     const ordinaryOtherSeriesByRowForRequestedYear = new Map<string, number[]>(
       ordinaryOtherCatalogRows.map((row) => {
@@ -1169,30 +1435,81 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         ];
       }),
     );
+    const extraordinaryOtherSeriesByRowForRequestedYear = new Map<string, number[]>(
+      extraordinaryOtherCatalogRows.map((row) => {
+        const byYear = extraordinaryOtherIncomeByRowAndYear.get(row.id);
+        return [
+          row.id,
+          requestedYearIsLegacyVisible
+            ? (byYear?.[requestedYear] ?? createZeroSeries())
+            : createZeroSeries(),
+        ];
+      }),
+    );
+    const extraordinaryExpenseSeriesByRowForRequestedYear = new Map<string, number[]>(
+      extraordinaryExpenseConceptRows.map((row) => {
+        const byYear = extraordinaryExpenseByRowAndYear.get(row.id);
+        return [
+          row.id,
+          requestedYearIsLegacyVisible
+            ? (byYear?.[requestedYear] ?? createZeroSeries())
+            : createZeroSeries(),
+        ];
+      }),
+    );
 
     if (!requestedYearIsLegacyVisible) {
       for (const income of incomes as IncomeSnapshot[]) {
-        if (income.legacyMiscCatalogId === null) {
+        if (income.miscCatalogId === null) {
           continue;
         }
 
-        if (income.legacyChargeGroupId !== null && income.legacyChargeGroupId !== 0) {
-          continue;
-        }
-
-        const row = ordinaryOtherRowByLegacyMiscId.get(income.legacyMiscCatalogId);
-        if (!row) {
+        if (income.chargeGroupId !== null) {
           continue;
         }
 
         const month = getMonth(income.date);
         const amount = decimalToNumber(income.amount);
-        const series = ordinaryOtherSeriesByRowForRequestedYear.get(row.id);
 
+        const ordinaryRow = ordinaryOtherRowByMiscCatalogId.get(income.miscCatalogId);
+        if (ordinaryRow) {
+          const series = ordinaryOtherSeriesByRowForRequestedYear.get(ordinaryRow.id);
+          if (series) {
+            addAmountToSeries(series, month, amount);
+          }
+        }
+
+        const extraordinaryRow = extraordinaryOtherRowByMiscCatalogId.get(income.miscCatalogId);
+        if (extraordinaryRow) {
+          const series = extraordinaryOtherSeriesByRowForRequestedYear.get(extraordinaryRow.id);
+          if (series) {
+            addAmountToSeries(series, month, amount);
+          }
+        }
+      }
+
+      for (const expense of expenses as ExpenseSnapshot[]) {
+        if (resolveExpenseBucket(expense) !== "extraordinary") {
+          continue;
+        }
+
+        const legacyBudgetConceptId = expense.budgetConcept?.legacyBudgetConceptId ?? null;
+        if (legacyBudgetConceptId === null) {
+          continue;
+        }
+
+        const row = extraordinaryExpenseRowByLegacyConceptId.get(legacyBudgetConceptId);
+        if (!row) {
+          continue;
+        }
+
+        const series = extraordinaryExpenseSeriesByRowForRequestedYear.get(row.id);
         if (!series) {
           continue;
         }
 
+        const month = getMonth(expense.date);
+        const amount = decimalToNumber(expense.amount);
         addAmountToSeries(series, month, amount);
       }
     }
@@ -1219,7 +1536,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       monthlyByKind[CHARGE_GROUP_KIND.EXTRA_COMMERCE],
     ]);
 
-    const extraordinaryOtherIncomeSeries = createZeroSeries();
+    const extraordinaryOtherSeriesList = extraordinaryOtherCatalogRows.map(
+      (row) => extraordinaryOtherSeriesByRowForRequestedYear.get(row.id) ?? createZeroSeries(),
+    );
+    const extraordinaryOtherIncomeSeries =
+      extraordinaryOtherSeriesList.length > 0
+        ? sumSeries(extraordinaryOtherSeriesList)
+        : createZeroSeries();
     const extraordinaryTotalIncomeSeries = sumSeries([
       extraordinaryIncomeSeries,
       extraordinaryOtherIncomeSeries,
@@ -1279,7 +1602,11 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             title: "Saldo Ingresos - Egresos Ordinarios",
             rows: [
               toTableRow("ordinary-balance-total", "Total", ordinaryBalanceSeries, true),
-              toTableRow("ordinary-banks-cash", "Bancos y caja", ordinaryBanksCashSeries),
+              toTableRowWithPeriodEndTotal(
+                "ordinary-banks-cash",
+                "Bancos y caja",
+                ordinaryBanksCashSeries,
+              ),
             ],
           },
         ],
@@ -1308,36 +1635,46 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           {
             id: "extraordinary-other-income",
             title: "Otros ingresos",
-            rows: [
-              toTableRow(
-                "extra-other",
-                "Otros ingresos extraordinarios",
-                extraordinaryOtherIncomeSeries,
-              ),
-              toTableRow(
-                "extra-other-total",
-                "Total",
-                extraordinaryOtherIncomeSeries,
-                true,
-              ),
-            ],
+            rows:
+              extraordinaryOtherCatalogRows.length > 0
+                ? [
+                    ...extraordinaryOtherCatalogRows.map((row) =>
+                      toTableRow(
+                        row.id,
+                        row.label,
+                        extraordinaryOtherSeriesByRowForRequestedYear.get(row.id) ?? createZeroSeries(),
+                      ),
+                    ),
+                    toTableRow("extra-other-total", "Total", extraordinaryOtherIncomeSeries, true),
+                  ]
+                : [
+                    toTableRow(
+                      "extra-other",
+                      "Otros ingresos extraordinarios",
+                      extraordinaryOtherIncomeSeries,
+                    ),
+                    toTableRow("extra-other-total", "Total", extraordinaryOtherIncomeSeries, true),
+                  ],
           },
           {
             id: "extraordinary-expenses",
             title: "Egresos mensuales",
-            rows: [
-              toTableRow(
-                "extra-expense",
-                "Egresos extraordinarios",
-                extraordinaryExpenseSeries,
-              ),
-              toTableRow(
-                "extra-expense-total",
-                "Total",
-                extraordinaryExpenseSeries,
-                true,
-              ),
-            ],
+            rows:
+              extraordinaryExpenseConceptRows.length > 0
+                ? [
+                    ...extraordinaryExpenseConceptRows.map((row) =>
+                      toTableRow(
+                        row.id,
+                        row.label,
+                        extraordinaryExpenseSeriesByRowForRequestedYear.get(row.id) ?? createZeroSeries(),
+                      ),
+                    ),
+                    toTableRow("extra-expense-total", "Total", extraordinaryExpenseSeries, true),
+                  ]
+                : [
+                    toTableRow("extra-expense", "Egresos extraordinarios", extraordinaryExpenseSeries),
+                    toTableRow("extra-expense-total", "Total", extraordinaryExpenseSeries, true),
+                  ],
           },
           {
             id: "extraordinary-balance",
@@ -1354,12 +1691,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const ordinaryIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "ordinary-income-multi-year",
       title: "Ingresos mensuales",
-      years: [...LEGACY_VISIBLE_YEARS],
+      years: [...REPORT_VISIBLE_YEARS],
       rows: [
-        ...LEGACY_ORDINARY_INCOME_ROWS.map((row) => ({
+        ...ORDINARY_RECEIVABLE_ROWS.map((row) => ({
           id: row.id,
           label: row.label,
-          yearly: LEGACY_VISIBLE_YEARS.map((year) =>
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
             toYearSlice(year, ordinaryIncomeByRowAndYear[row.id][year]),
           ),
         })),
@@ -1367,12 +1704,42 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           id: "ordinary-income-total",
           label: "Total",
           isTotal: true,
-          yearly: LEGACY_VISIBLE_YEARS.map((year) =>
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
             toYearSlice(
               year,
               sumSeries([
-                ...LEGACY_ORDINARY_INCOME_ROWS.map((row) => ordinaryIncomeByRowAndYear[row.id][year]),
+                ...ORDINARY_RECEIVABLE_ROWS.map((row) => ordinaryIncomeByRowAndYear[row.id][year]),
               ]),
+            ),
+          ),
+        },
+      ],
+    };
+
+    const extraordinaryIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
+      id: "extraordinary-income-multi-year",
+      title: "Ingresos mensuales",
+      years: [...REPORT_VISIBLE_YEARS],
+      rows: [
+        ...EXTRAORDINARY_INCOME_ROWS.map((row) => ({
+          id: row.id,
+          label: row.label,
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSlice(year, extraordinaryIncomeByRowAndYear[row.id][year]),
+          ),
+        })),
+        {
+          id: "extraordinary-income-total",
+          label: "Total",
+          isTotal: true,
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSlice(
+              year,
+              sumSeries(
+                EXTRAORDINARY_INCOME_ROWS.map(
+                  (row) => extraordinaryIncomeByRowAndYear[row.id][year],
+                ),
+              ),
             ),
           ),
         },
@@ -1384,7 +1751,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         ? ordinaryOtherCatalogRows.map((row) => ({
             id: row.id,
             label: row.label,
-            yearly: LEGACY_VISIBLE_YEARS.map((year) =>
+            yearly: REPORT_VISIBLE_YEARS.map((year) =>
               toYearSlice(year, ordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()),
             ),
           }))
@@ -1392,25 +1759,246 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             {
               id: "ordinary-other",
               label: "Otros ingresos",
-              yearly: LEGACY_VISIBLE_YEARS.map((year) => toYearSlice(year, createZeroSeries())),
+              yearly: REPORT_VISIBLE_YEARS.map((year) => toYearSlice(year, createZeroSeries())),
             },
           ];
 
     const ordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "ordinary-other-income-multi-year",
       title: "Otros ingresos",
-      years: [...LEGACY_VISIBLE_YEARS],
+      years: [...REPORT_VISIBLE_YEARS],
       rows: [
         ...ordinaryOtherIncomeMultiYearRows,
         {
           id: "ordinary-other-total",
           label: "Total",
           isTotal: true,
-          yearly: LEGACY_VISIBLE_YEARS.map((year) =>
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
             toYearSlice(
               year,
               sumSeries(
                 ordinaryOtherIncomeMultiYearRows.map(
+                  (row) => row.yearly.find((slice) => slice.year === year)?.months ?? createZeroSeries(),
+                ),
+              ),
+            ),
+          ),
+        },
+      ],
+    };
+
+    const extraordinaryOtherIncomeMultiYearRows =
+      extraordinaryOtherCatalogRows.length > 0
+        ? extraordinaryOtherCatalogRows.map((row) => ({
+            id: row.id,
+            label: row.label,
+            yearly: REPORT_VISIBLE_YEARS.map((year) =>
+              toYearSlice(
+                year,
+                extraordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries(),
+              ),
+            ),
+          }))
+        : [
+            {
+              id: "extraordinary-other",
+              label: "Otros ingresos extraordinarios",
+              yearly: REPORT_VISIBLE_YEARS.map((year) => toYearSlice(year, createZeroSeries())),
+            },
+          ];
+
+    const extraordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
+      id: "extraordinary-other-income-multi-year",
+      title: "Otros ingresos",
+      years: [...REPORT_VISIBLE_YEARS],
+      rows: [
+        ...extraordinaryOtherIncomeMultiYearRows,
+        {
+          id: "extraordinary-other-total",
+          label: "Total",
+          isTotal: true,
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSlice(
+              year,
+              sumSeries(
+                extraordinaryOtherIncomeMultiYearRows.map(
+                  (row) =>
+                    row.yearly.find((slice) => slice.year === year)?.months ?? createZeroSeries(),
+                ),
+              ),
+            ),
+          ),
+        },
+      ],
+    };
+
+    const extraordinaryExpensesMultiYearRows =
+      extraordinaryExpenseConceptRows.length > 0
+        ? extraordinaryExpenseConceptRows.map((row) => ({
+            id: row.id,
+            label: row.label,
+            yearly: REPORT_VISIBLE_YEARS.map((year) =>
+              toYearSlice(year, extraordinaryExpenseByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()),
+            ),
+          }))
+        : [
+            {
+              id: "extraordinary-expense",
+              label: "Egresos extraordinarios",
+              yearly: REPORT_VISIBLE_YEARS.map((year) => toYearSlice(year, createZeroSeries())),
+            },
+          ];
+
+    const extraordinaryExpensesMultiYearTable: FinancialSummaryMultiYearTable = {
+      id: "extraordinary-expenses-multi-year",
+      title: "Egresos mensuales",
+      years: [...REPORT_VISIBLE_YEARS],
+      rows: [
+        ...extraordinaryExpensesMultiYearRows,
+        {
+          id: "extraordinary-expenses-total",
+          label: "Total",
+          isTotal: true,
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSlice(
+              year,
+              sumSeries(
+                extraordinaryExpensesMultiYearRows.map(
+                  (row) => row.yearly.find((slice) => slice.year === year)?.months ?? createZeroSeries(),
+                ),
+              ),
+            ),
+          ),
+        },
+      ],
+    };
+
+    const extraordinaryBalanceByYear = new Map<number, number[]>(
+      REPORT_VISIBLE_YEARS.map((year) => {
+        const extraordinaryIncomeForYear = sumSeries(
+          EXTRAORDINARY_INCOME_ROWS.map((row) => extraordinaryIncomeByRowAndYear[row.id][year]),
+        );
+        const extraordinaryOtherIncomeForYear = sumSeries(
+          extraordinaryOtherCatalogRows.map(
+            (row) => extraordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries(),
+          ),
+        );
+        const extraordinaryExpenseForYear = sumSeries(
+          extraordinaryExpenseConceptRows.map(
+            (row) => extraordinaryExpenseByRowAndYear.get(row.id)?.[year] ?? createZeroSeries(),
+          ),
+        );
+
+        return [
+          year,
+          subtractSeries(
+            sumSeries([extraordinaryIncomeForYear, extraordinaryOtherIncomeForYear]),
+            extraordinaryExpenseForYear,
+          ),
+        ];
+      }),
+    );
+    const extraordinaryBanksCashByYear = new Map<number, number[]>(
+      REPORT_VISIBLE_YEARS.map((year) => [
+        year,
+        cumulativeSeries(extraordinaryBalanceByYear.get(year) ?? createZeroSeries()),
+      ]),
+    );
+
+    const extraordinaryBalanceMultiYearTable: FinancialSummaryMultiYearTable = {
+      id: "extraordinary-balance-multi-year",
+      title: "Saldo Ingresos - Egresos Extraordinarios",
+      years: [...REPORT_VISIBLE_YEARS],
+      rows: [
+        {
+          id: "extraordinary-balance-total",
+          label: "Total",
+          isTotal: true,
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSlice(year, extraordinaryBalanceByYear.get(year) ?? createZeroSeries()),
+          ),
+        },
+        {
+          id: "extraordinary-banks-cash",
+          label: "Bancos y caja",
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSlice(year, extraordinaryBanksCashByYear.get(year) ?? createZeroSeries()),
+          ),
+        },
+      ],
+    };
+
+    const extraordinaryReceivablesMultiYearTable: FinancialSummaryMultiYearTable = {
+      id: "extraordinary-receivables-multi-year",
+      title: "Cuentas por cobrar - Cuotas extraordinarias",
+      years: [...REPORT_VISIBLE_YEARS],
+      rows: [
+        ...EXTRAORDINARY_INCOME_ROWS.map((row) => ({
+          id: row.id,
+          label: row.label,
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSlice(year, extraordinaryReceivableByRowAndYear[row.id][year]),
+          ),
+        })),
+        {
+          id: "extraordinary-receivables-total",
+          label: "Total",
+          isTotal: true,
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSlice(
+              year,
+              sumSeries(
+                EXTRAORDINARY_INCOME_ROWS.map(
+                  (row) => extraordinaryReceivableByRowAndYear[row.id][year],
+                ),
+              ),
+            ),
+          ),
+        },
+      ],
+    };
+
+    const extraordinaryPayablesMultiYearRows =
+      extraordinaryExpenseConceptRows.length > 0
+        ? extraordinaryExpenseConceptRows.map((row) => ({
+            id: row.id,
+            label: row.label,
+            yearly: REPORT_VISIBLE_YEARS.map((year) =>
+              toYearSliceWithPeriodEndTotal(
+                year,
+                cumulativeSeries(
+                  (extraordinaryExpenseByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()).map(
+                    (value) => -value,
+                  ),
+                ),
+              ),
+            ),
+          }))
+        : [
+            {
+              id: "extraordinary-payable",
+              label: "Cuotas extraordinarias",
+              yearly: REPORT_VISIBLE_YEARS.map((year) =>
+                toYearSliceWithPeriodEndTotal(year, createZeroSeries()),
+              ),
+            },
+          ];
+
+    const extraordinaryPayablesMultiYearTable: FinancialSummaryMultiYearTable = {
+      id: "extraordinary-payables-multi-year",
+      title: "Cuentas por pagar - Cuotas extraordinarias",
+      years: [...REPORT_VISIBLE_YEARS],
+      rows: [
+        ...extraordinaryPayablesMultiYearRows,
+        {
+          id: "extraordinary-payables-total",
+          label: "Total",
+          isTotal: true,
+          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            toYearSliceWithPeriodEndTotal(
+              year,
+              sumSeries(
+                extraordinaryPayablesMultiYearRows.map(
                   (row) => row.yearly.find((slice) => slice.year === year)?.months ?? createZeroSeries(),
                 ),
               ),
@@ -1425,7 +2013,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       title: "Egresos mensuales",
       years: [...ordinaryExpenseYears],
       rows: [
-        ...LEGACY_ORDINARY_EXPENSE_ROWS.map((row) => ({
+        ...ORDINARY_EXPENSE_ROWS.map((row) => ({
           id: row.id,
           label: row.label,
           yearly: ordinaryExpenseYears.map((year) =>
@@ -1440,7 +2028,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             toYearSlice(
               year,
               sumSeries(
-                LEGACY_ORDINARY_EXPENSE_ROWS.map(
+                ORDINARY_EXPENSE_ROWS.map(
                   (row) => ordinaryExpenseByRowAndYear[row.id][year],
                 ),
               ),
@@ -1451,7 +2039,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     };
 
     const ordinaryReceivableRows: FinancialSummaryOrdinaryReceivableRow[] =
-      LEGACY_ORDINARY_INCOME_ROWS.map((row) => {
+      ORDINARY_RECEIVABLE_ROWS.map((row) => {
         const rowState = receivableRowsById.get(row.id);
 
         return {
@@ -1536,7 +2124,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       },
       blocks,
       ordinaryIncomeMultiYearTable,
+      extraordinaryIncomeMultiYearTable,
       ordinaryOtherIncomeMultiYearTable,
+      extraordinaryOtherIncomeMultiYearTable,
+      extraordinaryExpensesMultiYearTable,
+      extraordinaryBalanceMultiYearTable,
+      extraordinaryReceivablesMultiYearTable,
+      extraordinaryPayablesMultiYearTable,
       ordinaryExpensesLegacyTable,
       ordinaryReceivablesTable,
       ordinaryPayablesTable,

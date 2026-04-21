@@ -1,5 +1,7 @@
 import { prisma as basePrisma } from "@/shared/infrastructure/db/prisma";
 import { toPrivateAreaStatusFromLegacy } from "@/shared/domain/private-area-status";
+import { toBudgetExpenseGroupFromLegacyGroupId } from "@/shared/domain/budget-expense-group";
+import { resolveChargeGroupKind } from "@/shared/domain/charge-group-kind";
 
 const LEGACY_WRITE_EXEMPT_MODELS = new Set([
   "MigrationIdMap",
@@ -139,19 +141,77 @@ function asDate(value: unknown): Date | null {
   return null;
 }
 
+function asMonth(value: unknown): number | null {
+  const parsed = asInt(value);
+  if (parsed === null) {
+    return null;
+  }
+
+  return parsed >= 1 && parsed <= 12 ? parsed : null;
+}
+
+function resolveBudgetConceptName(payload: Record<string, unknown>, conceptId: number): string {
+  const rawName =
+    asString(payload.nombre) ??
+    asString(payload.concepto) ??
+    asString(payload.descripcion) ??
+    asString(payload.detalle);
+
+  if (rawName && rawName.trim().length > 0) {
+    return rawName.trim();
+  }
+
+  return `Concepto ${conceptId}`;
+}
+
+function resolveExpenseYear(payload: Record<string, unknown>): number {
+  const explicitYear = asInt(payload.anio);
+  if (explicitYear !== null) {
+    return explicitYear;
+  }
+
+  const date = asDate(payload.fecha);
+  if (date) {
+    return date.getUTCFullYear();
+  }
+
+  return new Date().getUTCFullYear();
+}
+
+function resolvePaymentVisibility(input: {
+  legacyStatusCode: number | null;
+  isLegacyActive: boolean | null;
+  legacyAreaIsActive: boolean | null;
+}): boolean {
+  const hasLegacyContext =
+    input.legacyStatusCode !== null ||
+    input.isLegacyActive !== null ||
+    input.legacyAreaIsActive !== null;
+
+  if (!hasLegacyContext) {
+    return true;
+  }
+
+  return (
+    input.legacyStatusCode === 1 &&
+    input.isLegacyActive === true &&
+    input.legacyAreaIsActive === true
+  );
+}
+
 function toLedgerStatus(idCatStatusPago: number | null, montoAbonado: number | null, monto: number | null):
   | "OPEN"
   | "PARTIAL"
   | "PAID"
   | "CANCELED" {
-  if (idCatStatusPago === 3 || (monto !== null && montoAbonado !== null && montoAbonado >= monto)) {
+  if (idCatStatusPago === 2 || idCatStatusPago === 4) {
+    return "CANCELED";
+  }
+  if (monto !== null && montoAbonado !== null && montoAbonado >= monto) {
     return "PAID";
   }
   if (montoAbonado !== null && montoAbonado > 0) {
     return "PARTIAL";
-  }
-  if (idCatStatusPago === 4) {
-    return "CANCELED";
   }
   return "OPEN";
 }
@@ -334,6 +394,12 @@ export class PromoteFromStagingUseCase {
 
     for (const row of rows) {
       const payload = row.payload as Record<string, unknown>;
+      const name = asString(payload.nombre) ?? `Grupo ${row.legacyId}`;
+      const chargeType = asString(payload.tiempo);
+      const kind = resolveChargeGroupKind({
+        name,
+        chargeType,
+      });
 
       const group = await prisma.chargeGroup.upsert({
         where: {
@@ -345,13 +411,15 @@ export class PromoteFromStagingUseCase {
         create: {
           condominiumId,
           legacyId: row.legacyId,
-          name: asString(payload.nombre) ?? `Grupo ${row.legacyId}`,
-          chargeType: asString(payload.tiempo),
+          name,
+          chargeType,
+          kind,
           isActive: asBoolean(payload.activo, true),
         },
         update: {
-          name: asString(payload.nombre) ?? `Grupo ${row.legacyId}`,
-          chargeType: asString(payload.tiempo),
+          name,
+          chargeType,
+          kind,
           isActive: asBoolean(payload.activo, true),
         },
       });
@@ -921,8 +989,25 @@ export class PromoteFromStagingUseCase {
       take: 5000,
     });
 
+    const chargeGroupByLegacyId = new Map<number, string>(
+      (
+        await prisma.chargeGroup.findMany({
+          where: { condominiumId },
+          select: { id: true, legacyId: true },
+        })
+      )
+        .filter((group): group is { id: string; legacyId: number } => group.legacyId !== null)
+        .map((group) => [group.legacyId, group.id]),
+    );
+
     for (const row of rows) {
       const payload = row.payload as Record<string, unknown>;
+      const legacyChargeGroupId = asInt(payload.id_cat_grupos_cobro);
+      const chargeGroupId =
+        legacyChargeGroupId === null
+          ? null
+          : (chargeGroupByLegacyId.get(legacyChargeGroupId) ?? null);
+
       const item = await prisma.miscIncomeCatalog.upsert({
         where: {
           condominiumId_legacyId: {
@@ -934,12 +1019,14 @@ export class PromoteFromStagingUseCase {
           condominiumId,
           legacyId: row.legacyId,
           name: asString(payload.nombre) ?? `Vario ${row.legacyId}`,
-          legacyChargeGroupId: asInt(payload.id_cat_grupos_cobro),
+          legacyChargeGroupId,
+          chargeGroupId,
           isActive: asBoolean(payload.activo, true),
         },
         update: {
           name: asString(payload.nombre) ?? `Vario ${row.legacyId}`,
-          legacyChargeGroupId: asInt(payload.id_cat_grupos_cobro),
+          legacyChargeGroupId,
+          chargeGroupId,
           isActive: asBoolean(payload.activo, true),
         },
       });
@@ -1274,6 +1361,7 @@ export class PromoteFromStagingUseCase {
       const paidAmount = asNumber(payload.montoAbonado) ?? 0;
       const interestAmount = asNumber(payload.interesMoratorio) ?? 0;
       const discountAmount = asNumber(payload.descuento) ?? 0;
+      const legacyStatusCode = asInt(payload.id_cat_status_pago);
       const isCollectible = asBoolean(payload.activo, true);
       const tenancyId = await this.resolveMappedId({
         runId,
@@ -1282,7 +1370,9 @@ export class PromoteFromStagingUseCase {
         targetEntity: "Rental",
       });
       const responsibility = asInt(payload.id_opcion_estado_cuenta) === 2 ? "COMMERCE" : "OWNER";
-      const status = toLedgerStatus(asInt(payload.id_cat_status_pago), paidAmount, amount);
+      const status = toLedgerStatus(legacyStatusCode, paidAmount, amount);
+      const periodYear = asInt(payload.anio) ?? paymentDate.getUTCFullYear();
+      const periodMonth = asMonth(payload.mes) ?? paymentDate.getUTCMonth() + 1;
 
       const charge = await prisma.charge.upsert({
         where: {
@@ -1298,8 +1388,9 @@ export class PromoteFromStagingUseCase {
           chargeGroupId,
           tenancyId,
           responsibility,
-          periodYear: paymentDate.getUTCFullYear(),
-          periodMonth: paymentDate.getUTCMonth() + 1,
+          legacyStatusCode,
+          periodYear,
+          periodMonth,
           amount,
           paidAmount,
           interestAmount,
@@ -1313,8 +1404,9 @@ export class PromoteFromStagingUseCase {
           chargeGroupId,
           tenancyId,
           responsibility,
-          periodYear: paymentDate.getUTCFullYear(),
-          periodMonth: paymentDate.getUTCMonth() + 1,
+          legacyStatusCode,
+          periodYear,
+          periodMonth,
           amount,
           paidAmount,
           interestAmount,
@@ -1384,6 +1476,11 @@ export class PromoteFromStagingUseCase {
         legacyAreaCode === null ? null : (legacyAreaActiveById.get(legacyAreaCode) ?? null);
       const legacyStatusCode = asInt(payload.id_cat_status_historico_pagos);
       const isLegacyActive = asBoolean(payload.activo, true);
+      const isVisibleInFinancialSummary = resolvePaymentVisibility({
+        legacyStatusCode,
+        isLegacyActive,
+        legacyAreaIsActive,
+      });
       const privateAreaId = await this.resolveMappedId({
         runId,
         legacyTable: "AREAS_PRIVATIVAS",
@@ -1406,6 +1503,7 @@ export class PromoteFromStagingUseCase {
           legacyAreaIsActive,
           legacyStatusCode,
           isLegacyActive,
+          isVisibleInFinancialSummary,
           paidAt,
           amount,
           method,
@@ -1418,6 +1516,7 @@ export class PromoteFromStagingUseCase {
           legacyAreaIsActive,
           legacyStatusCode,
           isLegacyActive,
+          isVisibleInFinancialSummary,
           paidAt,
           amount,
           method,
@@ -1972,12 +2071,33 @@ export class PromoteFromStagingUseCase {
     }
   }
 
-  private async promoteBudgetLines(runId: string): Promise<void> {
+  private async promoteBudgetLines(runId: string, condominiumId: string): Promise<void> {
     const rows = await prisma.legacyStagingRow.findMany({
       where: { runId, legacyTable: "PRESUPUESTO_DETALLE", promotedAt: null },
       orderBy: { legacyId: "asc" },
       take: 10000,
     });
+
+    const budgetYearById = new Map<string, number>(
+      (
+        await prisma.budget.findMany({
+          where: { condominiumId },
+          select: { id: true, year: true },
+        })
+      ).map((budget) => [budget.id, budget.year]),
+    );
+
+    const budgetExpenseConceptFindUnique = (
+      basePrisma as unknown as {
+        budgetExpenseConcept: {
+          findUnique(args: unknown): Promise<{
+            id: string;
+            name: string;
+            budgetGroup: string;
+          } | null>;
+        };
+      }
+    ).budgetExpenseConcept.findUnique;
 
     for (const row of rows) {
       const payload = row.payload as Record<string, unknown>;
@@ -1993,8 +2113,33 @@ export class PromoteFromStagingUseCase {
         continue;
       }
 
-      const concept = `Concepto ${asInt(payload.id_cat_conceptos_presupuesto) ?? row.legacyId}`;
-      const groupName = `Grupo ${asInt(payload.id_cat_grupos_presupuesto) ?? "N/A"}`;
+      const budgetYear = budgetYearById.get(budgetId) ?? null;
+      const legacyConceptId = asInt(payload.id_cat_conceptos_presupuesto);
+
+      const budgetConcept =
+        budgetYear !== null && legacyConceptId !== null
+          ? await budgetExpenseConceptFindUnique({
+              where: {
+                condominiumId_year_legacyBudgetConceptId: {
+                  condominiumId,
+                  year: budgetYear,
+                  legacyBudgetConceptId: legacyConceptId,
+                },
+              },
+              select: {
+                id: true,
+                name: true,
+                budgetGroup: true,
+              },
+            })
+          : null;
+
+      const concept =
+        budgetConcept?.name ??
+        `Concepto ${legacyConceptId ?? row.legacyId}`;
+      const groupName =
+        budgetConcept?.budgetGroup ??
+        `Grupo ${asInt(payload.id_cat_grupos_presupuesto) ?? "N/A"}`;
 
       const existingMap = await prisma.migrationIdMap.findUnique({
         where: {
@@ -2028,6 +2173,7 @@ export class PromoteFromStagingUseCase {
               legacyId: row.legacyId,
               concept,
               groupName,
+              budgetConceptId: budgetConcept?.id ?? null,
             },
           })
         : await prisma.budgetLine.create({
@@ -2036,6 +2182,7 @@ export class PromoteFromStagingUseCase {
               legacyId: row.legacyId,
               concept,
               groupName,
+              budgetConceptId: budgetConcept?.id ?? null,
             },
           });
 
@@ -2104,6 +2251,175 @@ export class PromoteFromStagingUseCase {
     }
   }
 
+  private async promoteExpenseConceptGroupMappings(
+    runId: string,
+    condominiumId: string,
+  ): Promise<void> {
+    const budgetDetailRows = await prisma.legacyStagingRow.findMany({
+      where: { runId, legacyTable: "PRESUPUESTO_DETALLE" },
+      select: {
+        payload: true,
+      },
+    });
+
+    const conceptRows = await prisma.legacyStagingRow.findMany({
+      where: {
+        runId,
+        legacyTable: {
+          in: ["CAT_CONCEPTOS_PRESUPUESTO", "CAT_CONCEPTOS_PRESUPUESTO_BACKUP_20260203"],
+        },
+      },
+      select: {
+        id: true,
+        promotedAt: true,
+        payload: true,
+      },
+    });
+
+    const budgetExpenseConceptUpsert = (
+      basePrisma as unknown as {
+        budgetExpenseConcept: {
+          upsert(args: unknown): Promise<{ id: string }>;
+        };
+      }
+    ).budgetExpenseConcept.upsert;
+
+    const expenseConceptGroupMapUpsert = (
+      basePrisma as unknown as {
+        expenseConceptGroupMap: {
+          upsert(args: unknown): Promise<unknown>;
+        };
+      }
+    ).expenseConceptGroupMap.upsert;
+
+    const conceptMetaByYearAndConcept = new Map<string, { name: string; isActive: boolean }>();
+    const conceptMetaByConcept = new Map<number, { name: string; isActive: boolean }>();
+
+    for (const conceptRow of conceptRows) {
+      const payload = conceptRow.payload as Record<string, unknown>;
+      const conceptId = asInt(payload.id_cat_conceptos_presupuesto);
+      if (conceptId === null) {
+        continue;
+      }
+
+      const name = resolveBudgetConceptName(payload, conceptId);
+      const isActive = asBoolean(payload.activo, false);
+      const year = asInt(payload.anio);
+
+      if (year !== null) {
+        conceptMetaByYearAndConcept.set(`${year}:${conceptId}`, {
+          name,
+          isActive,
+        });
+      } else {
+        conceptMetaByConcept.set(conceptId, {
+          name,
+          isActive,
+        });
+      }
+    }
+
+    const mappingsByYearAndConcept = new Map<
+      string,
+      { year: number; conceptId: number; budgetGroupId: number; name: string; isActive: boolean }
+    >();
+
+    for (const row of budgetDetailRows) {
+      const payload = row.payload as Record<string, unknown>;
+
+      const year = asInt(payload.anio);
+      const conceptId = asInt(payload.id_cat_conceptos_presupuesto);
+      const budgetGroupId = asInt(payload.id_cat_grupos_presupuesto);
+
+      if (year === null || conceptId === null || budgetGroupId === null) {
+        continue;
+      }
+
+      const metaByYear = conceptMetaByYearAndConcept.get(`${year}:${conceptId}`);
+      const metaByConcept = conceptMetaByConcept.get(conceptId);
+      const conceptName =
+        metaByYear?.name ??
+        metaByConcept?.name ??
+        resolveBudgetConceptName(payload, conceptId);
+      const conceptIsActive =
+        metaByYear?.isActive ??
+        metaByConcept?.isActive ??
+        asBoolean(payload.activo, false);
+
+      const key = `${year}:${conceptId}`;
+
+      if (!mappingsByYearAndConcept.has(key)) {
+        mappingsByYearAndConcept.set(key, {
+          year,
+          conceptId,
+          budgetGroupId,
+          name: conceptName,
+          isActive: conceptIsActive,
+        });
+      }
+    }
+
+    for (const mapping of mappingsByYearAndConcept.values()) {
+      const budgetConcept = await budgetExpenseConceptUpsert({
+        where: {
+          condominiumId_year_legacyBudgetConceptId: {
+            condominiumId,
+            year: mapping.year,
+            legacyBudgetConceptId: mapping.conceptId,
+          },
+        },
+        update: {
+          name: mapping.name,
+          budgetGroup: toBudgetExpenseGroupFromLegacyGroupId(mapping.budgetGroupId),
+          isActive: mapping.isActive,
+          source: "legacy_etl",
+        },
+        create: {
+          condominiumId,
+          year: mapping.year,
+          legacyBudgetConceptId: mapping.conceptId,
+          name: mapping.name,
+          budgetGroup: toBudgetExpenseGroupFromLegacyGroupId(mapping.budgetGroupId),
+          isActive: mapping.isActive,
+          source: "legacy_etl",
+        },
+      });
+
+      await expenseConceptGroupMapUpsert({
+        where: {
+          condominiumId_year_legacyBudgetConceptId: {
+            condominiumId,
+            year: mapping.year,
+            legacyBudgetConceptId: mapping.conceptId,
+          },
+        },
+        update: {
+          budgetGroupId: mapping.budgetGroupId,
+          budgetConceptId: budgetConcept.id,
+          isBudgetConceptActive: mapping.isActive,
+          source: "legacy_etl",
+        },
+        create: {
+          condominiumId,
+          year: mapping.year,
+          legacyBudgetConceptId: mapping.conceptId,
+          budgetGroupId: mapping.budgetGroupId,
+          budgetConceptId: budgetConcept.id,
+          isBudgetConceptActive: mapping.isActive,
+          source: "legacy_etl",
+        },
+      });
+    }
+
+    for (const conceptRow of conceptRows) {
+      if (conceptRow.promotedAt !== null) {
+        continue;
+      }
+
+      await markPromoted(conceptRow.id);
+    }
+  }
+
   private async promoteIncomes(runId: string, condominiumId: string): Promise<void> {
     const rows = await prisma.legacyStagingRow.findMany({
       where: { runId, legacyTable: "INGRESOS", promotedAt: null },
@@ -2119,8 +2435,40 @@ export class PromoteFromStagingUseCase {
       }
     ).income.upsert;
 
+    const chargeGroupByLegacyId = new Map<number, string>(
+      (
+        await prisma.chargeGroup.findMany({
+          where: { condominiumId },
+          select: { id: true, legacyId: true },
+        })
+      )
+        .filter((group): group is { id: string; legacyId: number } => group.legacyId !== null)
+        .map((group) => [group.legacyId, group.id]),
+    );
+
+    const miscCatalogByLegacyId = new Map<number, string>(
+      (
+        await prisma.miscIncomeCatalog.findMany({
+          where: { condominiumId },
+          select: { id: true, legacyId: true },
+        })
+      )
+        .filter((catalog): catalog is { id: string; legacyId: number } => catalog.legacyId !== null)
+        .map((catalog) => [catalog.legacyId, catalog.id]),
+    );
+
     for (const row of rows) {
       const payload = row.payload as Record<string, unknown>;
+      const legacyChargeGroupId = asInt(payload.id_cat_grupos_cobro);
+      const chargeGroupId =
+        legacyChargeGroupId === null
+          ? null
+          : (chargeGroupByLegacyId.get(legacyChargeGroupId) ?? null);
+      const legacyMiscCatalogId = asInt(payload.id_dcat_varios);
+      const miscCatalogId =
+        legacyMiscCatalogId === null
+          ? null
+          : (miscCatalogByLegacyId.get(legacyMiscCatalogId) ?? null);
 
       const income = await incomeUpsert({
         where: {
@@ -2132,24 +2480,28 @@ export class PromoteFromStagingUseCase {
         create: {
           condominiumId,
           legacyId: row.legacyId,
+          chargeGroupId,
+          miscCatalogId,
           date: asDate(payload.fecha) ?? new Date(),
           concept: asString(payload.comentarios) ?? "Ingreso migrado",
           amount: asNumber(payload.monto) ?? 0,
           isActive: asBoolean(payload.activo, true),
-          legacyChargeGroupId: asInt(payload.id_cat_grupos_cobro),
-          legacyMiscCatalogId: asInt(payload.id_dcat_varios),
+          legacyChargeGroupId,
+          legacyMiscCatalogId,
           legacyPrivateAreaId: asInt(payload.id_areas_privativas),
           isConfirmed: asBoolean(payload.confirmado, false),
           paymentMethod: toPaymentMethod(asInt(payload.id_cat_formas_pago)),
           notes: asString(payload.comentarios),
         },
         update: {
+          chargeGroupId,
+          miscCatalogId,
           date: asDate(payload.fecha) ?? new Date(),
           concept: asString(payload.comentarios) ?? "Ingreso migrado",
           amount: asNumber(payload.monto) ?? 0,
           isActive: asBoolean(payload.activo, true),
-          legacyChargeGroupId: asInt(payload.id_cat_grupos_cobro),
-          legacyMiscCatalogId: asInt(payload.id_dcat_varios),
+          legacyChargeGroupId,
+          legacyMiscCatalogId,
           legacyPrivateAreaId: asInt(payload.id_areas_privativas),
           isConfirmed: asBoolean(payload.confirmado, false),
           paymentMethod: toPaymentMethod(asInt(payload.id_cat_formas_pago)),
@@ -2184,8 +2536,41 @@ export class PromoteFromStagingUseCase {
       }
     ).expense.upsert;
 
+    const budgetExpenseConceptFindUnique = (
+      basePrisma as unknown as {
+        budgetExpenseConcept: {
+          findUnique(args: unknown): Promise<{ id: string } | null>;
+        };
+      }
+    ).budgetExpenseConcept.findUnique;
+
+    const budgetConceptIdCache = new Map<string, string | null>();
+
     for (const row of rows) {
       const payload = row.payload as Record<string, unknown>;
+      const date = asDate(payload.fecha) ?? new Date();
+      const conceptId = asInt(payload.id_cat_conceptos_presupuesto);
+      const year = resolveExpenseYear(payload);
+
+      const budgetConceptKey =
+        conceptId === null ? null : `${year}:${conceptId}`;
+      if (budgetConceptKey && !budgetConceptIdCache.has(budgetConceptKey)) {
+        const budgetConcept = await budgetExpenseConceptFindUnique({
+          where: {
+            condominiumId_year_legacyBudgetConceptId: {
+              condominiumId,
+              year,
+              legacyBudgetConceptId: conceptId,
+            },
+          },
+          select: { id: true },
+        });
+
+        budgetConceptIdCache.set(budgetConceptKey, budgetConcept?.id ?? null);
+      }
+
+      const budgetConceptId =
+        budgetConceptKey === null ? null : (budgetConceptIdCache.get(budgetConceptKey) ?? null);
 
       const expense = await expenseUpsert({
         where: {
@@ -2197,22 +2582,22 @@ export class PromoteFromStagingUseCase {
         create: {
           condominiumId,
           legacyId: row.legacyId,
-          date: asDate(payload.fecha) ?? new Date(),
+          date,
           concept: asString(payload.comentarios) ?? "Gasto migrado",
           amount: asNumber(payload.monto) ?? 0,
           isActive: asBoolean(payload.activo, true),
-          legacyBudgetConceptId: asInt(payload.id_cat_conceptos_presupuesto),
+          budgetConceptId,
           legacyReceipt: asString(payload.recibo),
           legacyProjectName: asString(payload.proyecto),
           paymentMethod: toPaymentMethod(asInt(payload.id_cat_formas_pago)),
           notes: asString(payload.comentarios),
         },
         update: {
-          date: asDate(payload.fecha) ?? new Date(),
+          date,
           concept: asString(payload.comentarios) ?? "Gasto migrado",
           amount: asNumber(payload.monto) ?? 0,
           isActive: asBoolean(payload.activo, true),
-          legacyBudgetConceptId: asInt(payload.id_cat_conceptos_presupuesto),
+          budgetConceptId,
           legacyReceipt: asString(payload.recibo),
           legacyProjectName: asString(payload.proyecto),
           paymentMethod: toPaymentMethod(asInt(payload.id_cat_formas_pago)),
@@ -2800,9 +3185,10 @@ export class PromoteFromStagingUseCase {
     await this.promotePaymentsAndAllocations(input.runId, condominium.id);
     await this.promotePaymentDetails(input.runId, condominium.id);
     await this.promoteIncomes(input.runId, condominium.id);
-    await this.promoteExpenses(input.runId, condominium.id);
     await this.promoteBudgets(input.runId, condominium.id);
-    await this.promoteBudgetLines(input.runId);
+    await this.promoteExpenseConceptGroupMappings(input.runId, condominium.id);
+    await this.promoteExpenses(input.runId, condominium.id);
+    await this.promoteBudgetLines(input.runId, condominium.id);
     await this.promoteBudgetMonths(input.runId);
     await this.promoteNotificationCategories(input.runId, condominium.id);
     await this.promoteTicketDepartments(input.runId, condominium.id);

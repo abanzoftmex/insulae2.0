@@ -96,6 +96,23 @@ async function main(): Promise<void> {
     throw new Error("No se encontro condominio activo para aplicar el backfill de DCAT_VARIOS");
   }
 
+  const groups = await prisma.chargeGroup.findMany({
+    where: {
+      condominiumId: condominium.id,
+      legacyId: { not: null },
+    },
+    select: {
+      id: true,
+      legacyId: true,
+    },
+  });
+
+  const chargeGroupByLegacyId = new Map<number, string>(
+    groups
+      .filter((group): group is { id: string; legacyId: number } => group.legacyId !== null)
+      .map((group) => [group.legacyId, group.id]),
+  );
+
   let scanned = 0;
   let upserted = 0;
   let skipped = 0;
@@ -110,6 +127,11 @@ async function main(): Promise<void> {
     }
 
     const name = asString(row.nombre) ?? `Vario ${legacyId}`;
+    const legacyChargeGroupId = asInt(row.id_cat_grupos_cobro);
+    const chargeGroupId =
+      legacyChargeGroupId === null
+        ? null
+        : (chargeGroupByLegacyId.get(legacyChargeGroupId) ?? null);
 
     await prisma.miscIncomeCatalog.upsert({
       where: {
@@ -123,12 +145,14 @@ async function main(): Promise<void> {
         legacyId,
         name,
         isActive: asBoolean(row.activo, true),
-        legacyChargeGroupId: asInt(row.id_cat_grupos_cobro),
+        legacyChargeGroupId,
+        chargeGroupId,
       },
       update: {
         name,
         isActive: asBoolean(row.activo, true),
-        legacyChargeGroupId: asInt(row.id_cat_grupos_cobro),
+        legacyChargeGroupId,
+        chargeGroupId,
       },
     });
 

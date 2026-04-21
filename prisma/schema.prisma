@@ -20,6 +20,15 @@ enum PaymentMethod {
   OTHER
 }
 
+enum ExpenseBudgetGroup {
+  ADMINISTRATION
+  MAINTENANCE
+  SECURITY
+  INFRASTRUCTURE
+  EXTRAORDINARY
+  OTHER
+}
+
 enum LedgerStatus {
   OPEN
   PARTIAL
@@ -30,6 +39,16 @@ enum LedgerStatus {
 enum ChargeResponsibility {
   OWNER
   COMMERCE
+}
+
+enum ChargeGroupCanonicalKind {
+  ORDINARY
+  EXTRA_CONDO
+  EXTRA_COMMERCE
+  STC
+  SANCTION
+  COMODATO
+  OTHER
 }
 
 enum TicketStatus {
@@ -109,6 +128,7 @@ model Condominium {
   subzoneCatalogs      SubzoneCatalog[]
   landUseCatalogs      LandUseCatalog[]
   miscIncomeCatalogs   MiscIncomeCatalog[]
+  budgetExpenseConcepts BudgetExpenseConcept[]
   expenseConceptGroupMaps ExpenseConceptGroupMap[]
 }
 
@@ -365,14 +385,18 @@ model ChargeGroup {
   legacyId      Int?
   name          String
   chargeType    String?
+  kind          ChargeGroupCanonicalKind @default(OTHER)
   isActive      Boolean  @default(true)
 
   condominium Condominium @relation(fields: [condominiumId], references: [id])
   areaCharges AreaCharge[]
   charges     Charge[]
   paymentDetails PaymentDetail[]
+  incomes Income[]
+  miscIncomeCatalogs MiscIncomeCatalog[]
 
   @@index([condominiumId])
+  @@index([condominiumId, kind, isActive])
   @@unique([condominiumId, legacyId])
 }
 
@@ -402,6 +426,7 @@ model Charge {
   chargeGroupId String
   tenancyId     String?
   legacyId      Int?
+  legacyStatusCode Int?
   responsibility ChargeResponsibility @default(OWNER)
   periodYear    Int
   periodMonth   Int
@@ -424,6 +449,7 @@ model Charge {
   @@index([privateAreaId])
   @@index([privateAreaId, responsibility, periodYear, periodMonth])
   @@index([tenancyId])
+  @@index([condominiumId, legacyStatusCode])
   @@index([responsibility])
   @@unique([condominiumId, legacyId])
 }
@@ -433,6 +459,7 @@ model Payment {
   condominiumId String
   legacyId      Int?
   privateAreaId String?
+  isVisibleInFinancialSummary Boolean @default(true)
   legacyStatusCode Int?
   isLegacyActive   Boolean?
   legacyAreaCode   Int?
@@ -450,6 +477,7 @@ model Payment {
   details     PaymentDetail[]
 
   @@index([privateAreaId])
+  @@index([condominiumId, isVisibleInFinancialSummary])
   @@index([condominiumId, legacyStatusCode])
   @@index([condominiumId, legacyAreaIsActive])
   @@index([condominiumId, paidAt])
@@ -555,12 +583,17 @@ model MiscIncomeCatalog {
   id            String   @id @default(uuid())
   condominiumId String
   legacyId      Int?
+  chargeGroupId String?
   name          String
   legacyChargeGroupId Int?
   isActive      Boolean  @default(true)
 
   condominium Condominium @relation(fields: [condominiumId], references: [id])
+  chargeGroup ChargeGroup? @relation(fields: [chargeGroupId], references: [id], onDelete: SetNull)
+  incomes Income[]
 
+  @@index([chargeGroupId])
+  @@index([condominiumId, isActive, chargeGroupId])
   @@index([condominiumId, isActive, legacyChargeGroupId])
   @@unique([condominiumId, legacyId])
 }
@@ -569,6 +602,8 @@ model Income {
   id            String        @id @default(uuid())
   condominiumId String
   legacyId      Int?
+  chargeGroupId String?
+  miscCatalogId String?
   date          DateTime
   concept       String
   amount        Decimal       @db.Decimal(14, 2)
@@ -581,8 +616,12 @@ model Income {
   notes         String?
 
   condominium Condominium @relation(fields: [condominiumId], references: [id])
+  chargeGroup ChargeGroup? @relation(fields: [chargeGroupId], references: [id], onDelete: SetNull)
+  miscCatalog MiscIncomeCatalog? @relation(fields: [miscCatalogId], references: [id], onDelete: SetNull)
 
   @@index([condominiumId, isActive, date])
+  @@index([chargeGroupId])
+  @@index([miscCatalogId])
   @@index([condominiumId, legacyChargeGroupId])
   @@index([condominiumId, legacyMiscCatalogId, legacyChargeGroupId, isActive, date])
   @@unique([condominiumId, legacyId])
@@ -596,6 +635,7 @@ model Expense {
   concept       String
   amount        Decimal       @db.Decimal(14, 2)
   isActive      Boolean       @default(true)
+  budgetConceptId String?
   legacyBudgetConceptId Int?
   legacyReceipt String?
   legacyProjectName String?
@@ -603,8 +643,10 @@ model Expense {
   notes         String?
 
   condominium Condominium @relation(fields: [condominiumId], references: [id])
+  budgetConcept BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@index([condominiumId, isActive, date])
+  @@index([budgetConceptId])
   @@index([condominiumId, legacyBudgetConceptId])
   @@unique([condominiumId, legacyId])
 }
@@ -619,9 +661,35 @@ model Budget {
 
   condominium Condominium @relation(fields: [condominiumId], references: [id])
   lines       BudgetLine[]
+  expenseConcepts BudgetExpenseConcept[]
   expenseConceptGroupMaps ExpenseConceptGroupMap[]
 
   @@unique([condominiumId, year])
+}
+
+model BudgetExpenseConcept {
+  id                    String             @id @default(uuid())
+  condominiumId         String             @map("condominium_id")
+  year                  Int
+  name                  String
+  budgetGroup           ExpenseBudgetGroup @map("group")
+  isActive              Boolean            @default(true) @map("is_active")
+  legacyBudgetConceptId Int?               @map("legacy_budget_concept_id")
+  source                String             @default("legacy_etl")
+  createdAt             DateTime           @default(now()) @map("created_at")
+  updatedAt             DateTime           @updatedAt @map("updated_at")
+
+  condominium Condominium            @relation(fields: [condominiumId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  budget      Budget                 @relation(fields: [condominiumId, year], references: [condominiumId, year], onDelete: Restrict, onUpdate: Cascade)
+  expenses    Expense[]
+  budgetLines BudgetLine[]
+  mappings    ExpenseConceptGroupMap[]
+
+  @@unique([condominiumId, year, legacyBudgetConceptId])
+  @@index([condominiumId, year, budgetGroup, isActive])
+  @@index([condominiumId, year, isActive])
+  @@index([condominiumId, year, name])
+  @@map("budget_expense_concept")
 }
 
 model BudgetLine {
@@ -631,11 +699,14 @@ model BudgetLine {
   concept      String
   groupName    String?
   annualAmount Decimal? @db.Decimal(14, 2)
+  budgetConceptId String?
 
   budget Budget      @relation(fields: [budgetId], references: [id])
+  budgetConcept BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   months BudgetMonth[]
 
   @@index([budgetId])
+  @@index([budgetConceptId])
 }
 
 model BudgetMonth {
@@ -654,17 +725,22 @@ model ExpenseConceptGroupMap {
   condominiumId         String   @map("condominium_id")
   year                  Int
   legacyBudgetConceptId Int      @map("legacy_budget_concept_id")
+  budgetConceptId       String?  @map("budget_concept_id")
   budgetGroupId         Int      @map("budget_group_id")
+  isBudgetConceptActive Boolean  @default(true) @map("is_budget_concept_active")
   source                String   @default("legacy_etl")
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
   condominium Condominium @relation(fields: [condominiumId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   budget      Budget      @relation(fields: [condominiumId, year], references: [condominiumId, year], onDelete: Restrict, onUpdate: Cascade)
+  budgetConcept BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([condominiumId, year, legacyBudgetConceptId])
   @@index([year, legacyBudgetConceptId])
+  @@index([budgetConceptId])
   @@index([condominiumId, year, budgetGroupId])
+  @@index([condominiumId, year, isBudgetConceptActive])
   @@map("expense_concept_group_map")
 }
 

@@ -3,10 +3,15 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { PROJECT_SCOPE } from "@/config/project-scope";
+import { toBudgetExpenseGroupFromLegacyGroupId } from "@/shared/domain/budget-expense-group";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 type ExpenseConceptGroupMapUpsertDelegate = {
   upsert(args: unknown): Promise<unknown>;
+};
+
+type BudgetExpenseConceptUpsertDelegate = {
+  upsert(args: unknown): Promise<{ id: string }>;
 };
 
 const expenseConceptGroupMapModel = (
@@ -15,12 +20,43 @@ const expenseConceptGroupMapModel = (
   }
 ).expenseConceptGroupMap;
 
+const budgetExpenseConceptModel = (
+  prisma as unknown as {
+    budgetExpenseConcept: BudgetExpenseConceptUpsertDelegate;
+  }
+).budgetExpenseConcept;
+
 type LegacyBudgetDetailRow = {
   anio?: unknown;
   activo?: unknown;
   id_cat_conceptos_presupuesto?: unknown;
   id_cat_grupos_presupuesto?: unknown;
 };
+
+type LegacyBudgetConceptRow = {
+  anio?: unknown;
+  activo?: unknown;
+  id_cat_conceptos_presupuesto?: unknown;
+  nombre?: unknown;
+  concepto?: unknown;
+  descripcion?: unknown;
+  detalle?: unknown;
+};
+
+function resolveBudgetConceptName(
+  row: LegacyBudgetConceptRow,
+  conceptId: number,
+): string {
+  const candidates = [row.nombre, row.concepto, row.descripcion, row.detalle];
+
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && candidate.trim().length > 0) {
+      return candidate.trim();
+    }
+  }
+
+  return `Concepto ${conceptId}`;
+}
 
 function asInt(value: unknown): number | null {
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -68,12 +104,31 @@ async function readLegacyBudgetDetailRows(filePath: string): Promise<LegacyBudge
     .map((line) => JSON.parse(line) as LegacyBudgetDetailRow);
 }
 
+async function readLegacyBudgetConceptRows(filePath: string): Promise<LegacyBudgetConceptRow[]> {
+  const content = await readFile(filePath, "utf8");
+
+  return content
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+    .map((line) => JSON.parse(line) as LegacyBudgetConceptRow);
+}
+
 async function main(): Promise<void> {
   const fileArg = process.argv.find((arg) => arg.startsWith("--file="))?.split("=")[1];
+  const conceptsFileArg = process.argv
+    .find((arg) => arg.startsWith("--conceptsFile="))
+    ?.split("=")[1];
   const scriptDir = path.dirname(fileURLToPath(import.meta.url));
   const filePath = fileArg ?? path.resolve(scriptDir, "../../data/legacy-export/PRESUPUESTO_DETALLE.ndjson");
+  const conceptsFilePath =
+    conceptsFileArg ??
+    path.resolve(scriptDir, "../../data/legacy-export/CAT_CONCEPTOS_PRESUPUESTO.ndjson");
 
-  const legacyRows = await readLegacyBudgetDetailRows(filePath);
+  const [legacyRows, conceptRows] = await Promise.all([
+    readLegacyBudgetDetailRows(filePath),
+    readLegacyBudgetConceptRows(conceptsFilePath).catch(() => [] as LegacyBudgetConceptRow[]),
+  ]);
 
   const condominium =
     (await prisma.condominium.findFirst({
@@ -89,13 +144,33 @@ async function main(): Promise<void> {
     throw new Error("No se encontro condominio activo para aplicar backfill de mapeo de grupos de egresos");
   }
 
-  const mapping = new Map<string, { year: number; conceptId: number; groupId: number }>();
+  const conceptByYearAndConcept = new Map<string, { isActive: boolean; name: string }>();
+  const conceptByConcept = new Map<number, { isActive: boolean; name: string }>();
 
-  for (const row of legacyRows) {
-    if (!asBoolean(row.activo, false)) {
+  for (const conceptRow of conceptRows) {
+    const conceptId = asInt(conceptRow.id_cat_conceptos_presupuesto);
+    if (conceptId === null) {
       continue;
     }
 
+    const isConceptActive = asBoolean(conceptRow.activo, false);
+    const year = asInt(conceptRow.anio);
+    const name = resolveBudgetConceptName(conceptRow, conceptId);
+
+    if (year === null) {
+      conceptByConcept.set(conceptId, { isActive: isConceptActive, name });
+      continue;
+    }
+
+    conceptByYearAndConcept.set(`${year}:${conceptId}`, { isActive: isConceptActive, name });
+  }
+
+  const mapping = new Map<
+    string,
+    { year: number; conceptId: number; groupId: number; isConceptActive: boolean; conceptName: string }
+  >();
+
+  for (const row of legacyRows) {
     const year = asInt(row.anio);
     const conceptId = asInt(row.id_cat_conceptos_presupuesto);
     const groupId = asInt(row.id_cat_grupos_presupuesto);
@@ -104,9 +179,14 @@ async function main(): Promise<void> {
       continue;
     }
 
+    const conceptByYear = conceptByYearAndConcept.get(`${year}:${conceptId}`);
+    const concept = conceptByYear ?? conceptByConcept.get(conceptId) ?? null;
+    const isConceptActive = concept?.isActive ?? asBoolean(row.activo, false);
+    const conceptName = concept?.name ?? `Concepto ${conceptId}`;
+
     const key = `${year}:${conceptId}`;
     if (!mapping.has(key)) {
-      mapping.set(key, { year, conceptId, groupId });
+      mapping.set(key, { year, conceptId, groupId, isConceptActive, conceptName });
     }
   }
 
@@ -115,6 +195,31 @@ async function main(): Promise<void> {
 
   for (const entry of mapping.values()) {
     scanned += 1;
+
+    const budgetConcept = await budgetExpenseConceptModel.upsert({
+      where: {
+        condominiumId_year_legacyBudgetConceptId: {
+          condominiumId: condominium.id,
+          year: entry.year,
+          legacyBudgetConceptId: entry.conceptId,
+        },
+      },
+      update: {
+        name: entry.conceptName,
+        budgetGroup: toBudgetExpenseGroupFromLegacyGroupId(entry.groupId),
+        isActive: entry.isConceptActive,
+        source: "legacy_etl",
+      },
+      create: {
+        condominiumId: condominium.id,
+        year: entry.year,
+        legacyBudgetConceptId: entry.conceptId,
+        name: entry.conceptName,
+        budgetGroup: toBudgetExpenseGroupFromLegacyGroupId(entry.groupId),
+        isActive: entry.isConceptActive,
+        source: "legacy_etl",
+      },
+    });
 
     await expenseConceptGroupMapModel.upsert({
       where: {
@@ -126,6 +231,8 @@ async function main(): Promise<void> {
       },
       update: {
         budgetGroupId: entry.groupId,
+        budgetConceptId: budgetConcept.id,
+        isBudgetConceptActive: entry.isConceptActive,
         source: "legacy_etl",
       },
       create: {
@@ -133,6 +240,8 @@ async function main(): Promise<void> {
         year: entry.year,
         legacyBudgetConceptId: entry.conceptId,
         budgetGroupId: entry.groupId,
+        budgetConceptId: budgetConcept.id,
+        isBudgetConceptActive: entry.isConceptActive,
         source: "legacy_etl",
       },
     });
@@ -146,6 +255,7 @@ async function main(): Promise<void> {
         condominium: condominium.slug,
         condominiumName: condominium.name,
         sourceFile: filePath,
+        conceptsSourceFile: conceptsFilePath,
         scanned,
         upserted,
       },
