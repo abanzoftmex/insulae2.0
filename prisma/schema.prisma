@@ -99,69 +99,71 @@ model Condominium {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  users         User[]
-  commerces     Commerce[]
-  userCommerces UserCommerce[]
-  privateAreas  PrivateArea[]
-  assignments   ResidentAssignment[]
-  rentals       Rental[]
-  chargeGroups  ChargeGroup[]
-  areaCharges   AreaCharge[]
-  charges       Charge[]
-  payments      Payment[]
-  incomes       Income[]
-  expenses      Expense[]
-  budgets       Budget[]
-  meetings      Meeting[]
-  notifications Notification[]
-  notificationCategories NotificationCategory[]
-  ticketDepartments TicketDepartment[]
-  tickets       Ticket[]
-  projects      Project[]
-  contacts      ContactEntry[]
-  structureGroups    CondominiumStructureGroup[]
-  structurePositions CondominiumStructurePosition[]
+  users                        User[]
+  commerces                    Commerce[]
+  userCommerces                UserCommerce[]
+  privateAreas                 PrivateArea[]
+  assignments                  ResidentAssignment[]
+  rentals                      Rental[]
+  chargeGroups                 ChargeGroup[]
+  areaCharges                  AreaCharge[]
+  charges                      Charge[]
+  payments                     Payment[]
+  incomes                      Income[]
+  expenses                     Expense[]
+  budgets                      Budget[]
+  meetings                     Meeting[]
+  notifications                Notification[]
+  notificationCategories       NotificationCategory[]
+  ticketDepartments            TicketDepartment[]
+  tickets                      Ticket[]
+  projects                     Project[]
+  contacts                     ContactEntry[]
+  structureGroups              CondominiumStructureGroup[]
+  structurePositions           CondominiumStructurePosition[]
   structurePositionAssignments CondominiumStructurePositionAssignment[]
-  paymentDetails       PaymentDetail[]
-  paymentMethodCatalogs PaymentMethodCatalog[]
-  zoneCatalogs         ZoneCatalog[]
-  subzoneCatalogs      SubzoneCatalog[]
-  landUseCatalogs      LandUseCatalog[]
-  miscIncomeCatalogs   MiscIncomeCatalog[]
-  budgetExpenseConcepts BudgetExpenseConcept[]
-  expenseConceptGroupMaps ExpenseConceptGroupMap[]
+  paymentDetails               PaymentDetail[]
+  paymentMethodCatalogs        PaymentMethodCatalog[]
+  zoneCatalogs                 ZoneCatalog[]
+  subzoneCatalogs              SubzoneCatalog[]
+  landUseCatalogs              LandUseCatalog[]
+  miscIncomeCatalogs           MiscIncomeCatalog[]
+  budgetExpenseConcepts        BudgetExpenseConcept[]
+  expenseConceptGroupMaps      ExpenseConceptGroupMap[]
+  budgetGroups                 BudgetGroup[]
+  sanctions                    SanctionCatalog[]
 }
 
 model User {
-  id            String   @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  userType      UserType @default(INDIVIDUAL)
-  firstName     String?
-  lastName      String?
-  businessName  String?
-  email         String?
-  phone         String?
+  id              String   @id @default(uuid())
+  condominiumId   String
+  legacyId        Int?
+  userType        UserType @default(INDIVIDUAL)
+  firstName       String?
+  lastName        String?
+  businessName    String?
+  email           String?
+  phone           String?
   requiresInvoice Boolean?
-  passwordHash  String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  passwordHash    String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  condominium Condominium          @relation(fields: [condominiumId], references: [id])
-  assignments ResidentAssignment[]
-  commerces   UserCommerce[]
-  administrativeCommerces Commerce[] @relation("CommerceAdministrativeContact")
-  operativeCommerces      Commerce[] @relation("CommerceOperativeContact")
-  rentalsAsAdministrativeContact Rental[] @relation("RentalAdministrativeContact")
-  rentalsAsOperativeContact      Rental[] @relation("RentalOperativeContact")
-  userRoles   UserRole[]
-  openedTickets Ticket[]
-  structurePositionAssignments CondominiumStructurePositionAssignment[]
+  condominium                    Condominium                              @relation(fields: [condominiumId], references: [id])
+  assignments                    ResidentAssignment[]
+  commerces                      UserCommerce[]
+  administrativeCommerces        Commerce[]                               @relation("CommerceAdministrativeContact")
+  operativeCommerces             Commerce[]                               @relation("CommerceOperativeContact")
+  rentalsAsAdministrativeContact Rental[]                                 @relation("RentalAdministrativeContact")
+  rentalsAsOperativeContact      Rental[]                                 @relation("RentalOperativeContact")
+  userRoles                      UserRole[]
+  openedTickets                  Ticket[]
+  structurePositionAssignments   CondominiumStructurePositionAssignment[]
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId])
   @@index([email])
-  @@unique([condominiumId, legacyId])
 }
 
 model Role {
@@ -187,11 +189,11 @@ model CondominiumStructureGroup {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  condominium Condominium                  @relation(fields: [condominiumId], references: [id])
+  condominium Condominium                    @relation(fields: [condominiumId], references: [id])
   positions   CondominiumStructurePosition[]
 
-  @@index([condominiumId, isActive, position])
   @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive, position])
 }
 
 model CondominiumStructurePosition {
@@ -207,13 +209,13 @@ model CondominiumStructurePosition {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  condominium Condominium               @relation(fields: [condominiumId], references: [id])
-  group       CondominiumStructureGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  condominium Condominium                              @relation(fields: [condominiumId], references: [id])
+  group       CondominiumStructureGroup                @relation(fields: [groupId], references: [id], onDelete: Cascade)
   assignments CondominiumStructurePositionAssignment[]
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId, isActive])
   @@index([groupId, isActive, sortOrder])
-  @@unique([condominiumId, legacyId])
 }
 
 model CondominiumStructurePositionAssignment {
@@ -226,14 +228,14 @@ model CondominiumStructurePositionAssignment {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  condominium Condominium                @relation(fields: [condominiumId], references: [id])
+  condominium Condominium                  @relation(fields: [condominiumId], references: [id])
   position    CondominiumStructurePosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
-  user        User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([positionId, userId, isAlternate])
   @@index([condominiumId, isActive])
   @@index([positionId, isAlternate, isActive])
   @@index([userId, isActive])
-  @@unique([positionId, userId, isAlternate])
 }
 
 model UserRole {
@@ -267,81 +269,82 @@ model UserCommerce {
 }
 
 model Commerce {
-  id            String   @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  name          String?
+  id                          String   @id @default(uuid())
+  condominiumId               String
+  legacyId                    Int?
+  name                        String?
   administrativeContactUserId String?
-  operativeContactUserId String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  operativeContactUserId      String?
+  isActive                    Boolean  @default(true)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
-  administrativeContactUser User? @relation("CommerceAdministrativeContact", fields: [administrativeContactUserId], references: [id], onDelete: SetNull)
-  operativeContactUser      User? @relation("CommerceOperativeContact", fields: [operativeContactUserId], references: [id], onDelete: SetNull)
-  rentals Rental[]
+  condominium               Condominium @relation(fields: [condominiumId], references: [id])
+  administrativeContactUser User?       @relation("CommerceAdministrativeContact", fields: [administrativeContactUserId], references: [id], onDelete: SetNull)
+  operativeContactUser      User?       @relation("CommerceOperativeContact", fields: [operativeContactUserId], references: [id], onDelete: SetNull)
+  rentals                   Rental[]
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId])
   @@index([administrativeContactUserId])
   @@index([operativeContactUserId])
-  @@unique([condominiumId, legacyId])
 }
 
 model PrivateArea {
-  id            String   @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  parentPrivateAreaId String?
-  sortOrder     Int      @default(0)
-  code          String?
-  name          String
-  zone          String?
-  subzone       String?
-  street        String?
-  useType       String?
-  status        PrivateAreaStatus @default(UNASSIGNED)
-  isFusion      Boolean  @default(false)
-  m2Original    Decimal? @db.Decimal(12, 4)
-  m2Apole       Decimal? @db.Decimal(12, 4)
-  m2Construction Decimal? @db.Decimal(12, 4)
-  m2CommonArea  Decimal? @db.Decimal(12, 4)
-  m2ConstructionChildren Decimal? @db.Decimal(12, 4)
-  m2CommonAreaChildren Decimal? @db.Decimal(12, 4)
-  indiviso      Decimal? @db.Decimal(12, 6)
-  vccc          Decimal? @db.Decimal(14, 6)
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                     String            @id @default(uuid())
+  condominiumId          String
+  legacyId               Int?
+  parentPrivateAreaId    String?
+  sortOrder              Int               @default(0)
+  code                   String?
+  name                   String
+  zone                   String?
+  subzone                String?
+  street                 String?
+  useType                String?
+  status                 PrivateAreaStatus @default(UNASSIGNED)
+  isFusion               Boolean           @default(false)
+  m2Original             Decimal?          @db.Decimal(12, 4)
+  m2Apole                Decimal?          @db.Decimal(12, 4)
+  m2Construction         Decimal?          @db.Decimal(12, 4)
+  m2CommonArea           Decimal?          @db.Decimal(12, 4)
+  m2ConstructionChildren Decimal?          @db.Decimal(12, 4)
+  m2CommonAreaChildren   Decimal?          @db.Decimal(12, 4)
+  indiviso               Decimal?          @db.Decimal(12, 6)
+  vccc                   Decimal?          @db.Decimal(14, 6)
+  isActive               Boolean           @default(true)
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
 
-  condominium Condominium          @relation(fields: [condominiumId], references: [id])
-  parentPrivateArea PrivateArea?   @relation("PrivateAreaHierarchy", fields: [parentPrivateAreaId], references: [id], onDelete: SetNull)
-  childPrivateAreas PrivateArea[]  @relation("PrivateAreaHierarchy")
-  assignments ResidentAssignment[]
-  areaCharges AreaCharge[]
-  charges     Charge[]
-  payments    Payment[]
-  rentals     Rental[]
-  attendances Attendance[]
-  tickets     Ticket[]
+  condominium       Condominium          @relation(fields: [condominiumId], references: [id])
+  parentPrivateArea PrivateArea?         @relation("PrivateAreaHierarchy", fields: [parentPrivateAreaId], references: [id], onDelete: SetNull)
+  childPrivateAreas PrivateArea[]        @relation("PrivateAreaHierarchy")
+  assignments       ResidentAssignment[]
+  areaCharges       AreaCharge[]
+  charges           Charge[]
+  payments          Payment[]
+  rentals           Rental[]
+  attendances       Attendance[]
+  tickets           Ticket[]
+  incomes           Income[]
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId])
   @@index([parentPrivateAreaId])
   @@index([condominiumId, parentPrivateAreaId, sortOrder])
   @@index([status])
   @@index([isFusion])
-  @@unique([condominiumId, legacyId])
 }
 
 model ResidentAssignment {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   condominiumId String
   userId        String
   privateAreaId String
   roleName      String?
   startsAt      DateTime?
   endsAt        DateTime?
-  isActive      Boolean  @default(true)
+  isActive      Boolean   @default(true)
 
   condominium Condominium @relation(fields: [condominiumId], references: [id])
   user        User        @relation(fields: [userId], references: [id])
@@ -353,24 +356,24 @@ model ResidentAssignment {
 }
 
 model Rental {
-  id            String   @id @default(uuid())
-  condominiumId String
-  privateAreaId String
-  commerceId    String?
-  tenantName    String?
+  id                          String    @id @default(uuid())
+  condominiumId               String
+  privateAreaId               String
+  commerceId                  String?
+  tenantName                  String?
   administrativeContactUserId String?
-  operativeContactUserId String?
-  startsAt      DateTime?
-  endsAt        DateTime?
-  status        String?
-  notes         String?
+  operativeContactUserId      String?
+  startsAt                    DateTime?
+  endsAt                      DateTime?
+  status                      String?
+  notes                       String?
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
-  privateArea PrivateArea @relation(fields: [privateAreaId], references: [id])
-  commerce Commerce? @relation(fields: [commerceId], references: [id], onDelete: SetNull)
-  administrativeContactUser User? @relation("RentalAdministrativeContact", fields: [administrativeContactUserId], references: [id], onDelete: SetNull)
-  operativeContactUser      User? @relation("RentalOperativeContact", fields: [operativeContactUserId], references: [id], onDelete: SetNull)
-  charges Charge[]
+  condominium               Condominium @relation(fields: [condominiumId], references: [id])
+  privateArea               PrivateArea @relation(fields: [privateAreaId], references: [id])
+  commerce                  Commerce?   @relation(fields: [commerceId], references: [id], onDelete: SetNull)
+  administrativeContactUser User?       @relation("RentalAdministrativeContact", fields: [administrativeContactUserId], references: [id], onDelete: SetNull)
+  operativeContactUser      User?       @relation("RentalOperativeContact", fields: [operativeContactUserId], references: [id], onDelete: SetNull)
+  charges                   Charge[]
 
   @@index([condominiumId])
   @@index([privateAreaId])
@@ -380,35 +383,35 @@ model Rental {
 }
 
 model ChargeGroup {
-  id            String   @id @default(uuid())
+  id            String                   @id @default(uuid())
   condominiumId String
   legacyId      Int?
   name          String
   chargeType    String?
   kind          ChargeGroupCanonicalKind @default(OTHER)
-  isActive      Boolean  @default(true)
+  isActive      Boolean                  @default(true)
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
-  areaCharges AreaCharge[]
-  charges     Charge[]
-  paymentDetails PaymentDetail[]
-  incomes Income[]
+  condominium        Condominium         @relation(fields: [condominiumId], references: [id])
+  areaCharges        AreaCharge[]
+  charges            Charge[]
+  paymentDetails     PaymentDetail[]
+  incomes            Income[]
   miscIncomeCatalogs MiscIncomeCatalog[]
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId])
   @@index([condominiumId, kind, isActive])
-  @@unique([condominiumId, legacyId])
 }
 
 model AreaCharge {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   condominiumId String
   privateAreaId String
   chargeGroupId String
-  amount        Decimal  @db.Decimal(14, 2)
+  amount        Decimal   @db.Decimal(14, 2)
   startsAt      DateTime?
   endsAt        DateTime?
-  isActive      Boolean  @default(true)
+  isActive      Boolean   @default(true)
 
   condominium Condominium @relation(fields: [condominiumId], references: [id])
   privateArea PrivateArea @relation(fields: [privateAreaId], references: [id])
@@ -420,68 +423,70 @@ model AreaCharge {
 }
 
 model Charge {
-  id            String       @id @default(uuid())
-  condominiumId String
-  privateAreaId String
-  chargeGroupId String
-  tenancyId     String?
-  legacyId      Int?
+  id               String               @id @default(uuid())
+  condominiumId    String
+  privateAreaId    String
+  chargeGroupId    String
+  tenancyId        String?
+  legacyId         Int?
   legacyStatusCode Int?
-  responsibility ChargeResponsibility @default(OWNER)
-  periodYear    Int
-  periodMonth   Int
-  amount        Decimal      @db.Decimal(14, 2)
-  paidAmount    Decimal      @default(0) @db.Decimal(14, 2)
-  interestAmount Decimal     @default(0) @db.Decimal(14, 2)
-  discountAmount Decimal     @default(0) @db.Decimal(14, 2)
-  isCollectible Boolean      @default(true)
-  dueDate       DateTime?
-  status        LedgerStatus @default(OPEN)
-  createdAt     DateTime     @default(now())
+  concept          String?
 
-  condominium Condominium       @relation(fields: [condominiumId], references: [id])
-  privateArea PrivateArea       @relation(fields: [privateAreaId], references: [id])
-  chargeGroup ChargeGroup       @relation(fields: [chargeGroupId], references: [id])
-  tenancy    Rental?          @relation(fields: [tenancyId], references: [id], onDelete: SetNull)
+  responsibility   ChargeResponsibility @default(OWNER)
+  periodYear       Int
+  periodMonth      Int
+  amount           Decimal              @db.Decimal(14, 2)
+  paidAmount       Decimal              @default(0) @db.Decimal(14, 2)
+  interestAmount   Decimal              @default(0) @db.Decimal(14, 2)
+  discountAmount   Decimal              @default(0) @db.Decimal(14, 2)
+  isCollectible    Boolean              @default(true)
+  dueDate          DateTime?
+  status           LedgerStatus         @default(OPEN)
+  createdAt        DateTime             @default(now())
+
+  condominium Condominium         @relation(fields: [condominiumId], references: [id])
+  privateArea PrivateArea         @relation(fields: [privateAreaId], references: [id])
+  chargeGroup ChargeGroup         @relation(fields: [chargeGroupId], references: [id])
+  tenancy     Rental?             @relation(fields: [tenancyId], references: [id], onDelete: SetNull)
   allocations PaymentAllocation[]
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId, periodYear, periodMonth])
   @@index([privateAreaId])
   @@index([privateAreaId, responsibility, periodYear, periodMonth])
   @@index([tenancyId])
   @@index([condominiumId, legacyStatusCode])
   @@index([responsibility])
-  @@unique([condominiumId, legacyId])
 }
 
 model Payment {
-  id            String        @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  privateAreaId String?
-  isVisibleInFinancialSummary Boolean @default(true)
-  legacyStatusCode Int?
-  isLegacyActive   Boolean?
-  legacyAreaCode   Int?
-  legacyAreaIsActive Boolean?
-  paidAt        DateTime
-  amount        Decimal       @db.Decimal(14, 2)
-  method        PaymentMethod
-  reference     String?
-  notes         String?
-  createdAt     DateTime      @default(now())
+  id                          String        @id @default(uuid())
+  condominiumId               String
+  legacyId                    Int?
+  privateAreaId               String?
+  isVisibleInFinancialSummary Boolean       @default(true)
+  legacyStatusCode            Int?
+  isLegacyActive              Boolean?
+  legacyAreaCode              Int?
+  legacyAreaIsActive          Boolean?
+  paidAt                      DateTime
+  amount                      Decimal       @db.Decimal(14, 2)
+  method                      PaymentMethod
+  reference                   String?
+  notes                       String?
+  createdAt                   DateTime      @default(now())
 
-  condominium Condominium       @relation(fields: [condominiumId], references: [id])
-  privateArea PrivateArea?      @relation(fields: [privateAreaId], references: [id], onDelete: SetNull)
+  condominium Condominium         @relation(fields: [condominiumId], references: [id])
+  privateArea PrivateArea?        @relation(fields: [privateAreaId], references: [id], onDelete: SetNull)
   allocations PaymentAllocation[]
   details     PaymentDetail[]
 
+  @@unique([condominiumId, legacyId])
   @@index([privateAreaId])
   @@index([condominiumId, isVisibleInFinancialSummary])
   @@index([condominiumId, legacyStatusCode])
   @@index([condominiumId, legacyAreaIsActive])
   @@index([condominiumId, paidAt])
-  @@unique([condominiumId, legacyId])
 }
 
 model PaymentAllocation {
@@ -510,21 +515,21 @@ model PaymentDetail {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now())
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
-  payment     Payment     @relation(fields: [paymentId], references: [id])
+  condominium Condominium  @relation(fields: [condominiumId], references: [id])
+  payment     Payment      @relation(fields: [paymentId], references: [id])
   chargeGroup ChargeGroup? @relation(fields: [chargeGroupId], references: [id])
 
+  @@unique([condominiumId, legacyId])
   @@index([paymentId])
   @@index([chargeGroupId])
-  @@unique([condominiumId, legacyId])
 }
 
 model PaymentMethodCatalog {
-  id            String   @id @default(uuid())
+  id            String  @id @default(uuid())
   condominiumId String
   legacyId      Int?
   name          String
-  isActive      Boolean  @default(true)
+  isActive      Boolean @default(true)
 
   condominium Condominium @relation(fields: [condominiumId], references: [id])
 
@@ -541,26 +546,26 @@ model ZoneCatalog {
   weight        Decimal? @db.Decimal(12, 4)
   isActive      Boolean  @default(true)
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
+  condominium Condominium      @relation(fields: [condominiumId], references: [id])
   subzones    SubzoneCatalog[]
 
   @@unique([condominiumId, legacyId])
 }
 
 model SubzoneCatalog {
-  id            String   @id @default(uuid())
+  id            String  @id @default(uuid())
   condominiumId String
   legacyId      Int?
   zoneId        String?
   name          String
   initials      String?
-  isActive      Boolean  @default(true)
+  isActive      Boolean @default(true)
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
+  condominium Condominium  @relation(fields: [condominiumId], references: [id])
   zone        ZoneCatalog? @relation(fields: [zoneId], references: [id], onDelete: SetNull)
 
-  @@index([zoneId])
   @@unique([condominiumId, legacyId])
+  @@index([zoneId])
 }
 
 model LandUseCatalog {
@@ -580,91 +585,127 @@ model LandUseCatalog {
 }
 
 model MiscIncomeCatalog {
-  id            String   @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  chargeGroupId String?
-  name          String
+  id                  String  @id @default(uuid())
+  condominiumId       String
+  legacyId            Int?
+  chargeGroupId       String?
+  name                String
   legacyChargeGroupId Int?
-  isActive      Boolean  @default(true)
+  isActive            Boolean @default(true)
+  order               Int     @default(0)
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
+  condominium Condominium  @relation(fields: [condominiumId], references: [id])
   chargeGroup ChargeGroup? @relation(fields: [chargeGroupId], references: [id], onDelete: SetNull)
-  incomes Income[]
+  incomes     Income[]
 
+  @@unique([condominiumId, legacyId])
   @@index([chargeGroupId])
   @@index([condominiumId, isActive, chargeGroupId])
   @@index([condominiumId, isActive, legacyChargeGroupId])
-  @@unique([condominiumId, legacyId])
 }
 
 model Income {
-  id            String        @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  chargeGroupId String?
-  miscCatalogId String?
-  date          DateTime
-  concept       String
-  amount        Decimal       @db.Decimal(14, 2)
-  isActive      Boolean       @default(true)
+  id                  String         @id @default(uuid())
+  condominiumId       String
+  legacyId            Int?
+  chargeGroupId       String?
+  miscCatalogId       String?
+  privateAreaId       String?
+  date                DateTime
+  concept             String
+  amount              Decimal        @db.Decimal(14, 2)
+  isActive            Boolean        @default(true)
   legacyChargeGroupId Int?
   legacyMiscCatalogId Int?
   legacyPrivateAreaId Int?
-  isConfirmed   Boolean?
-  paymentMethod PaymentMethod?
-  notes         String?
+  isConfirmed         Boolean?
+  paymentMethod       PaymentMethod?
+  notes               String?
+  receiptUrl          String?
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
-  chargeGroup ChargeGroup? @relation(fields: [chargeGroupId], references: [id], onDelete: SetNull)
+  condominium Condominium        @relation(fields: [condominiumId], references: [id])
+  chargeGroup ChargeGroup?       @relation(fields: [chargeGroupId], references: [id], onDelete: SetNull)
   miscCatalog MiscIncomeCatalog? @relation(fields: [miscCatalogId], references: [id], onDelete: SetNull)
+  privateArea PrivateArea?       @relation(fields: [privateAreaId], references: [id], onDelete: SetNull)
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId, isActive, date])
   @@index([chargeGroupId])
   @@index([miscCatalogId])
+  @@index([privateAreaId])
   @@index([condominiumId, legacyChargeGroupId])
   @@index([condominiumId, legacyMiscCatalogId, legacyChargeGroupId, isActive, date])
-  @@unique([condominiumId, legacyId])
 }
 
 model Expense {
-  id            String        @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  date          DateTime
-  concept       String
-  amount        Decimal       @db.Decimal(14, 2)
-  isActive      Boolean       @default(true)
-  budgetConceptId String?
+  id                    String         @id @default(uuid())
+  condominiumId         String
+  legacyId              Int?
+  date                  DateTime
+  concept               String
+  amount                Decimal        @db.Decimal(14, 2)
+  isActive              Boolean        @default(true)
+  budgetConceptId       String?
   legacyBudgetConceptId Int?
-  legacyReceipt String?
-  legacyProjectName String?
-  paymentMethod PaymentMethod?
-  notes         String?
+  legacyReceipt         String?
+  receiptUrl            String?
+  legacyProjectName     String?
+  projectName           String?
+  paymentMethod         PaymentMethod?
+  notes                 String?
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
+  condominium   Condominium           @relation(fields: [condominiumId], references: [id])
   budgetConcept BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId, isActive, date])
   @@index([budgetConceptId])
   @@index([condominiumId, legacyBudgetConceptId])
-  @@unique([condominiumId, legacyId])
+}
+
+enum BudgetStatus {
+  OPEN
+  CLOSED
 }
 
 model Budget {
-  id            String   @id @default(uuid())
+  id            String       @id @default(uuid())
   condominiumId String
   legacyId      Int?
   year          Int
   name          String?
-  isActive      Boolean  @default(true)
+  isActive      Boolean      @default(true)
+  status        BudgetStatus @default(OPEN)
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
-  lines       BudgetLine[]
-  expenseConcepts BudgetExpenseConcept[]
+  condominium             Condominium              @relation(fields: [condominiumId], references: [id])
+  lines                   BudgetLine[]
+  expenseConcepts         BudgetExpenseConcept[]
   expenseConceptGroupMaps ExpenseConceptGroupMap[]
+  budgetGroups            BudgetGroup[]
 
   @@unique([condominiumId, year])
+}
+
+model BudgetGroup {
+  id            String             @id @default(uuid())
+  condominiumId String             @map("condominium_id")
+  year          Int
+  name          String
+  isActive      Boolean            @default(true) @map("is_active")
+  legacyId      Int?               @map("legacy_id")
+  category      ExpenseBudgetGroup @default(OTHER)
+  order         Int                @default(0)
+  parentId      String?            @map("parent_id")
+
+  condominium Condominium            @relation(fields: [condominiumId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  budget      Budget                 @relation(fields: [condominiumId, year], references: [condominiumId, year], onDelete: Restrict, onUpdate: Cascade)
+  concepts    BudgetExpenseConcept[]
+  parent      BudgetGroup?           @relation("BudgetGroupToParent", fields: [parentId], references: [id])
+  children    BudgetGroup[]          @relation("BudgetGroupToParent")
+
+  @@unique([condominiumId, year, legacyId])
+  @@index([condominiumId, year, isActive])
+  @@map("budget_group")
 }
 
 model BudgetExpenseConcept {
@@ -673,14 +714,18 @@ model BudgetExpenseConcept {
   year                  Int
   name                  String
   budgetGroup           ExpenseBudgetGroup @map("group")
+  budgetGroupId         String?            @map("budget_group_id")
   isActive              Boolean            @default(true) @map("is_active")
   legacyBudgetConceptId Int?               @map("legacy_budget_concept_id")
   source                String             @default("legacy_etl")
+  order                 Int                @default(0)
+  type                  String             @default("N/A") // N/A, Variable, Fijo
   createdAt             DateTime           @default(now()) @map("created_at")
   updatedAt             DateTime           @updatedAt @map("updated_at")
 
-  condominium Condominium            @relation(fields: [condominiumId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  budget      Budget                 @relation(fields: [condominiumId, year], references: [condominiumId, year], onDelete: Restrict, onUpdate: Cascade)
+  condominium Condominium              @relation(fields: [condominiumId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  budget      Budget                   @relation(fields: [condominiumId, year], references: [condominiumId, year], onDelete: Restrict, onUpdate: Cascade)
+  group       BudgetGroup?             @relation(fields: [budgetGroupId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   expenses    Expense[]
   budgetLines BudgetLine[]
   mappings    ExpenseConceptGroupMap[]
@@ -693,27 +738,27 @@ model BudgetExpenseConcept {
 }
 
 model BudgetLine {
-  id           String   @id @default(uuid())
-  budgetId     String
-  legacyId     Int?
-  concept      String
-  groupName    String?
-  annualAmount Decimal? @db.Decimal(14, 2)
+  id              String   @id @default(uuid())
+  budgetId        String
+  legacyId        Int?
+  concept         String
+  groupName       String?
+  annualAmount    Decimal? @db.Decimal(14, 2)
   budgetConceptId String?
 
-  budget Budget      @relation(fields: [budgetId], references: [id])
+  budget        Budget                @relation(fields: [budgetId], references: [id])
   budgetConcept BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id], onDelete: SetNull, onUpdate: Cascade)
-  months BudgetMonth[]
+  months        BudgetMonth[]
 
   @@index([budgetId])
   @@index([budgetConceptId])
 }
 
 model BudgetMonth {
-  id           String   @id @default(uuid())
+  id           String  @id @default(uuid())
   budgetLineId String
   month        Int
-  amount       Decimal  @db.Decimal(14, 2)
+  amount       Decimal @db.Decimal(14, 2)
 
   budgetLine BudgetLine @relation(fields: [budgetLineId], references: [id])
 
@@ -732,8 +777,8 @@ model ExpenseConceptGroupMap {
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-  budget      Budget      @relation(fields: [condominiumId, year], references: [condominiumId, year], onDelete: Restrict, onUpdate: Cascade)
+  condominium   Condominium           @relation(fields: [condominiumId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  budget        Budget                @relation(fields: [condominiumId, year], references: [condominiumId, year], onDelete: Restrict, onUpdate: Cascade)
   budgetConcept BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id], onDelete: SetNull, onUpdate: Cascade)
 
   @@unique([condominiumId, year, legacyBudgetConceptId])
@@ -753,19 +798,19 @@ model Meeting {
   status        String?
   createdAt     DateTime @default(now())
 
-  condominium Condominium    @relation(fields: [condominiumId], references: [id])
+  condominium Condominium      @relation(fields: [condominiumId], references: [id])
   sessions    MeetingSession[]
 
-  @@index([condominiumId])
   @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
 }
 
 model MeetingSession {
-  id       String   @id @default(uuid())
+  id        String    @id @default(uuid())
   meetingId String
-  startsAt DateTime?
-  endsAt   DateTime?
-  status   String?
+  startsAt  DateTime?
+  endsAt    DateTime?
+  status    String?
 
   meeting     Meeting      @relation(fields: [meetingId], references: [id])
   attendances Attendance[]
@@ -789,7 +834,7 @@ model Attendance {
 }
 
 model Vote {
-  id               String @id @default(uuid())
+  id               String  @id @default(uuid())
   meetingSessionId String
   topic            String
   voteType         String?
@@ -803,7 +848,7 @@ model Vote {
 }
 
 model Notification {
-  id            String   @id @default(uuid())
+  id            String    @id @default(uuid())
   condominiumId String
   legacyId      Int?
   categoryId    String?
@@ -817,12 +862,12 @@ model Notification {
   pdfUrl        String?
   pdfPath       String?
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
+  condominium Condominium           @relation(fields: [condominiumId], references: [id])
   categoryRef NotificationCategory? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId])
   @@index([categoryId])
-  @@unique([condominiumId, legacyId])
 }
 
 model NotificationCategory {
@@ -835,11 +880,11 @@ model NotificationCategory {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  condominium  Condominium  @relation(fields: [condominiumId], references: [id])
+  condominium   Condominium    @relation(fields: [condominiumId], references: [id])
   notifications Notification[]
 
-  @@index([condominiumId, isActive])
   @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive])
 }
 
 model TicketDepartment {
@@ -855,78 +900,78 @@ model TicketDepartment {
   condominium Condominium @relation(fields: [condominiumId], references: [id])
   tickets     Ticket[]
 
-  @@index([condominiumId, isActive])
   @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive])
 }
 
 model Ticket {
-  id            String       @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  departmentId  String?
-  privateAreaId String?
-  openedById    String?
-  title         String
-  description   String?
-  response      String?
-  respondedAt   DateTime?
+  id                String       @id @default(uuid())
+  condominiumId     String
+  legacyId          Int?
+  departmentId      String?
+  privateAreaId     String?
+  openedById        String?
+  title             String
+  description       String?
+  response          String?
+  respondedAt       DateTime?
   responseImageUrl  String?
   responseImagePath String?
   responsePdfUrl    String?
   responsePdfPath   String?
-  status        TicketStatus @default(OPEN)
-  openedAt      DateTime     @default(now())
-  closedAt      DateTime?
-  isActive      Boolean      @default(true)
+  status            TicketStatus @default(OPEN)
+  openedAt          DateTime     @default(now())
+  closedAt          DateTime?
+  isActive          Boolean      @default(true)
 
-  condominium Condominium @relation(fields: [condominiumId], references: [id])
+  condominium Condominium       @relation(fields: [condominiumId], references: [id])
   department  TicketDepartment? @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  privateArea PrivateArea? @relation(fields: [privateAreaId], references: [id])
-  openedBy    User?        @relation(fields: [openedById], references: [id])
+  privateArea PrivateArea?      @relation(fields: [privateAreaId], references: [id])
+  openedBy    User?             @relation(fields: [openedById], references: [id])
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId])
   @@index([condominiumId, isActive])
   @@index([condominiumId, status])
   @@index([departmentId])
   @@index([privateAreaId])
-  @@unique([condominiumId, legacyId])
 }
 
 model Project {
-  id            String   @id @default(uuid())
-  condominiumId String
-  legacyId      Int?
-  name          String
-  initials      String?
-  description   String?
-  privacyNoticeText String?
-  startYear     Int?
+  id                  String    @id @default(uuid())
+  condominiumId       String
+  legacyId            Int?
+  name                String
+  initials            String?
+  description         String?
+  privacyNoticeText   String?
+  startYear           Int?
   condominiumFormatId Int?
-  totalM2       Decimal? @db.Decimal(14, 4)
-  totalApoles   Int?
-  commonAreasM2 Decimal? @db.Decimal(14, 4)
-  condominiumLogoUrl String?
+  totalM2             Decimal?  @db.Decimal(14, 4)
+  totalApoles         Int?
+  commonAreasM2       Decimal?  @db.Decimal(14, 4)
+  condominiumLogoUrl  String?
   condominiumImageUrl String?
-  footerLogoUrl String?
+  footerLogoUrl       String?
   privacyNoticePdfUrl String?
-  footerLeft    String?
-  footerRight   String?
-  developedBy   String?
-  usesLandUseFormula Boolean?
-  hasVccc       Boolean?
-  startsAt      DateTime?
-  endsAt        DateTime?
-  isActive      Boolean  @default(true)
+  footerLeft          String?
+  footerRight         String?
+  developedBy         String?
+  usesLandUseFormula  Boolean?
+  hasVccc             Boolean?
+  startsAt            DateTime?
+  endsAt              DateTime?
+  isActive            Boolean   @default(true)
 
-  condominium Condominium     @relation(fields: [condominiumId], references: [id])
+  condominium Condominium       @relation(fields: [condominiumId], references: [id])
   documents   ProjectDocument[]
 
-  @@index([condominiumId])
   @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
 }
 
 model ProjectDocument {
-  id            String   @id @default(uuid())
+  id            String              @id @default(uuid())
   projectId     String
   legacyId      Int?
   fileName      String
@@ -936,15 +981,15 @@ model ProjectDocument {
   storageBucket String
   storagePath   String
   checksum      String?
-  isActive      Boolean  @default(true)
-  uploadedAt    DateTime @default(now())
+  isActive      Boolean             @default(true)
+  uploadedAt    DateTime            @default(now())
 
   project Project @relation(fields: [projectId], references: [id])
 
+  @@unique([projectId, legacyId])
   @@index([projectId])
   @@index([projectId, documentType])
   @@index([isActive])
-  @@unique([projectId, legacyId])
 }
 
 model ContactType {
@@ -975,20 +1020,20 @@ model ContactEntry {
   condominium Condominium @relation(fields: [condominiumId], references: [id])
   contactType ContactType @relation(fields: [contactTypeId], references: [id])
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId, sortOrder])
   @@index([contactTypeId])
-  @@unique([condominiumId, legacyId])
 }
 
 model MigrationRun {
-  id              String             @id @default(uuid())
-  name            String
-  sourceSnapshot  String
-  dryRun          Boolean            @default(true)
-  status          MigrationRunStatus @default(CREATED)
-  startedAt       DateTime?
-  completedAt     DateTime?
-  createdAt       DateTime           @default(now())
+  id             String             @id @default(uuid())
+  name           String
+  sourceSnapshot String
+  dryRun         Boolean            @default(true)
+  status         MigrationRunStatus @default(CREATED)
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime           @default(now())
 
   stagingRows       LegacyStagingRow[]
   idMaps            MigrationIdMap[]
@@ -999,13 +1044,13 @@ model MigrationRun {
 }
 
 model LegacyStagingRow {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   runId          String
   legacyTable    String
   legacyId       Int
   payload        Json
   payloadHash    String
-  extractedAt    DateTime @default(now())
+  extractedAt    DateTime  @default(now())
   transformedAt  DateTime?
   loadedAt       DateTime?
   promotedAt     DateTime?
@@ -1034,20 +1079,35 @@ model MigrationIdMap {
 }
 
 model MigrationValidationResult {
-  id          String                      @id @default(uuid())
-  runId       String
-  layer       String
-  targetTable String
-  sourceCount Int
+  id           String                      @id @default(uuid())
+  runId        String
+  layer        String
+  targetTable  String
+  sourceCount  Int
   stagingCount Int
-  finalCount  Int
-  difference  Int
-  severity    MigrationValidationSeverity @default(INFO)
-  details     Json?
-  createdAt   DateTime                    @default(now())
+  finalCount   Int
+  difference   Int
+  severity     MigrationValidationSeverity @default(INFO)
+  details      Json?
+  createdAt    DateTime                    @default(now())
 
   run MigrationRun @relation(fields: [runId], references: [id])
 
   @@index([runId, layer])
   @@index([runId, severity])
+}
+
+model SanctionCatalog {
+  id            String      @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  article       String?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  condominium Condominium @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
 }

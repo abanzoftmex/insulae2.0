@@ -1,7 +1,7 @@
 "use client";
 
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { getDownloadURL, getStorage, ref, uploadBytes, deleteObject } from "firebase/storage";
 
 type CondoAssetKind =
   | "condominium-logo"
@@ -12,7 +12,9 @@ type CondoAssetKind =
   | "notification-image"
   | "notification-pdf"
   | "ticket-response-image"
-  | "ticket-response-pdf";
+  | "ticket-response-pdf"
+  | "income-receipt"
+  | "expense-receipt";
 
 function getRequiredClientEnv(value: string | undefined, name: string): string {
   const normalized = value?.trim();
@@ -96,4 +98,30 @@ export async function uploadCondominiumAsset(input: {
 
   const url = await getDownloadURL(objectRef);
   return { url, fullPath: filePath };
+}
+
+/**
+ * Delete an asset from Firebase Storage using its download URL.
+ * Extracts the storage path from the URL and calls deleteObject.
+ * Silently ignores errors (file may already be deleted).
+ */
+export async function deleteCondominiumAsset(downloadUrl: string): Promise<void> {
+  try {
+    const app = getFirebaseApp();
+    const storage = getStorage(app);
+
+    // Firebase download URLs look like:
+    // https://firebasestorage.googleapis.com/v0/b/BUCKET/o/PATH%2Ffile.pdf?alt=media&token=...
+    // We need to extract PATH/file.pdf from the URL-encoded 'o/' segment
+    const urlObj = new URL(downloadUrl);
+    const pathSegment = urlObj.pathname.split("/o/")[1];
+    if (!pathSegment) return;
+    const storagePath = decodeURIComponent(pathSegment);
+
+    const objectRef = ref(storage, storagePath);
+    await deleteObject(objectRef);
+  } catch (err) {
+    // Silently ignore — file may already be deleted or URL malformed
+    console.warn("Failed to delete Firebase Storage asset:", err);
+  }
 }

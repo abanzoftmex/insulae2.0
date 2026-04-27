@@ -1,0 +1,36 @@
+{"id_cat_grupos_presupuesto":1,"nombre":"Gastos administración","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget5","id_cat_grupos_cobro":2,"anio":2025}
+{"id_cat_grupos_presupuesto":2,"nombre":"Gastos de mantenimiento","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget4","id_cat_grupos_cobro":2,"anio":2025}
+{"id_cat_grupos_presupuesto":3,"nombre":"Gastos de seguridad","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget3","id_cat_grupos_cobro":2,"anio":2025}
+{"id_cat_grupos_presupuesto":4,"nombre":"Gastos de infraestructura","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget2","id_cat_grupos_cobro":2,"anio":2025}
+{"id_cat_grupos_presupuesto":5,"nombre":"Inversión","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget1","id_cat_grupos_cobro":3,"anio":2025}
+{"id_cat_grupos_presupuesto":6,"nombre":"Mobiliario de oficina","activo":0,"id_cat_grupos_presupuesto_padre":5,"css":"","id_cat_grupos_cobro":null,"anio":2025}
+{"id_cat_grupos_presupuesto":7,"nombre":"Herramienta de mantenimiento","activo":0,"id_cat_grupos_presupuesto_padre":5,"css":"","id_cat_grupos_cobro":null,"anio":2025}
+{"id_cat_grupos_presupuesto":8,"nombre":"Herramienta de jardineria","activo":0,"id_cat_grupos_presupuesto_padre":5,"css":"","id_cat_grupos_cobro":null,"anio":2025}
+{"id_cat_grupos_presupuesto":9,"nombre":"Herramienta de seguridad","activo":0,"id_cat_grupos_presupuesto_padre":5,"css":"","id_cat_grupos_cobro":null,"anio":2025}
+{"id_cat_grupos_presupuesto":10,"nombre":"Administración","activo":0,"id_cat_grupos_presupuesto_padre":5,"css":"","id_cat_grupos_cobro":null,"anio":2025}
+{"id_cat_grupos_presupuesto":11,"nombre":"STC","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget6","id_cat_grupos_cobro":4,"anio":2025}
+{"id_cat_grupos_presupuesto":12,"nombre":"SIB","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget7","id_cat_grupos_cobro":7,"anio":2025}
+{"id_cat_grupos_presupuesto":13,"nombre":"SIH","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget8","id_cat_grupos_cobro":8,"anio":2025}
+{"id_cat_grupos_presupuesto":14,"nombre":"Experiencias","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget9","id_cat_grupos_cobro":9,"anio":2025}
+{"id_cat_grupos_presupuesto":15,"nombre":"Cuota única","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":"colBudget10","id_cat_grupos_cobro":10,"anio":2025}
+{"id_cat_grupos_presupuesto":16,"nombre":"Proyecto Hidrosanitario, Proyecto Eléctrico Integral","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":3,"anio":2025}
+{"id_cat_grupos_presupuesto":17,"nombre":"Proyecto Eléctrico Integral","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":3,"anio":2025}
+{"id_cat_grupos_presupuesto":18,"nombre":"PRUEBA","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":1,"anio":2025}
+{"id_cat_grupos_presupuesto":19,"nombre":"Gastos administración","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":2,"anio":2026}
+{"id_cat_grupos_presupuesto":20,"nombre":"Gastos de seguridad","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":2,"anio":2026}
+{"id_cat_grupos_presupuesto":21,"nombre":"Gastos de infraestructura","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":2,"anio":2026}
+{"id_cat_grupos_presupuesto":22,"nombre":"Inversión","activo":0,"id_cat_grupos_presupuesto_padre":0,"css":null,"id_cat_grupos_cobro":3,"anio":2026}
+{"id_cat_grupos_presupuesto":23,"nombre":"Mobiliario de oficina","activo":0,"id_cat_grupos_presupuesto_padre":22,"css":null,"id_cat_grupos_cobro":0,"anio":2026}
+{"id_cat_grupos_presupuesto":24,"nombre":"Herramienta de mantenimiento","activo":0,"id_cat_grupos_presupuesto_padre":22,"css":null,"id_cat_grupos_cobro":0,"anio":2026}
+{"id_cat_grupos_presupuesto":25,"nombre":"Herramienta de jardineria","activo":0,"id_cat_grupos_presupuesto_padre":22,"css":null,"id_cat_grupos_cobro":0,"anio":2026}
+{"id_cat_grupos_presupuesto":26,"nombre":"Herramienta de seguridad","activo":0,"id_cat_grupos_presupuesto_padre":22,"css":null,"id_cat_grupos_cobro":0,"anio":2026}
+{"id_cat_grupos_presupuesto":27,"nombre":"Administración","activo":0,"id_cat_grupos_presupuesto_padre":22,"css":null,"id_cat_grupos_cobro":0,"anio":2026}
+{"id_cat_grupos_presupuesto":28,"nombre":"STC","activo":0,"id_cat_grupos_presupuesto_padre":0,"css":null,"id_cat_grupos_cobro":4,"anio":2026}
+{"id_cat_grupos_presupuesto":29,"nombre":"SIB","activo":0,"id_cat_grupos_presupuesto_padre":0,"css":null,"id_cat_grupos_cobro":7,"anio":2026}
+{"id_cat_grupos_presupuesto":30,"nombre":"SIH","activo":0,"id_cat_grupos_presupuesto_padre":0,"css":null,"id_cat_grupos_cobro":8,"anio":2026}
+{"id_cat_grupos_presupuesto":31,"nombre":"Experiencias","activo":0,"id_cat_grupos_presupuesto_padre":0,"css":null,"id_cat_grupos_cobro":9,"anio":2026}
+{"id_cat_grupos_presupuesto":32,"nombre":"Cuota única","activo":0,"id_cat_grupos_presupuesto_padre":0,"css":null,"id_cat_grupos_cobro":10,"anio":2026}
+{"id_cat_grupos_presupuesto":33,"nombre":"Proyecto Hidrosanitario, Proyecto Eléctrico Integral","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":3,"anio":2026}
+{"id_cat_grupos_presupuesto":34,"nombre":"Proyecto Eléctrico Integral","activo":0,"id_cat_grupos_presupuesto_padre":0,"css":null,"id_cat_grupos_cobro":3,"anio":2026}
+{"id_cat_grupos_presupuesto":35,"nombre":"PRUEBA","activo":0,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":1,"anio":2026}
+{"id_cat_grupos_presupuesto":36,"nombre":"Gastos de mantenimiento","activo":1,"id_cat_grupos_presupuesto_padre":null,"css":null,"id_cat_grupos_cobro":2,"anio":2026}

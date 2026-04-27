@@ -228,7 +228,9 @@ async function run(): Promise<void> {
       continue;
     }
 
-    const responsibility = asInt(payload.id_opcion_estado_cuenta) === 2 ? "COMMERCE" : "OWNER";
+    // Legacy: id_opcion_estado_cuenta = 2 → Propietario (OWNER)
+    //         id_opcion_estado_cuenta = 1 → Comercio    (COMMERCE)
+    const responsibility = asInt(payload.id_opcion_estado_cuenta) === 2 ? "OWNER" : "COMMERCE";
     const tenancyId = (() => {
       const rentalLegacyId = asInt(payload.id_arrendamientos);
       if (rentalLegacyId === null) {

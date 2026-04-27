@@ -2,7 +2,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-type TableName = "CAT_GRUPO_PUESTOS" | "CAT_PUESTOS" | "DIRECTORIO_HAS_CAT_PUESTOS";
+type TableName = 
+  | "CAT_GRUPO_PUESTOS" 
+  | "CAT_PUESTOS" 
+  | "DIRECTORIO_HAS_CAT_PUESTOS"
+  | "CAT_GRUPOS_PRESUPUESTO"
+  | "CAT_CONCEPTOS_PRESUPUESTO";
 
 const TABLE_COLUMNS: Record<TableName, string[]> = {
   CAT_GRUPO_PUESTOS: ["id_cat_grupo_puestos", "nombre", "activo", "posicion", "tipo"],
@@ -13,6 +18,24 @@ const TABLE_COLUMNS: Record<TableName, string[]> = {
     "id_cat_puestos",
     "activo",
     "suplente",
+  ],
+  CAT_GRUPOS_PRESUPUESTO: [
+    "id_cat_grupos_presupuesto",
+    "nombre",
+    "activo",
+    "id_cat_grupos_presupuesto_padre",
+    "css",
+    "id_cat_grupos_cobro",
+    "anio"
+  ],
+  CAT_CONCEPTOS_PRESUPUESTO: [
+    "id_cat_conceptos_presupuesto",
+    "id_cat_grupos_presupuesto",
+    "nombre",
+    "activo",
+    "es_extraordinario",
+    "anio",
+    "orden"
   ],
 };
 

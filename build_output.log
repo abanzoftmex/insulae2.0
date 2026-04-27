@@ -1,0 +1,67 @@
+
+> insuale2.0@0.1.0 prebuild
+> npm run prisma:generate
+
+
+> insuale2.0@0.1.0 prisma:generate
+> prisma generate
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma/schema.prisma.
+
+✔ Generated Prisma Client (v7.6.0) to ./node_modules/@prisma/client in 224ms
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+
+
+> insuale2.0@0.1.0 build
+> next build
+
+▲ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 2.2s
+  Running TypeScript ...
+  Finished TypeScript in 4.8s ...
+  Collecting page data using 9 workers ...
+Error: Failed to collect configuration for /listado-gastos/[id]
+    at ignore-listed frames {
+  [cause]: Error [PrismaClientInitializationError]: `PrismaClient` needs to be constructed with a non-empty, valid `PrismaClientOptions`:
+  
+  ```
+  new PrismaClient({
+    ...
+  })
+  ```
+  
+  or
+  
+  ```
+  constructor() {
+    super({ ... });
+  }
+  ```
+            
+      at module evaluation (.next/server/chunks/ssr/_0-f-pfc._.js:1:351)
+      at instantiateModule (.next/server/chunks/ssr/[turbopack]_runtime.js:853:9)
+      at getOrInstantiateModuleFromParent (.next/server/chunks/ssr/[turbopack]_runtime.js:877:12)
+      at Context.esmImport [as i] (.next/server/chunks/ssr/[turbopack]_runtime.js:281:20)
+      at <unknown> (.next/server/chunks/ssr/[root-of-the-server]__0jixjs1._.js:1:11571)
+      at Context.asyncModule [as a] (.next/server/chunks/ssr/[turbopack]_runtime.js:525:5)
+      at module evaluation (.next/server/chunks/ssr/[root-of-the-server]__0jixjs1._.js:1:11519)
+      at instantiateModule (.next/server/chunks/ssr/[turbopack]_runtime.js:853:9)
+      at getOrInstantiateModuleFromParent (.next/server/chunks/ssr/[turbopack]_runtime.js:877:12) {
+    clientVersion: '7.6.0',
+    errorCode: undefined,
+    retryable: undefined
+  }
+}
+
+> Build error occurred
+Error: Failed to collect page data for /listado-gastos/[id]
+    at ignore-listed frames {
+  type: 'Error'
+}

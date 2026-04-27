@@ -50,7 +50,17 @@ const NAV_SECTIONS: NavSection[] = [
   },
   {
     title: "Financiero",
-    items: [{ label: "Resumen financiero", href: "/resumen-financiero", icon: "RF" }],
+    items: [{ label: "Resumen financiero", href: "/resumen-financiero", icon: "RF" },
+    { label: "Reporte de cuotas", href: "/reporte-cuotas", icon: "RC" },
+    { label: "Reporte de cuotas extraordinarias", href: "/reporte-cuotas-extraordinarias", icon: "RCE" },
+    { label: "Presupuestos", href: "/presupuestos", icon: "PR" },
+    { label: "Estructura del presupuesto", href: "/listado-estructura-presupuesto", icon: "EP" },
+    { label: "Estructura otros ingresos", href: "/listado-estructura-otros-ingresos", icon: "OI" },
+    { label: "Ingresos", href: "/listado-ingresos", icon: "IN" },
+    { label: "Gastos", href: "/listado-gastos", icon: "GA" },
+    { label: "Cobros masivos", href: "/cobros-masivos", icon: "CM" },
+    { label: "Sanciones", href: "/sanciones", icon: "SA" },
+    ],
   },
 ];
 
@@ -160,7 +170,7 @@ export function AppShell({ children, navbarLogoUrl, navbarLogoAlt = "Val'Quirico
       </div>
 
       {sidebarOpen ? (
-        <div className="fixed inset-0 z-40">
+        <div className="fixed inset-0 z-[1000]">
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
@@ -194,11 +204,10 @@ export function AppShell({ children, navbarLogoUrl, navbarLogoAlt = "Val'Quirico
                       const isActive = item.href
                         ? currentPath === normalizePath(item.href) || currentPath.startsWith(`${normalizePath(item.href)}/`)
                         : false;
-                      const sharedClass = `flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition ${
-                        isActive
-                          ? "border-[#8f593b]/50 bg-[#8f593b]/12 text-[#3a261c]"
-                          : "border-transparent text-[#5f4b3f] hover:border-[#c8ae97] hover:bg-white/65"
-                      }`;
+                      const sharedClass = `flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition ${isActive
+                        ? "border-[#8f593b]/50 bg-[#8f593b]/12 text-[#3a261c]"
+                        : "border-transparent text-[#5f4b3f] hover:border-[#c8ae97] hover:bg-white/65"
+                        }`;
 
                       const inner = (
                         <>

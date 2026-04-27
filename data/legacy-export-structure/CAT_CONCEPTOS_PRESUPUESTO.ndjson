@@ -1,0 +1,304 @@
+{"id_cat_conceptos_presupuesto":1,"id_cat_grupos_presupuesto":1,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":2,"id_cat_grupos_presupuesto":1,"nombre":"AGUA EMBOTELLADA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2025,"orden":2}
+{"id_cat_conceptos_presupuesto":3,"id_cat_grupos_presupuesto":1,"nombre":"AQUISICION DE EQUPO DE COMPUTO ADMON","activo":1,"es_extraordinario":0,"anio":2025,"orden":3}
+{"id_cat_conceptos_presupuesto":4,"id_cat_grupos_presupuesto":1,"nombre":"SOPORTE TECNICO EN SISTEMAS","activo":1,"es_extraordinario":0,"anio":2025,"orden":4}
+{"id_cat_conceptos_presupuesto":5,"id_cat_grupos_presupuesto":1,"nombre":"SERVICIOS LEGALES ADMON VQ","activo":1,"es_extraordinario":0,"anio":2025,"orden":5}
+{"id_cat_conceptos_presupuesto":6,"id_cat_grupos_presupuesto":1,"nombre":"TRAMITES LEGALES ADMON VQ","activo":1,"es_extraordinario":0,"anio":2025,"orden":6}
+{"id_cat_conceptos_presupuesto":7,"id_cat_grupos_presupuesto":1,"nombre":"AUDITORIA PROPAET","activo":0,"es_extraordinario":0,"anio":2025,"orden":7}
+{"id_cat_conceptos_presupuesto":8,"id_cat_grupos_presupuesto":1,"nombre":"COMISIONES BANCARIAS","activo":1,"es_extraordinario":0,"anio":2025,"orden":8}
+{"id_cat_conceptos_presupuesto":9,"id_cat_grupos_presupuesto":1,"nombre":"CONSULTORIA FISCAL","activo":1,"es_extraordinario":0,"anio":2025,"orden":9}
+{"id_cat_conceptos_presupuesto":10,"id_cat_grupos_presupuesto":2,"nombre":"GASOLINA EQ DE TRANSPORTES","activo":1,"es_extraordinario":0,"anio":2025,"orden":1}
+{"id_cat_conceptos_presupuesto":11,"id_cat_grupos_presupuesto":2,"nombre":"MANTENIMIENTO REPARACIONES EN GENERAL","activo":1,"es_extraordinario":0,"anio":2025,"orden":2}
+{"id_cat_conceptos_presupuesto":12,"id_cat_grupos_presupuesto":2,"nombre":"ARTICULOS DE LIMPIEZA (ASEO BAÑOS, OFICINAS, PUEBLO)","activo":1,"es_extraordinario":0,"anio":2025,"orden":3}
+{"id_cat_conceptos_presupuesto":13,"id_cat_grupos_presupuesto":2,"nombre":"ARTICULOS DE ILUMINACION (FOTOS CELDAS, Y REFLECTORES)","activo":1,"es_extraordinario":0,"anio":2025,"orden":4}
+{"id_cat_conceptos_presupuesto":14,"id_cat_grupos_presupuesto":2,"nombre":"FUMIGACION AREAS COMUNES","activo":1,"es_extraordinario":0,"anio":2025,"orden":5}
+{"id_cat_conceptos_presupuesto":15,"id_cat_grupos_presupuesto":2,"nombre":"UNIFORMES PERSONAL MANTENIMIENTO","activo":1,"es_extraordinario":0,"anio":2025,"orden":6}
+{"id_cat_conceptos_presupuesto":16,"id_cat_grupos_presupuesto":2,"nombre":"NOMINA PERSONAL DE MANTENIMIENTO ","activo":1,"es_extraordinario":0,"anio":2025,"orden":7}
+{"id_cat_conceptos_presupuesto":17,"id_cat_grupos_presupuesto":2,"nombre":"NOMINA AGUINALDOS 2025 (PERSONAL MANTENIMIENTO)","activo":1,"es_extraordinario":0,"anio":2025,"orden":8}
+{"id_cat_conceptos_presupuesto":18,"id_cat_grupos_presupuesto":2,"nombre":"MANTENIMIENTO EQUIPO DE TRANSPORTE (PIPA, MOTO CARROS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":9}
+{"id_cat_conceptos_presupuesto":19,"id_cat_grupos_presupuesto":3,"nombre":"GASOLINA SEGURIDAD (MOTOS SEGURIDAD)","activo":1,"es_extraordinario":0,"anio":2025,"orden":1}
+{"id_cat_conceptos_presupuesto":20,"id_cat_grupos_presupuesto":3,"nombre":"MANTENIMIENTO EQUIPO DE TRANSPORTE (MOTOS SEG)","activo":1,"es_extraordinario":0,"anio":2025,"orden":2}
+{"id_cat_conceptos_presupuesto":21,"id_cat_grupos_presupuesto":4,"nombre":"PLANTA DE TRATAMIENTO (INSUMOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":1}
+{"id_cat_conceptos_presupuesto":22,"id_cat_grupos_presupuesto":4,"nombre":"PLANTA DE TRATAMIENTO (MANTENIMIENTO)","activo":1,"es_extraordinario":0,"anio":2025,"orden":2}
+{"id_cat_conceptos_presupuesto":23,"id_cat_grupos_presupuesto":4,"nombre":"PLANTA DE TRATAMIENTO (ANALISIS DE LODOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":3}
+{"id_cat_conceptos_presupuesto":24,"id_cat_grupos_presupuesto":4,"nombre":"24","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":25,"id_cat_grupos_presupuesto":4,"nombre":"PLANTA DE TRATAMIENTO (ANALISIS DE AGUA)","activo":1,"es_extraordinario":0,"anio":2025,"orden":4}
+{"id_cat_conceptos_presupuesto":26,"id_cat_grupos_presupuesto":4,"nombre":"TELEFONIA CELULAR (PETAR)","activo":1,"es_extraordinario":0,"anio":2025,"orden":5}
+{"id_cat_conceptos_presupuesto":27,"id_cat_grupos_presupuesto":4,"nombre":"ENERGIA ELECTRICA PETAR (ANTIGUA)","activo":1,"es_extraordinario":0,"anio":2025,"orden":6}
+{"id_cat_conceptos_presupuesto":28,"id_cat_grupos_presupuesto":4,"nombre":"ENERGIA ELECTRICA PETAR (NUEVA)","activo":1,"es_extraordinario":0,"anio":2025,"orden":7}
+{"id_cat_conceptos_presupuesto":29,"id_cat_grupos_presupuesto":4,"nombre":"IMPUESTOS FEDERALES (CONAGUA)","activo":1,"es_extraordinario":0,"anio":2025,"orden":8}
+{"id_cat_conceptos_presupuesto":30,"id_cat_grupos_presupuesto":4,"nombre":"ASESORIA LEGAL CONAGUA","activo":1,"es_extraordinario":0,"anio":2025,"orden":9}
+{"id_cat_conceptos_presupuesto":31,"id_cat_grupos_presupuesto":4,"nombre":"RENTA TERRENO PLANTA DE TRATAMIENTO","activo":1,"es_extraordinario":0,"anio":2025,"orden":10}
+{"id_cat_conceptos_presupuesto":32,"id_cat_grupos_presupuesto":4,"nombre":"ASESORIA PLANTA DE TRATAMIENTO (WATERNEXT)","activo":1,"es_extraordinario":0,"anio":2025,"orden":11}
+{"id_cat_conceptos_presupuesto":33,"id_cat_grupos_presupuesto":4,"nombre":"DESASOLVES BARRIO CENTRO","activo":1,"es_extraordinario":0,"anio":2025,"orden":12}
+{"id_cat_conceptos_presupuesto":34,"id_cat_grupos_presupuesto":4,"nombre":"GASTOS DE TRANSPORTE (FORD TRANSIT)","activo":1,"es_extraordinario":0,"anio":2025,"orden":13}
+{"id_cat_conceptos_presupuesto":35,"id_cat_grupos_presupuesto":4,"nombre":"DIESEL FORD TRANSIT","activo":1,"es_extraordinario":0,"anio":2025,"orden":14}
+{"id_cat_conceptos_presupuesto":36,"id_cat_grupos_presupuesto":4,"nombre":"SEGURO, VERIFICACION  Y CONTROL VEHICULAR (FORD TRANSIT)","activo":1,"es_extraordinario":0,"anio":2025,"orden":15}
+{"id_cat_conceptos_presupuesto":37,"id_cat_grupos_presupuesto":4,"nombre":"MANTENIMIENTO PREVENTIVO (TRANSPORTE FORD TRANSIT)","activo":1,"es_extraordinario":0,"anio":2025,"orden":16}
+{"id_cat_conceptos_presupuesto":38,"id_cat_grupos_presupuesto":4,"nombre":"NOMINA PERSONAL DE TRANSPORTE","activo":1,"es_extraordinario":0,"anio":2025,"orden":17}
+{"id_cat_conceptos_presupuesto":39,"id_cat_grupos_presupuesto":4,"nombre":"NOMINA AGUINALDOS 2025 (PERSONAL TRANSPORTE)","activo":1,"es_extraordinario":0,"anio":2025,"orden":18}
+{"id_cat_conceptos_presupuesto":40,"id_cat_grupos_presupuesto":6,"nombre":"Multa CFE","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":41,"id_cat_grupos_presupuesto":6,"nombre":"Ingeniería electricidad","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":42,"id_cat_grupos_presupuesto":6,"nombre":"Zanja","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":43,"id_cat_grupos_presupuesto":6,"nombre":"Drenaje","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":44,"id_cat_grupos_presupuesto":6,"nombre":"Nueva PTAR","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":45,"id_cat_grupos_presupuesto":6,"nombre":"integral electricidad","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":46,"id_cat_grupos_presupuesto":6,"nombre":"Aire acondicionado","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":47,"id_cat_grupos_presupuesto":6,"nombre":"Pantalla para reuniones","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":48,"id_cat_grupos_presupuesto":6,"nombre":"Celular ","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":49,"id_cat_grupos_presupuesto":7,"nombre":"39","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":50,"id_cat_grupos_presupuesto":7,"nombre":"40","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":51,"id_cat_grupos_presupuesto":7,"nombre":"41","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":52,"id_cat_grupos_presupuesto":7,"nombre":"42","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":53,"id_cat_grupos_presupuesto":7,"nombre":"43","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":54,"id_cat_grupos_presupuesto":7,"nombre":"44","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":55,"id_cat_grupos_presupuesto":8,"nombre":"45","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":56,"id_cat_grupos_presupuesto":8,"nombre":"46","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":57,"id_cat_grupos_presupuesto":9,"nombre":"47","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":58,"id_cat_grupos_presupuesto":9,"nombre":"48","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":59,"id_cat_grupos_presupuesto":9,"nombre":"49","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":60,"id_cat_grupos_presupuesto":9,"nombre":"50","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":61,"id_cat_grupos_presupuesto":10,"nombre":"Reinos de México","activo":1,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":62,"id_cat_grupos_presupuesto":11,"nombre":"Servicio de transporte condominal","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":63,"id_cat_grupos_presupuesto":12,"nombre":"Servicio de infraestructura","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":64,"id_cat_grupos_presupuesto":13,"nombre":"Servicio de infraestructura hidraulicos","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":65,"id_cat_grupos_presupuesto":14,"nombre":"Experiencias de visitantes","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":66,"id_cat_grupos_presupuesto":15,"nombre":"Servicio de medidores","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":67,"id_cat_grupos_presupuesto":1,"nombre":"ASESORES EXTERNOS","activo":1,"es_extraordinario":0,"anio":2025,"orden":10}
+{"id_cat_conceptos_presupuesto":68,"id_cat_grupos_presupuesto":1,"nombre":"CUOTAS IMSS E INFONAVIT","activo":1,"es_extraordinario":0,"anio":2025,"orden":11}
+{"id_cat_conceptos_presupuesto":69,"id_cat_grupos_presupuesto":1,"nombre":"ENERGIA ELECTRICA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2025,"orden":12}
+{"id_cat_conceptos_presupuesto":70,"id_cat_grupos_presupuesto":1,"nombre":"IMPUESTOS FEDERALES (IMSS ANUAL) PRIMA DE RIESGO","activo":1,"es_extraordinario":0,"anio":2025,"orden":13}
+{"id_cat_conceptos_presupuesto":71,"id_cat_grupos_presupuesto":1,"nombre":"IMPUESTO FEDERALES (ISR ANUAL 2023 Y 2024)","activo":0,"es_extraordinario":0,"anio":2025,"orden":16}
+{"id_cat_conceptos_presupuesto":72,"id_cat_grupos_presupuesto":1,"nombre":"IMPUESTOS LOCALES (3% SOBRE NOMINA)","activo":1,"es_extraordinario":0,"anio":2025,"orden":15}
+{"id_cat_conceptos_presupuesto":73,"id_cat_grupos_presupuesto":1,"nombre":"LICENCIAS SOFTWARE VQ","activo":1,"es_extraordinario":0,"anio":2025,"orden":16}
+{"id_cat_conceptos_presupuesto":74,"id_cat_grupos_presupuesto":1,"nombre":"MANTENIMIENTO PREVENTIVO A/A (ALAMO)","activo":0,"es_extraordinario":0,"anio":2025,"orden":21}
+{"id_cat_conceptos_presupuesto":75,"id_cat_grupos_presupuesto":1,"nombre":"MANTENIMIENTO PREVENTIVO A/A (ALAMO)","activo":1,"es_extraordinario":0,"anio":2025,"orden":17}
+{"id_cat_conceptos_presupuesto":76,"id_cat_grupos_presupuesto":1,"nombre":"MANTENIMIENTO PREVENTIVO SISTEMA DE REJAS (BOSQUES, LAURELES Y FRENOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":19}
+{"id_cat_conceptos_presupuesto":77,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA AGUINALDOS 2025 (ADMINISTRACION)","activo":1,"es_extraordinario":0,"anio":2025,"orden":20}
+{"id_cat_conceptos_presupuesto":78,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA AGUINALDOS 2025 (COORD Y JEFATURA) SEGURIDAD","activo":0,"es_extraordinario":0,"anio":2025,"orden":21}
+{"id_cat_conceptos_presupuesto":79,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA PERSONAL (FINIQUITO O LIQUIDACION)","activo":0,"es_extraordinario":0,"anio":2025,"orden":22}
+{"id_cat_conceptos_presupuesto":80,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA PERSONAL ADMINISTRATIVO ","activo":0,"es_extraordinario":0,"anio":2025,"orden":23}
+{"id_cat_conceptos_presupuesto":81,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA PERSONAL DE SEGURIDAD (COORD Y JEFATURA) SEGURIDAD","activo":0,"es_extraordinario":0,"anio":2025,"orden":24}
+{"id_cat_conceptos_presupuesto":82,"id_cat_grupos_presupuesto":1,"nombre":"PAPELERIA E INSUMOS DE TRABAJO ","activo":1,"es_extraordinario":0,"anio":2025,"orden":25}
+{"id_cat_conceptos_presupuesto":83,"id_cat_grupos_presupuesto":1,"nombre":"PAPELERIA E INSUMOS DE TRABAJO (ASAMBLEA COMERCIOS Y CONDOMINIO)","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":84,"id_cat_grupos_presupuesto":1,"nombre":"PAPELERIA E INSUMOS DE TRABAJO (RECONOCIMIENTOS POR 10 AÑOS)","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":85,"id_cat_grupos_presupuesto":1,"nombre":"TRAMITES ASAMBLEAS DE COMERCIO Y CONDOMINAL","activo":1,"es_extraordinario":0,"anio":2025,"orden":26}
+{"id_cat_conceptos_presupuesto":86,"id_cat_grupos_presupuesto":1,"nombre":"PAQUETES CONTABLES (SISTEMAS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":28}
+{"id_cat_conceptos_presupuesto":87,"id_cat_grupos_presupuesto":1,"nombre":"POSADA PERSONAL FIN DE AÑO","activo":1,"es_extraordinario":0,"anio":2025,"orden":29}
+{"id_cat_conceptos_presupuesto":88,"id_cat_grupos_presupuesto":1,"nombre":"RECOLECCION DE BASURA","activo":1,"es_extraordinario":0,"anio":2025,"orden":30}
+{"id_cat_conceptos_presupuesto":89,"id_cat_grupos_presupuesto":1,"nombre":"REEMBOLSO PRESTAMO CUOTA EXTRAORDINARIA","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":90,"id_cat_grupos_presupuesto":1,"nombre":"RENTA AREA DE BASURA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2025,"orden":31}
+{"id_cat_conceptos_presupuesto":91,"id_cat_grupos_presupuesto":1,"nombre":"RENTA IMPRESORA","activo":1,"es_extraordinario":0,"anio":2025,"orden":32}
+{"id_cat_conceptos_presupuesto":92,"id_cat_grupos_presupuesto":1,"nombre":"RENTA LAS MERCEDES","activo":0,"es_extraordinario":0,"anio":2025,"orden":33}
+{"id_cat_conceptos_presupuesto":93,"id_cat_grupos_presupuesto":1,"nombre":"RENTAS OFICINAS ADMINISTRACION","activo":1,"es_extraordinario":0,"anio":2025,"orden":34}
+{"id_cat_conceptos_presupuesto":94,"id_cat_grupos_presupuesto":1,"nombre":"SEGUROS Y FINANZAS REPONSABILIDAD CIVIL","activo":1,"es_extraordinario":0,"anio":2025,"orden":35}
+{"id_cat_conceptos_presupuesto":95,"id_cat_grupos_presupuesto":1,"nombre":"SISTEMA DE COBRANZA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2025,"orden":36}
+{"id_cat_conceptos_presupuesto":96,"id_cat_grupos_presupuesto":1,"nombre":"SISTEMA DE COBRANZA VQ CONDO (INSULAIF)","activo":1,"es_extraordinario":0,"anio":2025,"orden":37}
+{"id_cat_conceptos_presupuesto":97,"id_cat_grupos_presupuesto":1,"nombre":"TELEFONIA CELULAR (VQ CONDO)","activo":1,"es_extraordinario":0,"anio":2025,"orden":38}
+{"id_cat_conceptos_presupuesto":98,"id_cat_grupos_presupuesto":1,"nombre":"TELEFONIA LOCAL ","activo":1,"es_extraordinario":0,"anio":2025,"orden":39}
+{"id_cat_conceptos_presupuesto":99,"id_cat_grupos_presupuesto":1,"nombre":"","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":100,"id_cat_grupos_presupuesto":2,"nombre":"PAGO CREDITO ADQUISICION EQUIPO DE TRANSP (MOTO CARRO)","activo":0,"es_extraordinario":0,"anio":2025,"orden":10}
+{"id_cat_conceptos_presupuesto":101,"id_cat_grupos_presupuesto":2,"nombre":"ADQUISICION EQUIPO DE JARDINERIA ","activo":0,"es_extraordinario":0,"anio":2025,"orden":2}
+{"id_cat_conceptos_presupuesto":102,"id_cat_grupos_presupuesto":3,"nombre":"UNIFORMES PERSONAL SEGURIDAD","activo":1,"es_extraordinario":0,"anio":2025,"orden":3}
+{"id_cat_conceptos_presupuesto":103,"id_cat_grupos_presupuesto":3,"nombre":"TELEFONIA CELULAR (SEGURIDAD)","activo":1,"es_extraordinario":0,"anio":2025,"orden":4}
+{"id_cat_conceptos_presupuesto":104,"id_cat_grupos_presupuesto":3,"nombre":"SISTEMA DE CAMARAS (SPY4YOU)","activo":1,"es_extraordinario":0,"anio":2025,"orden":5}
+{"id_cat_conceptos_presupuesto":105,"id_cat_grupos_presupuesto":3,"nombre":"ARRENDAMIENTOS DE CUATRIMOTOS SEGURIDAD (SPY4YOU)","activo":1,"es_extraordinario":0,"anio":2025,"orden":6}
+{"id_cat_conceptos_presupuesto":106,"id_cat_grupos_presupuesto":3,"nombre":"SCLUSA","activo":0,"es_extraordinario":0,"anio":2025,"orden":7}
+{"id_cat_conceptos_presupuesto":107,"id_cat_grupos_presupuesto":3,"nombre":"REPARACION SISTEMA CAMARAS VQ CONDO","activo":0,"es_extraordinario":0,"anio":2025,"orden":8}
+{"id_cat_conceptos_presupuesto":108,"id_cat_grupos_presupuesto":3,"nombre":"NOMINA PERSONAL DE SEGURIDAD (OPERATIVOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":9}
+{"id_cat_conceptos_presupuesto":109,"id_cat_grupos_presupuesto":3,"nombre":"NOMINA AGUINALDOS 2025 (SEGURIDAD OPERATIVOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":10}
+{"id_cat_conceptos_presupuesto":110,"id_cat_grupos_presupuesto":3,"nombre":"ARTICULOS DE SEGURIDAD (CONTADORES, LAMPARAS, BANDEROLAS, CHALECOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":11}
+{"id_cat_conceptos_presupuesto":111,"id_cat_grupos_presupuesto":3,"nombre":"RECARGA EXTINTORES","activo":0,"es_extraordinario":0,"anio":2025,"orden":18}
+{"id_cat_conceptos_presupuesto":112,"id_cat_grupos_presupuesto":3,"nombre":"GASTOS OPERATIVOS AREA PARAMEDICOS","activo":1,"es_extraordinario":0,"anio":2025,"orden":13}
+{"id_cat_conceptos_presupuesto":113,"id_cat_grupos_presupuesto":3,"nombre":"TELEFONIA CELULAR (PARAMEDICOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":14}
+{"id_cat_conceptos_presupuesto":114,"id_cat_grupos_presupuesto":3,"nombre":"NOMINA PERSONAL PARAMEDICOS","activo":1,"es_extraordinario":0,"anio":2025,"orden":15}
+{"id_cat_conceptos_presupuesto":115,"id_cat_grupos_presupuesto":3,"nombre":"NOMINA AGUINALDOS 2025 (PERSONAL PARAMEDICOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":16}
+{"id_cat_conceptos_presupuesto":116,"id_cat_grupos_presupuesto":3,"nombre":"UNIFORMES AREAS PARAMEDICOS","activo":1,"es_extraordinario":0,"anio":2025,"orden":17}
+{"id_cat_conceptos_presupuesto":117,"id_cat_grupos_presupuesto":3,"nombre":"CONVENIO AMBULANCIA CRUZ ROJA","activo":1,"es_extraordinario":0,"anio":2025,"orden":18}
+{"id_cat_conceptos_presupuesto":118,"id_cat_grupos_presupuesto":3,"nombre":"INSUMOS PARAMEDICOS","activo":1,"es_extraordinario":0,"anio":2025,"orden":19}
+{"id_cat_conceptos_presupuesto":119,"id_cat_grupos_presupuesto":3,"nombre":"LICENCIA DE PROTECCION CIVIL 2024","activo":1,"es_extraordinario":0,"anio":2025,"orden":20}
+{"id_cat_conceptos_presupuesto":120,"id_cat_grupos_presupuesto":3,"nombre":"ALARMAS SISMICA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2025,"orden":21}
+{"id_cat_conceptos_presupuesto":121,"id_cat_grupos_presupuesto":1,"nombre":"Prueba de redondeo","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":122,"id_cat_grupos_presupuesto":16,"nombre":"Proyecto Hidrosanitario, Proyecto Eléctrico Integral","activo":1,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":123,"id_cat_grupos_presupuesto":16,"nombre":"Proyecto eléctrico Integral","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":124,"id_cat_grupos_presupuesto":17,"nombre":"Proyecto Eléctrico Integral","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":125,"id_cat_grupos_presupuesto":1,"nombre":"SOPORTE TECNICO EN SISTEMAS","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":126,"id_cat_grupos_presupuesto":1,"nombre":"MOBILIARIO Y EQUIPO DE OFICINA","activo":0,"es_extraordinario":0,"anio":2025,"orden":27}
+{"id_cat_conceptos_presupuesto":127,"id_cat_grupos_presupuesto":1,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":0,"es_extraordinario":0,"anio":2025,"orden":1}
+{"id_cat_conceptos_presupuesto":128,"id_cat_grupos_presupuesto":1,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":0,"es_extraordinario":0,"anio":2025,"orden":0}
+{"id_cat_conceptos_presupuesto":129,"id_cat_grupos_presupuesto":1,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":0,"es_extraordinario":0,"anio":2025,"orden":1}
+{"id_cat_conceptos_presupuesto":130,"id_cat_grupos_presupuesto":1,"nombre":"IMPUESTOS FEDERALES (ISR ANUAL 2025)","activo":0,"es_extraordinario":1,"anio":2025,"orden":17}
+{"id_cat_conceptos_presupuesto":131,"id_cat_grupos_presupuesto":1,"nombre":"IMPUESTO FEDERALES (ISR RETENCIONES)","activo":0,"es_extraordinario":0,"anio":2025,"orden":18}
+{"id_cat_conceptos_presupuesto":132,"id_cat_grupos_presupuesto":1,"nombre":"IMPUESTO FEDERALES (IVA RETENCIONES)","activo":0,"es_extraordinario":0,"anio":2025,"orden":19}
+{"id_cat_conceptos_presupuesto":133,"id_cat_grupos_presupuesto":1,"nombre":"MANTENIMIENTO PREVENTIVO PUERTAS Y SISTEMAS (ALAMO)","activo":1,"es_extraordinario":0,"anio":2025,"orden":18}
+{"id_cat_conceptos_presupuesto":134,"id_cat_grupos_presupuesto":1,"nombre":"RECONOCIMIENTO POR 10 AÑOS DE ANTIGÜEDAD","activo":0,"es_extraordinario":0,"anio":2025,"orden":26}
+{"id_cat_conceptos_presupuesto":135,"id_cat_grupos_presupuesto":1,"nombre":"IMPUESTOS FEDERALES (ISR MENSUAL Y ANUAL)","activo":1,"es_extraordinario":0,"anio":2025,"orden":14}
+{"id_cat_conceptos_presupuesto":136,"id_cat_grupos_presupuesto":3,"nombre":"CAPACITACION PERSONAL SEGURIDAD","activo":0,"es_extraordinario":0,"anio":2025,"orden":4}
+{"id_cat_conceptos_presupuesto":137,"id_cat_grupos_presupuesto":3,"nombre":"MANTENIMIENTO MOTO BOMBA (SEGURIDAD)","activo":0,"es_extraordinario":0,"anio":2025,"orden":3}
+{"id_cat_conceptos_presupuesto":138,"id_cat_grupos_presupuesto":3,"nombre":"REJA DE SEGURIDAD (ACCESO PRINCIPAL)","activo":0,"es_extraordinario":0,"anio":2025,"orden":5}
+{"id_cat_conceptos_presupuesto":139,"id_cat_grupos_presupuesto":4,"nombre":"LIMPIEZA DE CISTERNA GENERAL","activo":0,"es_extraordinario":0,"anio":2025,"orden":2}
+{"id_cat_conceptos_presupuesto":140,"id_cat_grupos_presupuesto":4,"nombre":"DESASOLVES POZO GENERAL","activo":0,"es_extraordinario":0,"anio":2025,"orden":3}
+{"id_cat_conceptos_presupuesto":141,"id_cat_grupos_presupuesto":4,"nombre":"NUEVO EQUIPO DE BOMBEO Y MEDICION","activo":0,"es_extraordinario":0,"anio":2025,"orden":4}
+{"id_cat_conceptos_presupuesto":142,"id_cat_grupos_presupuesto":4,"nombre":"MANTENIMIENTO RED ELECTRICA","activo":0,"es_extraordinario":0,"anio":2025,"orden":6}
+{"id_cat_conceptos_presupuesto":143,"id_cat_grupos_presupuesto":4,"nombre":"MANTENIMIENTO A RED HIDROSANITARIA","activo":0,"es_extraordinario":0,"anio":2025,"orden":7}
+{"id_cat_conceptos_presupuesto":144,"id_cat_grupos_presupuesto":4,"nombre":"LICENCIA Y TRAMITES DE USO DE SUELO PTAR","activo":0,"es_extraordinario":0,"anio":2025,"orden":15}
+{"id_cat_conceptos_presupuesto":145,"id_cat_grupos_presupuesto":18,"nombre":"PRUEBA","activo":0,"es_extraordinario":0,"anio":2025,"orden":14}
+{"id_cat_conceptos_presupuesto":146,"id_cat_grupos_presupuesto":19,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":147,"id_cat_grupos_presupuesto":21,"nombre":"24","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":148,"id_cat_grupos_presupuesto":23,"nombre":"Multa CFE","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":149,"id_cat_grupos_presupuesto":23,"nombre":"Ingeniería electricidad","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":150,"id_cat_grupos_presupuesto":23,"nombre":"Zanja","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":151,"id_cat_grupos_presupuesto":23,"nombre":"Drenaje","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":152,"id_cat_grupos_presupuesto":23,"nombre":"Nueva PTAR","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":153,"id_cat_grupos_presupuesto":23,"nombre":"integral electricidad","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":154,"id_cat_grupos_presupuesto":23,"nombre":"Aire acondicionado","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":155,"id_cat_grupos_presupuesto":23,"nombre":"Pantalla para reuniones","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":156,"id_cat_grupos_presupuesto":23,"nombre":"Celular ","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":157,"id_cat_grupos_presupuesto":24,"nombre":"39","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":158,"id_cat_grupos_presupuesto":24,"nombre":"40","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":159,"id_cat_grupos_presupuesto":24,"nombre":"41","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":160,"id_cat_grupos_presupuesto":24,"nombre":"42","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":161,"id_cat_grupos_presupuesto":24,"nombre":"43","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":162,"id_cat_grupos_presupuesto":24,"nombre":"44","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":163,"id_cat_grupos_presupuesto":25,"nombre":"45","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":164,"id_cat_grupos_presupuesto":25,"nombre":"46","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":165,"id_cat_grupos_presupuesto":26,"nombre":"47","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":166,"id_cat_grupos_presupuesto":26,"nombre":"48","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":167,"id_cat_grupos_presupuesto":26,"nombre":"49","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":168,"id_cat_grupos_presupuesto":26,"nombre":"50","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":169,"id_cat_grupos_presupuesto":27,"nombre":"Reinos de México","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":170,"id_cat_grupos_presupuesto":28,"nombre":"Servicio de transporte condominal","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":171,"id_cat_grupos_presupuesto":29,"nombre":"Servicio de infraestructura","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":172,"id_cat_grupos_presupuesto":30,"nombre":"Servicio de infraestructura hidraulicos","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":173,"id_cat_grupos_presupuesto":31,"nombre":"Experiencias de visitantes","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":174,"id_cat_grupos_presupuesto":32,"nombre":"Servicio de medidores","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":175,"id_cat_grupos_presupuesto":19,"nombre":"PAPELERIA E INSUMOS DE TRABAJO (ASAMBLEA COMERCIOS Y CONDOMINIO)","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":176,"id_cat_grupos_presupuesto":19,"nombre":"PAPELERIA E INSUMOS DE TRABAJO (RECONOCIMIENTOS POR 10 AÑOS)","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":177,"id_cat_grupos_presupuesto":19,"nombre":"REEMBOLSO PRESTAMO CUOTA EXTRAORDINARIA","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":178,"id_cat_grupos_presupuesto":19,"nombre":"","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":179,"id_cat_grupos_presupuesto":19,"nombre":"Prueba de redondeo","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":180,"id_cat_grupos_presupuesto":33,"nombre":"Proyecto Hidrosanitario, Proyecto Eléctrico Integral","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":181,"id_cat_grupos_presupuesto":33,"nombre":"Proyecto eléctrico Integral","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":182,"id_cat_grupos_presupuesto":34,"nombre":"Proyecto Eléctrico Integral","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":183,"id_cat_grupos_presupuesto":19,"nombre":"SOPORTE TECNICO EN SISTEMAS","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":184,"id_cat_grupos_presupuesto":19,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":0,"es_extraordinario":0,"anio":2026,"orden":0}
+{"id_cat_conceptos_presupuesto":185,"id_cat_grupos_presupuesto":19,"nombre":"AGUA EMBOTELLADA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2026,"orden":1}
+{"id_cat_conceptos_presupuesto":186,"id_cat_grupos_presupuesto":20,"nombre":"GASOLINA SEGURIDAD (MOTOS SEGURIDAD)","activo":1,"es_extraordinario":0,"anio":2026,"orden":1}
+{"id_cat_conceptos_presupuesto":187,"id_cat_grupos_presupuesto":21,"nombre":"PLANTA DE TRATAMIENTO (INSUMOS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":1}
+{"id_cat_conceptos_presupuesto":188,"id_cat_grupos_presupuesto":19,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":0,"es_extraordinario":0,"anio":2026,"orden":1}
+{"id_cat_conceptos_presupuesto":189,"id_cat_grupos_presupuesto":19,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":0,"es_extraordinario":0,"anio":2026,"orden":1}
+{"id_cat_conceptos_presupuesto":190,"id_cat_grupos_presupuesto":19,"nombre":"AQUISICION DE EQUPO DE COMPUTO ADMON","activo":1,"es_extraordinario":0,"anio":2026,"orden":2}
+{"id_cat_conceptos_presupuesto":191,"id_cat_grupos_presupuesto":20,"nombre":"MANTENIMIENTO EQUIPO DE TRANSPORTE (MOTOS SEG)","activo":1,"es_extraordinario":0,"anio":2026,"orden":2}
+{"id_cat_conceptos_presupuesto":192,"id_cat_grupos_presupuesto":21,"nombre":"LIMPIEZA DE CISTERNA GENERAL","activo":1,"es_extraordinario":0,"anio":2026,"orden":2}
+{"id_cat_conceptos_presupuesto":193,"id_cat_grupos_presupuesto":19,"nombre":"SOPORTE TECNICO EN SISTEMAS","activo":1,"es_extraordinario":0,"anio":2026,"orden":3}
+{"id_cat_conceptos_presupuesto":194,"id_cat_grupos_presupuesto":20,"nombre":"MANTENIMIENTO MOTO BOMBA (SEGURIDAD)","activo":1,"es_extraordinario":0,"anio":2026,"orden":3}
+{"id_cat_conceptos_presupuesto":195,"id_cat_grupos_presupuesto":21,"nombre":"DESASOLVES POZO GENERAL","activo":1,"es_extraordinario":0,"anio":2026,"orden":3}
+{"id_cat_conceptos_presupuesto":196,"id_cat_grupos_presupuesto":19,"nombre":"SERVICIOS LEGALES ADMON VQ","activo":1,"es_extraordinario":0,"anio":2026,"orden":4}
+{"id_cat_conceptos_presupuesto":197,"id_cat_grupos_presupuesto":20,"nombre":"CAPACITACION PERSONAL SEGURIDAD","activo":1,"es_extraordinario":0,"anio":2026,"orden":4}
+{"id_cat_conceptos_presupuesto":198,"id_cat_grupos_presupuesto":21,"nombre":"NUEVO EQUIPO DE BOMBEO Y MEDICION","activo":1,"es_extraordinario":0,"anio":2026,"orden":4}
+{"id_cat_conceptos_presupuesto":199,"id_cat_grupos_presupuesto":19,"nombre":"TRAMITES LEGALES ADMON VQ","activo":1,"es_extraordinario":0,"anio":2026,"orden":5}
+{"id_cat_conceptos_presupuesto":200,"id_cat_grupos_presupuesto":21,"nombre":"PLANTA DE TRATAMIENTO (MANTENIMIENTO)","activo":1,"es_extraordinario":0,"anio":2026,"orden":5}
+{"id_cat_conceptos_presupuesto":201,"id_cat_grupos_presupuesto":20,"nombre":"REJA DE SEGURIDAD (ACCESO PRINCIPAL)","activo":1,"es_extraordinario":0,"anio":2026,"orden":5}
+{"id_cat_conceptos_presupuesto":202,"id_cat_grupos_presupuesto":19,"nombre":"ASESORES EXTERNOS","activo":1,"es_extraordinario":0,"anio":2026,"orden":6}
+{"id_cat_conceptos_presupuesto":203,"id_cat_grupos_presupuesto":20,"nombre":"UNIFORMES PERSONAL SEGURIDAD","activo":1,"es_extraordinario":0,"anio":2026,"orden":6}
+{"id_cat_conceptos_presupuesto":204,"id_cat_grupos_presupuesto":21,"nombre":"MANTENIMIENTO RED ELECTRICA","activo":1,"es_extraordinario":0,"anio":2026,"orden":6}
+{"id_cat_conceptos_presupuesto":205,"id_cat_grupos_presupuesto":19,"nombre":"AUDITORIA PROPAET","activo":0,"es_extraordinario":0,"anio":2026,"orden":7}
+{"id_cat_conceptos_presupuesto":206,"id_cat_grupos_presupuesto":19,"nombre":"NOMINA AGUINALDOS 2026 (ADMINISTRACION)","activo":1,"es_extraordinario":0,"anio":2026,"orden":7}
+{"id_cat_conceptos_presupuesto":207,"id_cat_grupos_presupuesto":20,"nombre":"TELEFONIA CELULAR (SEGURIDAD)","activo":1,"es_extraordinario":0,"anio":2026,"orden":7}
+{"id_cat_conceptos_presupuesto":208,"id_cat_grupos_presupuesto":20,"nombre":"SCLUSA","activo":0,"es_extraordinario":0,"anio":2026,"orden":7}
+{"id_cat_conceptos_presupuesto":209,"id_cat_grupos_presupuesto":21,"nombre":"MANTENIMIENTO A RED HIDROSANITARIA","activo":1,"es_extraordinario":0,"anio":2026,"orden":7}
+{"id_cat_conceptos_presupuesto":210,"id_cat_grupos_presupuesto":21,"nombre":"PLANTA DE TRATAMIENTO (ANALISIS DE LODOS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":8}
+{"id_cat_conceptos_presupuesto":211,"id_cat_grupos_presupuesto":19,"nombre":"NOMINA PERSONAL ADMINISTRATIVO ","activo":1,"es_extraordinario":0,"anio":2026,"orden":8}
+{"id_cat_conceptos_presupuesto":212,"id_cat_grupos_presupuesto":20,"nombre":"REPARACION SISTEMA CAMARAS VQ CONDO","activo":0,"es_extraordinario":0,"anio":2026,"orden":8}
+{"id_cat_conceptos_presupuesto":213,"id_cat_grupos_presupuesto":20,"nombre":"NOMINA PERSONAL DE SEGURIDAD (OPERATIVOS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":8}
+{"id_cat_conceptos_presupuesto":214,"id_cat_grupos_presupuesto":21,"nombre":"PLANTA DE TRATAMIENTO (ANALISIS DE AGUA)","activo":1,"es_extraordinario":0,"anio":2026,"orden":9}
+{"id_cat_conceptos_presupuesto":215,"id_cat_grupos_presupuesto":19,"nombre":"CUOTAS IMSS E INFONAVIT","activo":1,"es_extraordinario":0,"anio":2026,"orden":9}
+{"id_cat_conceptos_presupuesto":216,"id_cat_grupos_presupuesto":20,"nombre":"NOMINA AGUINALDOS 2026 (SEGURIDAD OPERATIVOS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":9}
+{"id_cat_conceptos_presupuesto":217,"id_cat_grupos_presupuesto":21,"nombre":"TELEFONIA CELULAR (PETAR)","activo":1,"es_extraordinario":0,"anio":2026,"orden":10}
+{"id_cat_conceptos_presupuesto":218,"id_cat_grupos_presupuesto":19,"nombre":"IMPUESTOS FEDERALES (IMSS ANUAL) PRIMA DE RIESGO","activo":1,"es_extraordinario":0,"anio":2026,"orden":10}
+{"id_cat_conceptos_presupuesto":219,"id_cat_grupos_presupuesto":20,"nombre":"SISTEMA DE CAMARAS (SPY4YOU)","activo":1,"es_extraordinario":0,"anio":2026,"orden":10}
+{"id_cat_conceptos_presupuesto":220,"id_cat_grupos_presupuesto":21,"nombre":"ENERGIA ELECTRICA PETAR (ANTIGUA)","activo":1,"es_extraordinario":0,"anio":2026,"orden":11}
+{"id_cat_conceptos_presupuesto":221,"id_cat_grupos_presupuesto":20,"nombre":"ARRENDAMIENTOS DE CUATRIMOTOS SEGURIDAD (SPY4YOU)","activo":1,"es_extraordinario":0,"anio":2026,"orden":11}
+{"id_cat_conceptos_presupuesto":222,"id_cat_grupos_presupuesto":19,"nombre":"IMPUESTOS FEDERALES (ISR RETENCION DE NOMINA)","activo":1,"es_extraordinario":0,"anio":2026,"orden":11}
+{"id_cat_conceptos_presupuesto":223,"id_cat_grupos_presupuesto":21,"nombre":"ENERGIA ELECTRICA PETAR (NUEVA)","activo":1,"es_extraordinario":0,"anio":2026,"orden":12}
+{"id_cat_conceptos_presupuesto":224,"id_cat_grupos_presupuesto":19,"nombre":"IMPUESTOS LOCALES (3% SOBRE NOMINA)","activo":1,"es_extraordinario":0,"anio":2026,"orden":12}
+{"id_cat_conceptos_presupuesto":225,"id_cat_grupos_presupuesto":20,"nombre":"ARTICULOS DE SEGURIDAD (CONTADORES, LAMPARAS, BANDEROLAS, CHALECOS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":12}
+{"id_cat_conceptos_presupuesto":226,"id_cat_grupos_presupuesto":19,"nombre":"COMISIONES BANCARIAS","activo":1,"es_extraordinario":0,"anio":2026,"orden":13}
+{"id_cat_conceptos_presupuesto":227,"id_cat_grupos_presupuesto":21,"nombre":"IMPUESTOS FEDERALES (CONAGUA)","activo":1,"es_extraordinario":0,"anio":2026,"orden":13}
+{"id_cat_conceptos_presupuesto":228,"id_cat_grupos_presupuesto":20,"nombre":"GASTOS OPERATIVOS AREA PARAMEDICOS","activo":1,"es_extraordinario":0,"anio":2026,"orden":13}
+{"id_cat_conceptos_presupuesto":229,"id_cat_grupos_presupuesto":19,"nombre":"CONSULTORIA FISCAL","activo":1,"es_extraordinario":0,"anio":2026,"orden":14}
+{"id_cat_conceptos_presupuesto":230,"id_cat_grupos_presupuesto":21,"nombre":"ASESORIA LEGAL CONAGUA","activo":1,"es_extraordinario":0,"anio":2026,"orden":14}
+{"id_cat_conceptos_presupuesto":231,"id_cat_grupos_presupuesto":20,"nombre":"NOMINA PERSONAL PARAMEDICOS","activo":1,"es_extraordinario":0,"anio":2026,"orden":14}
+{"id_cat_conceptos_presupuesto":232,"id_cat_grupos_presupuesto":35,"nombre":"PRUEBA","activo":0,"es_extraordinario":0,"anio":2026,"orden":14}
+{"id_cat_conceptos_presupuesto":233,"id_cat_grupos_presupuesto":19,"nombre":"ENERGIA ELECTRICA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2026,"orden":15}
+{"id_cat_conceptos_presupuesto":234,"id_cat_grupos_presupuesto":20,"nombre":"NOMINA AGUINALDOS 2026 (PERSONAL PARAMEDICOS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":15}
+{"id_cat_conceptos_presupuesto":235,"id_cat_grupos_presupuesto":21,"nombre":"LICENCIA Y TRAMITES DE USO DE SUELO PTAR","activo":1,"es_extraordinario":0,"anio":2026,"orden":15}
+{"id_cat_conceptos_presupuesto":236,"id_cat_grupos_presupuesto":21,"nombre":"RENTA TERRENO PLANTA DE TRATAMIENTO (ANTIGUA)","activo":1,"es_extraordinario":0,"anio":2026,"orden":16}
+{"id_cat_conceptos_presupuesto":237,"id_cat_grupos_presupuesto":19,"nombre":"IMPUESTO FEDERALES (ISR ANUAL 2023 Y 2024)","activo":1,"es_extraordinario":0,"anio":2026,"orden":16}
+{"id_cat_conceptos_presupuesto":238,"id_cat_grupos_presupuesto":20,"nombre":"TELEFONIA CELULAR (PARAMEDICOS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":16}
+{"id_cat_conceptos_presupuesto":239,"id_cat_grupos_presupuesto":21,"nombre":"ASESORIA PLANTA DE TRATAMIENTO (WATERNEXT)","activo":1,"es_extraordinario":0,"anio":2026,"orden":17}
+{"id_cat_conceptos_presupuesto":240,"id_cat_grupos_presupuesto":20,"nombre":"UNIFORMES AREAS PARAMEDICOS","activo":1,"es_extraordinario":0,"anio":2026,"orden":17}
+{"id_cat_conceptos_presupuesto":241,"id_cat_grupos_presupuesto":19,"nombre":"IMPUESTOS FEDERALES (ISR ANUAL 2025)","activo":1,"es_extraordinario":1,"anio":2026,"orden":17}
+{"id_cat_conceptos_presupuesto":242,"id_cat_grupos_presupuesto":21,"nombre":"DESASOLVES BARRIO CENTRO","activo":1,"es_extraordinario":0,"anio":2026,"orden":18}
+{"id_cat_conceptos_presupuesto":243,"id_cat_grupos_presupuesto":20,"nombre":"RECARGA EXTINTORES","activo":1,"es_extraordinario":0,"anio":2026,"orden":18}
+{"id_cat_conceptos_presupuesto":244,"id_cat_grupos_presupuesto":19,"nombre":"IMPUESTO FEDERALES (ISR RETENCIONES)","activo":1,"es_extraordinario":0,"anio":2026,"orden":18}
+{"id_cat_conceptos_presupuesto":245,"id_cat_grupos_presupuesto":21,"nombre":"GASTOS DE TRANSPORTE (FORD TRANSIT)","activo":1,"es_extraordinario":0,"anio":2026,"orden":19}
+{"id_cat_conceptos_presupuesto":246,"id_cat_grupos_presupuesto":20,"nombre":"AMBULANCIA","activo":1,"es_extraordinario":0,"anio":2026,"orden":19}
+{"id_cat_conceptos_presupuesto":247,"id_cat_grupos_presupuesto":19,"nombre":"IMPUESTO FEDERALES (IVA RETENCIONES)","activo":1,"es_extraordinario":0,"anio":2026,"orden":19}
+{"id_cat_conceptos_presupuesto":248,"id_cat_grupos_presupuesto":21,"nombre":"NOMINA PERSONAL DE TRANSPORTE","activo":1,"es_extraordinario":0,"anio":2026,"orden":20}
+{"id_cat_conceptos_presupuesto":249,"id_cat_grupos_presupuesto":19,"nombre":"LICENCIAS SOFTWARE VQ","activo":1,"es_extraordinario":0,"anio":2026,"orden":20}
+{"id_cat_conceptos_presupuesto":250,"id_cat_grupos_presupuesto":20,"nombre":"INSUMOS PARAMEDICOS","activo":1,"es_extraordinario":0,"anio":2026,"orden":20}
+{"id_cat_conceptos_presupuesto":251,"id_cat_grupos_presupuesto":21,"nombre":"NOMINA AGUINALDOS 2026 (PERSONAL TRANSPORTE)","activo":1,"es_extraordinario":0,"anio":2026,"orden":21}
+{"id_cat_conceptos_presupuesto":252,"id_cat_grupos_presupuesto":19,"nombre":"MANTENIMIENTO PREVENTIVO A/A (ALAMO)","activo":0,"es_extraordinario":0,"anio":2026,"orden":21}
+{"id_cat_conceptos_presupuesto":253,"id_cat_grupos_presupuesto":19,"nombre":"MANTENIMIENTO PREVENTIVO A/A (ALAMO)","activo":1,"es_extraordinario":0,"anio":2026,"orden":21}
+{"id_cat_conceptos_presupuesto":254,"id_cat_grupos_presupuesto":19,"nombre":"NOMINA AGUINALDOS 2025 (COORD Y JEFATURA) SEGURIDAD","activo":0,"es_extraordinario":0,"anio":2026,"orden":21}
+{"id_cat_conceptos_presupuesto":255,"id_cat_grupos_presupuesto":20,"nombre":"LICENCIA Y CAPACITACION DE PROTECCION CIVIL 2025","activo":1,"es_extraordinario":0,"anio":2026,"orden":21}
+{"id_cat_conceptos_presupuesto":256,"id_cat_grupos_presupuesto":21,"nombre":"DIESEL FORD TRANSIT","activo":1,"es_extraordinario":0,"anio":2026,"orden":22}
+{"id_cat_conceptos_presupuesto":257,"id_cat_grupos_presupuesto":19,"nombre":"NOMINA PERSONAL (FINIQUITO O LIQUIDACION)","activo":0,"es_extraordinario":0,"anio":2026,"orden":22}
+{"id_cat_conceptos_presupuesto":258,"id_cat_grupos_presupuesto":20,"nombre":"ALARMAS SISMICA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2026,"orden":22}
+{"id_cat_conceptos_presupuesto":259,"id_cat_grupos_presupuesto":19,"nombre":"MANTENIMIENTO PREVENTIVO PUERTAS Y SISTEMAS (ALAMO)","activo":1,"es_extraordinario":0,"anio":2026,"orden":22}
+{"id_cat_conceptos_presupuesto":260,"id_cat_grupos_presupuesto":21,"nombre":"SEGURO, VERIFICACION  Y CONTROL VEHICULAR (FORD TRANSIT)","activo":1,"es_extraordinario":0,"anio":2026,"orden":23}
+{"id_cat_conceptos_presupuesto":261,"id_cat_grupos_presupuesto":19,"nombre":"MANTENIMIENTO PREVENTIVO SISTEMA DE REJAS (BOSQUES, LAURELES Y FRENOS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":23}
+{"id_cat_conceptos_presupuesto":262,"id_cat_grupos_presupuesto":21,"nombre":"MANTENIMIENTO PREVENTIVO (TRANSPORTE FORD TRANSIT)","activo":1,"es_extraordinario":0,"anio":2026,"orden":24}
+{"id_cat_conceptos_presupuesto":263,"id_cat_grupos_presupuesto":19,"nombre":"NOMINA PERSONAL DE SEGURIDAD (COORD Y JEFATURA) SEGURIDAD","activo":0,"es_extraordinario":0,"anio":2026,"orden":24}
+{"id_cat_conceptos_presupuesto":264,"id_cat_grupos_presupuesto":19,"nombre":"PAPELERIA E INSUMOS DE TRABAJO ","activo":1,"es_extraordinario":0,"anio":2026,"orden":24}
+{"id_cat_conceptos_presupuesto":265,"id_cat_grupos_presupuesto":19,"nombre":"TRAMITES ASAMBLEAS DE COMERCIO Y CONDOMINAL","activo":1,"es_extraordinario":0,"anio":2026,"orden":25}
+{"id_cat_conceptos_presupuesto":266,"id_cat_grupos_presupuesto":19,"nombre":"RECONOCIMIENTO POR 10 AÑOS DE ANTIGÜEDAD","activo":1,"es_extraordinario":0,"anio":2026,"orden":26}
+{"id_cat_conceptos_presupuesto":267,"id_cat_grupos_presupuesto":19,"nombre":"PAQUETES CONTABLES (SISTEMAS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":27}
+{"id_cat_conceptos_presupuesto":268,"id_cat_grupos_presupuesto":19,"nombre":"MOBILIARIO Y EQUIPO DE OFICINA","activo":0,"es_extraordinario":0,"anio":2026,"orden":27}
+{"id_cat_conceptos_presupuesto":269,"id_cat_grupos_presupuesto":19,"nombre":"POSADA PERSONAL FIN DE AÑO","activo":1,"es_extraordinario":0,"anio":2026,"orden":28}
+{"id_cat_conceptos_presupuesto":270,"id_cat_grupos_presupuesto":19,"nombre":"RECOLECCION DE BASURA","activo":1,"es_extraordinario":0,"anio":2026,"orden":29}
+{"id_cat_conceptos_presupuesto":271,"id_cat_grupos_presupuesto":19,"nombre":"RENTA AREA DE BASURA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2026,"orden":30}
+{"id_cat_conceptos_presupuesto":272,"id_cat_grupos_presupuesto":19,"nombre":"RENTA IMPRESORA","activo":1,"es_extraordinario":0,"anio":2026,"orden":31}
+{"id_cat_conceptos_presupuesto":273,"id_cat_grupos_presupuesto":19,"nombre":"RENTAS OFICINAS ADMINISTRACION","activo":1,"es_extraordinario":0,"anio":2026,"orden":32}
+{"id_cat_conceptos_presupuesto":274,"id_cat_grupos_presupuesto":19,"nombre":"RENTA LAS MERCEDES","activo":0,"es_extraordinario":0,"anio":2026,"orden":33}
+{"id_cat_conceptos_presupuesto":275,"id_cat_grupos_presupuesto":19,"nombre":"SEGUROS Y FINANZAS REPONSABILIDAD CIVIL","activo":1,"es_extraordinario":0,"anio":2026,"orden":33}
+{"id_cat_conceptos_presupuesto":276,"id_cat_grupos_presupuesto":19,"nombre":"SISTEMA DE COBRANZA VQ CONDO","activo":1,"es_extraordinario":0,"anio":2026,"orden":34}
+{"id_cat_conceptos_presupuesto":277,"id_cat_grupos_presupuesto":19,"nombre":"SISTEMA DE COBRANZA VQ CONDO (INSULAIF)","activo":1,"es_extraordinario":0,"anio":2026,"orden":35}
+{"id_cat_conceptos_presupuesto":278,"id_cat_grupos_presupuesto":19,"nombre":"TELEFONIA CELULAR (VQ CONDO)","activo":1,"es_extraordinario":0,"anio":2026,"orden":36}
+{"id_cat_conceptos_presupuesto":279,"id_cat_grupos_presupuesto":19,"nombre":"TELEFONIA LOCAL ","activo":1,"es_extraordinario":0,"anio":2026,"orden":37}
+{"id_cat_conceptos_presupuesto":280,"id_cat_grupos_presupuesto":35,"nombre":"PRUEBA","activo":0,"es_extraordinario":0,"anio":2026,"orden":1}
+{"id_cat_conceptos_presupuesto":281,"id_cat_grupos_presupuesto":36,"nombre":"GASOLINA EQ DE TRANSPORTES","activo":1,"es_extraordinario":0,"anio":2026,"orden":1}
+{"id_cat_conceptos_presupuesto":282,"id_cat_grupos_presupuesto":36,"nombre":"ADQUISICION EQUIPO DE JARDINERIA ","activo":1,"es_extraordinario":0,"anio":2026,"orden":2}
+{"id_cat_conceptos_presupuesto":283,"id_cat_grupos_presupuesto":36,"nombre":"NOMINA PERSONAL DE MANTENIMIENTO ","activo":1,"es_extraordinario":0,"anio":2026,"orden":3}
+{"id_cat_conceptos_presupuesto":284,"id_cat_grupos_presupuesto":36,"nombre":"NOMINA AGUINALDOS 2026 (PERSONAL MANTENIMIENTO)","activo":1,"es_extraordinario":0,"anio":2026,"orden":4}
+{"id_cat_conceptos_presupuesto":285,"id_cat_grupos_presupuesto":36,"nombre":"MANTENIMIENTO REPARACIONES EN GENERAL","activo":1,"es_extraordinario":0,"anio":2026,"orden":5}
+{"id_cat_conceptos_presupuesto":286,"id_cat_grupos_presupuesto":36,"nombre":"ARTICULOS DE LIMPIEZA (ASEO BAÑOS, OFICINAS, PUEBLO)","activo":1,"es_extraordinario":0,"anio":2026,"orden":6}
+{"id_cat_conceptos_presupuesto":287,"id_cat_grupos_presupuesto":36,"nombre":"ARTICULOS DE ILUMINACION (FOTOS CELDAS, Y REFLECTORES)","activo":1,"es_extraordinario":0,"anio":2026,"orden":7}
+{"id_cat_conceptos_presupuesto":288,"id_cat_grupos_presupuesto":36,"nombre":"FUMIGACION AREAS COMUNES","activo":1,"es_extraordinario":0,"anio":2026,"orden":8}
+{"id_cat_conceptos_presupuesto":289,"id_cat_grupos_presupuesto":36,"nombre":"UNIFORMES PERSONAL MANTENIMIENTO","activo":1,"es_extraordinario":0,"anio":2026,"orden":9}
+{"id_cat_conceptos_presupuesto":290,"id_cat_grupos_presupuesto":36,"nombre":"MANTENIMIENTO EQUIPO DE TRANSPORTE (PIPA, MOTO CARROS)","activo":1,"es_extraordinario":0,"anio":2026,"orden":10}
+{"id_cat_conceptos_presupuesto":291,"id_cat_grupos_presupuesto":36,"nombre":"PAGO CREDITO ADQUISICION EQUIPO DE TRANSP (MOTO CARRO)","activo":0,"es_extraordinario":0,"anio":2026,"orden":10}
+{"id_cat_conceptos_presupuesto":292,"id_cat_grupos_presupuesto":1,"nombre":"ADECUACIONES OFICNAS ADMON NUEVAS","activo":1,"es_extraordinario":0,"anio":2025,"orden":1}
+{"id_cat_conceptos_presupuesto":293,"id_cat_grupos_presupuesto":1,"nombre":"AUDITORIA PROPAET","activo":1,"es_extraordinario":0,"anio":2025,"orden":7}
+{"id_cat_conceptos_presupuesto":294,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA AGUINALDOS 2025 (COORD Y JEFATURA) SEGURIDAD","activo":1,"es_extraordinario":0,"anio":2025,"orden":21}
+{"id_cat_conceptos_presupuesto":295,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA PERSONAL (FINIQUITO O LIQUIDACION)","activo":1,"es_extraordinario":0,"anio":2025,"orden":22}
+{"id_cat_conceptos_presupuesto":296,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA PERSONAL ADMINISTRATIVO ","activo":1,"es_extraordinario":0,"anio":2025,"orden":23}
+{"id_cat_conceptos_presupuesto":297,"id_cat_grupos_presupuesto":1,"nombre":"NOMINA PERSONAL DE SEGURIDAD (COORD Y JEFATURA) SEGURIDAD","activo":1,"es_extraordinario":0,"anio":2025,"orden":24}
+{"id_cat_conceptos_presupuesto":298,"id_cat_grupos_presupuesto":1,"nombre":"MOBILIARIO Y EQUIPO DE OFICINA","activo":1,"es_extraordinario":0,"anio":2025,"orden":27}
+{"id_cat_conceptos_presupuesto":299,"id_cat_grupos_presupuesto":1,"nombre":"RENTA LAS MERCEDES","activo":1,"es_extraordinario":0,"anio":2025,"orden":33}
+{"id_cat_conceptos_presupuesto":300,"id_cat_grupos_presupuesto":2,"nombre":"PAGO CREDITO ADQUISICION EQUIPO DE TRANSP (MOTO CARRO)","activo":1,"es_extraordinario":0,"anio":2025,"orden":10}
+{"id_cat_conceptos_presupuesto":301,"id_cat_grupos_presupuesto":2,"nombre":"EQUIPO DE COMUNICACIÓN (RADIOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":11}
+{"id_cat_conceptos_presupuesto":302,"id_cat_grupos_presupuesto":3,"nombre":"SCLUSA","activo":1,"es_extraordinario":0,"anio":2025,"orden":7}
+{"id_cat_conceptos_presupuesto":303,"id_cat_grupos_presupuesto":3,"nombre":"EQUIPO DE COMUNICACIÓN (RADIOS)","activo":1,"es_extraordinario":0,"anio":2025,"orden":12}
+{"id_cat_conceptos_presupuesto":304,"id_cat_grupos_presupuesto":3,"nombre":"REPARACION SISTEMA CAMARAS VQ CONDO","activo":1,"es_extraordinario":0,"anio":2025,"orden":8}
