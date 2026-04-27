@@ -30,6 +30,8 @@ export interface PreviewMassChargeResult {
   months: number[];
   year: number;
   concept: string;
+  startDay: number;
+  dueDay: number;
   properties: PreviewPropertyResult[];
   summary: {
     totalProperties: number;
@@ -54,7 +56,7 @@ export interface CreateMassChargeRequest {
 
 export interface CreateMassChargeResult {
   success: boolean;
-  chargesCreated: number;
+  chargesCreated?: number;
   error?: string;
 }
 
