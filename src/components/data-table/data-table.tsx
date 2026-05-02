@@ -1,0 +1,213 @@
+"use client";
+
+import * as React from "react";
+import { 
+  Search, 
+  ChevronLeft, 
+  ChevronRight, 
+  MoreVertical, 
+  ArrowUpDown,
+  Plus
+} from "lucide-react";
+import { cn } from "@/shared/utils/cn";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
+export interface DataTableColumn<T> {
+  header: string;
+  accessorKey: keyof T | string;
+  cell?: (row: T) => React.ReactNode;
+  align?: "left" | "center" | "right";
+  sortable?: boolean;
+}
+
+export interface DataTableAction<T> {
+  label: string;
+  icon?: React.ReactNode;
+  onClick: (row: T) => void;
+  variant?: "default" | "destructive";
+}
+
+interface DataTableProps<T> {
+  title: string;
+  count?: number;
+  data: T[];
+  columns: DataTableColumn<T>[];
+  actions?: DataTableAction<T>[];
+  onSearch?: (query: string) => void;
+  onAdd?: () => void;
+  addLabel?: string;
+  isLoading?: boolean;
+  emptyState?: React.ReactNode;
+  pagination?: {
+    page: number;
+    pageSize: number;
+    totalRows: number;
+    onPageChange: (page: number) => void;
+    onPageSizeChange: (size: number) => void;
+  };
+}
+
+export function DataTable<T extends { id: string | number }>({
+  title,
+  count,
+  data,
+  columns,
+  actions,
+  onSearch,
+  onAdd,
+  addLabel = "Nuevo",
+  isLoading,
+  emptyState,
+  pagination
+}: DataTableProps<T>) {
+  const [searchQuery, setSearchQuery] = React.useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSearch?.(searchQuery);
+  };
+
+  return (
+    <Card className="overflow-hidden border-transparent shadow-layered">
+      {/* Toolbar */}
+      <div className="h-14 px-4 border-b border-line flex items-center justify-between bg-card">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-black uppercase tracking-tight text-brand">{title}</h2>
+          {count !== undefined && (
+            <span className="px-1.5 py-0.5 rounded bg-canvas text-[10px] font-black text-ink-soft/60">
+              {count}
+            </span>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-3">
+          {onSearch && (
+            <form onSubmit={handleSearch} className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-soft/40" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar..."
+                className="h-8 w-48 lg:w-64 pl-8 pr-3 bg-canvas/50 border-none rounded-md text-[12px] font-medium focus:ring-2 focus:ring-brand-accent/20 transition-all"
+              />
+            </form>
+          )}
+          
+          {onAdd && (
+            <Button onClick={onAdd} size="sm" className="h-8 px-3 gap-1 text-[11px] font-black uppercase tracking-tight">
+              <Plus className="h-3.5 w-3.5" />
+              {addLabel}
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-left border-collapse">
+          <thead>
+            <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+              {columns.map((col) => (
+                <th 
+                  key={String(col.accessorKey)} 
+                  className={cn(
+                    "px-4 text-[10px] font-black uppercase tracking-widest text-ink-soft/60",
+                    col.align === "right" && "text-right",
+                    col.align === "center" && "text-center"
+                  )}
+                >
+                  <div className={cn(
+                    "flex items-center gap-1",
+                    col.align === "right" && "justify-end",
+                    col.align === "center" && "justify-center"
+                  )}>
+                    {col.header}
+                    {col.sortable && <ArrowUpDown className="h-3 w-3 opacity-30" />}
+                  </div>
+                </th>
+              ))}
+              {actions && <th className="w-10"></th>}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-line/50">
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <tr key={i} className="h-12 animate-pulse">
+                  {columns.map((_, j) => (
+                    <td key={j} className="px-4">
+                      <div className="h-3 bg-canvas rounded w-2/3" />
+                    </td>
+                  ))}
+                  {actions && <td />}
+                </tr>
+              ))
+            ) : data.length > 0 ? (
+              data.map((row) => (
+                <tr key={row.id} className="h-12 hover:bg-canvas/20 transition-colors group">
+                  {columns.map((col) => (
+                    <td 
+                      key={String(col.accessorKey)} 
+                      className={cn(
+                        "px-4 text-[13px] font-medium text-ink",
+                        col.align === "right" && "text-right font-mono",
+                        col.align === "center" && "text-center"
+                      )}
+                    >
+                      {col.cell ? col.cell(row) : (row as Record<string, any>)[col.accessorKey as string]}
+                    </td>
+                  ))}
+                  {actions && (
+                    <td className="px-4 text-right">
+                      <button className="p-1.5 rounded-md hover:bg-canvas text-ink-soft/40 hover:text-ink transition-standard">
+                        <MoreVertical className="h-4 w-4" />
+                      </button>
+                    </td>
+                  )}
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={columns.length + (actions ? 1 : 0)} className="py-20">
+                  {emptyState || (
+                    <div className="flex flex-col items-center justify-center text-ink-soft/30">
+                      <p className="text-[11px] font-black uppercase tracking-widest">Sin registros</p>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Pagination */}
+      {pagination && (
+        <div className="h-12 px-4 border-t border-line flex items-center justify-between bg-card text-[11px] font-bold text-ink-soft/60 uppercase">
+          <div>
+            Mostrando {(pagination.page - 1) * pagination.pageSize + 1} - {Math.min(pagination.page * pagination.pageSize, pagination.totalRows)} de {pagination.totalRows}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              disabled={pagination.page === 1}
+              onClick={() => pagination.onPageChange(pagination.page - 1)}
+              className="p-1 rounded hover:bg-canvas disabled:opacity-30 transition-standard"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            {pagination.page}
+            <button 
+              disabled={pagination.page * pagination.pageSize >= pagination.totalRows}
+              onClick={() => pagination.onPageChange(pagination.page + 1)}
+              className="p-1 rounded hover:bg-canvas disabled:opacity-30 transition-standard"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}

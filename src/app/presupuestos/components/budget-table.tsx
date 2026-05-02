@@ -1,10 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { Fragment } from "react";
 import { BudgetVM } from "@/modules/budget";
 import { updateBudgetAmountAction, createBudgetAmountAction } from "../actions";
+import { cn } from "@/shared/utils/cn";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 function formatMXN(num: number) {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(num);
+}
+
+function formatMXNFull(num: number) {
   return new Intl.NumberFormat("es-MX", {
     style: "currency",
     currency: "MXN",
@@ -18,11 +29,11 @@ const monthNames = [
 ];
 
 const groupTitles: Record<string, string> = {
-  ADMINISTRATION: "Gastos de administración",
-  MAINTENANCE: "Gastos de mantenimiento",
-  SECURITY: "Gastos de seguridad",
-  INFRASTRUCTURE: "Gastos de infraestructura",
-  EXTRAORDINARY: "Gastos extraordinarios",
+  ADMINISTRATION: "Administración",
+  MAINTENANCE: "Mantenimiento",
+  SECURITY: "Seguridad",
+  INFRASTRUCTURE: "Infraestructura",
+  EXTRAORDINARY: "Extraordinarios",
   OTHER: "Otros"
 };
 
@@ -39,100 +50,105 @@ export default function BudgetTable({ vm }: { vm: BudgetVM }) {
     if (monthId) {
       await updateBudgetAmountAction(vm.year, monthId, val);
     } else {
-      if (!vm.id) return; // Si no hay presupuesto creado y el blur lanza update, deberia crearse primero
+      if (!vm.id) return;
       await createBudgetAmountAction(vm.year, vm.id, conceptId, month, val);
     }
-    // Optimistically updating dataset prevents re-triggering
     e.target.dataset.original = val.toString();
   };
 
   return (
-    <div className="w-full overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm mt-4 custom-scrollbar">
-      <table className="min-w-full text-sm text-left">
-        <thead className="bg-[#5c7a6b] text-white sticky top-0 z-20">
-          <tr>
-            <th className="px-4 py-3 sticky left-0 z-30 bg-[#4e6b5d] min-w-[280px]">Concepto</th>
-            <th className="px-4 py-3 bg-[#5c7a6b]">Total presupuestado {vm.year}</th>
-            <th className="px-4 py-3 bg-[#5c7a6b]">Gasto generado {vm.year}</th>
-            <th className="px-4 py-3 bg-[#5c7a6b]">Saldo actual {vm.year}</th>
-            {monthNames.map((m, i) => (
-              <React.Fragment key={m}>
-                <th className="px-4 py-3 bg-[#5c7a6b]">Presupuesto {m} {vm.year}</th>
-                <th className="px-4 py-3 bg-[#4a6456]">Gasto final {m} {vm.year}</th>
-              </React.Fragment>
-            ))}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100">
-          {vm.groups.map(group => (
-            <React.Fragment key={group.groupData}>
-              {/* CABECERA DE GRUPO */}
-              <tr className="bg-gray-50 border-b-2 border-gray-200">
-                <td className="px-4 py-3 font-semibold uppercase text-gray-700 sticky left-0 z-10 bg-gray-50">
-                  {groupTitles[group.groupData] || group.groupData}
-                </td>
-                <td className="px-4 py-3 font-semibold">{formatMXN(group.budgeted)}</td>
-                <td className="px-4 py-3 font-semibold">{formatMXN(group.generated)}</td>
-                <td className="px-4 py-3 font-semibold">{formatMXN(group.balance)}</td>
-                <td colSpan={24} className="bg-gray-50"></td>
+    <Card className="overflow-hidden border-transparent shadow-layered">
+      <CardHeader className="px-4 py-3 border-b border-line bg-card flex flex-row items-center justify-between">
+        <CardTitle className="text-[10px] font-black uppercase tracking-widest text-brand">Desglose Presupuestal Mensual</CardTitle>
+        {isClosed && <Badge variant="danger">Lectura Protegida</Badge>}
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[120rem]">
+            <thead>
+              <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-black uppercase tracking-tighter text-ink-soft/70">
+                <th className="sticky left-0 z-30 px-4 border-r border-line bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-[240px]">Concepto</th>
+                <th className="px-4 text-right border-r border-line bg-brand/5 text-brand">Anual Presupuesto</th>
+                <th className="px-4 text-right border-r border-line bg-brand/5 text-brand">Anual Ejercido</th>
+                <th className="px-4 text-right border-r border-line bg-brand/5 text-brand">Anual Saldo</th>
+                {monthNames.map((m) => (
+                  <Fragment key={m}>
+                    <th className="px-3 text-right border-r border-line/30 font-bold opacity-60">Ppto {m}</th>
+                    <th className="px-3 text-right border-r border-line font-bold opacity-80 bg-canvas/20">Ejerc {m}</th>
+                  </Fragment>
+                ))}
               </tr>
-              
-              {/* FILAS DE CONCEPTOS */}
-              {group.concepts.map(concept => (
-                <tr key={concept.conceptId} className="hover:bg-blue-50/30 transition-colors">
-                  <td className="px-4 py-2 text-gray-600 sticky left-0 z-10 bg-white border-r border-gray-100 uppercase text-xs">
-                    {concept.conceptName}
-                  </td>
-                  <td className="px-4 py-2 font-medium">{formatMXN(concept.budgeted)}</td>
-                  <td className="px-4 py-2">{formatMXN(concept.generated)}</td>
-                  <td className={`px-4 py-2 font-medium ${concept.balance < 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {formatMXN(concept.balance)}
-                  </td>
+            </thead>
+            <tbody className="divide-y divide-line/30">
+              {vm.groups.map(group => (
+                <Fragment key={group.groupData}>
+                  {/* Group Header Row */}
+                  <tr className="h-9 bg-brand-deep/[0.03] border-b border-line/50">
+                    <td className="sticky left-0 px-4 font-black uppercase text-[11px] text-brand border-r border-line bg-brand-deep/[0.01] shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                      {groupTitles[group.groupData] || group.groupData}
+                    </td>
+                    <td className="px-4 text-right font-black text-[12px] text-brand border-r border-line">{formatMXN(group.budgeted)}</td>
+                    <td className="px-4 text-right font-black text-[12px] text-brand border-r border-line">{formatMXN(group.generated)}</td>
+                    <td className={cn("px-4 text-right font-black text-[12px] border-r border-line", group.balance >= 0 ? "text-brand" : "text-danger")}>
+                      {formatMXN(group.balance)}
+                    </td>
+                    <td colSpan={24} className="bg-canvas/10"></td>
+                  </tr>
                   
-                  {concept.months.map((m, i) => (
-                    <React.Fragment key={m.month}>
-                      <td className="px-2 py-2 w-32 border-l border-gray-50">
-                        {isClosed ? (
-                          <div className="px-2 py-1 bg-gray-100 rounded text-gray-500 line-through decoration-gray-400">
-                            {formatMXN(m.budgeted)}
-                          </div>
-                        ) : (
-                          <div className="relative">
-                            <span className="absolute left-2 top-1.5 text-gray-400 text-xs">$</span>
-                            <input
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              defaultValue={m.budgeted || ""}
-                              data-original={m.budgeted}
-                              onBlur={(e) => handleBlur(e, concept.conceptId, m.month, m.budgetMonthId)}
-                              className="w-full border-gray-200 rounded px-2 py-1 pl-5 text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-500 text-sm bg-white"
-                            />
-                          </div>
-                        )}
+                  {/* Concept Rows */}
+                  {group.concepts.map(concept => (
+                    <tr key={concept.conceptId} className="h-10 hover:bg-canvas/10 transition-colors group">
+                      <td className="sticky left-0 px-4 text-[12px] font-bold text-ink-soft border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)] group-hover:bg-canvas/5 transition-colors">
+                        {concept.conceptName}
                       </td>
-                      <td className="px-4 py-2 bg-gray-50/50 text-gray-600 text-sm">
-                        {formatMXN(m.generated)}
+                      <td className="px-4 text-right font-bold text-[12px] text-ink border-r border-line">{formatMXN(concept.budgeted)}</td>
+                      <td className="px-4 text-right font-medium text-[12px] text-ink-soft border-r border-line">{formatMXN(concept.generated)}</td>
+                      <td className={cn("px-4 text-right font-bold text-[12px] border-r border-line", concept.balance >= 0 ? "text-brand" : "text-danger")}>
+                        {formatMXN(concept.balance)}
                       </td>
-                    </React.Fragment>
+                      
+                      {concept.months.map((m) => (
+                        <Fragment key={m.month}>
+                          <td className="px-2 py-1.5 w-32 border-r border-line/30">
+                            {isClosed ? (
+                              <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
+                                {formatMXN(m.budgeted)}
+                              </div>
+                            ) : (
+                              <input
+                                type="number"
+                                step="0.01"
+                                defaultValue={m.budgeted || ""}
+                                data-original={m.budgeted}
+                                onBlur={(e) => handleBlur(e, concept.conceptId, m.month, m.budgetMonthId)}
+                                className="w-full h-7 bg-canvas/30 border border-transparent rounded px-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
+                              />
+                            )}
+                          </td>
+                          <td className="px-3 text-right text-[11px] font-mono text-ink-soft/60 border-r border-line bg-canvas/10 italic">
+                            {formatMXN(m.generated)}
+                          </td>
+                        </Fragment>
+                      ))}
+                    </tr>
                   ))}
-                </tr>
+                </Fragment>
               ))}
-
-              {/* TOTAL DEL GRUPO (Opional, si legacy lo tiene al pie. Omitido porque ya está en cabecera) */}
-            </React.Fragment>
-          ))}
-          
-          {/* TOTAL GLOBAL */}
-          <tr className="bg-[#4e6b5d] text-white">
-            <td className="px-4 py-4 font-bold sticky left-0 z-10 bg-[#4e6b5d] text-lg">TOTAL GENERAL</td>
-            <td className="px-4 py-4 font-bold text-lg">{formatMXN(vm.totalBudgeted)}</td>
-            <td className="px-4 py-4 font-bold text-lg">{formatMXN(vm.totalGenerated)}</td>
-            <td className="px-4 py-4 font-bold text-lg">{formatMXN(vm.totalBalance)}</td>
-            <td colSpan={24} className="bg-[#4e6b5d]"></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            </tbody>
+            <tfoot>
+              <tr className="h-12 bg-brand-deep text-white border-t border-line">
+                <td className="sticky left-0 px-4 font-black uppercase text-[13px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Total General</td>
+                <td className="px-4 text-right font-black text-[14px] border-r border-white/10">{formatMXNFull(vm.totalBudgeted)}</td>
+                <td className="px-4 text-right font-black text-[14px] border-r border-white/10">{formatMXNFull(vm.totalGenerated)}</td>
+                <td className="px-4 text-right font-black text-[14px] border-r border-white/10">{formatMXNFull(vm.totalBalance)}</td>
+                <td colSpan={24} className="bg-brand-deep"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
+
+import { Badge } from "@/components/ui/badge";

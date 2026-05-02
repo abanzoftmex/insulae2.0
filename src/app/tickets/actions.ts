@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { saveTicketResponseUseCase } from "@/modules/tickets";
+import { saveTicketResponseUseCase, getTicketResponseFormUseCase, toTicketResponseFormVM } from "@/modules/tickets";
 import type { TicketStatusValue } from "@/modules/tickets/domain/ticket";
 
 export interface SaveTicketResponseActionInput {
@@ -15,6 +15,11 @@ export interface SaveTicketResponseActionInput {
   responsePdfPath?: string | null;
 }
 
+export async function getTicketResponseFormDataAction(id: string) {
+  const data = await getTicketResponseFormUseCase.execute(id);
+  return data ? toTicketResponseFormVM(data) : null;
+}
+
 export async function saveTicketResponseAction(
   input: SaveTicketResponseActionInput,
 ): Promise<{ ok: boolean; message: string; ticketId?: string }> {
@@ -22,7 +27,6 @@ export async function saveTicketResponseAction(
 
   if (result.ok) {
     revalidatePath("/tickets");
-    revalidatePath(`/tickets/${result.ticketId}/editar`);
   }
 
   return result;

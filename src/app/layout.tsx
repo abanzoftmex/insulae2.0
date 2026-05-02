@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "./app-shell";
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -40,9 +35,9 @@ export default async function RootLayout({
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full" suppressHydrationWarning>
+      <body className="min-h-full font-sans tracking-[-0.01em]" suppressHydrationWarning>
         <AppShell navbarLogoUrl={navbarLogoUrl} navbarLogoAlt={navbarLogoAlt}>{children}</AppShell>
       </body>
     </html>

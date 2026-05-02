@@ -1,432 +1,297 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
-
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import React, { useState, useTransition, useMemo } from "react";
+import { 
+  FileText, 
+  Plus, 
+  ExternalLink, 
+  Edit2, 
+  Trash2, 
+  FileDown, 
+  Upload, 
+  Loader2,
+  Layers,
+  Info
+} from "lucide-react";
 import type { RegulationDirectoryVM, RegulationDocumentVM } from "@/modules/regulations/presentation/regulation-directory.vm";
-import type { RegulationDocumentType } from "@/modules/regulations/domain/regulation-directory";
-
-import {
-  archiveRegulationDocumentAction,
-  createRegulationDocumentAction,
-  updateRegulationDocumentAction,
+import { 
+  createRegulationDocumentAction, 
+  updateRegulationDocumentAction, 
+  archiveRegulationDocumentAction 
 } from "./actions";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
 
-interface ReglamentosWorkbenchProps {
-  directory: RegulationDirectoryVM;
-}
+import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
+import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/modal/modal";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { StatCard } from "@/components/ui/stat-card";
+import { cn } from "@/shared/utils/cn";
 
-interface DocumentFormState {
-  name: string;
-  documentType: RegulationDocumentType;
-}
-
-const ACCEPTED_FILE_TYPES = ["application/pdf"];
-
-function isPdfFile(file: File): boolean {
-  const extension = file.name.split(".").pop()?.toLowerCase();
-  return ACCEPTED_FILE_TYPES.includes(file.type) || extension === "pdf";
-}
-
-function createEmptyForm(): DocumentFormState {
-  return {
-    name: "",
-    documentType: "REGULATION",
-  };
-}
-
-function toDraft(document: RegulationDocumentVM): DocumentFormState {
-  return {
-    name: document.name,
-    documentType: document.documentType,
-  };
-}
-
-export function ReglamentosWorkbench({ directory }: ReglamentosWorkbenchProps) {
+export function ReglamentosWorkbench({ directory }: { directory: RegulationDirectoryVM }) {
   const [isPending, startTransition] = useTransition();
-  const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
-  const [newDocument, setNewDocument] = useState<DocumentFormState>(createEmptyForm());
-  const [newFile, setNewFile] = useState<File | null>(null);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<DocumentFormState>(createEmptyForm());
-  const [editFile, setEditFile] = useState<File | null>(null);
+  
+  // Form State
+  const [formName, setFormName] = useState("");
+  const [formType, setFormType] = useState<any>("REGLAMENTO_GRAL");
+  const [formFileUrl, setFormFileUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
 
   const filteredDocuments = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) {
-      return directory.documents;
-    }
-
-    return directory.documents.filter((document) => {
-      const haystack = `${document.name} ${document.documentTypeLabel}`.toLowerCase();
-      return haystack.includes(term);
+    const term = search.toLowerCase().trim();
+    return directory.documents.filter(d => {
+      const byType = typeFilter === "all" || d.documentType === typeFilter;
+      const bySearch = !term || d.name.toLowerCase().includes(term);
+      return byType && bySearch;
     });
-  }, [directory.documents, search]);
+  }, [directory.documents, search, typeFilter]);
 
-  const beginEdit = (document: RegulationDocumentVM) => {
-    setEditingId(document.id);
-    setEditForm(toDraft(document));
-    setEditFile(null);
-    setMessage("");
-  };
-
-  const cancelEdit = () => {
+  const openAddModal = () => {
     setEditingId(null);
-    setEditForm(createEmptyForm());
-    setEditFile(null);
-    setMessage("");
+    setFormName("");
+    setFormType("REGLAMENTO_GRAL");
+    setFormFileUrl("");
+    setIsModalOpen(true);
   };
 
-  const saveNewDocument = () => {
-    if (!newDocument.name.trim()) {
-      setMessage("El nombre es obligatorio.");
-      return;
-    }
-
-    if (!newFile) {
-      setMessage("Selecciona un archivo PDF.");
-      return;
-    }
-
-    if (!isPdfFile(newFile)) {
-      setMessage("Solo se permiten archivos PDF.");
-      return;
-    }
-
-    setMessage("");
-
-    startTransition(async () => {
-      try {
-        const uploaded = await uploadCondominiumAsset({
-          file: newFile,
-          condominiumSlug: directory.condominiumSlug,
-          projectId: directory.projectId,
-          kind: "project-document",
-        });
-
-        const response = await createRegulationDocumentAction({
-          name: newDocument.name,
-          documentType: newDocument.documentType,
-          fileUrl: uploaded.url,
-          mimeType: newFile.type || "application/pdf",
-          sizeBytes: newFile.size,
-          storageBucket: "firebase",
-          storageObjectPath: uploaded.fullPath,
-        });
-
-        setMessage(response.message);
-        if (response.ok) {
-          window.location.reload();
-        }
-      } catch (error) {
-        console.error("[Reglamentos] saveNewDocument failed", error);
-        setMessage("No se pudo subir/guardar el documento.");
-      }
-    });
+  const openEditModal = (doc: RegulationDocumentVM) => {
+    setEditingId(doc.id);
+    setFormName(doc.name);
+    setFormType(doc.documentType);
+    setFormFileUrl(doc.publicUrl);
+    setIsModalOpen(true);
   };
 
-  const saveEdit = (id: string) => {
-    if (!editForm.name.trim()) {
-      setMessage("El nombre es obligatorio.");
-      return;
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res = await uploadCondominiumAsset({
+        file,
+        condominiumSlug: directory.condominiumSlug,
+        projectId: "regulations",
+        kind: "project-document"
+      });
+      setFormFileUrl(res.url);
+    } catch {
+      alert("Error al subir archivo");
+    } finally {
+      setUploading(false);
     }
-
-    if (editFile && !isPdfFile(editFile)) {
-      setMessage("Solo se permiten archivos PDF.");
-      return;
-    }
-
-    setMessage("");
-
-    startTransition(async () => {
-      try {
-        let uploadedUrl: string | undefined;
-        let uploadedPath: string | null | undefined;
-        let mimeType: string | null | undefined;
-        let sizeBytes: number | null | undefined;
-
-        if (editFile) {
-          const uploaded = await uploadCondominiumAsset({
-            file: editFile,
-            condominiumSlug: directory.condominiumSlug,
-            projectId: directory.projectId,
-            kind: "project-document",
-          });
-
-          uploadedUrl = uploaded.url;
-          uploadedPath = uploaded.fullPath;
-          mimeType = editFile.type || "application/pdf";
-          sizeBytes = editFile.size;
-        }
-
-        const response = await updateRegulationDocumentAction({
-          id,
-          name: editForm.name,
-          documentType: editForm.documentType,
-          fileUrl: uploadedUrl,
-          mimeType,
-          sizeBytes,
-          storageBucket: uploadedUrl ? "firebase" : undefined,
-          storageObjectPath: uploadedPath,
-        });
-
-        setMessage(response.message);
-        if (response.ok) {
-          window.location.reload();
-        }
-      } catch (error) {
-        console.error("[Reglamentos] saveEdit failed", error);
-        setMessage("No se pudo actualizar el documento.");
-      }
-    });
   };
 
-  const removeDocument = (id: string) => {
-    const accepted = window.confirm("Se eliminara este documento. ¿Quieres continuar?");
-    if (!accepted) {
-      return;
-    }
-
-    setMessage("");
-
+  const handleSave = () => {
     startTransition(async () => {
-      const response = await archiveRegulationDocumentAction(id);
-      setMessage(response.message);
-      if (response.ok) {
+      const payload = {
+        id: editingId || undefined,
+        name: formName,
+        documentType: formType,
+        fileUrl: formFileUrl
+      };
+
+      const res = editingId 
+        ? await updateRegulationDocumentAction(payload)
+        : await createRegulationDocumentAction(payload);
+
+      if (res.ok) {
+        setIsModalOpen(false);
         window.location.reload();
+      } else {
+        alert(res.message);
       }
     });
   };
+
+  const handleDelete = (id: string) => {
+    if (!confirm("¿Archivar este documento? Ya no será visible para los residentes.")) return;
+    startTransition(async () => {
+      const res = await archiveRegulationDocumentAction(id);
+      if (res.ok) window.location.reload();
+      else alert(res.message);
+    });
+  };
+
+  const columns: DataTableColumn<RegulationDocumentVM>[] = [
+    {
+      header: "Documento",
+      accessorKey: "name",
+      cell: (row) => (
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded bg-brand/5 flex items-center justify-center text-brand shrink-0 border border-brand/5">
+            <FileText className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+             <p className="font-bold truncate leading-tight">{row.name}</p>
+             <p className="text-[10px] text-ink-soft/40 uppercase tracking-widest font-black mt-0.5">{row.uploadedAtLabel}</p>
+          </div>
+        </div>
+      )
+    },
+    {
+      header: "Tipo",
+      accessorKey: "documentTypeLabel",
+      cell: (row) => (
+        <Badge variant={row.documentType === "REGULATION" ? "brand" : "outline"} className="h-5 px-2">
+          {row.documentTypeLabel}
+        </Badge>
+      )
+    },
+    {
+      header: "Archivo",
+      accessorKey: "fileUrl",
+      cell: (row) => (
+        <a 
+          href={row.publicUrl}
+          target="_blank" 
+          rel="noreferrer" 
+          className="inline-flex items-center gap-1 text-[11px] font-black text-brand-accent hover:underline uppercase tracking-tight"
+        >
+          Visualizar <ExternalLink className="h-2.5 w-2.5" />
+        </a>
+      )
+    },
+    {
+      header: "Acción",
+      accessorKey: "id",
+      align: "right",
+      cell: (row) => (
+        <div className="flex items-center justify-end gap-1">
+          <button onClick={() => openEditModal(row)} className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard">
+            <Edit2 className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={() => handleDelete(row.id)} className="p-1.5 rounded hover:bg-danger/10 text-ink-soft/40 hover:text-danger transition-standard">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )
+    }
+  ];
 
   return (
-    <section className="rounded-[2rem] border border-[#bc9a80]/45 bg-[linear-gradient(155deg,#fffdf8_0%,#f8eee1_58%,#fff8ef_100%)] p-5 shadow-[0_20px_44px_rgba(61,36,19,0.11)] sm:p-7">
-      <div className="grid gap-6 lg:grid-cols-[0.96fr_1.04fr]">
-        <article className="rounded-3xl border border-[#d5bba6] bg-[#fffdf8]/90 p-5 shadow-[0_10px_24px_rgba(45,27,14,0.08)]">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#885638]">Alta de documento</p>
-          <h2 className="mt-2 font-[var(--font-reglamentos-display)] text-3xl text-[#2f221a]">Nuevo reglamento</h2>
-
-          <div className="mt-4 grid gap-3">
-            <label className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Nombre</span>
-              <input
-                value={newDocument.name}
-                onChange={(event) =>
-                  setNewDocument((prev) => ({
-                    ...prev,
-                    name: event.target.value,
-                  }))
-                }
-                placeholder="Ej. Reglamento general 2026"
-                className="w-full rounded-xl border border-[#d8c2ad] bg-white px-3 py-2 text-sm text-[#2c1f17] outline-none focus:border-[#9a6949]"
-              />
-            </label>
-
-            <fieldset className="space-y-2 rounded-xl border border-[#d8c2ad] bg-white px-3 py-3">
-              <legend className="px-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Tipo</legend>
-              <label className="flex items-center gap-2 text-sm text-[#2f2017]">
-                <input
-                  type="radio"
-                  name="new-document-type"
-                  checked={newDocument.documentType === "REGULATION"}
-                  onChange={() =>
-                    setNewDocument((prev) => ({
-                      ...prev,
-                      documentType: "REGULATION",
-                    }))
-                  }
-                />
-                Reglamento
-              </label>
-              <label className="flex items-center gap-2 text-sm text-[#2f2017]">
-                <input
-                  type="radio"
-                  name="new-document-type"
-                  checked={newDocument.documentType === "INTERNAL_DOCUMENT"}
-                  onChange={() =>
-                    setNewDocument((prev) => ({
-                      ...prev,
-                      documentType: "INTERNAL_DOCUMENT",
-                    }))
-                  }
-                />
-                Documento interno
-              </label>
-            </fieldset>
-
-            <label className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">PDF</span>
-              <input
-                type="file"
-                accept="application/pdf"
-                onChange={(event) => setNewFile(event.target.files?.[0] ?? null)}
-                className="w-full rounded-xl border border-[#d8c2ad] bg-white px-3 py-2 text-sm text-[#2c1f17] outline-none focus:border-[#9a6949]"
-              />
-            </label>
-          </div>
-
-          <button
-            type="button"
-            disabled={isPending}
-            onClick={saveNewDocument}
-            className="mt-5 w-full rounded-full bg-[#2f2017] px-5 py-2 text-xs font-semibold uppercase tracking-[0.17em] text-[#fff2e2] transition hover:-translate-y-0.5 hover:bg-[#20150f] disabled:cursor-not-allowed disabled:opacity-55"
-          >
-            {isPending ? "Guardando..." : "Guardar documento"}
-          </button>
-        </article>
-
-        <article className="rounded-3xl border border-[#d5bba6] bg-[#fffdf8]/90 p-5 shadow-[0_10px_24px_rgba(45,27,14,0.08)]">
-          <div className="flex flex-wrap items-end gap-3">
-            <label className="min-w-[12rem] flex-1 space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Buscar</span>
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Nombre o tipo"
-                className="w-full rounded-xl border border-[#d8c2ad] bg-white px-3 py-2 text-sm text-[#2c1f17] outline-none focus:border-[#9a6949]"
-              />
-            </label>
-          </div>
-
-          <div className="mt-4 overflow-hidden rounded-2xl border border-[#d8c2ad] bg-white">
-            <div className="grid grid-cols-[1.2fr_0.7fr_0.6fr_0.8fr] gap-3 border-b border-[#e9d8c8] bg-[#f8efe5] px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.15em] text-[#8a5a3c]">
-              <span>Nombre</span>
-              <span>Tipo</span>
-              <span>Archivo</span>
-              <span>Acciones</span>
-            </div>
-
-            <div className="max-h-[26rem] overflow-y-auto">
-              {filteredDocuments.length === 0 ? (
-                <p className="px-3 py-5 text-sm text-[#6d5d52]">No hay documentos para mostrar.</p>
-              ) : (
-                filteredDocuments.map((document) => {
-                  const isEditing = editingId === document.id;
-
-                  return (
-                    <div
-                      key={document.id}
-                      className="grid grid-cols-[1.2fr_0.7fr_0.6fr_0.8fr] gap-3 border-b border-[#f0e4d7] px-3 py-3 text-sm text-[#2c1f17]"
-                    >
-                      <div>
-                        {isEditing ? (
-                          <input
-                            value={editForm.name}
-                            onChange={(event) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                name: event.target.value,
-                              }))
-                            }
-                            className="w-full rounded-lg border border-[#d8c2ad] bg-white px-2 py-1 text-sm outline-none focus:border-[#9a6949]"
-                          />
-                        ) : (
-                          <>
-                            <p className="font-medium">{document.name}</p>
-                            <p className="text-xs text-[#7b6a5f]">Subido: {document.uploadedAtLabel}</p>
-                          </>
-                        )}
-                      </div>
-
-                      <div>
-                        {isEditing ? (
-                          <select
-                            value={editForm.documentType}
-                            onChange={(event) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                documentType: event.target.value as RegulationDocumentType,
-                              }))
-                            }
-                            className="w-full rounded-lg border border-[#d8c2ad] bg-white px-2 py-1 text-sm outline-none focus:border-[#9a6949]"
-                          >
-                            <option value="REGULATION">Reglamento</option>
-                            <option value="INTERNAL_DOCUMENT">Documento interno</option>
-                          </select>
-                        ) : (
-                          <span className="inline-flex rounded-full border border-[#9f6d50]/30 bg-[#fff4e6] px-2 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#885638]">
-                            {document.documentTypeLabel}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center">
-                        {isEditing ? (
-                          <input
-                            type="file"
-                            accept="application/pdf"
-                            onChange={(event) => setEditFile(event.target.files?.[0] ?? null)}
-                            className="w-full rounded-lg border border-[#d8c2ad] bg-white px-2 py-1 text-xs outline-none focus:border-[#9a6949]"
-                          />
-                        ) : document.publicUrl ? (
-                          <a
-                            href={document.publicUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-xs font-semibold uppercase tracking-[0.12em] text-[#6f3f25] hover:underline"
-                          >
-                            PDF
-                          </a>
-                        ) : (
-                          <span className="text-xs text-[#7f7066]">Sin link</span>
-                        )}
-                      </div>
-
-                      <div className="flex flex-wrap items-center gap-2">
-                        {isEditing ? (
-                          <>
-                            <button
-                              type="button"
-                              disabled={isPending}
-                              onClick={() => saveEdit(document.id)}
-                              className="rounded-full border border-[#2f2017] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#2f2017] hover:bg-[#2f2017] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              Guardar
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isPending}
-                              onClick={cancelEdit}
-                              className="rounded-full border border-[#7f6f64] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#7f6f64] hover:bg-[#7f6f64] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              Cancelar
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              type="button"
-                              disabled={isPending}
-                              onClick={() => beginEdit(document)}
-                              className="rounded-full border border-[#2f2017] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#2f2017] hover:bg-[#2f2017] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              disabled={isPending}
-                              onClick={() => removeDocument(document.id)}
-                              className="rounded-full border border-[#9d2f24] px-2 py-1 text-[11px] font-semibold uppercase tracking-[0.1em] text-[#9d2f24] hover:bg-[#9d2f24] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              Eliminar
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </article>
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <StatCard label="Documentos Totales" value={directory.totalDocuments} icon={<Layers className="h-3.5 w-3.5" />} />
+        <StatCard label="Reglamentos" value={directory.totalRegulations} icon={<FileText className="h-3.5 w-3.5" />} />
+        <StatCard label="Documentos Internos" value={directory.totalInternalDocuments} icon={<Info className="h-3.5 w-3.5" />} />
       </div>
 
-      {message ? (
-        <p className="mt-4 rounded-xl border border-[#cba98e] bg-[#fff5e8] px-4 py-3 text-sm text-[#5a473b]">
-          {message}
-        </p>
-      ) : null}
-    </section>
+      <div className="flex items-center justify-between gap-4 mt-2">
+         <div className="flex items-center gap-2">
+            <Button 
+              variant={typeFilter === "all" ? "primary" : "outline"} 
+              size="sm" 
+              onClick={() => setTypeFilter("all")}
+              className="h-7 text-[10px] uppercase font-black"
+            >
+              Todos
+            </Button>
+            <Button 
+              variant={typeFilter === "REGLAMENTO_GRAL" ? "primary" : "outline"} 
+              size="sm" 
+              onClick={() => setTypeFilter("REGLAMENTO_GRAL")}
+              className="h-7 text-[10px] uppercase font-black"
+            >
+              Reglamentos
+            </Button>
+            <Button 
+              variant={typeFilter === "DOCUMENTO_INTERNO" ? "primary" : "outline"} 
+              size="sm" 
+              onClick={() => setTypeFilter("DOCUMENTO_INTERNO")}
+              className="h-7 text-[10px] uppercase font-black"
+            >
+              Internos
+            </Button>
+         </div>
+      </div>
+
+      <DataTable
+        title="Repositorio de Documentos"
+        count={filteredDocuments.length}
+        data={filteredDocuments}
+        columns={columns}
+        onSearch={setSearch}
+        onAdd={openAddModal}
+        addLabel="Nuevo Documento"
+      />
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title={editingId ? "Editar Documento" : "Subir Documento"}
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+            <Button 
+              disabled={isPending || !formName || !formFileUrl} 
+              onClick={handleSave}
+              className="h-8 px-6 text-[10px] font-black uppercase"
+            >
+              {isPending ? "Procesando..." : "Guardar Documento"}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-6 pt-2">
+          <Input 
+            label="Título del Documento" 
+            value={formName} 
+            onChange={(e) => setFormName(e.target.value)} 
+            placeholder="Ej. Reglamento de Convivencia v2"
+          />
+
+          <div className="relative">
+            <select
+              value={formType}
+              onChange={(e) => setFormType(e.target.value as any)}
+              className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
+            >
+              <option value="REGLAMENTO_GRAL">Reglamento General (Público)</option>
+              <option value="DOCUMENTO_INTERNO">Documento Interno / Manual</option>
+            </select>
+            <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Categoría</label>
+          </div>
+
+          <div className="pt-2 border-t border-line/50">
+             <p className="text-[10px] font-black uppercase text-ink-soft/40 tracking-widest mb-3">Archivo Digital (PDF)</p>
+             {formFileUrl ? (
+               <div className="flex items-center justify-between p-3 bg-canvas/40 rounded-lg border border-line/50">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-brand" />
+                    <span className="text-[12px] font-bold text-ink truncate max-w-[200px]">{formName || "Archivo cargado"}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                     <a href={formFileUrl} target="_blank" className="p-1.5 rounded hover:bg-canvas text-brand transition-colors"><ExternalLink className="h-3.5 w-3.5" /></a>
+                     <button onClick={() => setFormFileUrl("")} className="p-1.5 rounded hover:bg-danger/10 text-danger transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+               </div>
+             ) : (
+               <label className="h-20 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-line rounded-xl cursor-pointer hover:bg-canvas transition-colors group">
+                  {uploading ? <Loader2 className="h-6 w-6 animate-spin text-brand/40" /> : <Upload className="h-6 w-6 text-brand/20 group-hover:text-brand transition-colors" />}
+                  <div className="text-center">
+                    <p className="text-[10px] font-black uppercase text-brand-accent">Click para subir PDF</p>
+                    <p className="text-[9px] font-bold text-ink-soft/40 uppercase tracking-tighter">Máximo 10MB</p>
+                  </div>
+                  <input type="file" className="hidden" accept="application/pdf" onChange={handleUpload} />
+               </label>
+             )}
+          </div>
+
+          <div className="p-3 bg-brand-deep/[0.02] border border-line rounded flex gap-2">
+            <Info className="h-4 w-4 text-brand-accent shrink-0 mt-0.5" />
+            <p className="text-[10px] font-bold text-ink-soft/60 leading-tight uppercase tracking-tight">
+              Los reglamentos generales son visibles en la sección informativa del portal de residentes. Los documentos internos solo son accesibles para administración.
+            </p>
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 }

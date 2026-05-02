@@ -45,6 +45,7 @@ export interface TicketListingVM {
   title: string;
   subtitle: string;
   total: number;
+  condominiumSlug: string;
   rows: TicketRowVM[];
 }
 
@@ -75,6 +76,7 @@ export function toTicketListingVM(listing: TicketListing): TicketListingVM {
     title: "Tickets",
     subtitle: `Seguimiento operativo para ${listing.condominiumName}.`,
     total: listing.rows.length,
+    condominiumSlug: listing.condominiumSlug,
     rows: listing.rows.map((row) => ({
       id: row.id,
       ticketNumber: row.ticketNumber,

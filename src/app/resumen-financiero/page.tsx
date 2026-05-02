@@ -1,29 +1,27 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Space_Grotesk } from "next/font/google";
 import Link from "next/link";
 import { Fragment } from "react";
+import { 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Calendar,
+  ChevronRight,
+  Info
+} from "lucide-react";
 
 import {
   getFinancialSummaryUseCase,
   toFinancialSummaryVM,
 } from "@/modules/financial-summary";
-
-const display = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["500", "700", "800"],
-  variable: "--font-financial-display",
-});
-
-const body = Space_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-financial-body",
-});
+import { StatCard } from "@/components/ui/stat-card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/shared/utils/cn";
 
 export const metadata: Metadata = {
   title: "Resumen Financiero | Insulae 2.0",
-  description:
-    "Resumen financiero anual de Valquirico con consolidado mensual de ingresos, egresos y balance.",
+  description: "Consolidado financiero anual con comparativa multi-anual y desglose mensual.",
 };
 
 export const dynamic = "force-dynamic";
@@ -50,811 +48,370 @@ type MultiYearTable = {
 
 type TableTone = {
   headerBg: string;
+  firstColBg: string;
   totalRowBg: string;
-  regularFirstColBg: string;
-  totalFirstColBg: string;
+  textTone: string;
 };
 
 const TABLE_TONE = {
   income: {
-    headerBg: "bg-[#c3f7a0]",
-    totalRowBg: "bg-[#b0e495]",
-    regularFirstColBg: "bg-[#d7f5c5]",
-    totalFirstColBg: "bg-[#b0e495]",
+    headerBg: "bg-brand-mint/50",
+    firstColBg: "bg-brand-mint/20",
+    totalRowBg: "bg-brand-mint/40",
+    textTone: "text-brand",
   },
   expense: {
-    headerBg: "bg-[#f0a9a9]",
-    totalRowBg: "bg-[#f0a9a9]",
-    regularFirstColBg: "bg-[#f5d6d6]",
-    totalFirstColBg: "bg-[#f0a9a9]",
+    headerBg: "bg-danger/10",
+    firstColBg: "bg-danger/[0.03]",
+    totalRowBg: "bg-danger/10",
+    textTone: "text-danger",
   },
   balance: {
-    headerBg: "bg-[#d8b7ec]",
-    totalRowBg: "bg-[#d8b7ec]",
-    regularFirstColBg: "bg-[#ecdaf7]",
-    totalFirstColBg: "bg-[#d8b7ec]",
+    headerBg: "bg-gold-soft",
+    firstColBg: "bg-gold-soft/30",
+    totalRowBg: "bg-gold-soft",
+    textTone: "text-gold",
   },
-} as const satisfies Record<string, TableTone>;
+} as const;
 
-function MultiYearArticle(props: {
-  blockTitle: string;
+function CompactFinancialTable({
+  title,
+  subtitle,
+  firstColumnLabel,
+  annualLabelPrefix,
+  table,
+  monthLabels,
+  tone,
+}: {
+  title: string;
+  subtitle: string;
   firstColumnLabel: string;
   annualLabelPrefix: string;
   table: MultiYearTable;
   monthLabels: string[];
   tone: TableTone;
 }) {
-  const { blockTitle, firstColumnLabel, annualLabelPrefix, table, monthLabels, tone } = props;
-
   return (
-    <article className="rounded-3xl border border-[#b59f87]/45 bg-[#fff9ef]/92 p-5 shadow-[0_16px_34px_rgba(39,26,19,0.09)] sm:p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a573c]">
-            Corte mensual
-          </p>
-          <h2 className="mt-1 font-[var(--font-financial-display)] text-3xl text-[#2f221b]">
-            {blockTitle}
-          </h2>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#4a647f]">
-            {table.title}
-          </p>
+    <Card className="overflow-hidden border-transparent shadow-layered">
+      <CardHeader className="px-4 py-3 border-b border-line bg-card">
+        <div className="flex flex-col">
+          <CardTitle className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+            {title}
+          </CardTitle>
+          <h2 className="text-sm font-black uppercase text-brand mt-0.5">{subtitle}</h2>
         </div>
-      </div>
-
-      <div className="mt-5 overflow-auto rounded-2xl border border-[#c5cde0] bg-white">
-        <table className="min-w-[130rem] border-separate border-spacing-0">
-          <thead>
-            <tr className="bg-[#cad2e5] text-left">
-              <th
-                className={`sticky left-0 top-0 z-30 border-b border-r border-[#adc0df] px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-[#243449] ${tone.headerBg}`}
-              >
-                {firstColumnLabel}
-              </th>
-              {table.years.map((year) => (
-                <Fragment key={`${table.title}-year-${year}`}>
-                  <th
-                    className={`sticky top-0 z-20 border-b border-l border-r border-[#adc0df] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449] ${tone.headerBg}`}
-                  >
-                    {annualLabelPrefix} {year}
-                  </th>
-                  {monthLabels.map((monthLabel) => (
-                    <th
-                      key={`${table.title}-${year}-${monthLabel}`}
-                      className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#cad2e5] px-3 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]"
-                    >
-                      {monthLabel} {year}
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[120rem]">
+            <thead>
+              <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-black uppercase tracking-tighter text-ink-soft/70">
+                <th className={cn("sticky left-0 z-30 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", tone.headerBg, tone.textTone)}>
+                  {firstColumnLabel}
+                </th>
+                {table.years.map((year) => (
+                  <Fragment key={`head-${year}`}>
+                    <th className={cn("px-4 text-right border-r border-line", tone.headerBg, tone.textTone)}>
+                      {annualLabelPrefix} {year}
                     </th>
-                  ))}
-                </Fragment>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {table.rows.map((row) => (
-              <tr
-                key={row.id}
-                className={row.isTotal ? tone.totalRowBg : "odd:bg-[#f9fbff] even:bg-[#f2f6fd]"}
-              >
-                <td
-                  className={`sticky left-0 border-b border-r border-[#bfd0ea] px-4 py-3 text-sm font-semibold ${
-                    row.isTotal
-                      ? `${tone.totalFirstColBg} text-[#223044]`
-                      : `${tone.regularFirstColBg} text-[#2c3138]`
-                  }`}
-                >
-                  {row.label}
-                </td>
-                {row.yearly.map((yearSlice) => (
-                  <Fragment key={`${row.id}-year-${yearSlice.year}`}>
-                    <td
-                      className={`border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold ${
-                        yearSlice.annualTotalValue >= 0 ? "text-[#2f3842]" : "text-[#8a2f2f]"
-                      }`}
-                    >
-                      {yearSlice.annualTotal}
-                    </td>
-                    {yearSlice.months.map((monthAmount, monthIndex) => (
-                      <td
-                        key={`${row.id}-${yearSlice.year}-${monthIndex + 1}`}
-                        className={`border-b border-r border-[#bfd0ea] px-3 py-3 text-right text-sm ${
-                          row.isTotal ? "font-semibold text-[#2f3842]" : "text-[#3a4654]"
-                        }`}
-                      >
-                        {monthAmount}
-                      </td>
+                    {monthLabels.map((m) => (
+                      <th key={`head-${year}-${m}`} className="px-3 text-right border-r border-line/50 font-bold opacity-60">
+                        {m} {year}
+                      </th>
                     ))}
                   </Fragment>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </article>
+            </thead>
+            <tbody className="divide-y divide-line/30">
+              {table.rows.map((row) => (
+                <tr key={row.id} className={cn("h-10 hover:bg-canvas/10 transition-colors", row.isTotal && tone.totalRowBg)}>
+                  <td className={cn(
+                    "sticky left-0 px-4 text-[12px] font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
+                    row.isTotal ? tone.textTone : tone.firstColBg
+                  )}>
+                    {row.label}
+                  </td>
+                  {row.yearly.map((yearSlice) => (
+                    <Fragment key={`body-${row.id}-${yearSlice.year}`}>
+                      <td className={cn(
+                        "px-4 text-right text-[12px] font-black border-r border-line",
+                        yearSlice.annualTotalValue >= 0 ? "text-brand" : "text-danger"
+                      )}>
+                        {yearSlice.annualTotal}
+                      </td>
+                      {yearSlice.months.map((val, idx) => (
+                        <td key={`val-${row.id}-${idx}`} className="px-3 text-right text-[12px] font-medium text-ink-soft border-r border-line/30">
+                          {val}
+                        </td>
+                      ))}
+                    </Fragment>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
-type ResumenFinancieroPageProps = {
-  searchParams?: Promise<{
-    mode?: string;
-  }>;
-};
-
 export default async function ResumenFinancieroPage({
   searchParams,
-}: ResumenFinancieroPageProps) {
+}: {
+  searchParams?: Promise<{ mode?: string }>;
+}) {
   const resolvedSearchParams = (await searchParams) ?? {};
-  const selectedMode: Mode =
-    resolvedSearchParams.mode === "extraordinary" ? "extraordinary" : "ordinary";
-  const showOrdinaryMode = selectedMode === "ordinary";
-  const showExtraordinaryMode = selectedMode === "extraordinary";
+  const selectedMode: Mode = resolvedSearchParams.mode === "extraordinary" ? "extraordinary" : "ordinary";
+  const showOrdinary = selectedMode === "ordinary";
 
   const selectedYear = new Date().getUTCFullYear() - 1;
-
   const summary = await getFinancialSummaryUseCase.execute({ year: selectedYear });
   const vm = summary ? toFinancialSummaryVM(summary) : null;
 
-  const ordinaryExpenseYears = vm?.ordinaryExpensesLegacyTable.years ?? [];
-  const ordinaryExpenseBaseYear = ordinaryExpenseYears[0] ?? selectedYear;
-  const ordinaryExpenseNextYear = ordinaryExpenseYears[1] ?? selectedYear + 1;
-  const receivableCurrentYear = vm?.ordinaryReceivablesTable.currentYear ?? selectedYear;
-  const receivableNextYear = vm?.ordinaryReceivablesTable.nextYear ?? selectedYear + 1;
-  const receivableOverdueStartYear =
-    vm?.ordinaryReceivablesTable.overdueStartYear ?? selectedYear - 1;
-  const receivableOverdueEndYear = vm?.ordinaryReceivablesTable.overdueEndYear ?? selectedYear - 1;
-  const payableCurrentYear = vm?.ordinaryPayablesTable.currentYear ?? selectedYear;
-  const payableNextYear = vm?.ordinaryPayablesTable.nextYear ?? selectedYear + 1;
+  if (!vm) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 text-ink-soft">
+        <h2 className="text-lg font-bold uppercase tracking-tight">Sin condominio activo</h2>
+        <p className="text-sm">No se encontró información financiera disponible.</p>
+      </div>
+    );
+  }
 
   return (
-    <main
-      className={`${display.variable} ${body.variable} relative isolate min-h-screen overflow-x-clip bg-[#f2ede4] px-5 pb-16 pt-8 text-[#1f1512] sm:px-8 lg:px-12`}
-    >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-9rem] top-[-8rem] h-[22rem] w-[22rem] rounded-full bg-[#c26f3d]/18 blur-3xl" />
-        <div className="absolute right-[-8rem] top-[8rem] h-[24rem] w-[24rem] rounded-full bg-[#3f7a73]/15 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_0%,rgba(255,255,255,0.52),transparent_42%)]" />
+    <div className="space-y-5 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-black text-brand tracking-tighter uppercase">Resumen Financiero</h1>
+            <Badge variant="brand">Fase 1 · BETA</Badge>
+          </div>
+          <p className="text-ink-soft/70 text-[12px] font-bold uppercase tracking-tight">
+            {vm.condominiumName} · Corte {vm.selectedYear} · {vm.generatedAtLabel}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
+          <Link
+            href="?mode=ordinary"
+            className={cn(
+              "h-8 px-4 flex items-center rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
+              showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
+            )}
+          >
+            Cuotas Ordinarias
+          </Link>
+          <Link
+            href="?mode=extraordinary"
+            className={cn(
+              "h-8 px-4 flex items-center rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
+              !showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
+            )}
+          >
+            Cuotas Extraordinarias
+          </Link>
+        </div>
       </div>
 
-      <section className="relative mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <header className="rounded-[2rem] border border-[#b9a58f]/55 bg-[#fff6ea]/88 p-6 shadow-[0_18px_46px_rgba(44,27,17,0.14)] backdrop-blur sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="space-y-3">
-              <span className="inline-flex rounded-full border border-[#7c4d31]/35 bg-[#7c4d31]/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#6f4028]">
-                Financiero Fase 1
-              </span>
-              <h1 className="font-[var(--font-financial-display)] text-4xl leading-none text-[#2e221b] sm:text-5xl">
-                Resumen Financiero
-              </h1>
-              <p className="max-w-3xl font-[var(--font-financial-body)] text-sm leading-relaxed text-[#5f4f43] sm:text-base">
-                Consolidado anual de ingresos y egresos por bloques contables, alineado a la
-                estructura historica del reporte legacy. Ambito fijo: Valquirico. Visualizacion
-                multi-anual fija para 2024, 2025 y 2026.
-              </p>
-            </div>
+      {/* KPI Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+        <StatCard label="Ingresos Ordinarios" value={vm.totals.ordinaryIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        <StatCard label="Extraordinarios" value={vm.totals.extraordinaryIncome} icon={<DollarSign className="h-3.5 w-3.5" />} />
+        <StatCard label="Otros Ingresos" value={vm.totals.otherIncome} icon={<PlusIcon className="h-3.5 w-3.5" />} />
+        <StatCard label="Ingresos Totales" value={vm.totals.totalIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} className="bg-brand-mint/20 border-brand-mint" />
+        <StatCard label="Egresos Totales" value={vm.totals.totalExpenses} icon={<TrendingDown className="h-3.5 w-3.5" />} />
+        <StatCard 
+          label="Balance Anual" 
+          value={vm.totals.annualBalance} 
+          icon={<Calendar className="h-3.5 w-3.5" />}
+          className={cn(vm.totals.annualBalanceValue >= 0 ? "bg-brand-mint/40" : "bg-danger/10 border-danger/20")}
+        />
+      </div>
 
-            <div className="rounded-3xl border border-[#ccb299] bg-[#221913] p-5 text-[#f8ead9]">
-              <p className="text-xs uppercase tracking-[0.18em] text-[#eac8a5]">Corte del reporte</p>
-              <p className="mt-2 font-[var(--font-financial-display)] text-3xl leading-tight">
-                {vm?.selectedYear ?? selectedYear}
-              </p>
-              <p className="mt-2 text-xs text-[#edd2bd]/90">Generado: {vm?.generatedAtLabel ?? "--"}</p>
-            </div>
-          </div>
+      {/* Context Info */}
+      <div className="flex items-center gap-2 p-3 bg-canvas/40 border border-line/30 rounded-md">
+        <Info className="h-4 w-4 text-brand-accent shrink-0" />
+        <p className="text-[11px] font-bold text-ink-soft/70 leading-tight uppercase tracking-tight">
+          Ambito: Valquirico · Datos consolidados de Neon · Periodo visual: 2024 / 2025 / 2026
+        </p>
+      </div>
 
-          <div className="mt-5">
-            <span className="rounded-full border border-[#bca58f] bg-white/75 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#3d2a20]">
-              Años visibles: 2024 / 2025 / 2026
-            </span>
-          </div>
-        </header>
-
-        {vm ? (
+      {/* Main Content Sections */}
+      <div className="space-y-6">
+        {showOrdinary ? (
           <>
-            <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-              {[
-                { label: "Ingresos ordinarios", value: vm.totals.ordinaryIncome },
-                { label: "Ingresos extraordinarios", value: vm.totals.extraordinaryIncome },
-                { label: "Otros ingresos", value: vm.totals.otherIncome },
-                { label: "Ingresos totales", value: vm.totals.totalIncome },
-                { label: "Egresos totales", value: vm.totals.totalExpenses },
-                { label: "Balance anual", value: vm.totals.annualBalance },
-              ].map((card) => {
-                const isBalance = card.label === "Balance anual";
-                const isPositiveBalance = vm.totals.annualBalanceValue >= 0;
+            <CompactFinancialTable
+              title="Balance Mensual"
+              subtitle="Cuotas Ordinarias"
+              firstColumnLabel="Tipo de Ingreso"
+              annualLabelPrefix="Ingreso Anual"
+              table={vm.ordinaryIncomeMultiYearTable}
+              monthLabels={vm.monthLabels}
+              tone={TABLE_TONE.income}
+            />
 
-                return (
-                  <article
-                    key={card.label}
-                    className={`rounded-3xl border p-5 shadow-[0_14px_30px_rgba(35,25,18,0.09)] ${
-                      isBalance
-                        ? isPositiveBalance
-                          ? "border-[#7ea687]/45 bg-[#edf8f1]"
-                          : "border-[#c98d76]/45 bg-[#fff0ea]"
-                        : "border-[#b39f87]/35 bg-[#fffaf2]/92"
-                    }`}
-                  >
-                    <p className="font-[var(--font-financial-body)] text-xs uppercase tracking-[0.18em] text-[#85553a]">
-                      {card.label}
-                    </p>
-                    <p className="mt-3 font-[var(--font-financial-display)] text-3xl leading-none text-[#2f221b]">
-                      {card.value}
-                    </p>
-                  </article>
-                );
-              })}
-            </section>
+            <CompactFinancialTable
+              title="Balance Mensual"
+              subtitle="Otros Ingresos Ordinarios"
+              firstColumnLabel="Tipo de Ingreso"
+              annualLabelPrefix="Ingreso Anual"
+              table={vm.ordinaryOtherIncomeMultiYearTable}
+              monthLabels={vm.monthLabels}
+              tone={TABLE_TONE.income}
+            />
 
-            <section className="space-y-6">
-              <p className="rounded-full border border-[#c7b198] bg-[#fff3e5] px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-[#815239]">
-                Condominio: {vm.condominiumName}
-              </p>
-
-              <div className="inline-flex items-center gap-2 rounded-2xl border border-[#b59f87]/45 bg-[#fff6ea]/90 p-1.5">
-                <Link
-                  href="?mode=ordinary"
-                  className={`rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${
-                    showOrdinaryMode
-                      ? "bg-[#2f221b] text-[#f8ead9]"
-                      : "text-[#5f4f43] hover:bg-[#ead8c4]"
-                  }`}
-                  aria-pressed={showOrdinaryMode}
-                >
-                  Cuotas ordinarias
-                </Link>
-                <Link
-                  href="?mode=extraordinary"
-                  className={`rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] transition ${
-                    showExtraordinaryMode
-                      ? "bg-[#2f221b] text-[#f8ead9]"
-                      : "text-[#5f4f43] hover:bg-[#ead8c4]"
-                  }`}
-                  aria-pressed={showExtraordinaryMode}
-                >
-                  Cuotas extraordinarias
-                </Link>
-              </div>
-
-              {showOrdinaryMode && (
-                <>
-                  <MultiYearArticle
-                    blockTitle="Balance de Cuotas Ordinarias"
-                    firstColumnLabel="Tipo de ingreso"
-                    annualLabelPrefix="Ingreso anual"
-                    table={vm.ordinaryIncomeMultiYearTable}
-                    monthLabels={vm.monthLabels}
-                    tone={TABLE_TONE.income}
-                  />
-
-                  <MultiYearArticle
-                    blockTitle="Balance de Cuotas Ordinarias"
-                    firstColumnLabel="Tipo de ingreso"
-                    annualLabelPrefix="Ingreso anual"
-                    table={vm.ordinaryOtherIncomeMultiYearTable}
-                    monthLabels={vm.monthLabels}
-                    tone={TABLE_TONE.income}
-                  />
-
-                  <article className="rounded-3xl border border-[#b59f87]/45 bg-[#fff9ef]/92 p-5 shadow-[0_16px_34px_rgba(39,26,19,0.09)] sm:p-6">
-                    <div className="flex flex-wrap items-end justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a573c]">
-                          Corte mensual
-                        </p>
-                        <h2 className="mt-1 font-[var(--font-financial-display)] text-3xl text-[#2f221b]">
-                          Balance de Cuotas Ordinarias
-                        </h2>
-                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#4a647f]">
-                          {vm.ordinaryExpensesLegacyTable.title}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 overflow-auto rounded-2xl border border-[#c5cde0] bg-white">
-                      <table className="min-w-[120rem] border-separate border-spacing-0">
-                        <thead>
-                          <tr className="bg-[#cad2e5] text-left">
-                            <th className="sticky left-0 top-0 z-30 border-b border-r border-[#adc0df] bg-[#f0a9a9] px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Tipo de egreso
-                            </th>
-                            <th className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#f0a9a9] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Egreso anual {ordinaryExpenseBaseYear}
-                            </th>
-                            {vm.monthLabels.map((monthLabel) => (
-                              <th
-                                key={`ordinary-expense-${ordinaryExpenseBaseYear}-${monthLabel}`}
-                                className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#cad2e5] px-3 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]"
-                              >
-                                {monthLabel} {ordinaryExpenseBaseYear}
-                              </th>
-                            ))}
-                            <th className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#f0a9a9] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Egreso anual {ordinaryExpenseNextYear}
-                            </th>
+            {/* Legacy Expense Table - custom layout because it has specific columns */}
+            <Card className="overflow-hidden border-transparent shadow-layered">
+              <CardHeader className="px-4 py-3 border-b border-line bg-card">
+                <div className="flex flex-col">
+                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+                    Corte Mensual
+                  </CardTitle>
+                  <h2 className="text-sm font-black uppercase text-danger mt-0.5">{vm.ordinaryExpensesLegacyTable.title}</h2>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto no-scrollbar">
+                  <table className="w-full text-left border-collapse min-w-[110rem]">
+                    <thead>
+                      <tr className="h-9 bg-danger/10 border-b border-line text-[10px] font-black uppercase tracking-tighter text-danger">
+                        <th className="sticky left-0 z-30 px-4 border-r border-line bg-danger/10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Tipo de Egreso</th>
+                        <th className="px-4 text-right border-r border-line">Egreso {vm.ordinaryExpensesLegacyTable.years[0]}</th>
+                        {vm.monthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m} {vm.ordinaryExpensesLegacyTable.years[0]}</th>)}
+                        <th className="px-4 text-right border-r border-line">Egreso {vm.ordinaryExpensesLegacyTable.years[1]}</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-line/30 text-[12px]">
+                      {vm.ordinaryExpensesLegacyTable.rows.map(row => {
+                        const s1 = row.yearly[0];
+                        const s2 = row.yearly[1];
+                        return (
+                          <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-danger/10 text-danger font-black")}>
+                            <td className={cn("sticky left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-danger/10" : "bg-danger/[0.02]")}>{row.label}</td>
+                            <td className="px-4 text-right font-black border-r border-line">{s1?.annualTotal}</td>
+                            {s1?.months.map((v, i) => <td key={i} className="px-3 text-right text-ink-soft border-r border-line/30">{v}</td>)}
+                            <td className="px-4 text-right font-black border-r border-line">{s2?.annualTotal}</td>
                           </tr>
-                        </thead>
-                        <tbody>
-                          {vm.ordinaryExpensesLegacyTable.rows.map((row) => {
-                            const baseYearSlice =
-                              row.yearly.find((yearSlice) => yearSlice.year === ordinaryExpenseBaseYear) ??
-                              row.yearly[0];
-                            const nextYearSlice =
-                              row.yearly.find((yearSlice) => yearSlice.year === ordinaryExpenseNextYear) ??
-                              row.yearly[row.yearly.length - 1];
-
-                            return (
-                              <tr
-                                key={row.id}
-                                className={row.isTotal ? "bg-[#f0a9a9]" : "odd:bg-[#f9fbff] even:bg-[#f2f6fd]"}
-                              >
-                                <td
-                                  className={`sticky left-0 border-b border-r border-[#bfd0ea] px-4 py-3 text-sm ${
-                                    row.isTotal
-                                      ? "bg-[#f0a9a9] font-semibold text-[#223044]"
-                                      : "bg-[#f5d6d6] font-semibold text-[#2c3138]"
-                                  }`}
-                                >
-                                  {row.label}
-                                </td>
-                                <td className="border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold text-[#2f3842]">
-                                  {baseYearSlice?.annualTotal ?? "$0.00"}
-                                </td>
-                                {(baseYearSlice?.months ?? []).map((monthAmount, monthIndex) => (
-                                  <td
-                                    key={`${row.id}-legacy-expense-${ordinaryExpenseBaseYear}-${monthIndex + 1}`}
-                                    className={`border-b border-r border-[#bfd0ea] px-3 py-3 text-right text-sm ${
-                                      row.isTotal ? "font-semibold text-[#2f3842]" : "text-[#3a4654]"
-                                    }`}
-                                  >
-                                    {monthAmount}
-                                  </td>
-                                ))}
-                                <td className="border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold text-[#2f3842]">
-                                  {nextYearSlice?.annualTotal ?? "$0.00"}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </article>
-
-                  {vm.blocks
-                    .filter((block) => block.id === "ordinary")
-                    .flatMap((block) =>
-                      block.tables
-                        .filter((table) => table.id === "ordinary-balance")
-                        .map((table) => (
-                          <article
-                            key={`${block.id}-${table.id}`}
-                            className="rounded-3xl border border-[#b59f87]/45 bg-[#fff9ef]/92 p-5 shadow-[0_16px_34px_rgba(39,26,19,0.09)] sm:p-6"
-                          >
-                            <div className="flex flex-wrap items-end justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a573c]">
-                                  Corte mensual
-                                </p>
-                                <h2 className="mt-1 font-[var(--font-financial-display)] text-3xl text-[#2f221b]">
-                                  {block.title}
-                                </h2>
-                                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#4a647f]">
-                                  {table.title}
-                                </p>
-                              </div>
-                            </div>
-
-                            <div className="mt-5 overflow-auto rounded-2xl border border-[#c5cde0] bg-white shadow-[0_12px_24px_rgba(45,37,29,0.08)]">
-                              <table className="min-w-[52rem] border-separate border-spacing-0">
-                                <thead>
-                                  <tr className="bg-[#cad2e5] text-left">
-                                    <th className="sticky left-0 top-0 z-30 border-b border-r border-[#adc0df] bg-[#d8b7ec] px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                                      Saldo
-                                    </th>
-                                    {vm.monthLabels.map((monthLabel) => (
-                                      <th
-                                        key={`${table.id}-${monthLabel}`}
-                                        className="sticky top-0 z-20 border-b border-[#adc0df] bg-[#cad2e5] px-3 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]"
-                                      >
-                                        {monthLabel.slice(0, 3)}
-                                      </th>
-                                    ))}
-                                    <th className="sticky top-0 z-20 border-b border-l border-[#adc0df] bg-[#d8b7ec] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                                      Total anual
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {table.rows.map((row) => (
-                                    <tr
-                                      key={row.id}
-                                      className={row.isTotal ? "bg-[#d8b7ec]" : "odd:bg-[#f9fbff] even:bg-[#f2f6fd]"}
-                                    >
-                                      <td
-                                        className={`sticky left-0 border-b border-r border-[#bfd0ea] px-4 py-3 text-sm ${
-                                          row.isTotal
-                                            ? "bg-[#d8b7ec] font-semibold text-[#223044]"
-                                            : "bg-[#ecdaf7] font-semibold text-[#2c3138]"
-                                        }`}
-                                      >
-                                        {row.label}
-                                      </td>
-                                      {row.months.map((monthAmount, monthIndex) => (
-                                        <td
-                                          key={`${row.id}-${monthIndex + 1}`}
-                                          className={`border-b border-[#bfd0ea] px-3 py-3 text-right text-sm ${
-                                            row.isTotal ? "font-semibold text-[#2f3842]" : "text-[#3a4654]"
-                                          }`}
-                                        >
-                                          {monthAmount}
-                                        </td>
-                                      ))}
-                                      <td
-                                        className={`border-b border-l border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold ${
-                                          row.annualTotalValue >= 0 ? "text-[#285f4a]" : "text-[#8a2f2f]"
-                                        }`}
-                                      >
-                                        {row.annualTotal}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </article>
-                        )),
-                    )}
-
-                  <article className="rounded-3xl border border-[#b59f87]/45 bg-[#fff9ef]/92 p-5 shadow-[0_16px_34px_rgba(39,26,19,0.09)] sm:p-6">
-                    <div className="flex flex-wrap items-end justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a573c]">
-                          Corte mensual
-                        </p>
-                        <h2 className="mt-1 font-[var(--font-financial-display)] text-3xl text-[#2f221b]">
-                          Balance de Cuotas Ordinarias
-                        </h2>
-                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#4a647f]">
-                          {vm.ordinaryReceivablesTable.title}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 overflow-auto rounded-2xl border border-[#c5cde0] bg-white">
-                      <table className="min-w-[130rem] border-separate border-spacing-0">
-                        <thead>
-                          <tr className="bg-[#cad2e5] text-left">
-                            <th className="sticky left-0 top-0 z-30 border-b border-r border-[#adc0df] bg-[#c3f7a0] px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Tipo de ingreso
-                            </th>
-                            <th className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#c3f7a0] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Periodo {receivableCurrentYear}
-                            </th>
-                            <th className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#c3f7a0] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Cartera vencida {receivableOverdueStartYear}-{receivableOverdueEndYear}
-                            </th>
-                            {vm.monthLabels.map((monthLabel) => (
-                              <th
-                                key={`ordinary-receivable-${receivableCurrentYear}-${monthLabel}`}
-                                className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#cad2e5] px-3 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]"
-                              >
-                                {monthLabel} {receivableCurrentYear}
-                              </th>
-                            ))}
-                            <th className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#c3f7a0] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Periodo {receivableNextYear}
-                            </th>
-                            {vm.monthLabels.map((monthLabel) => (
-                              <th
-                                key={`ordinary-receivable-${receivableNextYear}-${monthLabel}`}
-                                className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#cad2e5] px-3 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]"
-                              >
-                                {monthLabel} {receivableNextYear}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {vm.ordinaryReceivablesTable.rows.map((row) => (
-                            <tr
-                              key={row.id}
-                              className={row.isTotal ? "bg-[#b0e495]" : "odd:bg-[#f9fbff] even:bg-[#f2f6fd]"}
-                            >
-                              <td
-                                className={`sticky left-0 border-b border-r border-[#bfd0ea] px-4 py-3 text-sm ${
-                                  row.isTotal
-                                    ? "bg-[#b0e495] font-semibold text-[#223044]"
-                                    : "bg-[#d7f5c5] font-semibold text-[#2c3138]"
-                                }`}
-                              >
-                                {row.label}
-                              </td>
-                              <td className="border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold text-[#2f3842]">
-                                {row.periodCurrentYear}
-                              </td>
-                              <td className="border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold text-[#2f3842]">
-                                {row.overduePortfolio}
-                              </td>
-                              {row.monthsCurrentYear.map((monthAmount, monthIndex) => (
-                                <td
-                                  key={`${row.id}-receivable-current-${monthIndex + 1}`}
-                                  className={`border-b border-r border-[#bfd0ea] px-3 py-3 text-right text-sm ${
-                                    row.isTotal ? "font-semibold text-[#2f3842]" : "text-[#3a4654]"
-                                  }`}
-                                >
-                                  {monthAmount}
-                                </td>
-                              ))}
-                              <td className="border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold text-[#2f3842]">
-                                {row.periodNextYear}
-                              </td>
-                              {row.monthsNextYear.map((monthAmount, monthIndex) => (
-                                <td
-                                  key={`${row.id}-receivable-next-${monthIndex + 1}`}
-                                  className={`border-b border-r border-[#bfd0ea] px-3 py-3 text-right text-sm ${
-                                    row.isTotal ? "font-semibold text-[#2f3842]" : "text-[#3a4654]"
-                                  }`}
-                                >
-                                  {monthAmount}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </article>
-
-                  <article className="rounded-3xl border border-[#b59f87]/45 bg-[#fff9ef]/92 p-5 shadow-[0_16px_34px_rgba(39,26,19,0.09)] sm:p-6">
-                    <div className="flex flex-wrap items-end justify-between gap-3">
-                      <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a573c]">
-                          Corte mensual
-                        </p>
-                        <h2 className="mt-1 font-[var(--font-financial-display)] text-3xl text-[#2f221b]">
-                          Balance de Cuotas Ordinarias
-                        </h2>
-                        <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#4a647f]">
-                          {vm.ordinaryPayablesTable.title}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-5 overflow-auto rounded-2xl border border-[#c5cde0] bg-white">
-                      <table className="min-w-[130rem] border-separate border-spacing-0">
-                        <thead>
-                          <tr className="bg-[#cad2e5] text-left">
-                            <th className="sticky left-0 top-0 z-30 border-b border-r border-[#adc0df] bg-[#f0a9a9] px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Tipo de egreso
-                            </th>
-                            <th className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#f0a9a9] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Periodo {payableCurrentYear}
-                            </th>
-                            {vm.monthLabels.map((monthLabel) => (
-                              <th
-                                key={`ordinary-payable-${payableCurrentYear}-${monthLabel}`}
-                                className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#cad2e5] px-3 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]"
-                              >
-                                {monthLabel} {payableCurrentYear}
-                              </th>
-                            ))}
-                            <th className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#f0a9a9] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Total anual {payableNextYear}
-                            </th>
-                            <th className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#f0a9a9] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                              Periodo {payableNextYear}
-                            </th>
-                            {vm.monthLabels.map((monthLabel) => (
-                              <th
-                                key={`ordinary-payable-${payableNextYear}-${monthLabel}`}
-                                className="sticky top-0 z-20 border-b border-r border-[#adc0df] bg-[#cad2e5] px-3 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]"
-                              >
-                                {monthLabel} {payableNextYear}
-                              </th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {vm.ordinaryPayablesTable.rows.map((row) => (
-                            <tr key={row.id} className="odd:bg-[#f9fbff] even:bg-[#f2f6fd]">
-                              <td className="sticky left-0 border-b border-r border-[#bfd0ea] bg-[#f5d6d6] px-4 py-3 text-sm font-semibold text-[#2c3138]">
-                                {row.label}
-                              </td>
-                              <td className="border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold text-[#2f3842]">
-                                {row.periodCurrentYear}
-                              </td>
-                              {row.monthsCurrentYear.map((monthAmount, monthIndex) => (
-                                <td
-                                  key={`${row.id}-payable-current-${monthIndex + 1}`}
-                                  className="border-b border-r border-[#bfd0ea] px-3 py-3 text-right text-sm text-[#3a4654]"
-                                >
-                                  {monthAmount}
-                                </td>
-                              ))}
-                              <td className="border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold text-[#2f3842]">
-                                {row.totalAnnualNextYear}
-                              </td>
-                              <td className="border-b border-r border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold text-[#2f3842]">
-                                {row.periodNextYear}
-                              </td>
-                              {row.monthsNextYear.map((monthAmount, monthIndex) => (
-                                <td
-                                  key={`${row.id}-payable-next-${monthIndex + 1}`}
-                                  className="border-b border-r border-[#bfd0ea] px-3 py-3 text-right text-sm text-[#3a4654]"
-                                >
-                                  {monthAmount}
-                                </td>
-                              ))}
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  </article>
-
-                  {vm.blocks
-                    .filter((block) => block.id === "ordinary")
-                    .flatMap((block) =>
-                      block.tables
-                        .filter(
-                          (table) =>
-                            table.id !== "ordinary-income" &&
-                            table.id !== "ordinary-other-income" &&
-                            table.id !== "ordinary-expenses" &&
-                            table.id !== "ordinary-balance",
                         )
-                        .map((table) => (
-                          <article
-                            key={`${block.id}-${table.id}`}
-                            className="rounded-3xl border border-[#b59f87]/45 bg-[#fff9ef]/92 p-5 shadow-[0_16px_34px_rgba(39,26,19,0.09)] sm:p-6"
-                          >
-                            <div className="flex flex-wrap items-end justify-between gap-3">
-                              <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#8a573c]">
-                                  Corte mensual
-                                </p>
-                                <h2 className="mt-1 font-[var(--font-financial-display)] text-3xl text-[#2f221b]">
-                                  {block.title}
-                                </h2>
-                                <p className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-[#4a647f]">
-                                  {table.title}
-                                </p>
-                              </div>
-                            </div>
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
 
-                            <div className="mt-5 overflow-auto rounded-2xl border border-[#c5cde0] bg-white shadow-[0_12px_24px_rgba(45,37,29,0.08)]">
-                              <table className="min-w-[52rem] border-separate border-spacing-0">
-                                <thead>
-                                  <tr className="bg-[#cad2e5] text-left">
-                                    <th className="sticky left-0 top-0 z-30 border-b border-r border-[#adc0df] bg-[#cad2e5] px-4 py-3 text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                                      Concepto
-                                    </th>
-                                    {vm.monthLabels.map((monthLabel) => (
-                                      <th
-                                        key={`${table.id}-${monthLabel}`}
-                                        className="sticky top-0 z-20 border-b border-[#adc0df] bg-[#cad2e5] px-3 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]"
-                                      >
-                                        {monthLabel.slice(0, 3)}
-                                      </th>
-                                    ))}
-                                    <th className="sticky top-0 z-20 border-b border-l border-[#adc0df] bg-[#cad2e5] px-4 py-3 text-right text-[11px] uppercase tracking-[0.12em] text-[#243449]">
-                                      Total anual
-                                    </th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {table.rows.map((row) => (
-                                    <tr
-                                      key={row.id}
-                                      className={row.isTotal ? "bg-[#e8eefb]" : "odd:bg-[#f9fbff] even:bg-[#f2f6fd]"}
-                                    >
-                                      <td
-                                        className={`sticky left-0 border-b border-r border-[#bfd0ea] px-4 py-3 text-sm ${
-                                          row.isTotal
-                                            ? "bg-[#e8eefb] font-semibold text-[#223044]"
-                                            : "bg-inherit text-[#2c3138]"
-                                        }`}
-                                      >
-                                        {row.label}
-                                      </td>
-                                      {row.months.map((monthAmount, monthIndex) => (
-                                        <td
-                                          key={`${row.id}-${monthIndex + 1}`}
-                                          className={`border-b border-[#bfd0ea] px-3 py-3 text-right text-sm ${
-                                            row.isTotal ? "font-semibold text-[#2f3842]" : "text-[#3a4654]"
-                                          }`}
-                                        >
-                                          {monthAmount}
-                                        </td>
-                                      ))}
-                                      <td
-                                        className={`border-b border-l border-[#bfd0ea] px-4 py-3 text-right text-sm font-semibold ${
-                                          row.annualTotalValue >= 0 ? "text-[#285f4a]" : "text-[#8a2f2f]"
-                                        }`}
-                                      >
-                                        {row.annualTotal}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </article>
-                        )),
-                    )}
-                </>
-              )}
+            {/* Balances block */}
+            {vm.blocks.filter(b => b.id === "ordinary").map(block => (
+              block.tables.filter(t => t.id === "ordinary-balance").map(table => (
+                <Card key={table.id} className="overflow-hidden border-transparent shadow-layered">
+                  <CardHeader className="px-4 py-3 border-b border-line bg-card">
+                    <div className="flex flex-col">
+                      <CardTitle className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">{block.title}</CardTitle>
+                      <h2 className="text-sm font-black uppercase text-gold mt-0.5">{table.title}</h2>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="overflow-x-auto no-scrollbar">
+                      <table className="w-full text-left border-collapse min-w-[60rem]">
+                        <thead>
+                          <tr className="h-9 bg-gold-soft border-b border-line text-[10px] font-black uppercase tracking-tighter text-gold">
+                            <th className="sticky left-0 z-30 px-4 border-r border-line bg-gold-soft shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Saldo</th>
+                            {vm.monthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m.slice(0, 3)}</th>)}
+                            <th className="px-4 text-right border-r border-line">Total Anual</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-line/30 text-[12px]">
+                          {table.rows.map(row => (
+                            <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-gold-soft text-gold font-black")}>
+                              <td className={cn("sticky left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-gold-soft" : "bg-gold-soft/20")}>{row.label}</td>
+                              {row.months.map((v, i) => <td key={i} className="px-3 text-right text-ink-soft border-r border-line/30">{v}</td>)}
+                              <td className={cn("px-4 text-right font-black", row.annualTotalValue >= 0 ? "text-brand" : "text-danger")}>{row.annualTotal}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ))}
 
-              {showExtraordinaryMode && (
-                <>
-                  <MultiYearArticle
-                    blockTitle="Balance de Cuotas Extraordinarias"
-                    firstColumnLabel="Tipo de ingreso"
-                    annualLabelPrefix="Ingreso anual"
-                    table={vm.extraordinaryIncomeMultiYearTable}
-                    monthLabels={vm.monthLabels}
-                    tone={TABLE_TONE.income}
-                  />
-
-                  <MultiYearArticle
-                    blockTitle="Balance de Cuotas Extraordinarias"
-                    firstColumnLabel="Tipo de ingreso"
-                    annualLabelPrefix="Ingreso anual"
-                    table={vm.extraordinaryOtherIncomeMultiYearTable}
-                    monthLabels={vm.monthLabels}
-                    tone={TABLE_TONE.income}
-                  />
-
-                  <MultiYearArticle
-                    blockTitle="Balance de Cuotas Extraordinarias"
-                    firstColumnLabel="Tipo de egreso"
-                    annualLabelPrefix="Egreso anual"
-                    table={vm.extraordinaryExpensesMultiYearTable}
-                    monthLabels={vm.monthLabels}
-                    tone={TABLE_TONE.expense}
-                  />
-
-                  <MultiYearArticle
-                    blockTitle="Balance de Cuotas Extraordinarias"
-                    firstColumnLabel="Saldo"
-                    annualLabelPrefix="Periodo"
-                    table={vm.extraordinaryBalanceMultiYearTable}
-                    monthLabels={vm.monthLabels}
-                    tone={TABLE_TONE.balance}
-                  />
-
-                  <MultiYearArticle
-                    blockTitle="Balance de Cuotas Extraordinarias"
-                    firstColumnLabel="Tipo de cuota"
-                    annualLabelPrefix="Periodo"
-                    table={vm.extraordinaryReceivablesMultiYearTable}
-                    monthLabels={vm.monthLabels}
-                    tone={TABLE_TONE.income}
-                  />
-
-                  <MultiYearArticle
-                    blockTitle="Balance de Cuotas Extraordinarias"
-                    firstColumnLabel="Tipo de cuota"
-                    annualLabelPrefix="Periodo"
-                    table={vm.extraordinaryPayablesMultiYearTable}
-                    monthLabels={vm.monthLabels}
-                    tone={TABLE_TONE.expense}
-                  />
-                </>
-              )}
-            </section>
+            {/* Receivables Table */}
+            <CompactFinancialTable
+              title="Control de Cartera"
+              subtitle={vm.ordinaryReceivablesTable.title}
+              firstColumnLabel="Tipo de Ingreso"
+              annualLabelPrefix="Periodo"
+              table={{
+                title: vm.ordinaryReceivablesTable.title,
+                years: [vm.ordinaryReceivablesTable.currentYear, vm.ordinaryReceivablesTable.nextYear],
+                rows: vm.ordinaryReceivablesTable.rows.map(r => ({
+                  id: r.id,
+                  label: r.label,
+                  isTotal: r.isTotal,
+                  yearly: [
+                    {
+                      year: vm.ordinaryReceivablesTable.currentYear,
+                      annualTotal: r.periodCurrentYear,
+                      annualTotalValue: 0, // not used for color here
+                      months: r.monthsCurrentYear
+                    },
+                    {
+                      year: vm.ordinaryReceivablesTable.nextYear,
+                      annualTotal: r.periodNextYear,
+                      annualTotalValue: 0,
+                      months: r.monthsNextYear
+                    }
+                  ]
+                }))
+              }}
+              monthLabels={vm.monthLabels}
+              tone={TABLE_TONE.income}
+            />
           </>
         ) : (
-          <section className="rounded-2xl border border-[#c8ad95] bg-[#fff8ef] p-6 text-center">
-            <h2 className="font-[var(--font-financial-display)] text-3xl text-[#2f221a]">
-              Sin condominio activo
-            </h2>
-            <p className="mt-2 font-[var(--font-financial-body)] text-sm text-[#68584c]">
-              No se encontro informacion suficiente para construir el resumen financiero.
-            </p>
-          </section>
+          /* Extraordinary Mode Content */
+          <div className="space-y-6">
+            <CompactFinancialTable
+              title="Balance Extraordinario"
+              subtitle="Ingresos Extraordinarios"
+              firstColumnLabel="Tipo de Ingreso"
+              annualLabelPrefix="Total"
+              table={vm.extraordinaryIncomeMultiYearTable}
+              monthLabels={vm.monthLabels}
+              tone={TABLE_TONE.income}
+            />
+            <CompactFinancialTable
+              title="Balance Extraordinario"
+              subtitle="Egresos Extraordinarios"
+              firstColumnLabel="Tipo de Egreso"
+              annualLabelPrefix="Total"
+              table={vm.extraordinaryExpensesMultiYearTable}
+              monthLabels={vm.monthLabels}
+              tone={TABLE_TONE.expense}
+            />
+            <CompactFinancialTable
+              title="Balance Extraordinario"
+              subtitle="Saldo Consolidado"
+              firstColumnLabel="Concepto"
+              annualLabelPrefix="Periodo"
+              table={vm.extraordinaryBalanceMultiYearTable}
+              monthLabels={vm.monthLabels}
+              tone={TABLE_TONE.balance}
+            />
+          </div>
         )}
-      </section>
-    </main>
+      </div>
+    </div>
+  );
+}
+
+function PlusIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
+      <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
+    </svg>
   );
 }

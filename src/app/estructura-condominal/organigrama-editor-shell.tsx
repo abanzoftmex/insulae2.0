@@ -2,6 +2,15 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { 
+  Save, 
+  X, 
+  UserPlus, 
+  ShieldCheck, 
+  UserCheck, 
+  Info,
+  Loader2
+} from "lucide-react";
 
 import type {
   OrganigramGroupSection,
@@ -9,6 +18,10 @@ import type {
 } from "@/modules/condominium-organigram/domain/condominium-organigram";
 
 import { saveCondominiumOrganigramAction } from "./actions";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/shared/utils/cn";
 
 type PositionDraft = {
   responsibleUserIds: string[];
@@ -27,18 +40,11 @@ function clampSelection(values: string[], maxAssignments: number): string[] {
   const normalized: string[] = [];
 
   for (const value of values) {
-    if (!value || seen.has(value)) {
-      continue;
-    }
-
+    if (!value || seen.has(value)) continue;
     normalized.push(value);
     seen.add(value);
-
-    if (maxAssignments >= 0 && normalized.length >= maxAssignments) {
-      break;
-    }
+    if (maxAssignments >= 0 && normalized.length >= maxAssignments) break;
   }
-
   return normalized;
 }
 
@@ -49,7 +55,6 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
 
   const [draftByPositionId, setDraftByPositionId] = useState<Record<string, PositionDraft>>(() => {
     const entries: Array<[string, PositionDraft]> = [];
-
     for (const group of groups) {
       for (const row of group.rows) {
         entries.push([
@@ -63,7 +68,6 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
         ]);
       }
     }
-
     return Object.fromEntries(entries);
   });
 
@@ -76,25 +80,14 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
   ) => {
     setDraftByPositionId((prev) => {
       const current = prev[positionId];
-      if (!current) {
-        return prev;
-      }
-
+      if (!current) return prev;
       const nextValues = clampSelection(values, current.maxAssignments);
-
-      return {
-        ...prev,
-        [positionId]: {
-          ...current,
-          [bucket]: nextValues,
-        },
-      };
+      return { ...prev, [positionId]: { ...current, [bucket]: nextValues } };
     });
   };
 
   const save = () => {
     setMessage("");
-
     startTransition(async () => {
       const payload = {
         positions: allRows.map((row) => {
@@ -106,142 +99,122 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
           };
         }),
       };
-
       const result = await saveCondominiumOrganigramAction(payload);
       setMessage(result.message);
-
-      if (!result.ok) {
-        return;
+      if (result.ok) {
+        router.push("/estructura-condominal");
+        router.refresh();
       }
-
-      router.push("/estructura-condominal");
-      router.refresh();
     });
   };
 
   return (
-    <section className="space-y-5">
-      {groups.map((group) => (
-        <article
-          key={group.groupId}
-          className="overflow-hidden rounded-2xl border border-[#c8b09a]/55 bg-white/80 shadow-[0_14px_28px_rgba(36,23,16,0.08)]"
-        >
-          <header className="border-b border-[#dccab7] bg-[#fbf2e6] px-4 py-3">
-            <h2 className="font-[var(--font-landuse-display)] text-2xl text-[#2f2219]">{group.groupName}</h2>
-          </header>
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {groups.map((group) => (
+          <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered">
+            <CardHeader className="px-4 py-3 border-b border-line bg-brand-deep/[0.03]">
+              <CardTitle className="text-[12px] font-black uppercase tracking-widest text-brand">{group.groupName}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="h-8 bg-canvas/10 text-[9px] font-black uppercase tracking-widest text-ink-soft/40 border-b border-line/30">
+                      <th className="px-4 py-2 w-[160px]">Cargo</th>
+                      <th className="px-4 py-2">Titular(es)</th>
+                      <th className="px-4 py-2">Suplente(s)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line/30">
+                    {group.rows.map((row) => {
+                      const draft = draftByPositionId[row.positionId];
+                      const responsible = draft?.responsibleUserIds ?? [];
+                      const alternates = draft?.alternateUserIds ?? [];
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
-              <thead>
-                <tr className="bg-[#f2e7d7] text-[11px] uppercase tracking-[0.14em] text-[#82563d]">
-                  <th className="border-b border-[#dcc7b2] px-4 py-3">Cargo</th>
-                  <th className="border-b border-[#dcc7b2] px-4 py-3">Responsable</th>
-                  <th className="border-b border-[#dcc7b2] px-4 py-3">Suplente</th>
-                </tr>
-              </thead>
-              <tbody>
-                {group.rows.map((row, index) => {
-                  const draft = draftByPositionId[row.positionId];
-                  const responsible = draft?.responsibleUserIds ?? [];
-                  const alternates = draft?.alternateUserIds ?? [];
+                      return (
+                        <tr key={row.positionId} className="h-24 hover:bg-canvas/5 transition-colors">
+                          <td className="px-4 py-2 align-top pt-3">
+                            <p className="text-[12px] font-bold text-ink leading-tight">{row.positionName}</p>
+                            <Badge variant="outline" className="mt-1.5 h-4 px-1 text-[8px]">Máx {row.maxAssignments}</Badge>
+                          </td>
 
-                  return (
-                    <tr key={row.positionId} className={index % 2 === 0 ? "bg-white/70" : "bg-[#fff7ed]/65"}>
-                      <td className="border-b border-[#e4d3c1] px-4 py-3 align-top font-semibold text-[#2f241d]">{row.positionName}</td>
-
-                      <td className="border-b border-[#e4d3c1] px-4 py-3 align-top">
-                        <p className="mb-2 text-[11px] uppercase tracking-[0.1em] text-[#8b6851]">
-                          Maximo {row.maxAssignments}
-                        </p>
-                        <select
-                          multiple
-                          value={responsible}
-                          onChange={(event) =>
-                            updateDraft(
-                              row.positionId,
-                              "responsibleUserIds",
-                              Array.from(event.target.selectedOptions).map((option) => option.value),
-                            )
-                          }
-                          className="min-h-28 w-full rounded-xl border border-[#d5c0ac] bg-white px-2 py-2 text-sm text-[#35281f] outline-none focus:border-[#9a6949] focus:ring-2 focus:ring-[#9a6949]/15"
-                        >
-                          {userOptions.map((user) => (
-                            <option key={user.id} value={user.id}>
-                              {user.displayName}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-
-                      <td className="border-b border-[#e4d3c1] px-4 py-3 align-top">
-                        {row.allowsAlternate ? (
-                          <>
-                            <p className="mb-2 text-[11px] uppercase tracking-[0.1em] text-[#8b6851]">
-                              Maximo {row.maxAssignments}
-                            </p>
+                          <td className="px-3 py-2 align-top">
                             <select
                               multiple
-                              value={alternates}
-                              onChange={(event) =>
-                                updateDraft(
-                                  row.positionId,
-                                  "alternateUserIds",
-                                  Array.from(event.target.selectedOptions).map((option) => option.value),
-                                )
-                              }
-                              className="min-h-28 w-full rounded-xl border border-[#d5c0ac] bg-white px-2 py-2 text-sm text-[#35281f] outline-none focus:border-[#9a6949] focus:ring-2 focus:ring-[#9a6949]/15"
+                              value={responsible}
+                              onChange={(e) => updateDraft(row.positionId, "responsibleUserIds", Array.from(e.target.selectedOptions).map(o => o.value))}
+                              className="h-20 w-full rounded border border-line bg-card px-1 py-1 text-[11px] font-medium outline-none focus:ring-2 focus:ring-brand-accent/20 appearance-none no-scrollbar"
                             >
                               {userOptions.map((user) => (
-                                <option key={user.id} value={user.id}>
+                                <option key={user.id} value={user.id} className="px-2 py-0.5 rounded cursor-pointer checked:bg-brand-mint/50 checked:text-brand">
                                   {user.displayName}
                                 </option>
                               ))}
                             </select>
-                          </>
-                        ) : (
-                          <p className="rounded-lg border border-dashed border-[#d4beaa] bg-[#f7eee2] px-3 py-3 text-sm text-[#6a5244]">
-                            Este cargo no permite suplente.
-                          </p>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </article>
-      ))}
+                          </td>
 
-      <section className="rounded-2xl border border-[#c8b09a]/55 bg-white/85 px-4 py-4 shadow-[0_14px_28px_rgba(36,23,16,0.08)]">
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={save}
+                          <td className="px-3 py-2 align-top">
+                            {row.allowsAlternate ? (
+                              <select
+                                multiple
+                                value={alternates}
+                                onChange={(e) => updateDraft(row.positionId, "alternateUserIds", Array.from(e.target.selectedOptions).map(o => o.value))}
+                                className="h-20 w-full rounded border border-line bg-card px-1 py-1 text-[11px] font-medium outline-none focus:ring-2 focus:ring-brand-accent/20 appearance-none no-scrollbar"
+                              >
+                                {userOptions.map((user) => (
+                                  <option key={user.id} value={user.id} className="px-2 py-0.5 rounded cursor-pointer checked:bg-brand-mint/50 checked:text-brand">
+                                    {user.displayName}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <div className="h-20 w-full flex items-center justify-center bg-canvas/30 rounded border border-dashed border-line/50">
+                                 <span className="text-[9px] font-black text-ink-soft/20 uppercase tracking-tighter">N/A</span>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Footer Controls */}
+      <div className="sticky bottom-0 z-40 p-4 bg-card/80 backdrop-blur-md border border-line shadow-2xl rounded-xl flex items-center justify-between">
+        <div className="flex items-center gap-4">
+           <Button 
+            onClick={save} 
             disabled={isPending}
-            className="rounded-xl border border-[#2f4c73] bg-[linear-gradient(155deg,#3e638f_0%,#2f4c73_100%)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#eff6ff] shadow-[0_12px_22px_rgba(46,71,106,0.28)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isPending ? "Guardando..." : "Guardar informacion"}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              router.push("/estructura-condominal");
-              router.refresh();
-            }}
-            className="rounded-xl border border-[#c8ae95] bg-white/90 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#694938] transition hover:bg-[#fff4e8]"
-          >
-            Cancelar
-          </button>
-
-          {message ? (
-            <p className={`text-xs font-semibold uppercase tracking-[0.1em] ${message.toLowerCase().includes("correct") ? "text-[#2f6a40]" : "text-[#9c3d2b]"}`}>
-              {message}
-            </p>
-          ) : null}
+            className="h-10 px-8 text-[11px] font-black uppercase gap-2 shadow-lg shadow-brand/10"
+           >
+             {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+             Guardar Estructura
+           </Button>
+           <Button 
+            variant="ghost" 
+            onClick={() => router.push("/estructura-condominal")}
+            className="h-10 px-6 text-[11px] font-black uppercase"
+           >
+             Cancelar
+           </Button>
         </div>
-      </section>
-    </section>
+
+        {message && (
+          <div className={cn(
+            "px-4 py-2 rounded-full text-[11px] font-black uppercase flex items-center gap-2",
+            message.toLowerCase().includes("correct") ? "bg-brand-mint text-brand" : "bg-danger/10 text-danger"
+          )}>
+            <Info className="h-3.5 w-3.5" />
+            {message}
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

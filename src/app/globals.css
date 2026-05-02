@@ -1,83 +1,66 @@
 @import "tailwindcss";
 
-:root {
-  --background: #efe6d8;
-  --foreground: #241a14;
+@theme {
+  --color-canvas: #f2f0eb;
+  --color-canvas-2: #edebe9;
+  --color-card: #ffffff;
+  --color-brand: #006241;
+  --color-brand-accent: #00754A;
+  --color-brand-deep: #1E3932;
+  --color-brand-uplift: #2b5148;
+  --color-brand-mint: #d4e9e2;
+  --color-gold: #cba258;
+  --color-gold-soft: #faf6ee;
+  --color-ink: rgb(0 0 0 / 0.87);
+  --color-ink-soft: rgb(0 0 0 / 0.58);
+  --color-line: rgb(0 0 0 / 0.06);
+  --color-danger: #c82014;
+
+  --radius-card: 12px;
+  --radius-pill: 9999px;
+
+  --shadow-card: 0 0 0.5px rgb(0 0 0 / 0.14), 0 1px 1px rgb(0 0 0 / 0.24);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Design tokens — named --space-N to avoid overriding Tailwind's utility scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 40px;
+  --space-7: 48px;
+  --space-8: 56px;
+  --space-9: 64px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), sans-serif;
-  text-rendering: optimizeLegibility;
-}
-
-@keyframes condoFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes reportSunPulse {
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.7;
-  }
-
-  50% {
-    transform: scale(1.16);
-    opacity: 1;
-  }
-}
-
-@keyframes reportMoonFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.65;
-  }
-
-  50% {
-    transform: translateY(6px);
-    opacity: 1;
+  * {
+    border-color: var(--color-line);
   }
 }
 
-@keyframes reportBarReveal {
-  from {
-    transform: scaleX(0);
-    transform-origin: left;
-  }
-
-  to {
-    transform: scaleX(1);
-    transform-origin: left;
-  }
+/* Custom Utilities */
+@utility shadow-layered {
+  shadow: var(--shadow-card);
 }
 
-@keyframes ticketOrbit {
-  0%,
-  100% {
-    transform: translateY(0) rotate(0deg);
-    opacity: 0.7;
-  }
+@utility transition-standard {
+  transition-property: all;
+  transition-timing-function: ease;
+  transition-duration: 200ms;
+}
 
-  50% {
-    transform: translateY(8px) rotate(7deg);
-    opacity: 1;
+@utility active-scale {
+  &:active {
+    transform: scale(0.95);
   }
 }

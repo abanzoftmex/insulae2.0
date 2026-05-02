@@ -1,169 +1,286 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
+import {
+  Users,
+  MapPin,
+  DollarSign,
+  Ticket as TicketIcon,
+  ArrowRight,
+  FileText,
+  Zap,
+  Bell,
+} from "lucide-react";
 
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
-import { toCondominiumOverviewVM } from "@/modules/condominium/presentation/condominium-overview.vm";
+import { getFinancialSummaryUseCase } from "@/modules/financial-summary";
+import { getPrivateAreaListingUseCase } from "@/modules/private-areas";
+import { getDirectoryUseCase } from "@/modules/directory";
+import { getTicketListingUseCase } from "@/modules/tickets";
 
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-home-display",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-home-body",
-});
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { FinancialChart } from "@/components/ui/financial-chart";
 
 export const metadata: Metadata = {
   title: "Inicio | Insulae 2.0",
-  description: "Inicio operativo del condominio con accesos rapidos a modulos principales.",
-};
-
-type FeatureCard = {
-  title: string;
-  description: string;
-  href?: string;
+  description: "Inicio operativo del condominio con accesos rápidos a módulos principales.",
 };
 
 export default async function Home() {
-  const condominiumOverview = await getCondominiumOverviewUseCase.execute();
-  const overview = condominiumOverview ? toCondominiumOverviewVM(condominiumOverview) : null;
+  const currentYear = 2026;
 
-  const heroImage = overview?.condominiumImageUrl || overview?.condominiumLogoUrl || "";
-  const footerLogo = overview?.footerLogoUrl || overview?.condominiumLogoUrl || "";
+  const [
+    condominiumOverview,
+    financialSummary,
+    privateAreaListing,
+    directoryOverview,
+    ticketListing,
+  ] = await Promise.all([
+    getCondominiumOverviewUseCase.execute(),
+    getFinancialSummaryUseCase.execute({ year: currentYear }),
+    getPrivateAreaListingUseCase.execute({ page: 1, pageSize: 1 }),
+    getDirectoryUseCase.execute({ query: "", page: 1, pageSize: 1 }),
+    getTicketListingUseCase.execute(),
+  ]);
 
-  const featureCards: FeatureCard[] = [
-    {
-      title: "Informacion del condominio (Reporte)",
-      description: "Vista general del condominio con indicadores y distribuciones principales.",
-      href: "/reporte-condominio",
-    },
-    {
-      title: "Condominio",
-      description: "Configuracion base del proyecto, imagenes y parametros del condominio.",
-      href: "/condominio",
-    },
-    {
-      title: "Contactos",
-      description: "Gestion de medios de contacto institucionales del condominio.",
-      href: "/contactos",
-    },
-    {
-      title: "Directorio",
-      description: "Personas activas, roles y APoLes asignadas en una vista operativa independiente.",
-      href: "/directorio",
-    },
-    {
-      title: "Reglamentos",
-      description: "Documentos internos y reglamentos del condominio en un solo lugar.",
-      href: "/reglamentos",
-    },
-    {
-      title: "Resumen financiero",
-      description: "Panel consolidado de ingresos, gastos y balance operativo.",
-      href: "/resumen-financiero",
-    },
-    {
-      title: "Areas privativas",
-      description: "Inventario detallado de areas, superficies y estados operativos.",
-      href: "/areas-privativas",
-    },
-  ];
+  const stats = {
+    areas: privateAreaListing?.summary.registeredAreas ?? 0,
+    residents: directoryOverview?.totalUsers ?? 0,
+    collections: financialSummary?.totals.totalIncome ?? 0,
+    openTickets:
+      ticketListing?.rows.filter(
+        (t) => t.status === "OPEN" || t.status === "IN_PROGRESS"
+      ).length ?? 0,
+  };
+
+  const recentTickets = ticketListing?.rows.slice(0, 5) ?? [];
+
+  const MONTH_ABBR = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+  const chartData = (financialSummary?.months ?? []).map((m) => ({
+    month: MONTH_ABBR[(m.month - 1) % 12],
+    ingresos: m.totalIncome,
+    gastos: m.totalExpenses,
+  }));
+  const condominiumName =
+    condominiumOverview?.condominiumName || "Val'Quirico";
+  const today = new Date().toLocaleDateString("es-MX", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
 
   return (
-    <main
-      className={`${cormorant.variable} ${manrope.variable} relative isolate mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-5 pb-14 pt-8 sm:px-8 lg:px-10`}
-    >
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -left-20 top-[-5rem] h-64 w-64 rounded-full bg-[#b86c3f]/16 blur-3xl" />
-        <div className="absolute right-[-6rem] top-[12rem] h-72 w-72 rounded-full bg-[#607e58]/14 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_0%,rgba(255,255,255,0.5),transparent_40%)]" />
+    <div className="space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-xl font-bold text-brand tracking-tight">
+          Resumen del condominio
+        </h1>
+        <p className="text-[13px] text-ink-soft mt-0.5">
+          {condominiumName} · {today}
+        </p>
       </div>
 
-      <section className="relative overflow-hidden rounded-[2.1rem] border border-[#c6b198]/50 bg-[#2c1f18] shadow-[0_18px_50px_rgba(50,32,20,0.16)]">
-        {heroImage ? (
-          <Image
-            src={heroImage}
-            alt="Imagen alusiva del condominio"
-            fill
-            unoptimized
-            sizes="(max-width: 768px) 100vw, 1100px"
-            className="object-cover"
-          />
-        ) : null}
+      {/* Stat cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard
+          label="Áreas privativas"
+          value={stats.areas.toLocaleString()}
+          icon={<MapPin strokeWidth={1.5} style={{ width: 14, height: 14 }} />}
+          trend={{ label: "0.5%", up: true }}
+        />
+        <StatCard
+          label="Residentes"
+          value={stats.residents.toLocaleString()}
+          icon={<Users strokeWidth={1.5} style={{ width: 14, height: 14 }} />}
+        />
+        <StatCard
+          label="Cobranza"
+          value={`$${(stats.collections / 1000).toFixed(1)}k`}
+          icon={<DollarSign strokeWidth={1.5} style={{ width: 14, height: 14 }} />}
+          trend={{ label: "12%", up: true }}
+        />
+        <StatCard
+          label="Tickets abiertos"
+          value={String(stats.openTickets)}
+          icon={<TicketIcon strokeWidth={1.5} style={{ width: 14, height: 14 }} />}
+          trend={stats.openTickets > 0 ? { label: String(stats.openTickets), up: false } : undefined}
+        />
+      </div>
 
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,10,8,0.56)_0%,rgba(25,17,13,0.72)_44%,rgba(20,14,11,0.86)_100%)]" />
+      {/* Charts + recent tickets */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-line">
+            <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+              Actividad financiera
+            </CardTitle>
+            <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px] font-semibold text-brand">
+              Ver reporte
+            </Button>
+          </CardHeader>
+          <CardContent className="px-2 pb-3 pt-2">
+            <FinancialChart data={chartData} />
+          </CardContent>
+        </Card>
 
-        <div className="relative px-6 pb-7 pt-8 sm:px-8 sm:pt-10 lg:px-10">
-          <div className="space-y-3 text-center">
-            <p className="inline-flex rounded-full border border-[#d9c2ae]/60 bg-[#f8e9dc]/18 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-[#f6e8da]">
-              Bienvenido
-            </p>
-            <h1 className="font-[var(--font-home-display)] text-4xl leading-none text-[#fff4e8] sm:text-5xl">
-              {overview?.condominiumName ?? "Val'Quirico"}
-            </h1>
-            <p className="mx-auto max-w-3xl font-[var(--font-home-body)] text-sm leading-relaxed text-[#f4e7d9]/92 sm:text-base">
-              Bienvenido al panel principal. Desde aqui puedes acceder rapido a las funciones principales del sistema.
-            </p>
-
-            <div className="mt-8 grid auto-rows-fr gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {featureCards.map((card, index) => {
-                const cardContent = (
-                  <article
-                    className="flex h-full min-h-[188px] flex-col rounded-2xl border border-[#f0dfcf]/45 bg-[#fff8ef]/20 p-4 shadow-[0_12px_22px_rgba(12,8,6,0.26)] backdrop-blur-md [animation:condoFadeUp_0.7s_ease-out_both] transition-all duration-300 hover:-translate-y-1 hover:border-[#fff4e8]/75 hover:bg-[#fff8ef]/32 hover:shadow-[0_18px_34px_rgba(0,0,0,0.34)]"
-                    style={{ animationDelay: `${80 + index * 70}ms` }}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-line">
+            <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+              Tickets recientes
+            </CardTitle>
+            <Link href="/tickets">
+              <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px] font-semibold text-brand">
+                Todos
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="p-0">
+            {recentTickets.length > 0 ? (
+              <ul>
+                {recentTickets.map((ticket, i) => (
+                  <li
+                    key={ticket.id}
+                    className={`flex items-center justify-between gap-3 px-4 py-3 ${
+                      i < recentTickets.length - 1 ? "border-b border-line/50" : ""
+                    }`}
                   >
-                    <p className="line-clamp-2 min-h-[4.25rem] font-[var(--font-home-display)] text-2xl leading-tight text-[#fff4e8]">
-                      {card.title}
-                    </p>
-                    <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-[#f4e4d6]/92">{card.description}</p>
-                  </article>
-                );
-
-                if (!card.href) {
-                  return (
-                    <div key={card.title} className="h-full">
-                      {cardContent}
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium text-ink truncate leading-snug">
+                        {ticket.title}
+                      </p>
+                      <p className="text-[11px] text-ink-soft/60 truncate mt-0.5">
+                        {ticket.residentName}
+                      </p>
                     </div>
-                  );
-                }
+                    <span
+                      className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                        ticket.status === "OPEN"
+                          ? "bg-brand-mint/50 text-brand"
+                          : "bg-canvas text-ink-soft/50"
+                      }`}
+                    >
+                      {ticket.status}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-8 text-ink-soft/20">
+                <TicketIcon style={{ width: 20, height: 20 }} className="mb-2 opacity-20" />
+                <p className="text-[11px] font-medium tracking-widest uppercase">
+                  Sin tickets
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-                return (
-                  <Link key={card.title} href={card.href} className="block h-full">
-                    {cardContent}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Quick actions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <QuickAction
+          href="/reporte-condominio"
+          icon={<FileText strokeWidth={1.5} style={{ width: 16, height: 16 }} />}
+          title="Generar reporte"
+          description="Estado actual del condominio en PDF."
+          cta="Continuar"
+        />
+        <QuickAction
+          href="/cobros-masivos"
+          icon={<Zap strokeWidth={1.5} style={{ width: 16, height: 16 }} />}
+          title="Cobros masivos"
+          description="Proceso de cobranza para todas las áreas."
+          cta="Lanzar"
+        />
+        <QuickAction
+          href="/notificaciones"
+          icon={<Bell strokeWidth={1.5} style={{ width: 16, height: 16 }} />}
+          title="Notificación masiva"
+          description="Comunicados masivos vía email/push."
+          cta="Redactar"
+        />
+      </div>
+    </div>
+  );
+}
 
-      <footer className="relative mt-1 flex flex-col items-center gap-3 pb-2">
-        <div className="relative h-16 w-40 overflow-hidden rounded-xl border border-[#d5bfaa] bg-[#fffdf8] sm:h-20 sm:w-48">
-          {footerLogo ? (
-            <Image
-              src={footerLogo}
-              alt="Logo de pie del condominio"
-              fill
-              unoptimized
-              sizes="(max-width: 768px) 180px, 200px"
-              className="object-contain p-2"
-            />
-          ) : (
-            <div className="flex h-full items-center justify-center font-[var(--font-home-display)] text-2xl text-[#6f4a35]">
-              {overview?.projectInitials?.slice(0, 3) ?? "VQ"}
-            </div>
-          )}
-        </div>
-        <p className="text-[11px] uppercase tracking-[0.16em] text-[#8d654b]">
-          {overview?.condominiumName ?? "Condominio"}
+// ─── Local sub-components ────────────────────────────────────────────────────
+
+function StatCard({
+  label,
+  value,
+  icon,
+  trend,
+}: {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+  trend?: { label: string; up: boolean };
+}) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between mb-3">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft/60 leading-tight">
+          {label}
         </p>
-      </footer>
-    </main>
+        {icon && (
+          <span className="p-1.5 rounded-md bg-canvas text-brand-accent/50">
+            {icon}
+          </span>
+        )}
+      </div>
+      <div className="flex items-end justify-between">
+        <span className="text-[26px] font-bold text-brand leading-none tracking-tight">
+          {value}
+        </span>
+        {trend && (
+          <span
+            className={`inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded ${
+              trend.up
+                ? "bg-brand-mint/40 text-brand"
+                : "bg-danger/10 text-danger"
+            }`}
+          >
+            {trend.up ? "↑" : "↓"} {trend.label}
+          </span>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+function QuickAction({
+  href,
+  icon,
+  title,
+  description,
+  cta,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  cta: string;
+}) {
+  return (
+    <Link href={href} className="block group">
+      <Card className="p-5 h-full transition-standard hover:shadow-md cursor-pointer">
+        <div className="flex items-center gap-3 mb-3">
+          <span className="inline-flex items-center justify-center rounded-lg bg-canvas text-brand-accent group-hover:bg-brand-mint/30 transition-standard"
+            style={{ width: 32, height: 32 }}>
+            {icon}
+          </span>
+          <h3 className="text-[13px] font-semibold text-brand">{title}</h3>
+        </div>
+        <p className="text-[12px] text-ink-soft leading-relaxed mb-4">
+          {description}
+        </p>
+        <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand-accent group-hover:gap-1.5 transition-all">
+          {cta}
+          <ArrowRight style={{ width: 12, height: 12 }} />
+        </span>
+      </Card>
+    </Link>
   );
 }

@@ -1,15 +1,38 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ElementType } from "react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
+  Search,
+  Users,
+  FileText,
+  MapPin,
+  BookOpen,
+  Settings,
+  Ticket,
+  TrendingUp,
+  TrendingDown,
+  PieChart,
+  ClipboardList,
+  AlertCircle,
+  Home,
+  ChevronDown,
+  type LucideIcon,
+} from "lucide-react";
+import { useHydratedSidebar } from "@/stores/ui-sidebar.store";
+import { cn } from "@/shared/utils/cn";
+import { SearchModal } from "@/components/ui/search-modal";
 
 type NavItem = {
   label: string;
   href?: string;
-  icon: string;
-  badge?: string;
+  icon: LucideIcon | ElementType;
+  items?: { label: string; href: string }[];
 };
 
 type NavSection = {
@@ -19,243 +42,420 @@ type NavSection = {
 
 const NAV_SECTIONS: NavSection[] = [
   {
-    title: "Panel Principal",
+    title: "Gestión",
     items: [
-      { label: "Condominio", href: "/condominio", icon: "CO" },
-      { label: "Contactos", href: "/contactos", icon: "CT" },
-      { label: "Documentos condominales", href: "/reglamentos", icon: "DC" },
-      { label: "Informacion del condominio", href: "/reporte-condominio", icon: "IC" },
-      { label: "Areas Privativas o Lotes", href: "/areas-privativas", icon: "AP" },
-      { label: "Areas Privativas para caseta de seguridad", href: "/listado-seguridad", icon: "LS" },
-      { label: "Directorio", href: "/directorio", icon: "DI" },
-      { label: "Barrios", href: "/listado-zonas", icon: "BR" },
-      { label: "Usos de suelo", href: "/listado-usos-suelo", icon: "US" },
-      { label: "Estructura condominal", href: "/estructura-condominal", icon: "ES" },
-      { label: "Generacion de estructura condominal", href: "/listado-estructura-condominal", icon: "GE" },
+      { label: "Inicio", href: "/", icon: Home },
+      {
+        label: "Condominio",
+        icon: Settings,
+        items: [
+          { label: "Configuración", href: "/condominio" },
+          { label: "Información", href: "/reporte-condominio" },
+          { label: "Estructura", href: "/estructura-condominal" },
+        ],
+      },
+      { label: "Directorio", href: "/directorio", icon: BookOpen },
+      { label: "Contactos", href: "/contactos", icon: Users },
+      { label: "Documentos", href: "/reglamentos", icon: FileText },
     ],
   },
   {
-    title: "Notificaciones",
+    title: "Operación",
     items: [
-      { label: "Categorias de notificacion", href: "/categorias-notificacion", icon: "CN" },
-      { label: "Notificaciones", href: "/notificaciones", icon: "NO" },
-    ],
-  },
-  {
-    title: "Tickets",
-    items: [
-      { label: "Departamentos de tickets", href: "/departamentos-tickets", icon: "DT" },
-      { label: "Tickets", href: "/tickets", icon: "TK" },
+      {
+        label: "Áreas Privativas",
+        icon: MapPin,
+        items: [
+          { label: "Listado", href: "/areas-privativas" },
+          { label: "Seguridad", href: "/listado-seguridad" },
+          { label: "Barrios", href: "/listado-zonas" },
+          { label: "Usos de Suelo", href: "/listado-usos-suelo" },
+        ],
+      },
+      {
+        label: "Atención",
+        icon: Ticket,
+        items: [
+          { label: "Tickets", href: "/tickets" },
+          { label: "Departamentos", href: "/departamentos-tickets" },
+          { label: "Notificaciones", href: "/notificaciones" },
+          { label: "Categorías", href: "/categorias-notificacion" },
+        ],
+      },
     ],
   },
   {
     title: "Financiero",
-    items: [{ label: "Resumen financiero", href: "/resumen-financiero", icon: "RF" },
-    { label: "Reporte de cuotas", href: "/reporte-cuotas", icon: "RC" },
-    { label: "Reporte de cuotas extraordinarias", href: "/reporte-cuotas-extraordinarias", icon: "RCE" },
-    { label: "Presupuestos", href: "/presupuestos", icon: "PR" },
-    { label: "Estructura del presupuesto", href: "/listado-estructura-presupuesto", icon: "EP" },
-    { label: "Estructura otros ingresos", href: "/listado-estructura-otros-ingresos", icon: "OI" },
-    { label: "Ingresos", href: "/listado-ingresos", icon: "IN" },
-    { label: "Gastos", href: "/listado-gastos", icon: "GA" },
-    { label: "Cobros masivos", href: "/cobros-masivos", icon: "CM" },
-    { label: "Sanciones", href: "/sanciones", icon: "SA" },
+    items: [
+      { label: "Resumen", href: "/resumen-financiero", icon: PieChart },
+      {
+        label: "Ingresos",
+        icon: TrendingUp,
+        items: [
+          { label: "Listado", href: "/listado-ingresos" },
+          { label: "Estructura", href: "/listado-estructura-otros-ingresos" },
+          { label: "Cobros Masivos", href: "/cobros-masivos" },
+        ],
+      },
+      {
+        label: "Egresos",
+        icon: TrendingDown,
+        items: [
+          { label: "Gastos", href: "/listado-gastos" },
+          { label: "Presupuestos", href: "/presupuestos" },
+          { label: "Estructura Pres.", href: "/listado-estructura-presupuesto" },
+        ],
+      },
+      { label: "Cuotas", href: "/reporte-cuotas", icon: ClipboardList },
+      { label: "Sanciones", href: "/sanciones", icon: AlertCircle },
     ],
   },
 ];
 
-const NAV_LINK_ITEMS = NAV_SECTIONS.flatMap((section) => section.items).filter(
-  (item): item is NavItem & { href: string } => typeof item.href === "string",
-);
-
 function normalizePath(path: string): string {
-  if (path.length > 1 && path.endsWith("/")) {
-    return path.slice(0, -1);
-  }
-
-  return path;
+  return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
 }
 
-interface AppShellProps {
+export function AppShell({
+  children,
+  navbarLogoAlt = "Val'Quirico",
+}: {
   children: React.ReactNode;
   navbarLogoUrl?: string | null;
   navbarLogoAlt?: string;
-}
-
-export function AppShell({ children, navbarLogoUrl, navbarLogoAlt = "Val'Quirico" }: AppShellProps) {
+}) {
   const pathname = usePathname();
   const currentPath = normalizePath(pathname || "/");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { isCollapsed, isMobileOpen, toggleCollapsed, openMobile, closeMobile } =
+    useHydratedSidebar();
 
-  const activeLabel = useMemo(() => {
-    if (currentPath === "/") {
-      return "Inicio";
-    }
+  const [openMenus, setOpenMenus] = useState<string[]>([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
-    const active = NAV_LINK_ITEMS.find((item) => {
-      const normalizedHref = normalizePath(item.href);
-      return currentPath === normalizedHref || currentPath.startsWith(`${normalizedHref}/`);
-    });
-    return active?.label ?? "Modulo";
+  const toggleMenu = (label: string) =>
+    setOpenMenus((prev) =>
+      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+    );
+
+  // Auto-expand parent of active route
+  const activeParents = useMemo(() => {
+    const parents: string[] = [];
+    for (const section of NAV_SECTIONS)
+      for (const item of section.items)
+        if (item.items?.some((sub) => normalizePath(sub.href) === currentPath))
+          parents.push(item.label);
+    return parents;
   }, [currentPath]);
 
   useEffect(() => {
-    if (!sidebarOpen) {
-      document.body.style.overflow = "";
-      return;
+    setOpenMenus((prev) => {
+      const merged = Array.from(new Set([...prev, ...activeParents]));
+      return merged.length === prev.length && merged.every((v) => prev.includes(v))
+        ? prev
+        : merged;
+    });
+  }, [activeParents]);
+
+  // Body scroll lock
+  useEffect(() => {
+    document.body.style.overflow = isMobileOpen || isSearchOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobileOpen, isSearchOpen]);
+
+  // Cmd+K / Ctrl+K
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setIsSearchOpen((v) => !v);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
+  // ─── Nav item renderer ───────────────────────────────────────────────────────
+
+  const renderNavItem = (item: NavItem) => {
+    const isActive = item.href ? currentPath === normalizePath(item.href) : false;
+    const hasSubmenu = !!item.items?.length;
+    const isOpen = openMenus.includes(item.label);
+    const Icon = item.icon;
+
+    // Expanded submenu
+    if (hasSubmenu && !isCollapsed) {
+      return (
+        <div key={item.label}>
+          <button
+            onClick={() => toggleMenu(item.label)}
+            className={cn(
+              "w-full flex items-center h-10 px-3 rounded-lg text-[14px] font-medium text-ink",
+              "hover:bg-[#f5f4f0] transition-standard group",
+              isOpen && "text-brand"
+            )}
+          >
+            <Icon
+              className={cn(
+                "shrink-0 text-ink-soft group-hover:text-brand transition-standard",
+                isOpen && "text-brand"
+              )}
+              style={{ width: 17, height: 17 }}
+              strokeWidth={1.5}
+            />
+            <span className="ml-2.5 flex-1 text-left truncate">{item.label}</span>
+            <ChevronDown
+              className={cn(
+                "shrink-0 text-ink-soft/50 transition-transform duration-200",
+                isOpen && "rotate-180"
+              )}
+              style={{ width: 13, height: 13 }}
+            />
+          </button>
+          {isOpen && (
+            <div className="ml-4 pl-3 border-l border-line mt-0.5 mb-1 space-y-0.5">
+              {item.items?.map((sub) => {
+                const isSubActive = currentPath === normalizePath(sub.href);
+                return (
+                  <Link
+                    key={sub.href}
+                    href={sub.href}
+                    className={cn(
+                      "flex items-center h-8 px-2.5 rounded-md text-[13px] transition-standard",
+                      isSubActive
+                        ? "bg-brand-mint/30 text-brand font-semibold"
+                        : "text-ink-soft hover:text-ink hover:bg-[#f5f4f0]"
+                    )}
+                  >
+                    {sub.label}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
     }
 
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
+    // Collapsed submenu — icon + tooltip
+    if (hasSubmenu && isCollapsed) {
+      return (
+        <div key={item.label} className="relative group/tip">
+          <button
+            onClick={() => toggleMenu(item.label)}
+            className="w-full flex items-center justify-center h-10 rounded-lg text-ink-soft hover:bg-[#f5f4f0] hover:text-ink transition-standard"
+            aria-label={item.label}
+          >
+            <Icon style={{ width: 17, height: 17 }} strokeWidth={1.5} />
+          </button>
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-brand-deep text-white text-[12px] font-medium rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover/tip:opacity-100 transition-opacity z-50">
+            {item.label}
+          </div>
+        </div>
+      );
+    }
 
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [sidebarOpen]);
+    // Regular link
+    return (
+      <div key={item.label} className={cn("relative", isCollapsed && "group/tip")}>
+        <Link
+          href={item.href || "#"}
+          className={cn(
+            "flex items-center h-10 rounded-lg transition-standard",
+            isCollapsed ? "justify-center px-0" : "px-3",
+            isActive
+              ? "bg-[#f2f0eb] text-brand font-semibold"
+              : "text-ink hover:bg-[#f5f4f0]"
+          )}
+          aria-label={isCollapsed ? item.label : undefined}
+        >
+          {isActive && !isCollapsed && (
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-brand-accent rounded-full" />
+          )}
+          <Icon
+            className={cn(
+              "shrink-0 transition-standard",
+              isActive ? "text-brand" : "text-ink-soft"
+            )}
+            style={{ width: 17, height: 17 }}
+            strokeWidth={1.5}
+          />
+          {!isCollapsed && (
+            <span className="ml-2.5 text-[14px] truncate">{item.label}</span>
+          )}
+        </Link>
+        {isCollapsed && (
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-brand-deep text-white text-[12px] font-medium rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover/tip:opacity-100 transition-opacity z-50">
+            {item.label}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ─── Shared sidebar content ──────────────────────────────────────────────────
+
+  const sidebarContent = (
+    <>
+      {/* Brand */}
+      <div
+        className={cn(
+          "flex items-center border-b border-line shrink-0",
+          isCollapsed ? "h-[52px] justify-center" : "h-[52px] px-4"
+        )}
+      >
+        <Link href="/" className="flex items-center min-w-0">
+          {isCollapsed ? (
+            <span className="font-black text-brand text-base">I</span>
+          ) : (
+            <span className="font-black text-brand text-[16px] tracking-tight">INSULAE</span>
+          )}
+        </Link>
+      </div>
+
+      {/* Nav */}
+      <nav className="flex-1 overflow-x-hidden overflow-y-auto py-3 px-2 space-y-4">
+        {NAV_SECTIONS.map((section) => (
+          <div key={section.title}>
+            {!isCollapsed && (
+              <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/40">
+                {section.title}
+              </p>
+            )}
+            {isCollapsed && <div className="mx-auto w-4 border-t border-line/50 mb-1.5" />}
+            <div className="space-y-0.5">
+              {section.items.map((item) => renderNavItem(item))}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Search button */}
+      <div className="shrink-0 px-2 pb-2">
+        <button
+          onClick={() => setIsSearchOpen(true)}
+          className={cn(
+            "w-full flex items-center rounded-lg border border-line bg-canvas/60",
+            "hover:bg-canvas transition-standard text-ink-soft hover:text-ink",
+            isCollapsed ? "h-10 justify-center" : "h-9 px-3 gap-2.5"
+          )}
+          aria-label="Buscar"
+        >
+          <Search style={{ width: 14, height: 14 }} strokeWidth={1.5} className="shrink-0" />
+          {!isCollapsed && (
+            <>
+              <span className="flex-1 text-left text-[13px]">Buscar...</span>
+              <kbd className="hidden sm:inline-flex items-center gap-px px-1 py-px rounded text-[11px] font-medium text-ink-soft/40 border border-line">
+                ⌘K
+              </kbd>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Collapse toggle */}
+      <div className="shrink-0 border-t border-line p-2">
+        <button
+          onClick={toggleCollapsed}
+          className="w-full h-8 flex items-center justify-center rounded-lg hover:bg-[#f5f4f0] text-ink-soft transition-standard active-scale"
+          aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
+        >
+          {isCollapsed ? (
+            <ChevronRight style={{ width: 14, height: 14 }} />
+          ) : (
+            <ChevronLeft style={{ width: 14, height: 14 }} />
+          )}
+        </button>
+      </div>
+    </>
+  );
+
+  // ─── Shell ───────────────────────────────────────────────────────────────────
 
   return (
-    <div className="relative min-h-screen bg-[#efe6d8] text-[#241a14]">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-12rem] top-[-8rem] h-[24rem] w-[26rem] rounded-full bg-[#b36d43]/20 blur-3xl" />
-        <div className="absolute right-[-8rem] top-[12rem] h-[22rem] w-[20rem] rounded-full bg-[#5f7f5b]/14 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_24%_0%,rgba(255,255,255,0.55),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.42),transparent_28%)]" />
+    <div className="flex min-h-screen bg-canvas font-sans">
+
+      {/* Desktop sidebar */}
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 hidden lg:flex flex-col bg-card border-r border-line",
+          "transition-all duration-200 overflow-hidden",
+          isCollapsed ? "w-[72px]" : "w-[264px]"
+        )}
+      >
+        {sidebarContent}
+      </aside>
+
+      {/* Main content — no header */}
+      <div
+        className={cn(
+          "flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-200",
+          isCollapsed ? "lg:pl-[72px]" : "lg:pl-[264px]"
+        )}
+      >
+        {/* Mobile-only top bar */}
+        <div className="lg:hidden sticky top-0 z-30 h-12 bg-card border-b border-line flex items-center px-4 gap-3">
+          <button
+            onClick={openMobile}
+            className="p-1.5 -ml-1 rounded-lg hover:bg-canvas text-ink-soft transition-standard"
+            aria-label="Abrir menú"
+          >
+            <Menu style={{ width: 18, height: 18 }} />
+          </button>
+          <span className="font-semibold text-brand text-sm">INSULAE</span>
+        </div>
+
+        <main className="flex-1 p-4 md:p-6 lg:py-8 lg:px-10 max-w-[1440px] w-full mx-auto">
+          {children}
+        </main>
       </div>
 
-      <div className="relative flex min-h-screen">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="border-b border-[#ccb49c]/55 bg-[#f8efe3]/85 px-4 py-3 backdrop-blur-md sm:px-6 lg:px-8">
-            <div className="relative flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setSidebarOpen(true)}
-                  className="rounded-xl border border-[#b98f71]/50 bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-[#6d422a] transition hover:bg-[#2e221c] hover:text-[#f8efe1]"
-                  aria-label="Abrir menu lateral"
-                  aria-expanded={sidebarOpen}
-                >
-                  Menu
-                </button>
-
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-[#9a6a4a]">Modulo Activo</p>
-                  <p className="font-[ui-serif] text-2xl leading-none text-[#2f221a]">{activeLabel}</p>
+      {/* Mobile drawer */}
+      <div
+        className={cn(
+          "fixed inset-0 z-50 lg:hidden",
+          isMobileOpen ? "pointer-events-auto" : "pointer-events-none"
+        )}
+      >
+        <div
+          className={cn(
+            "absolute inset-0 bg-brand-deep/40 backdrop-blur-sm transition-opacity duration-200",
+            isMobileOpen ? "opacity-100" : "opacity-0"
+          )}
+          onClick={closeMobile}
+        />
+        <aside
+          className={cn(
+            "absolute inset-y-0 left-0 w-[264px] bg-card flex flex-col overflow-hidden",
+            "transition-transform duration-200",
+            isMobileOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <div className="h-[52px] flex items-center justify-between px-4 border-b border-line shrink-0">
+            <span className="font-black text-brand text-[16px]">INSULAE</span>
+            <button
+              onClick={closeMobile}
+              className="p-1.5 rounded-lg hover:bg-canvas text-ink-soft transition-standard"
+              aria-label="Cerrar menú"
+            >
+              <X style={{ width: 16, height: 16 }} />
+            </button>
+          </div>
+          <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+            {NAV_SECTIONS.map((s) => (
+              <div key={s.title}>
+                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/40">
+                  {s.title}
+                </p>
+                <div className="space-y-0.5">
+                  {s.items.map((item) => renderNavItem(item))}
                 </div>
               </div>
-
-              <Link
-                href="/"
-                className="absolute left-1/2 top-1/2 hidden h-11 w-44 -translate-x-1/2 -translate-y-1/2 items-center justify-center overflow-hidden rounded-xl border border-[#cfb79f]/70 bg-[#fff8ef]/90 shadow-[0_10px_22px_rgba(50,30,18,0.12)] sm:flex"
-                aria-label="Ir al inicio"
-              >
-                {navbarLogoUrl ? (
-                  <Image
-                    src={navbarLogoUrl}
-                    alt={navbarLogoAlt}
-                    fill
-                    unoptimized
-                    sizes="176px"
-                    className="object-contain p-2"
-                  />
-                ) : (
-                  <span className="font-[ui-serif] text-lg text-[#6d412b]">Val&apos;Quirico</span>
-                )}
-              </Link>
-
-              <div className="hidden w-44 sm:block" />
-            </div>
-          </header>
-
-          <main className="min-w-0 flex-1 overflow-visible">{children}</main>
-        </div>
+            ))}
+          </nav>
+        </aside>
       </div>
 
-      {sidebarOpen ? (
-        <div className="fixed inset-0 z-[1000]">
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(false)}
-            className="absolute inset-0 bg-[#23170f]/55 backdrop-blur-sm"
-            aria-label="Cerrar menu"
-          />
-          <aside className="absolute left-0 top-0 h-full w-[17rem] overflow-y-auto overscroll-contain border-r border-[#ccb29a]/65 bg-[linear-gradient(170deg,#fff8ef_0%,#f5e9d8_70%,#f1e0c9_100%)] p-4 shadow-[18px_0_30px_rgba(50,30,18,0.25)] sm:w-[19rem]">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8d5a3d]">Insulae 2.0</p>
-                <p className="font-[ui-serif] text-xl text-[#2a1e17]">Valquirico</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSidebarOpen(false)}
-                className="rounded-full border border-[#9e6f50]/50 bg-white/80 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#73452b]"
-              >
-                X
-              </button>
-            </div>
-
-            <nav className="space-y-4">
-              {NAV_SECTIONS.map((section) => (
-                <section key={section.title}>
-                  <p className="mb-1 px-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8f6348]">
-                    {section.title}
-                  </p>
-
-                  <div className="space-y-1">
-                    {section.items.map((item) => {
-                      const isActive = item.href
-                        ? currentPath === normalizePath(item.href) || currentPath.startsWith(`${normalizePath(item.href)}/`)
-                        : false;
-                      const sharedClass = `flex items-center gap-3 rounded-2xl border px-3 py-2.5 transition ${isActive
-                        ? "border-[#8f593b]/50 bg-[#8f593b]/12 text-[#3a261c]"
-                        : "border-transparent text-[#5f4b3f] hover:border-[#c8ae97] hover:bg-white/65"
-                        }`;
-
-                      const inner = (
-                        <>
-                          <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-[#cdb8a3] bg-white/70 text-[11px] font-bold uppercase tracking-[0.08em] text-[#77523d]">
-                            {item.icon}
-                          </span>
-                          <span className="text-sm font-medium leading-tight">{item.label}</span>
-                          {item.badge ? (
-                            <span className="ml-auto rounded-full bg-[#2a201a] px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[#f6e7d5]">
-                              {item.badge}
-                            </span>
-                          ) : null}
-                        </>
-                      );
-
-                      if (!item.href) {
-                        return (
-                          <div key={`${section.title}-${item.label}`} className={`${sharedClass} cursor-not-allowed opacity-70`}>
-                            {inner}
-                          </div>
-                        );
-                      }
-
-                      return (
-                        <Link
-                          key={`${section.title}-${item.label}`}
-                          href={item.href}
-                          className={sharedClass}
-                          onClick={() => setSidebarOpen(false)}
-                        >
-                          {inner}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </section>
-              ))}
-            </nav>
-
-            <div className="mt-4 border-t border-[#d8c2ab] pt-4">
-              <div className="rounded-2xl border border-[#ccb097] bg-[#fff7ec]/80 p-3">
-                <p className="text-[10px] uppercase tracking-[0.16em] text-[#8f6348]">Estado</p>
-                <p className="mt-1 text-sm font-semibold text-[#3b281d]">Operativo</p>
-              </div>
-            </div>
-          </aside>
-        </div>
-      ) : null}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 }

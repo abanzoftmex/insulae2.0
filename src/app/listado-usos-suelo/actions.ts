@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { saveLandUseUseCase } from "@/modules/land-uses";
+import { saveLandUseUseCase, getLandUseFormUseCase } from "@/modules/land-uses";
 import type { SaveLandUseChargeInput } from "@/modules/land-uses/domain/land-use-form";
 
 export interface SaveLandUseActionInput {
@@ -13,6 +13,10 @@ export interface SaveLandUseActionInput {
   weight?: number | null;
   percentage?: number | null;
   charges: SaveLandUseChargeInput[];
+}
+
+export async function getLandUseFormDataAction(id: string) {
+  return await getLandUseFormUseCase.execute(id);
 }
 
 export async function saveLandUseAction(

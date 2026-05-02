@@ -2,12 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 
-import { saveZoneUseCase } from "@/modules/zones";
+import { saveZoneUseCase, getZoneFormUseCase } from "@/modules/zones";
 
 export interface SaveZoneActionInput {
   id?: string;
   name: string;
   initials?: string;
+}
+
+export async function getZoneFormDataAction(id: string) {
+  return await getZoneFormUseCase.execute(id);
 }
 
 export async function saveZoneAction(
