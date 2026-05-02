@@ -132,6 +132,8 @@ model Condominium {
   expenseConceptGroupMaps      ExpenseConceptGroupMap[]
   budgetGroups                 BudgetGroup[]
   sanctions                    SanctionCatalog[]
+  roles                        Role[]
+  announcements                Announcement[]
 }
 
 model User {
@@ -167,15 +169,51 @@ model User {
 }
 
 model Role {
-  id          String   @id @default(uuid())
-  legacyId    Int?
-  name        String
-  description String?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(uuid())
+  condominiumId String   @default("85af33b0-38ac-4f92-bbc5-385e044ef53a")
+  legacyId      Int?
+  legacyIdGral  Int      @default(0)
+  name          String
+  description   String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  userRoles UserRole[]
+  condominium Condominium      @relation(fields: [condominiumId], references: [id])
+  userRoles   UserRole[]
+  permissions RolePermission[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+}
+
+model ModuleCatalog {
+  id        String   @id @default(uuid())
+  legacyId  Int?     @unique
+  name      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  permissions RolePermission[]
+}
+
+model RolePermission {
+  id        String   @id @default(uuid())
+  roleId    String
+  moduleId  String
+  canCreate Boolean  @default(false)
+  canUpdate Boolean  @default(false)
+  canRead   Boolean  @default(false)
+  canDelete Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  role   Role          @relation(fields: [roleId], references: [id])
+  module ModuleCatalog @relation(fields: [moduleId], references: [id])
+
+  @@unique([roleId, moduleId])
 }
 
 model CondominiumStructureGroup {
@@ -212,6 +250,7 @@ model CondominiumStructurePosition {
   condominium Condominium                              @relation(fields: [condominiumId], references: [id])
   group       CondominiumStructureGroup                @relation(fields: [groupId], references: [id], onDelete: Cascade)
   assignments CondominiumStructurePositionAssignment[]
+  invitedAnnouncements AnnouncementInvitedPosition[]
 
   @@unique([condominiumId, legacyId])
   @@index([condominiumId, isActive])
@@ -1110,4 +1149,133 @@ model SanctionCatalog {
   condominium Condominium @relation(fields: [condominiumId], references: [id])
 
   @@unique([condominiumId, legacyId])
+}
+
+// --- Governance / Convocatorias ---
+
+model Announcement {
+  id                    String            @id @default(uuid())
+  condominiumId         String
+  condominium           Condominium       @relation(fields: [condominiumId], references: [id])
+  legacyId              Int?              
+  
+  name                  String
+  typeId                String
+  type                  AnnouncementType   @relation(fields: [typeId], references: [id])
+  subtypeId             String
+  subtype               AnnouncementSubtype @relation(fields: [subtypeId], references: [id])
+  statusId              String
+  status                AnnouncementStatus @relation(fields: [statusId], references: [id])
+  
+  comments              String?           @db.Text
+  guests                String?           @db.Text
+  pdfUrl                String?
+  
+  expectedAttendance    Int               @default(0)
+  actualAttendance      Int               @default(0)
+  attendancePercentage  Decimal           @default(0.0000) @db.Decimal(10, 4)
+  
+  conveningPersonId     String?
+  conveningPosition     String?           @db.VarChar(200)
+  moderatorPersonId     String?
+  moderatorPosition     String?           @db.VarChar(200)
+  
+  dates                 AnnouncementDate[]
+  topics                AnnouncementTopic[]
+  invitedPositions      AnnouncementInvitedPosition[]
+  specialGuests         SpecialGuest[]
+  
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  deletedAt             DateTime?
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+  @@index([statusId])
+}
+
+model AnnouncementType {
+  id            String         @id @default(uuid())
+  legacyId      Int?           @unique
+  name          String
+  isActive      Boolean        @default(true)
+  announcements Announcement[]
+}
+
+model AnnouncementSubtype {
+  id            String         @id @default(uuid())
+  legacyId      Int?           @unique
+  typeId        String
+  name          String
+  isActive      Boolean        @default(true)
+  announcements Announcement[]
+}
+
+model AnnouncementStatus {
+  id            String         @id @default(uuid())
+  legacyId      Int?           @unique
+  name          String
+  color         String?        @default("#6d422a")
+  isActive      Boolean        @default(true)
+  announcements Announcement[]
+}
+
+model AnnouncementDate {
+  id                    String            @id @default(uuid())
+  announcementId        String
+  announcement          Announcement      @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  legacyId              Int?              @unique
+  
+  date                  DateTime
+  time                  String?
+  location              String?
+  callType              String            @default("1ra Convocatoria")
+  status                String            @default("Pendiente")
+  
+  isActive              Boolean           @default(true)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+}
+
+model AnnouncementTopic {
+  id              String       @id @default(uuid())
+  announcementId  String
+  announcement    Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  legacyId        Int?         @unique
+  
+  order           Int          @default(0)
+  title           String
+  description     String?      @db.Text
+  presenterId     String?
+  durationMinutes Int?
+  actionType      String?      @default("NONE") // VOTE, CONFIRMATION, NONE
+  
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+model AnnouncementInvitedPosition {
+  id              String                       @id @default(uuid())
+  announcementId  String
+  positionId      String
+  isActive        Boolean                      @default(true)
+  createdAt       DateTime                     @default(now())
+
+  announcement    Announcement                 @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  position        CondominiumStructurePosition @relation(fields: [positionId], references: [id])
+
+  @@unique([announcementId, positionId])
+}
+
+model SpecialGuest {
+  id              String       @id @default(uuid())
+  announcementId  String
+  name            String
+  email           String?
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+
+  announcement    Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
 }

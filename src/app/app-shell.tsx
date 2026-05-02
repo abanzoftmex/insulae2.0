@@ -85,6 +85,18 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: "Gobernanza",
+    items: [
+      { label: "Convocatorias", href: "/gobernanza/convocatorias", icon: "CO" },
+    ],
+  },
+  {
+    title: "Condómino",
+    items: [
+      { label: "Mis convocatorias", href: "/condomino/mis-convocatorias", icon: "MC" },
+    ],
+  },
+  {
     title: "Financiero",
     items: [
       { label: "Resumen", href: "/resumen-financiero", icon: PieChart },
@@ -107,8 +119,15 @@ const NAV_SECTIONS: NavSection[] = [
         ],
       },
       { label: "Cuotas", href: "/reporte-cuotas", icon: ClipboardList },
-      { label: "Sanciones", href: "/sanciones", icon: AlertCircle },
+      { label: "Cuotas Extra.", href: "/reporte-cuotas-extraordinarias", icon: ClipboardList },
+      { label: "Sanciones", href: "/sanctions", icon: AlertCircle },
+      { label: "Roles", href: "/listado-roles", icon: Users },
     ],
+  },
+  {
+    title: "Seguridad",
+    items: [
+      { label: "Cambiar contraseña", href: "/cambio-contrasena", icon: Settings },
   },
 ];
 

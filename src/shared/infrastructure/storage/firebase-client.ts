@@ -1,6 +1,7 @@
 "use client";
 
 import { getApp, getApps, initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { getDownloadURL, getStorage, ref, uploadBytes, deleteObject } from "firebase/storage";
 
 type CondoAssetKind =
@@ -14,7 +15,8 @@ type CondoAssetKind =
   | "ticket-response-image"
   | "ticket-response-pdf"
   | "income-receipt"
-  | "expense-receipt";
+  | "expense-receipt"
+  | "announcement-pdf";
 
 function getRequiredClientEnv(value: string | undefined, name: string): string {
   const normalized = value?.trim();
@@ -63,6 +65,10 @@ const firebaseConfig = {
 
 function getFirebaseApp() {
   return getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+}
+
+export function getClientAuth() {
+  return getAuth(getFirebaseApp());
 }
 
 function sanitizeFileName(fileName: string): string {
