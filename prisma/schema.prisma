@@ -143,10 +143,23 @@ model User {
   userType        UserType @default(INDIVIDUAL)
   firstName       String?
   lastName        String?
+  lastNamePaterno String?
+  lastNameMaterno String?
   businessName    String?
+  commercialName  String?
+  curp            String?
+  rfc             String?
+  address         String?
+  taxAddress      String?
   email           String?
+  personalEmail   String?
+  businessEmail   String?
   phone           String?
+  personalPhone   String?
+  businessPhone   String?
   requiresInvoice Boolean?
+  taxStatusPdfUrl String?
+  initialRole     String?
   passwordHash    String?
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())

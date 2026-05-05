@@ -34,14 +34,51 @@ export interface DirectoryContactAssignment {
   roleName: string;
 }
 
+export interface ParticipationRow {
+  entityType: string;
+  privateAreaName: string;
+  percentage: number;
+  hasCommerces: boolean;
+}
+
+export interface ParticipationBlock {
+  title: string;
+  totalAreas: number;
+  totalPercentage: number;
+  rows: ParticipationRow[];
+}
+
+export interface LinkedCommerce {
+  id: string;
+  name: string;
+}
+
 export interface DirectoryContactParticipation {
   id: string;
   displayName: string;
+  firstName: string | null;
+  lastName: string | null;
+  lastNamePaterno: string | null;
+  lastNameMaterno: string | null;
+  businessName: string | null;
+  commercialName: string | null;
+  curp: string | null;
+  rfc: string | null;
+  address: string | null;
+  taxAddress: string | null;
   userType: "INDIVIDUAL" | "LEGAL_ENTITY" | "ADMIN";
   requiresInvoice: boolean | null;
   email: string | null;
+  personalEmail: string | null;
+  businessEmail: string | null;
   phone: string | null;
+  personalPhone: string | null;
+  businessPhone: string | null;
+  taxStatusPdfUrl: string | null;
+  initialRole: string | null;
   roles: string[];
+  participationBlocks: ParticipationBlock[];
+  linkedCommerces: LinkedCommerce[];
   assignments: DirectoryContactAssignment[];
 }
 

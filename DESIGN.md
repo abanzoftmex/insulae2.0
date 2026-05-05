@@ -559,6 +559,8 @@ Inferred from component width tokens and progressive nav heights:
 
 10. "Create a Starbucks nutrition facts table — two-column layout inside a White card. Left column: 'Ingredients' header (24/400 Text Black), followed by ingredient list or 'Not available for this item' placeholder paragraph in 14/400 Text Black Soft. Right column: 'Nutrition' header, then label/value rows (nutrient name left, value right) separated by `1px solid #e7e7e7` hairlines. Typography: labels in 14/400 Text Black, values in 14/700 Text Black right-aligned. Footnote asterisk markers in 13/400 Text Black Soft at the bottom."
 
+11. "Design a Directory Master Profile (Ficha Maestra) — A premium, editorial-style layout. Header: Full-width rounded card ([2.5rem]) on Neutral Warm (#f3eadc) canvas. Title: Large Cormorant Garamond display font (60px) for the contact name. Body: 3-column grid. Left/Center: General and Billing sections as rounded-card groups with Manrope typography. Use clear 'InfoItem' blocks with 10px bold uppercase labels and 16px medium values. Bottom: Participation Blocks with clear headers, total percentages, and high-contrast data tables. Right: Sidebar with system role badges and quick stats. Isolate with subtle blur-3xl decorative background blobs."
+
 ### Iteration Guide
 
 When refining existing screens generated with this design system:

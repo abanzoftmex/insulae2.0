@@ -8,6 +8,8 @@ import type {
   DirectoryFilters,
   DirectoryOverview,
   DirectoryPerson,
+  ParticipationBlock,
+  ParticipationRow,
 } from "../domain/directory";
 import type { DirectoryRepository } from "../domain/directory.repository";
 
@@ -387,17 +389,33 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           isActive: true,
           slug: PROJECT_SCOPE.condominiumCode,
         },
-        select: { id: true },
+        select: {
+          id: true,
+          projects: {
+            where: { isActive: true },
+            take: 1,
+            select: { totalM2: true },
+          },
+        },
       })) ??
       (await prisma.condominium.findFirst({
         where: { isActive: true },
         orderBy: { updatedAt: "desc" },
-        select: { id: true },
+        select: {
+          id: true,
+          projects: {
+            where: { isActive: true },
+            take: 1,
+            select: { totalM2: true },
+          },
+        },
       }));
 
     if (!condominium) {
       return null;
     }
+
+    const totalM2Project = Number(condominium.projects[0]?.totalM2 ?? 0);
 
     const user = await prisma.user.findFirst({
       where: {
@@ -408,11 +426,25 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       select: {
         id: true,
         userType: true,
-        businessName: true,
         firstName: true,
         lastName: true,
+        lastNamePaterno: true,
+        lastNameMaterno: true,
+        businessName: true,
+        commercialName: true,
+        curp: true,
+        rfc: true,
+        address: true,
+        taxAddress: true,
         email: true,
+        personalEmail: true,
+        businessEmail: true,
         phone: true,
+        personalPhone: true,
+        businessPhone: true,
+        requiresInvoice: true,
+        taxStatusPdfUrl: true,
+        initialRole: true,
         userRoles: {
           select: {
             role: {
@@ -425,15 +457,39 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         },
         assignments: {
           where: { isActive: true },
-          orderBy: [{ privateArea: { name: "asc" } }, { roleName: "asc" }],
+          orderBy: [{ privateArea: { sortOrder: "asc" } }, { privateArea: { name: "asc" } }],
           select: {
             roleName: true,
             privateArea: {
               select: {
                 id: true,
                 name: true,
+                sortOrder: true,
+                indiviso: true,
+                m2CommonArea: true,
+                m2Construction: true,
+                m2Original: true,
+                parentPrivateArea: {
+                  select: {
+                    id: true,
+                    name: true,
+                    sortOrder: true,
+                    indiviso: true,
+                    m2CommonArea: true,
+                    m2Original: true,
+                    m2ConstructionChildren: true,
+                  },
+                },
               },
             },
+          },
+        },
+        commerces: {
+          where: { isActive: true },
+          orderBy: { commerceName: "asc" },
+          select: {
+            id: true,
+            commerceName: true,
           },
         },
       },
@@ -443,25 +499,184 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       return null;
     }
 
-    const requiresInvoiceByUserId = await this.getRequiresInvoiceByUserId([user.id]);
+    // Process participation blocks
+    const blockMap: Record<string, { title: string; roles: string[] }> = {
+      legal: { title: "Propietario Legal", roles: ["legal"] },
+      pleno: { title: "Dominio actual", roles: ["pleno"] },
+      arrendatario: { title: "Arrendatario", roles: ["arrendatario", "arrend"] },
+      moral: { title: "Propietario Inicial", roles: ["moral"] },
+    };
+
+    // Pre-calculate area name sets for cross-block filtering
+    const legalNames = new Set(user.assignments.filter(a => (a.roleName || "").toLowerCase().includes("legal")).map(a => a.privateArea.name));
+    const plenoNames = new Set(user.assignments.filter(a => (a.roleName || "").toLowerCase().includes("pleno")).map(a => a.privateArea.name));
+    const arrendNames = new Set(user.assignments.filter(a => (a.roleName || "").toLowerCase().includes("arrend")).map(a => a.privateArea.name));
+
+    const blocks: ParticipationBlock[] = Object.entries(blockMap).map(([key, config]) => {
+      const rows: ParticipationRow[] = [];
+      const seenNames = new Set<string>();
+
+      // Sort user assignments by sortOrder and then name
+      const sortedAssignments = [...user.assignments].sort((a, b) => {
+        const orderA = a.privateArea.sortOrder || 0;
+        const orderB = b.privateArea.sortOrder || 0;
+        if (orderA !== orderB) return orderA - orderB;
+        return a.privateArea.name.localeCompare(b.privateArea.name, undefined, { numeric: true });
+      });
+
+      for (const assignment of sortedAssignments) {
+        const roleLower = (assignment.roleName ?? "").toLowerCase();
+        const matches = config.roles.some((r) => roleLower.includes(r));
+
+        if (matches) {
+          const area = assignment.privateArea;
+          if (seenNames.has(area.name)) continue;
+
+          // Legacy UI specific filtering rules:
+          if (key === "pleno") {
+            // "Dominio actual" block shows ONLY areas that are also in the "Legal" block
+            if (!legalNames.has(area.name)) continue;
+          } else if (key === "arrendatario") {
+            // "Arrendatario" block shows ONLY areas that are NOT in the "Legal" block
+            if (legalNames.has(area.name)) continue;
+          } else if (key === "moral") {
+            // "Propietario Inicial" block shows ONLY areas that are NOT in Pleno and NOT in Arrendatario
+            if (plenoNames.has(area.name) || arrendNames.has(area.name)) continue;
+          }
+
+          seenNames.add(area.name);
+
+          // Trust the m2Original/totalM2Project formula for the base indiviso
+          let percentage = 0;
+          const m2Total = Number(area.m2Original ?? 0);
+          
+          if (area.parentPrivateArea) {
+            // Formula for sub-areas: (child.m2Construction / parent.m2ConstructionChildren) * ParentIndiviso
+            const parentM2Total = Number(area.parentPrivateArea.m2Original ?? 0);
+            const parentIndiviso = (parentM2Total / totalM2Project) * 100;
+            const constructionChildren = Number(area.parentPrivateArea.m2ConstructionChildren ?? 0);
+
+            if (constructionChildren > 0 && parentIndiviso > 0) {
+              percentage = parentIndiviso * (Number(area.m2Construction ?? 0) / constructionChildren);
+            } else {
+              percentage = (m2Total / totalM2Project) * 100;
+            }
+          } else {
+            // Base formula for areas without parent
+            percentage = (m2Total / totalM2Project) * 100;
+          }
+
+          // Special case: if calculated is 0 but area has an indiviso in DB, trust the DB
+          if (percentage === 0 && area.indiviso) {
+            percentage = Number(area.indiviso);
+          }
+
+          // Normalize entity type naming to match legacy and fix encoding issues
+          let entityType = assignment.roleName || "Sin rol";
+          const normalizedRole = entityType.toLowerCase();
+          
+          if (config.roles.includes("legal") && (normalizedRole.includes("due") || normalizedRole.includes("legal") || normalizedRole.includes("propietario"))) {
+            entityType = "Propietario Legal";
+          } else if (config.roles.includes("pleno") && (normalizedRole.includes("dominio") || normalizedRole.includes("pleno"))) {
+            entityType = "Dominio actual";
+          } else if (config.roles.includes("arrendatario") && (normalizedRole.includes("arrend"))) {
+            entityType = "Arrendatario";
+          } else if (config.roles.includes("moral") && (normalizedRole.includes("moral") || normalizedRole.includes("inicial"))) {
+            entityType = "Propietario Inicial";
+          }
+
+          rows.push({
+            entityType,
+            privateAreaName: area.name,
+            percentage,
+            hasCommerces: false,
+          });
+        }
+      }
+
+      return {
+        title: config.title,
+        totalAreas: rows.length,
+        totalPercentage: rows.reduce((sum, r) => sum + r.percentage, 0),
+        rows,
+      };
+    });
 
     return {
       id: user.id,
       displayName: displayNameFrom(user),
+      firstName: user.firstName,
+      lastName: user.lastName,
+      lastNamePaterno: user.lastNamePaterno,
+      lastNameMaterno: user.lastNameMaterno,
+      businessName: user.businessName,
+      commercialName: user.commercialName,
+      curp: user.curp,
+      rfc: user.rfc,
+      address: user.address,
+      taxAddress: user.taxAddress,
       userType: user.userType,
-      requiresInvoice: requiresInvoiceByUserId.get(user.id) ?? null,
+      requiresInvoice: user.requiresInvoice,
       email: user.email,
+      personalEmail: user.personalEmail,
+      businessEmail: user.businessEmail,
       phone: user.phone,
+      personalPhone: user.personalPhone,
+      businessPhone: user.businessPhone,
+      taxStatusPdfUrl: user.taxStatusPdfUrl,
+      initialRole: user.initialRole,
       roles: uniqueSorted(
         user.userRoles
           .filter((item) => item.role.isActive)
           .map((item) => item.role.name),
       ),
+      participationBlocks: blocks,
+      linkedCommerces: user.commerces.map((c) => ({
+        id: c.id,
+        name: c.commerceName,
+      })),
       assignments: user.assignments.map((assignment) => ({
         privateAreaId: assignment.privateArea.id,
         privateAreaName: assignment.privateArea.name,
         roleName: assignment.roleName?.trim() || "Sin rol",
       })),
     };
+  }
+
+  async getRoles(): Promise<Array<{ id: string; name: string }>> {
+    const roles = await prisma.role.findMany({
+      where: { isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+    return roles;
+  }
+
+  async updateContact(id: string, data: Partial<DirectoryContactParticipation>): Promise<void> {
+    await prisma.user.update({
+      where: { id },
+      data: {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        lastNamePaterno: data.lastNamePaterno,
+        lastNameMaterno: data.lastNameMaterno,
+        businessName: data.businessName,
+        commercialName: data.commercialName,
+        curp: data.curp,
+        rfc: data.rfc,
+        address: data.address,
+        taxAddress: data.taxAddress,
+        userType: data.userType,
+        requiresInvoice: data.requiresInvoice,
+        email: data.email,
+        personalEmail: data.personalEmail,
+        businessEmail: data.businessEmail,
+        phone: data.phone,
+        personalPhone: data.personalPhone,
+        businessPhone: data.businessPhone,
+        taxStatusPdfUrl: data.taxStatusPdfUrl,
+        initialRole: data.initialRole,
+      },
+    });
   }
 }

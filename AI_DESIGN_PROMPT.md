@@ -330,12 +330,24 @@ Stores use localStorage prefix `insulae.ui.*`. New stores follow same pattern.
 
 ---
 
-## 14. Known Gaps / Future Work
+## 15. Master Profile Pattern (Ficha Maestra)
+
+For detail/profile views (e.g., Directory, Property detail):
+
+1. **Background**: Use `blur-3xl` decorative blobs (`bg-brand/10` and `bg-brand-accent/08`) positioned absolutely to create depth.
+2. **Layout**: `grid gap-8 lg:grid-cols-3`.
+3. **Sections**: Group related info into `rounded-[2rem] border border-brand/30 bg-[#fffdfa] p-8` containers.
+4. **InfoItem**: Use a small component for label/value pairs:
+   - Label: `text-[10px] font-bold uppercase tracking-[0.15em] text-ink-soft/60`
+   - Value: `text-base font-medium text-brand` (or `text-ink`)
+5. **Tables**: Inside sections, use `overflow-hidden rounded-[2rem]`. Headers: `bg-[#fdf8f2]`. Rows: `odd:bg-white even:bg-[#fdfbf9]`.
+
+---
+
+## 16. Known Gaps / Future Work
 
 - `SoDoSans` → **Inter** substitute (applied)
-- `Lander Tall` serif → not used in back-office context
-- `Kalam` script → not used in back-office context
-- Chart placeholder → **recharts AreaChart** implemented on home page; other pages need similar treatment
-- DataTable primitive → not yet built; listing pages need it
-- Modal primitive → not yet built; CRUD flows need it
-- Remaining routes → standard listing layout pending
+- `Lander Tall` serif → used in Master Profile as `Cormorant Garamond`
+- `Kalam` script → not used
+- DataTable primitive → standard listing layout pending
+- Modal primitive → standard CRUD flows pending

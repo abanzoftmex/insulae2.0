@@ -87,13 +87,13 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "Gobernanza",
     items: [
-      { label: "Convocatorias", href: "/gobernanza/convocatorias", icon: "CO" },
+      { label: "Convocatorias", href: "/gobernanza/convocatorias", icon: ClipboardList },
     ],
   },
   {
     title: "Condómino",
     items: [
-      { label: "Mis convocatorias", href: "/condomino/mis-convocatorias", icon: "MC" },
+      { label: "Mis convocatorias", href: "/condomino/mis-convocatorias", icon: FileText },
     ],
   },
   {
@@ -120,7 +120,7 @@ const NAV_SECTIONS: NavSection[] = [
       },
       { label: "Cuotas", href: "/reporte-cuotas", icon: ClipboardList },
       { label: "Cuotas Extra.", href: "/reporte-cuotas-extraordinarias", icon: ClipboardList },
-      { label: "Sanciones", href: "/sanctions", icon: AlertCircle },
+      { label: "Sanciones", href: "/sanciones", icon: AlertCircle },
       { label: "Roles", href: "/listado-roles", icon: Users },
     ],
   },
@@ -128,6 +128,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Seguridad",
     items: [
       { label: "Cambiar contraseña", href: "/cambio-contrasena", icon: Settings },
+    ],
   },
 ];
 

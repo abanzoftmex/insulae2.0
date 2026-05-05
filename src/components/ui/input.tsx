@@ -26,7 +26,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         />
         <label
           htmlFor={inputId}
-          className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60 transition-all peer-placeholder-shown:text-[12px] peer-placeholder-shown:font-bold peer-placeholder-shown:text-ink-soft/40 peer-placeholder-shown:top-2 peer-placeholder-shown:bg-transparent peer-focus:-top-1.5 peer-focus:px-1 peer-focus:bg-card peer-focus:text-[10px] peer-focus:font-black peer-focus:text-brand-accent pointer-events-none"
+          className="absolute left-2.5 -top-1.5 px-1 bg-[inherit] text-[10px] font-black uppercase tracking-widest text-brand-accent/60 transition-all peer-placeholder-shown:text-[12px] peer-placeholder-shown:font-bold peer-placeholder-shown:text-ink-soft/40 peer-placeholder-shown:top-2 peer-placeholder-shown:bg-transparent peer-focus:-top-1.5 peer-focus:px-1 peer-focus:bg-[inherit] peer-focus:text-[10px] peer-focus:font-black peer-focus:text-brand-accent pointer-events-none"
         >
           {label}
         </label>
@@ -60,7 +60,7 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         />
         <label
           htmlFor={inputId}
-          className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60 transition-all peer-placeholder-shown:text-[12px] peer-placeholder-shown:font-bold peer-placeholder-shown:text-ink-soft/40 peer-placeholder-shown:top-2 peer-placeholder-shown:bg-transparent peer-focus:-top-1.5 peer-focus:px-1 peer-focus:bg-card peer-focus:text-[10px] peer-focus:font-black peer-focus:text-brand-accent pointer-events-none"
+          className="absolute left-2.5 -top-1.5 px-1 bg-[inherit] text-[10px] font-black uppercase tracking-widest text-brand-accent/60 transition-all peer-placeholder-shown:text-[12px] peer-placeholder-shown:font-bold peer-placeholder-shown:text-ink-soft/40 peer-placeholder-shown:top-2 peer-placeholder-shown:bg-transparent peer-focus:-top-1.5 peer-focus:px-1 peer-focus:bg-[inherit] peer-focus:text-[10px] peer-focus:font-black peer-focus:text-brand-accent pointer-events-none"
         >
           {label}
         </label>

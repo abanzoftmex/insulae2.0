@@ -1,0 +1,1229 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Condominium {
+  id                           String                                   @id @default(uuid())
+  legacyId                     Int?                                     @unique
+  name                         String
+  slug                         String                                   @unique
+  isActive                     Boolean                                  @default(true)
+  createdAt                    DateTime                                 @default(now())
+  updatedAt                    DateTime                                 @updatedAt
+  announcements                Announcement[]
+  areaCharges                  AreaCharge[]
+  budgets                      Budget[]
+  charges                      Charge[]
+  chargeGroups                 ChargeGroup[]
+  commerces                    Commerce[]
+  structureGroups              CondominiumStructureGroup[]
+  structurePositions           CondominiumStructurePosition[]
+  structurePositionAssignments CondominiumStructurePositionAssignment[]
+  contacts                     ContactEntry[]
+  expenses                     Expense[]
+  incomes                      Income[]
+  landUseCatalogs              LandUseCatalog[]
+  meetings                     Meeting[]
+  miscIncomeCatalogs           MiscIncomeCatalog[]
+  notifications                Notification[]
+  notificationCategories       NotificationCategory[]
+  payments                     Payment[]
+  paymentDetails               PaymentDetail[]
+  paymentMethodCatalogs        PaymentMethodCatalog[]
+  privateAreas                 PrivateArea[]
+  projects                     Project[]
+  rentals                      Rental[]
+  assignments                  ResidentAssignment[]
+  roles                        Role[]
+  sanctions                    SanctionCatalog[]
+  subzoneCatalogs              SubzoneCatalog[]
+  tickets                      Ticket[]
+  ticketDepartments            TicketDepartment[]
+  users                        User[]
+  userCommerces                UserCommerce[]
+  zoneCatalogs                 ZoneCatalog[]
+  budgetExpenseConcepts        BudgetExpenseConcept[]
+  budgetGroups                 BudgetGroup[]
+  expenseConceptGroupMaps      ExpenseConceptGroupMap[]
+}
+
+model User {
+  id                             String                                   @id @default(uuid())
+  email                          String?
+  createdAt                      DateTime                                 @default(now())
+  businessName                   String?
+  condominiumId                  String
+  firstName                      String?
+  isActive                       Boolean                                  @default(true)
+  lastName                       String?
+  legacyId                       Int?
+  passwordHash                   String?
+  phone                          String?
+  updatedAt                      DateTime                                 @updatedAt
+  userType                       UserType                                 @default(INDIVIDUAL)
+  requiresInvoice                Boolean?
+  businessEmail                  String?
+  businessPhone                  String?
+  commercialName                 String?
+  curp                           String?
+  personalEmail                  String?
+  personalPhone                  String?
+  rfc                            String?
+  taxAddress                     String?
+  taxStatusPdfUrl                String?
+  administrativeCommerces        Commerce[]                               @relation("CommerceAdministrativeContact")
+  operativeCommerces             Commerce[]                               @relation("CommerceOperativeContact")
+  structurePositionAssignments   CondominiumStructurePositionAssignment[]
+  rentalsAsAdministrativeContact Rental[]                                 @relation("RentalAdministrativeContact")
+  rentalsAsOperativeContact      Rental[]                                 @relation("RentalOperativeContact")
+  assignments                    ResidentAssignment[]
+  openedTickets                  Ticket[]
+  condominium                    Condominium                              @relation(fields: [condominiumId], references: [id])
+  commerces                      UserCommerce[]
+  userRoles                      UserRole[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+  @@index([email])
+}
+
+model Role {
+  id            String           @id @default(uuid())
+  legacyId      Int?
+  name          String
+  description   String?
+  isActive      Boolean          @default(true)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  condominiumId String           @default("85af33b0-38ac-4f92-bbc5-385e044ef53a")
+  legacyIdGral  Int              @default(0)
+  condominium   Condominium      @relation(fields: [condominiumId], references: [id])
+  permissions   RolePermission[]
+  userRoles     UserRole[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+}
+
+model ModuleCatalog {
+  id          String           @id @default(uuid())
+  legacyId    Int?             @unique
+  name        String
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  permissions RolePermission[]
+}
+
+model RolePermission {
+  id        String        @id @default(uuid())
+  roleId    String
+  moduleId  String
+  canCreate Boolean       @default(false)
+  canUpdate Boolean       @default(false)
+  canRead   Boolean       @default(false)
+  canDelete Boolean       @default(false)
+  isActive  Boolean       @default(true)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  module    ModuleCatalog @relation(fields: [moduleId], references: [id])
+  role      Role          @relation(fields: [roleId], references: [id])
+
+  @@unique([roleId, moduleId])
+}
+
+model CondominiumStructureGroup {
+  id            String                         @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  position      Int                            @default(0)
+  structureType Int                            @default(0)
+  isActive      Boolean                        @default(true)
+  createdAt     DateTime                       @default(now())
+  updatedAt     DateTime                       @updatedAt
+  condominium   Condominium                    @relation(fields: [condominiumId], references: [id])
+  positions     CondominiumStructurePosition[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive, position])
+}
+
+model CondominiumStructurePosition {
+  id                   String                                   @id @default(uuid())
+  condominiumId        String
+  groupId              String
+  legacyId             Int?
+  name                 String
+  quantity             Int                                      @default(1)
+  isAlternate          Boolean                                  @default(false)
+  sortOrder            Int                                      @default(0)
+  isActive             Boolean                                  @default(true)
+  createdAt            DateTime                                 @default(now())
+  updatedAt            DateTime                                 @updatedAt
+  invitedAnnouncements AnnouncementInvitedPosition[]
+  condominium          Condominium                              @relation(fields: [condominiumId], references: [id])
+  group                CondominiumStructureGroup                @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  assignments          CondominiumStructurePositionAssignment[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive])
+  @@index([groupId, isActive, sortOrder])
+}
+
+model CondominiumStructurePositionAssignment {
+  id            String                       @id @default(uuid())
+  condominiumId String
+  positionId    String
+  userId        String
+  isAlternate   Boolean                      @default(false)
+  isActive      Boolean                      @default(true)
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+  condominium   Condominium                  @relation(fields: [condominiumId], references: [id])
+  position      CondominiumStructurePosition @relation(fields: [positionId], references: [id], onDelete: Cascade)
+  user          User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([positionId, userId, isAlternate])
+  @@index([condominiumId, isActive])
+  @@index([positionId, isAlternate, isActive])
+  @@index([userId, isActive])
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+  role      Role     @relation(fields: [roleId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model UserCommerce {
+  id            String      @id @default(uuid())
+  condominiumId String
+  userId        String
+  commerceName  String
+  sortOrder     Int         @default(0)
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+
+  @@index([condominiumId])
+  @@index([userId])
+  @@index([userId, isActive])
+}
+
+model Commerce {
+  id                          String      @id @default(uuid())
+  condominiumId               String
+  legacyId                    Int?
+  name                        String?
+  administrativeContactUserId String?
+  operativeContactUserId      String?
+  isActive                    Boolean     @default(true)
+  createdAt                   DateTime    @default(now())
+  updatedAt                   DateTime    @updatedAt
+  administrativeContactUser   User?       @relation("CommerceAdministrativeContact", fields: [administrativeContactUserId], references: [id])
+  condominium                 Condominium @relation(fields: [condominiumId], references: [id])
+  operativeContactUser        User?       @relation("CommerceOperativeContact", fields: [operativeContactUserId], references: [id])
+  rentals                     Rental[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+  @@index([administrativeContactUserId])
+  @@index([operativeContactUserId])
+}
+
+model PrivateArea {
+  id                     String               @id @default(uuid())
+  condominiumId          String
+  legacyId               Int?
+  code                   String?
+  name                   String
+  zone                   String?
+  subzone                String?
+  street                 String?
+  useType                String?
+  m2Original             Decimal?             @db.Decimal(12, 4)
+  m2Apole                Decimal?             @db.Decimal(12, 4)
+  indiviso               Decimal?             @db.Decimal(12, 6)
+  isActive               Boolean              @default(true)
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  parentPrivateAreaId    String?
+  isFusion               Boolean              @default(false)
+  m2Construction         Decimal?             @db.Decimal(12, 4)
+  m2CommonArea           Decimal?             @db.Decimal(12, 4)
+  m2ConstructionChildren Decimal?             @db.Decimal(12, 4)
+  m2CommonAreaChildren   Decimal?             @db.Decimal(12, 4)
+  vccc                   Decimal?             @db.Decimal(14, 6)
+  sortOrder              Int                  @default(0)
+  status                 PrivateAreaStatus    @default(UNASSIGNED)
+  areaCharges            AreaCharge[]
+  attendances            Attendance[]
+  charges                Charge[]
+  incomes                Income[]
+  payments               Payment[]
+  condominium            Condominium          @relation(fields: [condominiumId], references: [id])
+  parentPrivateArea      PrivateArea?         @relation("PrivateAreaHierarchy", fields: [parentPrivateAreaId], references: [id])
+  childPrivateAreas      PrivateArea[]        @relation("PrivateAreaHierarchy")
+  rentals                Rental[]
+  assignments            ResidentAssignment[]
+  tickets                Ticket[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+  @@index([parentPrivateAreaId])
+  @@index([condominiumId, parentPrivateAreaId, sortOrder])
+  @@index([status])
+  @@index([isFusion])
+}
+
+model ResidentAssignment {
+  id            String      @id @default(uuid())
+  condominiumId String
+  userId        String
+  privateAreaId String
+  roleName      String?
+  startsAt      DateTime?
+  endsAt        DateTime?
+  isActive      Boolean     @default(true)
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  privateArea   PrivateArea @relation(fields: [privateAreaId], references: [id])
+  user          User        @relation(fields: [userId], references: [id])
+
+  @@index([condominiumId])
+  @@index([userId])
+  @@index([privateAreaId])
+}
+
+model Rental {
+  id                          String      @id @default(uuid())
+  condominiumId               String
+  privateAreaId               String
+  tenantName                  String?
+  startsAt                    DateTime?
+  endsAt                      DateTime?
+  status                      String?
+  notes                       String?
+  administrativeContactUserId String?
+  operativeContactUserId      String?
+  commerceId                  String?
+  charges                     Charge[]
+  administrativeContactUser   User?       @relation("RentalAdministrativeContact", fields: [administrativeContactUserId], references: [id])
+  commerce                    Commerce?   @relation(fields: [commerceId], references: [id])
+  condominium                 Condominium @relation(fields: [condominiumId], references: [id])
+  operativeContactUser        User?       @relation("RentalOperativeContact", fields: [operativeContactUserId], references: [id])
+  privateArea                 PrivateArea @relation(fields: [privateAreaId], references: [id])
+
+  @@index([condominiumId])
+  @@index([privateAreaId])
+  @@index([commerceId])
+  @@index([administrativeContactUserId])
+  @@index([operativeContactUserId])
+}
+
+model ChargeGroup {
+  id                 String                   @id @default(uuid())
+  condominiumId      String
+  legacyId           Int?
+  name               String
+  chargeType         String?
+  isActive           Boolean                  @default(true)
+  kind               ChargeGroupCanonicalKind @default(OTHER)
+  areaCharges        AreaCharge[]
+  charges            Charge[]
+  condominium        Condominium              @relation(fields: [condominiumId], references: [id])
+  incomes            Income[]
+  miscIncomeCatalogs MiscIncomeCatalog[]
+  paymentDetails     PaymentDetail[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+  @@index([condominiumId, kind, isActive])
+}
+
+model AreaCharge {
+  id            String      @id @default(uuid())
+  condominiumId String
+  privateAreaId String
+  chargeGroupId String
+  amount        Decimal     @db.Decimal(14, 2)
+  startsAt      DateTime?
+  endsAt        DateTime?
+  isActive      Boolean     @default(true)
+  chargeGroup   ChargeGroup @relation(fields: [chargeGroupId], references: [id])
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+  privateArea   PrivateArea @relation(fields: [privateAreaId], references: [id])
+
+  @@index([condominiumId])
+  @@index([privateAreaId])
+  @@index([chargeGroupId])
+}
+
+model Charge {
+  id               String               @id @default(uuid())
+  condominiumId    String
+  privateAreaId    String
+  chargeGroupId    String
+  legacyId         Int?
+  periodYear       Int
+  periodMonth      Int
+  amount           Decimal              @db.Decimal(14, 2)
+  dueDate          DateTime?
+  status           LedgerStatus         @default(OPEN)
+  createdAt        DateTime             @default(now())
+  tenancyId        String?
+  responsibility   ChargeResponsibility @default(OWNER)
+  paidAmount       Decimal              @default(0) @db.Decimal(14, 2)
+  interestAmount   Decimal              @default(0) @db.Decimal(14, 2)
+  discountAmount   Decimal              @default(0) @db.Decimal(14, 2)
+  isCollectible    Boolean              @default(true)
+  legacyStatusCode Int?
+  concept          String?
+  chargeGroup      ChargeGroup          @relation(fields: [chargeGroupId], references: [id])
+  condominium      Condominium          @relation(fields: [condominiumId], references: [id])
+  privateArea      PrivateArea          @relation(fields: [privateAreaId], references: [id])
+  tenancy          Rental?              @relation(fields: [tenancyId], references: [id])
+  allocations      PaymentAllocation[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, periodYear, periodMonth])
+  @@index([privateAreaId])
+  @@index([privateAreaId, responsibility, periodYear, periodMonth])
+  @@index([tenancyId])
+  @@index([condominiumId, legacyStatusCode])
+  @@index([responsibility])
+}
+
+model Payment {
+  id                          String              @id @default(uuid())
+  condominiumId               String
+  legacyId                    Int?
+  paidAt                      DateTime
+  amount                      Decimal             @db.Decimal(14, 2)
+  method                      PaymentMethod
+  reference                   String?
+  notes                       String?
+  createdAt                   DateTime            @default(now())
+  privateAreaId               String?
+  legacyStatusCode            Int?
+  isLegacyActive              Boolean?
+  legacyAreaCode              Int?
+  legacyAreaIsActive          Boolean?
+  isVisibleInFinancialSummary Boolean             @default(true)
+  condominium                 Condominium         @relation(fields: [condominiumId], references: [id])
+  privateArea                 PrivateArea?        @relation(fields: [privateAreaId], references: [id])
+  allocations                 PaymentAllocation[]
+  details                     PaymentDetail[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([privateAreaId])
+  @@index([condominiumId, isVisibleInFinancialSummary])
+  @@index([condominiumId, legacyStatusCode])
+  @@index([condominiumId, legacyAreaIsActive])
+  @@index([condominiumId, paidAt])
+}
+
+model PaymentAllocation {
+  id        String   @id @default(uuid())
+  chargeId  String
+  paymentId String
+  amount    Decimal  @db.Decimal(14, 2)
+  createdAt DateTime @default(now())
+  charge    Charge   @relation(fields: [chargeId], references: [id])
+  payment   Payment  @relation(fields: [paymentId], references: [id])
+
+  @@unique([paymentId, chargeId])
+  @@index([chargeId])
+  @@index([paymentId])
+}
+
+model PaymentDetail {
+  id            String       @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  paymentId     String
+  chargeGroupId String?
+  amount        Decimal      @db.Decimal(14, 2)
+  creditBalance Decimal?     @db.Decimal(14, 2)
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  chargeGroup   ChargeGroup? @relation(fields: [chargeGroupId], references: [id])
+  condominium   Condominium  @relation(fields: [condominiumId], references: [id])
+  payment       Payment      @relation(fields: [paymentId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([paymentId])
+  @@index([chargeGroupId])
+}
+
+model PaymentMethodCatalog {
+  id            String      @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  isActive      Boolean     @default(true)
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+}
+
+model ZoneCatalog {
+  id            String           @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  initials      String?
+  marketValue   Decimal?         @db.Decimal(14, 2)
+  weight        Decimal?         @db.Decimal(12, 4)
+  isActive      Boolean          @default(true)
+  subzones      SubzoneCatalog[]
+  condominium   Condominium      @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+}
+
+model SubzoneCatalog {
+  id            String       @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  initials      String?
+  isActive      Boolean      @default(true)
+  zoneId        String?
+  condominium   Condominium  @relation(fields: [condominiumId], references: [id])
+  zone          ZoneCatalog? @relation(fields: [zoneId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([zoneId])
+}
+
+model LandUseCatalog {
+  id            String      @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  initials      String?
+  order         Int?
+  weight        Decimal?    @db.Decimal(12, 4)
+  percentage    Decimal?    @db.Decimal(12, 6)
+  isActive      Boolean     @default(true)
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+}
+
+model MiscIncomeCatalog {
+  id                  String       @id @default(uuid())
+  condominiumId       String
+  legacyId            Int?
+  name                String
+  legacyChargeGroupId Int?
+  isActive            Boolean      @default(true)
+  chargeGroupId       String?
+  order               Int          @default(0)
+  incomes             Income[]
+  chargeGroup         ChargeGroup? @relation(fields: [chargeGroupId], references: [id])
+  condominium         Condominium  @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([chargeGroupId])
+  @@index([condominiumId, isActive, chargeGroupId])
+  @@index([condominiumId, isActive, legacyChargeGroupId])
+}
+
+model Income {
+  id                  String             @id @default(uuid())
+  condominiumId       String
+  legacyId            Int?
+  date                DateTime
+  concept             String
+  amount              Decimal            @db.Decimal(14, 2)
+  paymentMethod       PaymentMethod?
+  notes               String?
+  isActive            Boolean            @default(true)
+  legacyChargeGroupId Int?
+  legacyMiscCatalogId Int?
+  legacyPrivateAreaId Int?
+  isConfirmed         Boolean?
+  chargeGroupId       String?
+  miscCatalogId       String?
+  privateAreaId       String?
+  receiptUrl          String?
+  chargeGroup         ChargeGroup?       @relation(fields: [chargeGroupId], references: [id])
+  condominium         Condominium        @relation(fields: [condominiumId], references: [id])
+  miscCatalog         MiscIncomeCatalog? @relation(fields: [miscCatalogId], references: [id])
+  privateArea         PrivateArea?       @relation(fields: [privateAreaId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive, date])
+  @@index([chargeGroupId])
+  @@index([miscCatalogId])
+  @@index([privateAreaId])
+  @@index([condominiumId, legacyChargeGroupId])
+  @@index([condominiumId, legacyMiscCatalogId, legacyChargeGroupId, isActive, date])
+}
+
+model Expense {
+  id                    String                @id @default(uuid())
+  condominiumId         String
+  legacyId              Int?
+  date                  DateTime
+  concept               String
+  amount                Decimal               @db.Decimal(14, 2)
+  paymentMethod         PaymentMethod?
+  notes                 String?
+  isActive              Boolean               @default(true)
+  legacyBudgetConceptId Int?
+  legacyReceipt         String?
+  legacyProjectName     String?
+  budgetConceptId       String?
+  projectName           String?
+  receiptUrl            String?
+  budgetConcept         BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id])
+  condominium           Condominium           @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive, date])
+  @@index([budgetConceptId])
+  @@index([condominiumId, legacyBudgetConceptId])
+}
+
+model Budget {
+  id                      String                   @id @default(uuid())
+  condominiumId           String
+  legacyId                Int?
+  year                    Int
+  name                    String?
+  isActive                Boolean                  @default(true)
+  status                  BudgetStatus             @default(OPEN)
+  condominium             Condominium              @relation(fields: [condominiumId], references: [id])
+  lines                   BudgetLine[]
+  expenseConcepts         BudgetExpenseConcept[]
+  budgetGroups            BudgetGroup[]
+  expenseConceptGroupMaps ExpenseConceptGroupMap[]
+
+  @@unique([condominiumId, year])
+}
+
+model BudgetGroup {
+  id            String                 @id @default(uuid())
+  condominiumId String                 @map("condominium_id")
+  year          Int
+  name          String
+  isActive      Boolean                @default(true) @map("is_active")
+  legacyId      Int?                   @map("legacy_id")
+  category      ExpenseBudgetGroup     @default(OTHER)
+  order         Int                    @default(0)
+  parentId      String?                @map("parent_id")
+  concepts      BudgetExpenseConcept[]
+  condominium   Condominium            @relation(fields: [condominiumId], references: [id])
+  budget        Budget                 @relation(fields: [condominiumId, year], references: [condominiumId, year])
+  parent        BudgetGroup?           @relation("BudgetGroupToParent", fields: [parentId], references: [id])
+  children      BudgetGroup[]          @relation("BudgetGroupToParent")
+
+  @@unique([condominiumId, year, legacyId])
+  @@index([condominiumId, year, isActive])
+  @@map("budget_group")
+}
+
+model BudgetExpenseConcept {
+  id                    String                   @id @default(uuid())
+  condominiumId         String                   @map("condominium_id")
+  year                  Int
+  name                  String
+  budgetGroup           ExpenseBudgetGroup       @map("group")
+  isActive              Boolean                  @default(true) @map("is_active")
+  legacyBudgetConceptId Int?                     @map("legacy_budget_concept_id")
+  source                String                   @default("legacy_etl")
+  createdAt             DateTime                 @default(now()) @map("created_at")
+  updatedAt             DateTime                 @updatedAt @map("updated_at")
+  budgetGroupId         String?                  @map("budget_group_id")
+  order                 Int                      @default(0)
+  type                  String                   @default("N/A")
+  budgetLines           BudgetLine[]
+  expenses              Expense[]
+  group                 BudgetGroup?             @relation(fields: [budgetGroupId], references: [id])
+  condominium           Condominium              @relation(fields: [condominiumId], references: [id])
+  budget                Budget                   @relation(fields: [condominiumId, year], references: [condominiumId, year])
+  mappings              ExpenseConceptGroupMap[]
+
+  @@unique([condominiumId, year, legacyBudgetConceptId])
+  @@index([condominiumId, year, budgetGroup, isActive])
+  @@index([condominiumId, year, isActive])
+  @@index([condominiumId, year, name])
+  @@map("budget_expense_concept")
+}
+
+model BudgetLine {
+  id              String                @id @default(uuid())
+  budgetId        String
+  legacyId        Int?
+  concept         String
+  groupName       String?
+  annualAmount    Decimal?              @db.Decimal(14, 2)
+  budgetConceptId String?
+  budgetConcept   BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id])
+  budget          Budget                @relation(fields: [budgetId], references: [id])
+  months          BudgetMonth[]
+
+  @@index([budgetId])
+  @@index([budgetConceptId])
+}
+
+model BudgetMonth {
+  id           String     @id @default(uuid())
+  budgetLineId String
+  month        Int
+  amount       Decimal    @db.Decimal(14, 2)
+  budgetLine   BudgetLine @relation(fields: [budgetLineId], references: [id])
+
+  @@unique([budgetLineId, month])
+}
+
+model ExpenseConceptGroupMap {
+  id                    BigInt                @id @default(autoincrement())
+  condominiumId         String                @map("condominium_id")
+  year                  Int
+  legacyBudgetConceptId Int                   @map("legacy_budget_concept_id")
+  budgetGroupId         Int                   @map("budget_group_id")
+  source                String                @default("legacy_etl")
+  createdAt             DateTime              @default(now()) @map("created_at")
+  updatedAt             DateTime              @updatedAt @map("updated_at")
+  isBudgetConceptActive Boolean               @default(true) @map("is_budget_concept_active")
+  budgetConceptId       String?               @map("budget_concept_id")
+  budgetConcept         BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id])
+  condominium           Condominium           @relation(fields: [condominiumId], references: [id])
+  budget                Budget                @relation(fields: [condominiumId, year], references: [condominiumId, year])
+
+  @@unique([condominiumId, year, legacyBudgetConceptId])
+  @@unique([condominiumId, year, legacyBudgetConceptId], map: "expense_concept_group_map_cond_year_concept_key")
+  @@index([year, legacyBudgetConceptId])
+  @@index([budgetConceptId])
+  @@index([condominiumId, year, isBudgetConceptActive])
+  @@index([condominiumId, year, budgetGroupId], map: "expense_concept_group_map_cond_year_group_idx")
+  @@index([condominiumId, year, budgetGroupId], map: "idx_expense_concept_group_map_lookup")
+  @@map("expense_concept_group_map")
+}
+
+model Meeting {
+  id            String           @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  title         String
+  meetingType   String?
+  status        String?
+  createdAt     DateTime         @default(now())
+  condominium   Condominium      @relation(fields: [condominiumId], references: [id])
+  sessions      MeetingSession[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+}
+
+model MeetingSession {
+  id          String       @id @default(uuid())
+  meetingId   String
+  startsAt    DateTime?
+  endsAt      DateTime?
+  status      String?
+  attendances Attendance[]
+  meeting     Meeting      @relation(fields: [meetingId], references: [id])
+  votes       Vote[]
+
+  @@index([meetingId])
+}
+
+model Attendance {
+  id               String         @id @default(uuid())
+  meetingSessionId String
+  privateAreaId    String
+  attendanceType   String?
+  coefficient      Decimal?       @db.Decimal(12, 6)
+  meetingSession   MeetingSession @relation(fields: [meetingSessionId], references: [id])
+  privateArea      PrivateArea    @relation(fields: [privateAreaId], references: [id])
+
+  @@index([meetingSessionId])
+  @@index([privateAreaId])
+}
+
+model Vote {
+  id               String         @id @default(uuid())
+  meetingSessionId String
+  topic            String
+  voteType         String?
+  votesFor         Int?
+  votesAgainst     Int?
+  votesAbstain     Int?
+  meetingSession   MeetingSession @relation(fields: [meetingSessionId], references: [id])
+
+  @@index([meetingSessionId])
+}
+
+model Notification {
+  id            String                @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  title         String
+  message       String
+  category      String?
+  sentAt        DateTime?
+  categoryId    String?
+  validUntil    DateTime?
+  imageUrl      String?
+  imagePath     String?
+  pdfUrl        String?
+  pdfPath       String?
+  categoryRef   NotificationCategory? @relation(fields: [categoryId], references: [id])
+  condominium   Condominium           @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+  @@index([categoryId])
+}
+
+model NotificationCategory {
+  id            String         @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  color         String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  notifications Notification[]
+  condominium   Condominium    @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive])
+}
+
+model TicketDepartment {
+  id            String      @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  email         String
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  tickets       Ticket[]
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive])
+}
+
+model Ticket {
+  id                String            @id @default(uuid())
+  condominiumId     String
+  legacyId          Int?
+  privateAreaId     String?
+  openedById        String?
+  title             String
+  description       String?
+  status            TicketStatus      @default(OPEN)
+  openedAt          DateTime          @default(now())
+  closedAt          DateTime?
+  departmentId      String?
+  response          String?
+  respondedAt       DateTime?
+  responseImageUrl  String?
+  responseImagePath String?
+  responsePdfUrl    String?
+  responsePdfPath   String?
+  isActive          Boolean           @default(true)
+  condominium       Condominium       @relation(fields: [condominiumId], references: [id])
+  department        TicketDepartment? @relation(fields: [departmentId], references: [id])
+  openedBy          User?             @relation(fields: [openedById], references: [id])
+  privateArea       PrivateArea?      @relation(fields: [privateAreaId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+  @@index([condominiumId, isActive])
+  @@index([condominiumId, status])
+  @@index([departmentId])
+  @@index([privateAreaId])
+}
+
+model Project {
+  id                  String            @id @default(uuid())
+  condominiumId       String
+  legacyId            Int?
+  name                String
+  description         String?
+  startsAt            DateTime?
+  endsAt              DateTime?
+  isActive            Boolean           @default(true)
+  commonAreasM2       Decimal?          @db.Decimal(14, 4)
+  condominiumFormatId Int?
+  developedBy         String?
+  footerLeft          String?
+  footerRight         String?
+  hasVccc             Boolean?
+  initials            String?
+  startYear           Int?
+  totalApoles         Int?
+  totalM2             Decimal?          @db.Decimal(14, 4)
+  usesLandUseFormula  Boolean?
+  condominiumImageUrl String?
+  condominiumLogoUrl  String?
+  footerLogoUrl       String?
+  privacyNoticePdfUrl String?
+  privacyNoticeText   String?
+  condominium         Condominium       @relation(fields: [condominiumId], references: [id])
+  documents           ProjectDocument[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+}
+
+model ProjectDocument {
+  id            String              @id @default(uuid())
+  projectId     String
+  legacyId      Int?
+  fileName      String
+  mimeType      String?
+  sizeBytes     Int?
+  storageBucket String
+  storagePath   String
+  checksum      String?
+  uploadedAt    DateTime            @default(now())
+  documentType  ProjectDocumentType @default(REGULATION)
+  isActive      Boolean             @default(true)
+  project       Project             @relation(fields: [projectId], references: [id])
+
+  @@unique([projectId, legacyId])
+  @@index([projectId])
+  @@index([projectId, documentType])
+  @@index([isActive])
+}
+
+model ContactType {
+  id        String         @id @default(uuid())
+  legacyId  Int?           @unique
+  name      String
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  contacts  ContactEntry[]
+}
+
+model ContactEntry {
+  id            String            @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  contactTypeId String
+  name          String
+  value         String
+  linkUrl       String
+  linkTarget    ContactLinkTarget @default(SAME_TAB)
+  sortOrder     Int               @default(0)
+  isActive      Boolean           @default(true)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  condominium   Condominium       @relation(fields: [condominiumId], references: [id])
+  contactType   ContactType       @relation(fields: [contactTypeId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, sortOrder])
+  @@index([contactTypeId])
+}
+
+model MigrationRun {
+  id                String                      @id @default(uuid())
+  name              String
+  sourceSnapshot    String
+  dryRun            Boolean                     @default(true)
+  status            MigrationRunStatus          @default(CREATED)
+  startedAt         DateTime?
+  completedAt       DateTime?
+  createdAt         DateTime                    @default(now())
+  stagingRows       LegacyStagingRow[]
+  idMaps            MigrationIdMap[]
+  validationResults MigrationValidationResult[]
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model LegacyStagingRow {
+  id             String       @id @default(uuid())
+  runId          String
+  legacyTable    String
+  legacyId       Int
+  payload        Json
+  payloadHash    String
+  extractedAt    DateTime     @default(now())
+  transformedAt  DateTime?
+  loadedAt       DateTime?
+  promotedAt     DateTime?
+  promotionError String?
+  run            MigrationRun @relation(fields: [runId], references: [id])
+
+  @@unique([runId, legacyTable, legacyId])
+  @@index([runId, legacyTable])
+  @@index([runId, promotedAt])
+}
+
+model MigrationIdMap {
+  id           String       @id @default(uuid())
+  runId        String
+  legacyTable  String
+  legacyId     Int
+  targetEntity String
+  targetId     String
+  createdAt    DateTime     @default(now())
+  run          MigrationRun @relation(fields: [runId], references: [id])
+
+  @@unique([runId, legacyTable, legacyId, targetEntity])
+  @@index([runId, targetEntity])
+}
+
+model MigrationValidationResult {
+  id           String                      @id @default(uuid())
+  runId        String
+  layer        String
+  targetTable  String
+  sourceCount  Int
+  stagingCount Int
+  finalCount   Int
+  difference   Int
+  severity     MigrationValidationSeverity @default(INFO)
+  details      Json?
+  createdAt    DateTime                    @default(now())
+  run          MigrationRun                @relation(fields: [runId], references: [id])
+
+  @@index([runId, layer])
+  @@index([runId, severity])
+}
+
+model SanctionCatalog {
+  id            String      @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  article       String?
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, legacyId])
+}
+
+model Announcement {
+  id                   String                        @id @default(uuid())
+  condominiumId        String
+  legacyId             Int?
+  name                 String
+  typeId               String
+  subtypeId            String
+  statusId             String
+  comments             String?
+  guests               String?
+  pdfUrl               String?
+  expectedAttendance   Int                           @default(0)
+  actualAttendance     Int                           @default(0)
+  attendancePercentage Decimal                       @default(0.0000) @db.Decimal(10, 4)
+  conveningPosition    String?                       @db.VarChar(200)
+  moderatorPosition    String?                       @db.VarChar(200)
+  isActive             Boolean                       @default(true)
+  createdAt            DateTime                      @default(now())
+  updatedAt            DateTime                      @updatedAt
+  deletedAt            DateTime?
+  conveningPersonId    String?
+  moderatorPersonId    String?
+  condominium          Condominium                   @relation(fields: [condominiumId], references: [id])
+  status               AnnouncementStatus            @relation(fields: [statusId], references: [id])
+  subtype              AnnouncementSubtype           @relation(fields: [subtypeId], references: [id])
+  type                 AnnouncementType              @relation(fields: [typeId], references: [id])
+  dates                AnnouncementDate[]
+  invitedPositions     AnnouncementInvitedPosition[]
+  topics               AnnouncementTopic[]
+  specialGuests        SpecialGuest[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId])
+  @@index([statusId])
+}
+
+model AnnouncementType {
+  id            String         @id @default(uuid())
+  legacyId      Int?           @unique
+  name          String
+  isActive      Boolean        @default(true)
+  announcements Announcement[]
+}
+
+model AnnouncementSubtype {
+  id            String         @id @default(uuid())
+  legacyId      Int?           @unique
+  typeId        String
+  name          String
+  isActive      Boolean        @default(true)
+  announcements Announcement[]
+}
+
+model AnnouncementStatus {
+  id            String         @id @default(uuid())
+  legacyId      Int?           @unique
+  name          String
+  color         String?        @default("#6d422a")
+  isActive      Boolean        @default(true)
+  announcements Announcement[]
+}
+
+model AnnouncementDate {
+  id             String       @id @default(uuid())
+  announcementId String
+  legacyId       Int?         @unique
+  date           DateTime
+  time           String?
+  location       String?
+  callType       String       @default("1ra Convocatoria")
+  status         String       @default("Pendiente")
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+}
+
+model AnnouncementTopic {
+  id              String       @id @default(uuid())
+  announcementId  String
+  legacyId        Int?         @unique
+  order           Int          @default(0)
+  title           String
+  description     String?
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  actionType      String?      @default("NONE")
+  durationMinutes Int?
+  presenterId     String?
+  announcement    Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+}
+
+model AnnouncementInvitedPosition {
+  id             String                       @id @default(uuid())
+  announcementId String
+  positionId     String
+  isActive       Boolean                      @default(true)
+  createdAt      DateTime                     @default(now())
+  announcement   Announcement                 @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+  position       CondominiumStructurePosition @relation(fields: [positionId], references: [id])
+
+  @@unique([announcementId, positionId])
+}
+
+model SpecialGuest {
+  id             String       @id @default(uuid())
+  announcementId String
+  name           String
+  email          String?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  announcement   Announcement @relation(fields: [announcementId], references: [id], onDelete: Cascade)
+}
+
+enum UserType {
+  INDIVIDUAL
+  LEGAL_ENTITY
+  ADMIN
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  CHECK
+  OTHER
+}
+
+enum ExpenseBudgetGroup {
+  ADMINISTRATION
+  MAINTENANCE
+  SECURITY
+  INFRASTRUCTURE
+  EXTRAORDINARY
+  OTHER
+}
+
+enum LedgerStatus {
+  OPEN
+  PARTIAL
+  PAID
+  CANCELED
+}
+
+enum ChargeResponsibility {
+  OWNER
+  COMMERCE
+}
+
+enum ChargeGroupCanonicalKind {
+  ORDINARY
+  EXTRA_CONDO
+  EXTRA_COMMERCE
+  STC
+  SANCTION
+  COMODATO
+  OTHER
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+enum PrivateAreaStatus {
+  UNASSIGNED
+  AVAILABLE
+  SOLD
+  UNDER_CONSTRUCTION
+  RENTED
+  DELINQUENT
+}
+
+enum ContactLinkTarget {
+  SAME_TAB
+  NEW_TAB
+}
+
+enum ProjectDocumentType {
+  REGULATION
+  INTERNAL_DOCUMENT
+}
+
+enum MigrationRunStatus {
+  CREATED
+  RUNNING
+  FAILED
+  COMPLETED
+}
+
+enum MigrationValidationSeverity {
+  INFO
+  WARNING
+  ERROR
+}
+
+enum BudgetStatus {
+  OPEN
+  CLOSED
+}
+
+
