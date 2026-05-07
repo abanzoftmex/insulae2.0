@@ -22,6 +22,7 @@ import {
   AlertCircle,
   Home,
   ChevronDown,
+  LogOut,
   type LucideIcon,
 } from "lucide-react";
 import { useHydratedSidebar } from "@/stores/ui-sidebar.store";
@@ -128,6 +129,7 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Seguridad",
     items: [
       { label: "Cambiar contraseña", href: "/cambio-contrasena", icon: Settings },
+      { label: "Cerrar sesión", href: "/logout", icon: LogOut },
     ],
   },
 ];
@@ -390,6 +392,12 @@ export function AppShell({
   );
 
   // ─── Shell ───────────────────────────────────────────────────────────────────
+
+  const isLoginPage = currentPath === "/login";
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="flex min-h-screen bg-canvas font-sans">
