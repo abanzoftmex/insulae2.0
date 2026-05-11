@@ -5,6 +5,7 @@ import { toDirectoryVM } from "@/modules/directory/presentation/directory.vm";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/shared/utils/cn";
@@ -44,13 +45,27 @@ function parsePositiveInteger(value: string, fallback: number): number {
 function Paginator({ page, totalPages, buildHref }: { page: number; totalPages: number; buildHref: (p: number) => string }) {
   if (totalPages <= 1) return null;
   return (
-    <div className="flex items-center gap-1.5 h-8">
-      <Link href={buildHref(Math.max(1, page - 1))} className={cn("p-1 rounded hover:bg-canvas transition-colors", page === 1 && "opacity-20 pointer-events-none")}>
-        <ChevronLeft className="h-4 w-4" />
+    <div className="flex items-center gap-3">
+      <Link
+        href={buildHref(Math.max(1, page - 1))}
+        className={cn(
+          "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+          page === 1 && "opacity-30 pointer-events-none"
+        )}
+      >
+        <ChevronLeft className="h-3.5 w-3.5" /> Anterior
       </Link>
-      <span className="text-[11px] font-black uppercase text-ink-soft/60">Pág {page} de {totalPages}</span>
-      <Link href={buildHref(Math.min(totalPages, page + 1))} className={cn("p-1 rounded hover:bg-canvas transition-colors", page === totalPages && "opacity-20 pointer-events-none")}>
-        <ChevronRight className="h-4 w-4" />
+      <span className="text-[11px] font-bold uppercase text-ink-soft/80 tabular-nums">
+        Pág {page} / {totalPages}
+      </span>
+      <Link
+        href={buildHref(Math.min(totalPages, page + 1))}
+        className={cn(
+          "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+          page === totalPages && "opacity-30 pointer-events-none"
+        )}
+      >
+        Siguiente <ChevronRight className="h-3.5 w-3.5" />
       </Link>
     </div>
   );
@@ -92,25 +107,28 @@ export default async function DirectorioPage(props: PageProps) {
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-xl font-black text-brand tracking-tighter uppercase">Directorio de Personas</h1>
-          <p className="text-ink-soft/50 text-[11px] font-bold uppercase tracking-tight">
-            Gestión centralizada de residentes, propietarios y personal operativo.
-          </p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Directorio de Personas</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Gestión de Personas</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              Gestión centralizada de residentes, propietarios y personal operativo.
+            </p>
+          </div>
         </div>
-        <Paginator page={vm.pagination.page} totalPages={vm.pagination.totalPages} buildHref={buildHref} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <StatCard label="Total Personas" value={vm.totalUsers} icon={<Users className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Total Personas" value={vm.totalUsers} icon={<Users className="h-3.5 w-3.5" />} />
         <div className="md:col-span-3">
           <Card className="p-3 shadow-layered border-transparent">
             <form method="get" className="flex gap-3">
               <div className="flex-1">
                 <Input label="Buscador Universal" name="q" defaultValue={query} placeholder="Nombre, correo, teléfono, rol o unidad..." className="h-9" />
               </div>
-              <Button type="submit" className="h-9 px-6 text-[10px] font-black uppercase gap-2">
+              <Button type="submit" className="h-9 px-6 text-[10px] font-bold uppercase gap-2">
                 <Search className="h-4 w-4" /> Buscar
               </Button>
             </form>
@@ -119,11 +137,22 @@ export default async function DirectorioPage(props: PageProps) {
       </div>
 
       {/* Main Table */}
+      {vm.pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70">
+            {vm.totalUsers} personas · página {vm.pagination.page} de {vm.pagination.totalPages}
+          </p>
+          <Paginator page={vm.pagination.page} totalPages={vm.pagination.totalPages} buildHref={buildHref} />
+        </div>
+      )}
       <Card className="overflow-hidden border-transparent shadow-layered">
+        <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white">Registro de Personas</p>
+        </div>
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+              <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/80">
                 <th className="px-4">Nombre / Razón Social</th>
                 <th className="px-4">Vínculo / Unidad</th>
                 <th className="px-4">Contacto</th>
@@ -134,7 +163,7 @@ export default async function DirectorioPage(props: PageProps) {
             <tbody className="divide-y divide-line/30">
               {vm.people.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-20 text-center text-ink-soft/30 italic font-bold uppercase text-[11px]">
+                  <td colSpan={5} className="py-20 text-center text-ink-soft/50 italic font-bold uppercase text-[11px]">
                     Sin registros que coincidan con la búsqueda
                   </td>
                 </tr>
@@ -143,35 +172,35 @@ export default async function DirectorioPage(props: PageProps) {
                   <tr key={person.id} className="h-14 hover:bg-canvas/10 transition-colors group">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                         <div className="h-8 w-8 rounded-full bg-brand-mint/30 flex items-center justify-center text-brand font-black text-[10px]">
+                         <div className="h-8 w-8 rounded-full bg-brand-mint/30 flex items-center justify-center text-brand font-bold text-[10px]">
                            {person.legalNameLabel.slice(0, 2).toUpperCase()}
                          </div>
                          <div className="min-w-0">
-                           <p className="text-[13px] font-black text-ink leading-tight truncate">{person.legalNameLabel}</p>
-                           <p className="text-[11px] font-semibold text-ink-soft/50 mt-0.5">{person.primaryRoleLabel}</p>
+                           <p className="text-[13px] font-bold text-ink leading-tight truncate">{person.legalNameLabel}</p>
+                           <p className="text-[11px] font-semibold text-ink-soft/70 mt-0.5">{person.primaryRoleLabel}</p>
                          </div>
                       </div>
                     </td>
 
                     <td className="px-4 py-3">
-                       <div className="flex items-center gap-1.5">
-                         <Briefcase className="h-3 w-3 text-brand/30" />
-                         <span className="text-[11px] font-bold text-ink-soft uppercase tracking-tight">{person.commerceLabel || "Individual"}</span>
+                       <div className="flex items-center gap-2">
+                         <Briefcase className="h-3.5 w-3.5 text-ink-soft/60" />
+                         <span className="text-[11px] font-bold text-ink-soft">{person.commerceLabel || "Individual"}</span>
                        </div>
                     </td>
 
                     <td className="px-4 py-3">
-                       <div className="flex flex-col gap-0.5">
+                       <div className="flex flex-col gap-1">
                          {person.email && (
-                           <div className="flex items-center gap-1.5 text-ink-soft/60">
-                             <Mail className="h-2.5 w-2.5" />
-                             <span className="text-[10px] font-medium truncate max-w-[150px]">{person.email}</span>
+                           <div className="flex items-center gap-2 text-ink-soft">
+                             <Mail className="h-3.5 w-3.5 shrink-0 text-ink-soft/60" />
+                             <span className="text-[11px] font-medium truncate max-w-[160px]">{person.email}</span>
                            </div>
                          )}
                          {person.phone && (
-                           <div className="flex items-center gap-1.5 text-ink-soft/60">
-                             <Phone className="h-2.5 w-2.5" />
-                             <span className="text-[10px] font-medium">{person.phone}</span>
+                           <div className="flex items-center gap-2 text-ink-soft">
+                             <Phone className="h-3.5 w-3.5 shrink-0 text-ink-soft/60" />
+                             <span className="text-[11px] font-medium">{person.phone}</span>
                            </div>
                          )}
                        </div>
@@ -180,17 +209,17 @@ export default async function DirectorioPage(props: PageProps) {
                     <td className="px-4 py-3">
                        <div className="flex items-center gap-2">
                          {person.requiresInvoiceLabel === "Si" ? (
-                           <Badge variant="brand" className="h-4 px-1.5 text-[10px]">Factura</Badge>
+                           <Badge variant="brand" className="px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest">Factura</Badge>
                          ) : (
-                           <span className="text-[10px] text-ink-soft/30">Sin Factura</span>
+                           <span className="text-[11px] font-medium text-ink-soft/60">Sin Factura</span>
                          )}
                        </div>
                     </td>
 
                     <td className="px-4 py-3 text-right">
-                       <Button variant="ghost" size="sm" asChild className="h-7 px-3 text-[10px] font-black uppercase gap-1 hover:bg-brand hover:text-white">
+                       <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25">
                          <Link href={buildEditHref(person.reference)}>
-                           Perfil <ArrowRight className="h-3 w-3" />
+                           Perfil <ArrowRight className="h-3.5 w-3.5" />
                          </Link>
                        </Button>
                     </td>
@@ -203,7 +232,7 @@ export default async function DirectorioPage(props: PageProps) {
       </Card>
 
       <div className="flex justify-between items-center py-2 px-1">
-         <p className="text-[11px] font-bold text-ink-soft/40 uppercase tracking-widest">
+         <p className="text-[11px] font-bold text-ink-soft/70 uppercase tracking-widest">
            Base de datos consolidada · {vm.totalUsers} Personas en sistema
          </p>
          <Paginator page={vm.pagination.page} totalPages={vm.pagination.totalPages} buildHref={buildHref} />

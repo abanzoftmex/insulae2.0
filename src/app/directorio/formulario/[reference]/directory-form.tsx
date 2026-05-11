@@ -163,7 +163,7 @@ export function DirectoryForm({
           <Card className="rounded-[2.5rem] border border-brand/10 bg-white/80 backdrop-blur-md p-8 shadow-xl shadow-brand/5 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full -mr-16 -mt-16 blur-2xl" />
             
-            <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
               <span className="w-6 h-px bg-brand/20" /> Configuración Inicial
             </h2>
 
@@ -265,7 +265,7 @@ export function DirectoryForm({
 
           {/* Personal Info Section */}
           <Card className="rounded-[2.5rem] border border-brand/10 bg-white/80 backdrop-blur-md p-8 shadow-xl shadow-brand/5">
-            <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
               <span className="w-6 h-px bg-brand/20" /> Información General del Propietario
             </h2>
 
@@ -284,7 +284,7 @@ export function DirectoryForm({
 
           {/* Billing Info Section */}
           <Card className="rounded-[2.5rem] border border-brand/10 bg-white/80 backdrop-blur-md p-8 shadow-xl shadow-brand/5">
-            <h2 className="text-[11px] font-black uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
+            <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
               <span className="w-6 h-px bg-brand/20" /> Información de Facturación
             </h2>
 
@@ -404,7 +404,7 @@ export function DirectoryForm({
         <div className="grid gap-12">
           {initialData.participationBlocks.map((block) => (
             <div key={block.title} className="space-y-4">
-              <h3 className="text-[12px] font-black uppercase tracking-[0.3em] text-brand/60 text-center">{block.title}</h3>
+              <h3 className="text-[12px] font-bold uppercase tracking-[0.3em] text-brand/60 text-center">{block.title}</h3>
               <Card className="rounded-3xl border border-brand/10 bg-white/70 backdrop-blur-sm overflow-hidden shadow-xl shadow-brand/5">
                 <div className="overflow-x-auto">
                   <table className="w-full text-left border-collapse">

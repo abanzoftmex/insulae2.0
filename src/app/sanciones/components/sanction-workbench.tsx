@@ -124,7 +124,7 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
   return (
     <>
       <div className="flex items-center gap-2 mb-2 px-1">
-        <div className="h-7 px-3 flex items-center justify-center rounded bg-brand/5 border border-brand/10 text-brand text-[9px] font-black uppercase tracking-tighter">
+        <div className="h-7 px-3 flex items-center justify-center rounded bg-brand/5 border border-brand/10 text-brand text-[9px] font-bold uppercase tracking-tighter">
           <Layers className="h-3 w-3 mr-1.5 opacity-50" />
           {initialSanctions.length} Tipos de sanciones
         </div>
@@ -160,11 +160,11 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
         title={editingId ? "Editar Sanción" : "Nueva Sanción"}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
             <Button 
               disabled={isPending || !formName} 
               onClick={handleSave}
-              className="h-8 px-6 text-[10px] font-black uppercase"
+              className="h-8 px-6 text-[10px] font-bold uppercase"
             >
               {isPending ? "Guardando..." : "Guardar Registro"}
             </Button>

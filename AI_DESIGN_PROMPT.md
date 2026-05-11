@@ -251,7 +251,7 @@ Sizes: `sm` = `h-8 px-3 text-xs`, `md` = `h-10 px-4`, `lg` = `h-12 px-6 text-bas
 | Small label | `text-[12px] text-ink-soft` | 12px |
 | Micro label | `text-[11px] text-ink-soft/60` | 11px |
 
-**Never use `font-black` (weight 900) on UI labels** — `font-semibold` (600) is the max for dashboard UI. `font-black` reads as too aggressive.
+**Do not use `font-black` (weight 900)** — the strongest weight in UI is **`font-bold` (700)** (uppercase labels, table headers, etc.); use **`font-semibold` (600)** when you want less emphasis.
 
 **Never use `uppercase tracking-tighter`** on headings — use `tracking-tight` or default.
 
@@ -299,7 +299,7 @@ Use these as your mental model. If a value looks too large, check that no `--spa
 - **No pure black** text — always `text-ink`
 - **No `--spacing-N` tokens** in `@theme` (breaks utility classes)
 - **No inline forms** on listing pages — all CRUD in modals
-- **No `font-black`** on UI text (too heavy for dashboard)
+- **No `font-black` (900)** on UI text — **`font-bold` (700)** is the ceiling for weight
 - **No component libraries** (shadcn/ui, Radix, Headless UI, etc.) — Tailwind only
 - **No per-page font imports** — only the root `layout.tsx` Inter import
 

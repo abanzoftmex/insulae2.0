@@ -17,6 +17,7 @@ import {
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
 
 export const metadata: Metadata = {
@@ -95,17 +96,17 @@ function CompactFinancialTable({
     <Card className="overflow-hidden border-transparent shadow-layered">
       <CardHeader className="px-4 py-3 border-b border-line bg-card">
         <div className="flex flex-col">
-          <CardTitle className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">
             {title}
           </CardTitle>
-          <h2 className="text-sm font-black uppercase text-brand mt-0.5">{subtitle}</h2>
+          <h2 className="text-sm font-bold uppercase text-brand mt-0.5">{subtitle}</h2>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
           <table className="w-full text-left border-collapse min-w-[120rem]">
             <thead>
-              <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-black uppercase tracking-tighter text-ink-soft/70">
+              <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
                 <th className={cn("sticky left-0 z-30 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", tone.headerBg, tone.textTone)}>
                   {firstColumnLabel}
                 </th>
@@ -135,7 +136,7 @@ function CompactFinancialTable({
                   {row.yearly.map((yearSlice) => (
                     <Fragment key={`body-${row.id}-${yearSlice.year}`}>
                       <td className={cn(
-                        "px-4 text-right text-[12px] font-black border-r border-line",
+                        "px-4 text-right text-[12px] font-bold border-r border-line",
                         yearSlice.annualTotalValue >= 0 ? "text-brand" : "text-danger"
                       )}>
                         {yearSlice.annualTotal}
@@ -182,22 +183,23 @@ export default async function ResumenFinancieroPage({
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black text-brand tracking-tighter uppercase">Resumen Financiero</h1>
-            <Badge variant="brand">Fase 1 · BETA</Badge>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Resumen Financiero</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Fase 1 · BETA</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {vm.condominiumName} · Corte {vm.selectedYear} · {vm.generatedAtLabel}
+            </p>
           </div>
-          <p className="text-ink-soft/70 text-[12px] font-bold uppercase tracking-tight">
-            {vm.condominiumName} · Corte {vm.selectedYear} · {vm.generatedAtLabel}
-          </p>
         </div>
 
         <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
           <Link
             href="?mode=ordinary"
             className={cn(
-              "h-8 px-4 flex items-center rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
+              "h-8 px-4 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
               showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
             )}
           >
@@ -206,7 +208,7 @@ export default async function ResumenFinancieroPage({
           <Link
             href="?mode=extraordinary"
             className={cn(
-              "h-8 px-4 flex items-center rounded-md text-[10px] font-black uppercase tracking-tighter transition-all",
+              "h-8 px-4 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
               !showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
             )}
           >
@@ -266,17 +268,17 @@ export default async function ResumenFinancieroPage({
             <Card className="overflow-hidden border-transparent shadow-layered">
               <CardHeader className="px-4 py-3 border-b border-line bg-card">
                 <div className="flex flex-col">
-                  <CardTitle className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">
                     Corte Mensual
                   </CardTitle>
-                  <h2 className="text-sm font-black uppercase text-danger mt-0.5">{vm.ordinaryExpensesLegacyTable.title}</h2>
+                  <h2 className="text-sm font-bold uppercase text-danger mt-0.5">{vm.ordinaryExpensesLegacyTable.title}</h2>
                 </div>
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto no-scrollbar">
                   <table className="w-full text-left border-collapse min-w-[110rem]">
                     <thead>
-                      <tr className="h-9 bg-danger/10 border-b border-line text-[10px] font-black uppercase tracking-tighter text-danger">
+                      <tr className="h-9 bg-danger/10 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-danger">
                         <th className="sticky left-0 z-30 px-4 border-r border-line bg-danger/10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Tipo de Egreso</th>
                         <th className="px-4 text-right border-r border-line">Egreso {vm.ordinaryExpensesLegacyTable.years[0]}</th>
                         {vm.monthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m} {vm.ordinaryExpensesLegacyTable.years[0]}</th>)}
@@ -288,11 +290,11 @@ export default async function ResumenFinancieroPage({
                         const s1 = row.yearly[0];
                         const s2 = row.yearly[1];
                         return (
-                          <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-danger/10 text-danger font-black")}>
+                          <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-danger/10 text-danger font-bold")}>
                             <td className={cn("sticky left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-danger/10" : "bg-danger/[0.02]")}>{row.label}</td>
-                            <td className="px-4 text-right font-black border-r border-line">{s1?.annualTotal}</td>
+                            <td className="px-4 text-right font-bold border-r border-line">{s1?.annualTotal}</td>
                             {s1?.months.map((v, i) => <td key={i} className="px-3 text-right text-ink-soft border-r border-line/30">{v}</td>)}
-                            <td className="px-4 text-right font-black border-r border-line">{s2?.annualTotal}</td>
+                            <td className="px-4 text-right font-bold border-r border-line">{s2?.annualTotal}</td>
                           </tr>
                         )
                       })}
@@ -308,15 +310,15 @@ export default async function ResumenFinancieroPage({
                 <Card key={table.id} className="overflow-hidden border-transparent shadow-layered">
                   <CardHeader className="px-4 py-3 border-b border-line bg-card">
                     <div className="flex flex-col">
-                      <CardTitle className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">{block.title}</CardTitle>
-                      <h2 className="text-sm font-black uppercase text-gold mt-0.5">{table.title}</h2>
+                      <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">{block.title}</CardTitle>
+                      <h2 className="text-sm font-bold uppercase text-gold mt-0.5">{table.title}</h2>
                     </div>
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto no-scrollbar">
                       <table className="w-full text-left border-collapse min-w-[60rem]">
                         <thead>
-                          <tr className="h-9 bg-gold-soft border-b border-line text-[10px] font-black uppercase tracking-tighter text-gold">
+                          <tr className="h-9 bg-gold-soft border-b border-line text-[10px] font-bold uppercase tracking-tighter text-gold">
                             <th className="sticky left-0 z-30 px-4 border-r border-line bg-gold-soft shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Saldo</th>
                             {vm.monthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m.slice(0, 3)}</th>)}
                             <th className="px-4 text-right border-r border-line">Total Anual</th>
@@ -324,10 +326,10 @@ export default async function ResumenFinancieroPage({
                         </thead>
                         <tbody className="divide-y divide-line/30 text-[12px]">
                           {table.rows.map(row => (
-                            <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-gold-soft text-gold font-black")}>
+                            <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-gold-soft text-gold font-bold")}>
                               <td className={cn("sticky left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-gold-soft" : "bg-gold-soft/20")}>{row.label}</td>
                               {row.months.map((v, i) => <td key={i} className="px-3 text-right text-ink-soft border-r border-line/30">{v}</td>)}
-                              <td className={cn("px-4 text-right font-black", row.annualTotalValue >= 0 ? "text-brand" : "text-danger")}>{row.annualTotal}</td>
+                              <td className={cn("px-4 text-right font-bold", row.annualTotalValue >= 0 ? "text-brand" : "text-danger")}>{row.annualTotal}</td>
                             </tr>
                           ))}
                         </tbody>

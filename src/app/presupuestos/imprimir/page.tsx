@@ -33,7 +33,7 @@ export default async function BudgetPrintPage(props: { searchParams: Promise<{ a
           <h2 className="text-2xl font-medium text-gray-600 tracking-wide">{condo.name.toUpperCase()}</h2>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-black text-gray-800">VAL'QUIRICO</div>
+          <div className="text-2xl font-bold text-gray-800">VAL'QUIRICO</div>
           <p className="text-xs text-gray-400 mt-1 uppercase tracking-tighter">Sistema Condominal | Impresión</p>
         </div>
       </div>
@@ -45,7 +45,7 @@ export default async function BudgetPrintPage(props: { searchParams: Promise<{ a
             <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">{card.title}</p>
             <div className="flex items-baseline justify-between">
               <span className="text-xs text-gray-400">Presupuestado</span>
-              <span className="text-lg font-black">
+              <span className="text-lg font-bold">
                 {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(card.budgeted)}
               </span>
             </div>

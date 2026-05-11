@@ -327,9 +327,9 @@ export function AppShell({
       >
         <Link href="/" className="flex items-center min-w-0">
           {isCollapsed ? (
-            <span className="font-black text-brand text-base">I</span>
+            <span className="font-bold text-brand text-base">I</span>
           ) : (
-            <span className="font-black text-brand text-[16px] tracking-tight">INSULAE</span>
+            <span className="font-bold text-brand text-[16px] tracking-tight">INSULAE</span>
           )}
         </Link>
       </div>
@@ -459,7 +459,7 @@ export function AppShell({
           )}
         >
           <div className="h-[52px] flex items-center justify-between px-4 border-b border-line shrink-0">
-            <span className="font-black text-brand text-[16px]">INSULAE</span>
+            <span className="font-bold text-brand text-[16px]">INSULAE</span>
             <button
               onClick={closeMobile}
               className="p-1.5 rounded-lg hover:bg-canvas text-ink-soft transition-standard"

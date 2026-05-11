@@ -114,13 +114,13 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
         {groups.map((group) => (
           <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered">
             <CardHeader className="px-4 py-3 border-b border-line bg-brand-deep/[0.03]">
-              <CardTitle className="text-[12px] font-black uppercase tracking-widest text-brand">{group.groupName}</CardTitle>
+              <CardTitle className="text-[12px] font-bold uppercase tracking-widest text-brand">{group.groupName}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="h-8 bg-canvas/10 text-[9px] font-black uppercase tracking-widest text-ink-soft/40 border-b border-line/30">
+                    <tr className="h-8 bg-canvas/10 text-[9px] font-bold uppercase tracking-widest text-ink-soft/40 border-b border-line/30">
                       <th className="px-4 py-2 w-[160px]">Cargo</th>
                       <th className="px-4 py-2">Titular(es)</th>
                       <th className="px-4 py-2">Suplente(s)</th>
@@ -170,7 +170,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
                               </select>
                             ) : (
                               <div className="h-20 w-full flex items-center justify-center bg-canvas/30 rounded border border-dashed border-line/50">
-                                 <span className="text-[9px] font-black text-ink-soft/20 uppercase tracking-tighter">N/A</span>
+                                 <span className="text-[9px] font-bold text-ink-soft/20 uppercase tracking-tighter">N/A</span>
                               </div>
                             )}
                           </td>
@@ -191,7 +191,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
            <Button 
             onClick={save} 
             disabled={isPending}
-            className="h-10 px-8 text-[11px] font-black uppercase gap-2 shadow-lg shadow-brand/10"
+            className="h-10 px-8 text-[11px] font-bold uppercase gap-2 shadow-lg shadow-brand/10"
            >
              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
              Guardar Estructura
@@ -199,7 +199,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
            <Button 
             variant="ghost" 
             onClick={() => router.push("/estructura-condominal")}
-            className="h-10 px-6 text-[11px] font-black uppercase"
+            className="h-10 px-6 text-[11px] font-bold uppercase"
            >
              Cancelar
            </Button>
@@ -207,7 +207,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
 
         {message && (
           <div className={cn(
-            "px-4 py-2 rounded-full text-[11px] font-black uppercase flex items-center gap-2",
+            "px-4 py-2 rounded-full text-[11px] font-bold uppercase flex items-center gap-2",
             message.toLowerCase().includes("correct") ? "bg-brand-mint text-brand" : "bg-danger/10 text-danger"
           )}>
             <Info className="h-3.5 w-3.5" />

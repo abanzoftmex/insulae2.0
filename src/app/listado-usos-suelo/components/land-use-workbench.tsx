@@ -125,7 +125,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
           <div className="flex-1 max-w-xs">
             <Input label="Buscar Uso" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre o iniciales..." className="h-9" />
           </div>
-          <Button onClick={openAddModal} className="h-9 px-6 text-[10px] font-black uppercase gap-2">
+          <Button onClick={openAddModal} className="h-9 px-6 text-[10px] font-bold uppercase gap-2">
             <Plus className="h-4 w-4" /> Nuevo Uso
           </Button>
         </div>
@@ -133,7 +133,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
 
       <Card className="overflow-hidden border-transparent shadow-layered mt-4">
         <CardHeader className="px-4 py-3 border-b border-line bg-card flex flex-row items-center justify-between">
-          <CardTitle className="text-[10px] font-black uppercase tracking-widest text-brand">Matriz de Configuración por Uso</CardTitle>
+          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand">Matriz de Configuración por Uso</CardTitle>
           <Badge variant={initialVm.usesLandUseFormula ? "success" : "warning"}>
             Fórmula: {initialVm.usesLandUseFormula ? "ACTIVA" : "INACTIVA"}
           </Badge>
@@ -142,7 +142,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
           <div className="overflow-x-auto no-scrollbar">
             <table className="w-full text-left border-collapse min-w-[120rem]">
               <thead>
-                <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+                <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">
                   <th className="sticky left-0 z-30 px-4 border-r border-line bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-[80px]">Orden</th>
                   <th className="sticky left-[80px] z-30 px-4 border-r border-line bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-[240px]">Nombre</th>
                   <th className="px-4">Iniciales</th>
@@ -157,7 +157,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
               <tbody className="divide-y divide-line/30">
                 {filteredRows.map(row => (
                   <tr key={row.id} className="h-12 hover:bg-canvas/10 transition-colors group">
-                    <td className="sticky left-0 px-4 text-[12px] font-black text-ink-soft/40 border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)]">{row.order}</td>
+                    <td className="sticky left-0 px-4 text-[12px] font-bold text-ink-soft/40 border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)]">{row.order}</td>
                     <td className="sticky left-[80px] px-4 text-[13px] font-bold text-brand border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)] group-hover:bg-canvas transition-colors">{row.name}</td>
                     <td className="px-4"><Badge variant="outline" className="h-5 px-1.5">{row.initials}</Badge></td>
                     <td className="px-4 text-right text-[12px] font-bold">{row.totalAreas}</td>
@@ -167,8 +167,8 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                       return (
                         <td key={col.key} className="px-4 border-l border-line/30">
                           <div className="flex flex-col items-center leading-none">
-                            <span className="text-[12px] font-black text-brand">{charge?.amount || "$0.00"}</span>
-                            <span className="text-[8px] font-black uppercase text-ink-soft/40 tracking-tighter mt-0.5">{charge?.applicationModeLabel || "N/A"}</span>
+                            <span className="text-[12px] font-bold text-brand">{charge?.amount || "$0.00"}</span>
+                            <span className="text-[8px] font-bold uppercase text-ink-soft/40 tracking-tighter mt-0.5">{charge?.applicationModeLabel || "N/A"}</span>
                           </div>
                         </td>
                       );
@@ -194,11 +194,11 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
         footer={
           !isLoadingForm && (
             <>
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
               <Button 
                 disabled={isPending || !formName} 
                 onClick={handleSave}
-                className="h-8 px-6 text-[10px] font-black uppercase"
+                className="h-8 px-6 text-[10px] font-bold uppercase"
               >
                 {isPending ? "Guardando..." : "Guardar Configuración"}
               </Button>
@@ -209,7 +209,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
         {isLoadingForm ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-brand/40">
             <Loader2 className="h-8 w-8 animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-widest">Obteniendo datos...</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest">Obteniendo datos...</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -227,7 +227,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
             <div className="space-y-4">
               <div className="flex items-center gap-2 border-b border-line pb-1">
                 <DollarSign className="h-3.5 w-3.5 text-brand" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">Configuración de Cargos por Grupo</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">Configuración de Cargos por Grupo</p>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
@@ -235,7 +235,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                   const charge = formCharges.find(c => c.chargeGroupId === col.key);
                   return (
                     <div key={col.key} className="p-3 bg-canvas/30 rounded border border-line/50 flex flex-col gap-3">
-                      <p className="text-[11px] font-black text-brand uppercase truncate">{col.label}</p>
+                      <p className="text-[11px] font-bold text-brand uppercase truncate">{col.label}</p>
                       <div className="flex gap-2">
                         <div className="flex-1">
                           <Input 
@@ -256,7 +256,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                             <option value="FIXED">Monto Fijo</option>
                             <option value="PER_M2">Por M2</option>
                           </select>
-                          <label className="absolute left-2 -top-1.5 px-1 bg-card text-[8px] font-black uppercase tracking-widest text-brand-accent/60">Modo</label>
+                          <label className="absolute left-2 -top-1.5 px-1 bg-card text-[8px] font-bold uppercase tracking-widest text-brand-accent/60">Modo</label>
                         </div>
                       </div>
                     </div>

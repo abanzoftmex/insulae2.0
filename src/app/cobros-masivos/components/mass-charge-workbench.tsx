@@ -159,10 +159,10 @@ export function MassChargeWorkbench({
         <div className="h-16 w-16 rounded-full bg-brand-mint flex items-center justify-center text-brand mb-6 shadow-lg shadow-brand/10">
           <CheckCircle2 className="h-8 w-8" />
         </div>
-        <h1 className="text-2xl font-black text-brand uppercase tracking-tight">Proceso Completado</h1>
+        <h1 className="text-2xl font-bold text-brand uppercase tracking-tight">Proceso Completado</h1>
         <p className="text-ink-soft text-sm mt-2">Se generaron exitosamente <strong>{savedSuccess.created}</strong> cargos.</p>
         <Button 
-          className="mt-8 h-10 px-8 text-[11px] font-black uppercase"
+          className="mt-8 h-10 px-8 text-[11px] font-bold uppercase"
           onClick={() => { setSavedSuccess(null); setPreviewData(null); setSelectedMonths([]); setConcept(""); }}
         >
           Nuevo Proceso
@@ -191,7 +191,7 @@ export function MassChargeWorkbench({
           <div className="lg:col-span-2 space-y-4">
             <Card className="shadow-layered border-transparent">
               <CardHeader className="px-4 py-3 border-b border-line bg-card">
-                <CardTitle className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">Configuración de Lote</CardTitle>
+                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">Configuración de Lote</CardTitle>
               </CardHeader>
               <CardContent className="p-5 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -199,20 +199,20 @@ export function MassChargeWorkbench({
                     <select value={zone} onChange={(e) => setZone(e.target.value)} className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
                       {zones.map(z => <option key={z} value={z}>{z}</option>)}
                     </select>
-                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Barrio</label>
+                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Barrio</label>
                   </div>
                   <div className="relative">
                     <select value={targetType} onChange={(e) => setTargetType(e.target.value as TargetType)} className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
                       <option value="COMERCIO">Comercio</option>
                       <option value="PROPIETARIO">Propietario</option>
                     </select>
-                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Destino</label>
+                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Destino</label>
                   </div>
                   <div className="relative">
                     <select value={chargeGroupId} onChange={(e) => setChargeGroupId(e.target.value)} className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
                       {chargeGroups.map(cg => <option key={cg.id} value={cg.id}>{cg.name}</option>)}
                     </select>
-                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Tipo de Cobro</label>
+                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Tipo de Cobro</label>
                   </div>
                 </div>
 
@@ -229,13 +229,13 @@ export function MassChargeWorkbench({
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-ink-soft/40">Meses a Aplicar</p>
-                    <button onClick={toggleAllMonths} className="text-[9px] font-black text-brand-accent hover:underline uppercase">Alternar Todos</button>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/40">Meses a Aplicar</p>
+                    <button onClick={toggleAllMonths} className="text-[9px] font-bold text-brand-accent hover:underline uppercase">Alternar Todos</button>
                   </div>
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                     {MESES.map(m => (
                       <button key={m.val} onClick={() => toggleMonth(m.val)} className={cn(
-                        "h-8 rounded text-[11px] font-black transition-all border",
+                        "h-8 rounded text-[11px] font-bold transition-all border",
                         selectedMonths.includes(m.val) ? "bg-brand text-white border-brand shadow-sm" : "bg-card text-ink-soft border-line hover:border-brand/40"
                       )}>{m.label}</button>
                     ))}
@@ -253,7 +253,7 @@ export function MassChargeWorkbench({
                     <Zap className="h-5 w-5 text-brand-mint" />
                   </div>
                   <div>
-                    <h3 className="font-black uppercase text-sm tracking-tight">Acción Masiva</h3>
+                    <h3 className="font-bold uppercase text-sm tracking-tight">Acción Masiva</h3>
                     <p className="text-[11px] text-brand-mint/60 font-bold uppercase">Validación en tiempo real</p>
                   </div>
                 </div>
@@ -268,7 +268,7 @@ export function MassChargeWorkbench({
                   </div>
                 </div>
                 <Button 
-                  className="w-full h-11 bg-brand-accent hover:bg-brand-accent/90 text-white font-black uppercase text-[11px] gap-2 active-scale"
+                  className="w-full h-11 bg-brand-accent hover:bg-brand-accent/90 text-white font-bold uppercase text-[11px] gap-2 active-scale"
                   onClick={handlePreview}
                   disabled={isPending}
                 >
@@ -297,13 +297,13 @@ export function MassChargeWorkbench({
             </Button>
             <div className="flex items-center gap-3">
               <div className="text-right">
-                <p className="text-[9px] font-black text-ink-soft/40 uppercase tracking-widest leading-none">Total Seleccionado</p>
-                <p className="text-lg font-black text-brand leading-tight">
+                <p className="text-[9px] font-bold text-ink-soft/40 uppercase tracking-widest leading-none">Total Seleccionado</p>
+                <p className="text-lg font-bold text-brand leading-tight">
                   {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(selectedTotal)}
                 </p>
               </div>
               <Button 
-                className="h-10 px-8 bg-brand-accent text-white font-black uppercase text-[11px] gap-2"
+                className="h-10 px-8 bg-brand-accent text-white font-bold uppercase text-[11px] gap-2"
                 onClick={handleConfirm}
                 disabled={isPending || selectedCount === 0}
               >
@@ -322,13 +322,13 @@ export function MassChargeWorkbench({
 
           <Card className="overflow-hidden border-transparent shadow-layered">
             <CardHeader className="px-4 py-3 border-b border-line bg-card flex flex-row items-center justify-between">
-              <CardTitle className="text-[10px] font-black uppercase tracking-widest text-brand">Detalle por Propiedad</CardTitle>
-              <button onClick={toggleAllProperties} className="text-[9px] font-black text-brand-accent hover:underline uppercase">Alternar Selección</button>
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand">Detalle por Propiedad</CardTitle>
+              <button onClick={toggleAllProperties} className="text-[9px] font-bold text-brand-accent hover:underline uppercase">Alternar Selección</button>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto max-h-[500px] no-scrollbar">
                 <table className="w-full text-left border-collapse">
-                  <thead className="sticky top-0 z-20 bg-canvas/90 backdrop-blur-sm border-b border-line text-[10px] font-black uppercase tracking-widest text-ink-soft/70">
+                  <thead className="sticky top-0 z-20 bg-canvas/90 backdrop-blur-sm border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/70">
                     <tr>
                       <th className="px-4 w-10"></th>
                       <th className="px-4 py-3">Propiedad</th>
@@ -366,7 +366,7 @@ export function MassChargeWorkbench({
                           </td>
                           <td className="px-4 text-[11px] font-medium text-ink-soft italic">{p.reason}</td>
                           <td className="px-4 text-right font-mono text-[11px] text-ink-soft">${p.amountPerMonth.toLocaleString('en-US')}</td>
-                          <td className="px-4 text-right font-black text-brand text-[13px]">${p.totalAmount.toLocaleString('en-US')}</td>
+                          <td className="px-4 text-right font-bold text-brand text-[13px]">${p.totalAmount.toLocaleString('en-US')}</td>
                         </tr>
                       );
                     })}

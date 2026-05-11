@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Force-include dynamic accent classes used in StatCard accentMap */
+@source inline("{bg,text,border}-{cyan,lime,amber}-{50,200,600,700,900,950}{,/70,/60,/30}");
+@source inline("bg-{cyan,lime,amber}-{50,900,950}/70");
+
 @theme {
   --color-canvas: #f2f0eb;
   --color-canvas-2: #edebe9;

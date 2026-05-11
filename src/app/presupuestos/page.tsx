@@ -9,6 +9,7 @@ import { YearSelector } from "./components/year-selector";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { 
   FileText, 
   Upload, 
@@ -41,7 +42,7 @@ async function StatusToggle({ isClosed, budgetId }: { isClosed: boolean, budgetI
       <button 
         type="submit" 
         className={cn(
-          "h-8 px-3 flex items-center gap-2 rounded-pill font-black text-[10px] uppercase transition-all active-scale border",
+          "h-8 px-3 flex items-center gap-2 rounded-pill font-bold text-[10px] uppercase transition-all active-scale border",
           isClosed ? "bg-danger/10 border-danger/20 text-danger hover:bg-danger/20" : "bg-brand-mint border-brand/10 text-brand hover:bg-brand-mint/80"
         )}
       >
@@ -94,26 +95,29 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black text-brand tracking-tighter uppercase">Presupuesto {year}</h1>
-            <YearSelector currentYear={currentYear} selectedYear={year} />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Presupuesto {year}</h1>
+              <YearSelector currentYear={currentYear} selectedYear={year} />
+            </div>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {condo.name} · Planeación y ejecución financiera anual.
+            </p>
           </div>
-          <p className="text-ink-soft/50 text-[11px] font-bold uppercase tracking-tight">
-            {condo.name} · Planeación y ejecución financiera anual.
-          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <StatusToggle isClosed={isClosed} budgetId={vm.id} />
           <ExcelImport year={year} isClosed={isClosed} />
-          <Link 
+          <Link
             href={`/presupuestos/imprimir?anio=${year}`}
             target="_blank"
-            className="h-8 px-4 flex items-center gap-2 bg-brand-deep text-white rounded-pill text-[10px] font-black uppercase hover:bg-brand-uplift transition-all shadow-sm active-scale"
+            className="h-8 px-4 flex items-center gap-2 bg-brand-deep text-white rounded-full text-[10px] font-bold uppercase hover:bg-brand transition-all shadow-md shadow-brand-deep/25"
           >
-            <Printer className="h-3.5 w-3.5" /> PDF
+            <Printer className="h-3.5 w-3.5 shrink-0" aria-hidden /> PDF
           </Link>
         </div>
       </div>

@@ -99,7 +99,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
     {
       header: "Ticket",
       accessorKey: "ticketNumber",
-      cell: (row) => <span className="font-mono font-black text-brand-accent">#{row.ticketNumber}</span>
+      cell: (row) => <span className="font-mono font-bold text-brand-accent">#{row.ticketNumber}</span>
     },
     {
       header: "Asunto",
@@ -139,7 +139,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
           variant="subtle" 
           size="sm" 
           onClick={() => openResponseModal(row.id)}
-          className="h-7 px-2 text-[10px] font-black uppercase gap-1"
+          className="h-7 px-2 text-[10px] font-bold uppercase gap-1"
         >
           <MessageSquare className="h-3 w-3" />
           Atender
@@ -166,11 +166,11 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
         footer={
           formData && !isLoadingForm && (
             <>
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
               <Button 
                 disabled={isPending || !!uploading || !response} 
                 onClick={handleSave}
-                className="h-8 px-6 text-[10px] font-black uppercase"
+                className="h-8 px-6 text-[10px] font-bold uppercase"
               >
                 {isPending ? "Guardando..." : "Guardar Respuesta"}
               </Button>
@@ -181,23 +181,23 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
         {isLoadingForm ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-brand/40">
             <Loader2 className="h-8 w-8 animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-widest">Obteniendo detalles...</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest">Obteniendo detalles...</p>
           </div>
         ) : formData && (
           <div className="space-y-5">
             {/* Info Section */}
             <div className="bg-canvas/50 rounded-lg p-3 border border-line/50 grid grid-cols-2 gap-y-3 gap-x-6">
               <div>
-                <p className="text-[9px] font-black uppercase text-ink-soft/40 tracking-widest">Residente</p>
+                <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">Residente</p>
                 <p className="text-[12px] font-bold text-ink leading-tight">{formData.snapshot.residentName}</p>
                 <p className="text-[10px] text-ink-soft/60">{formData.snapshot.residentEmail || "Sin email"}</p>
               </div>
               <div>
-                <p className="text-[9px] font-black uppercase text-ink-soft/40 tracking-widest">Departamento</p>
+                <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">Departamento</p>
                 <p className="text-[12px] font-bold text-brand leading-tight">{formData.snapshot.departmentName}</p>
               </div>
               <div className="col-span-2 pt-2 border-t border-line/30">
-                <p className="text-[9px] font-black uppercase text-ink-soft/40 tracking-widest mb-1">Descripción del Problema</p>
+                <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest mb-1">Descripción del Problema</p>
                 <p className="text-[12px] font-medium text-ink bg-card p-2 rounded border border-line/30 italic">
                   &quot;{formData.snapshot.description}&quot;
                 </p>
@@ -214,7 +214,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
               />
 
               <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase text-ink-soft/40 tracking-widest">Cambiar Estado</p>
+                <p className="text-[10px] font-bold uppercase text-ink-soft/40 tracking-widest">Cambiar Estado</p>
                 <div className="flex flex-wrap gap-2">
                   {formData.statusOptions.map((opt) => (
                     <button
@@ -236,7 +236,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
               {/* Evidence */}
               <div className="grid grid-cols-2 gap-4 pt-2 border-t border-line/50">
                 <div className="space-y-2">
-                  <p className="text-[9px] font-black uppercase text-ink-soft/40 tracking-widest">Evidencia Visual</p>
+                  <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">Evidencia Visual</p>
                   <div className="flex flex-col gap-2">
                     <input 
                       type="file" 
@@ -247,7 +247,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
                     />
                     <label 
                       htmlFor="img-upload" 
-                      className="flex items-center justify-center gap-2 h-9 border border-dashed border-line rounded-md cursor-pointer hover:bg-canvas transition-colors text-[10px] font-black uppercase text-brand-accent"
+                      className="flex items-center justify-center gap-2 h-9 border border-dashed border-line rounded-md cursor-pointer hover:bg-canvas transition-colors text-[10px] font-bold uppercase text-brand-accent"
                     >
                       {uploading === 'image' ? <Loader2 className="h-3 w-3 animate-spin" /> : <ImageIcon className="h-3.5 w-3.5" />}
                       {responseImageUrl ? "Cambiar Imagen" : "Subir Imagen"}
@@ -260,7 +260,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[9px] font-black uppercase text-ink-soft/40 tracking-widest">Documento PDF</p>
+                  <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">Documento PDF</p>
                   <div className="flex flex-col gap-2">
                     <input 
                       type="file" 
@@ -271,7 +271,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
                     />
                     <label 
                       htmlFor="pdf-upload" 
-                      className="flex items-center justify-center gap-2 h-9 border border-dashed border-line rounded-md cursor-pointer hover:bg-canvas transition-colors text-[10px] font-black uppercase text-brand-accent"
+                      className="flex items-center justify-center gap-2 h-9 border border-dashed border-line rounded-md cursor-pointer hover:bg-canvas transition-colors text-[10px] font-bold uppercase text-brand-accent"
                     >
                       {uploading === 'pdf' ? <Loader2 className="h-3 w-3 animate-spin" /> : <FileText className="h-3.5 w-3.5" />}
                       {responsePdfUrl ? "Cambiar PDF" : "Subir PDF"}

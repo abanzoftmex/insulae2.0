@@ -141,7 +141,7 @@ export function MiscIncomeWorkbench({
   return (
     <>
       <div className="flex items-center gap-2 mb-2 px-1">
-        <div className="h-7 px-3 flex items-center justify-center rounded bg-brand/5 border border-brand/10 text-brand text-[9px] font-black uppercase tracking-tighter">
+        <div className="h-7 px-3 flex items-center justify-center rounded bg-brand/5 border border-brand/10 text-brand text-[9px] font-bold uppercase tracking-tighter">
           <Layers className="h-3 w-3 mr-1.5 opacity-50" />
           {initialConcepts.length} Conceptos configurados
         </div>
@@ -174,11 +174,11 @@ export function MiscIncomeWorkbench({
         title={editingId ? "Editar Concepto" : "Nuevo Concepto"}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
             <Button 
               disabled={isPending || !formName} 
               onClick={handleSave}
-              className="h-8 px-6 text-[10px] font-black uppercase"
+              className="h-8 px-6 text-[10px] font-bold uppercase"
             >
               {isPending ? "Guardando..." : "Guardar Concepto"}
             </Button>
@@ -203,7 +203,7 @@ export function MiscIncomeWorkbench({
                 <option value={ordinaryGroup.id}>Ordinaria</option>
                 <option value={extraordinaryGroup.id}>Extraordinaria</option>
               </select>
-              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Categoría Base</label>
+              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Categoría Base</label>
             </div>
             <Input 
               label="Orden de Visualización" 
@@ -216,7 +216,7 @@ export function MiscIncomeWorkbench({
           <div className="p-3 bg-canvas/30 rounded border border-line/50">
             <div className="flex items-center gap-2 mb-1.5">
               <ArrowUpDown className="h-3 w-3 text-ink-soft/40" />
-              <p className="text-[9px] font-black uppercase text-ink-soft/60 tracking-widest">Información de clasificación</p>
+              <p className="text-[9px] font-bold uppercase text-ink-soft/60 tracking-widest">Información de clasificación</p>
             </div>
             <p className="text-[11px] text-ink-soft/70 leading-relaxed italic">
               La categoría base determina en qué sección del <strong>Resumen Financiero</strong> se agrupará este concepto.

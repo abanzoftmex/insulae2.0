@@ -61,7 +61,7 @@ export function Modal({
       )}>
         {/* Header */}
         <div className="h-14 px-5 border-b border-line flex items-center justify-between">
-          <h2 className="text-sm font-black uppercase tracking-tight text-brand">{title}</h2>
+          <h2 className="text-sm font-bold uppercase tracking-tight text-brand">{title}</h2>
           <button 
             onClick={onClose}
             className="p-1.5 rounded-full hover:bg-canvas text-ink-soft/40 hover:text-ink transition-standard"
@@ -80,8 +80,8 @@ export function Modal({
           <div className="px-5 py-4 border-t border-line bg-canvas/30 flex items-center justify-end gap-3 rounded-b-card">
             {footer || (
               <>
-                <Button variant="ghost" onClick={onClose} className="h-9 px-4 text-[11px] font-black uppercase">Cancelar</Button>
-                <Button className="h-9 px-6 text-[11px] font-black uppercase">Guardar</Button>
+                <Button variant="ghost" onClick={onClose} className="h-9 px-4 text-[11px] font-bold uppercase">Cancelar</Button>
+                <Button className="h-9 px-6 text-[11px] font-bold uppercase">Guardar</Button>
               </>
             )}
           </div>

@@ -12,6 +12,7 @@ import { StickyHorizontalTableFrame } from "./_components/sticky-horizontal-tabl
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 import { 
@@ -78,13 +79,13 @@ function renderFinancialCards(ownerAmount: string, commerceAmount: string, showC
   return (
     <div className="space-y-0.5">
       <div className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded bg-brand-deep/[0.03] border border-brand-deep/5">
-        <span className="text-[8px] font-black text-brand-deep/40">P</span>
-        <span className="text-[10px] font-black text-brand-deep/80">{ownerAmount}</span>
+        <span className="text-[8px] font-bold text-brand-deep/40">P</span>
+        <span className="text-[10px] font-bold text-brand-deep/80">{ownerAmount}</span>
       </div>
       {showCommerce && (
         <div className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded bg-danger/5 border border-danger/5">
-          <span className="text-[8px] font-black text-danger/40">C</span>
-          <span className="text-[10px] font-black text-danger/80">{commerceAmount}</span>
+          <span className="text-[8px] font-bold text-danger/40">C</span>
+          <span className="text-[10px] font-bold text-danger/80">{commerceAmount}</span>
         </div>
       )}
     </div>
@@ -215,23 +216,26 @@ export default async function AreasPrivativasPage(props: PageProps) {
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <h1 className="text-xl font-black text-brand tracking-tighter uppercase">Inventario de Áreas Privativas</h1>
-          <p className="text-ink-soft/50 text-[11px] font-bold uppercase tracking-tight">
-            Gestión maestra de superficies, usos de suelo y estado de cartera operativa.
-          </p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Inventario de Áreas Privativas</h1>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              Gestión maestra de superficies, usos de suelo y estado de cartera operativa.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild className="h-8 px-4 text-[10px] font-black uppercase">
-            <Link href="/listado-seguridad"><Shield className="h-3.5 w-3.5 mr-1.5" /> Seguridad</Link>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+            <Link href="/listado-seguridad"><Shield className="h-3.5 w-3.5 shrink-0" aria-hidden /> Seguridad</Link>
           </Button>
-          <Button variant="outline" size="sm" asChild className="h-8 px-4 text-[10px] font-black uppercase">
-            <Link href="/reporte-condominio"><FileText className="h-3.5 w-3.5 mr-1.5" /> Reporte</Link>
+          <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+            <Link href="/reporte-condominio"><FileText className="h-3.5 w-3.5 shrink-0" aria-hidden /> Reporte</Link>
           </Button>
-          <Button variant="dark" size="sm" asChild className="h-8 px-4 text-[10px] font-black uppercase shadow-lg shadow-brand-deep/20">
-            <Link href="/condominio"><Settings className="h-3.5 w-3.5 mr-1.5" /> Configuración</Link>
+          <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+            <Link href="/condominio"><Settings className="h-3.5 w-3.5 shrink-0" aria-hidden /> Configuración</Link>
           </Button>
         </div>
       </div>
@@ -252,7 +256,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
               <option value="">Todos los usos</option>
               {vm.facets.useTypes.map(o => <option key={o.value} value={o.value}>{o.label} ({o.count})</option>)}
             </select>
-            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-black uppercase tracking-widest text-brand-accent/60">Uso Suelo</label>
+            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-bold uppercase tracking-widest text-brand-accent/60">Uso Suelo</label>
           </div>
           <div className="relative">
             <select name="status" defaultValue={vm.filters.status} className="peer h-8 w-full rounded border border-line bg-card px-2 text-[12px] font-medium outline-none appearance-none">
@@ -260,7 +264,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
               <option value="ACTIVE">Activos</option>
               <option value="INACTIVE">Inactivos</option>
             </select>
-            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-black uppercase tracking-widest text-brand-accent/60">Estatus</label>
+            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-bold uppercase tracking-widest text-brand-accent/60">Estatus</label>
           </div>
           <Input label="M2 Min" name="m2Min" type="number" step="0.01" defaultValue={vm.filters.m2Min} className="h-8 text-[12px]" />
           <Input label="M2 Max" name="m2Max" type="number" step="0.01" defaultValue={vm.filters.m2Max} className="h-8 text-[12px]" />
@@ -270,9 +274,9 @@ export default async function AreasPrivativasPage(props: PageProps) {
               <option value="50">50</option>
               <option value="80">80</option>
             </select>
-            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-black uppercase tracking-widest text-brand-accent/60">Registros</label>
+            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-bold uppercase tracking-widest text-brand-accent/60">Registros</label>
           </div>
-          <Button type="submit" className="h-8 text-[10px] font-black uppercase gap-1.5">
+          <Button type="submit" className="h-8 text-[10px] font-bold uppercase gap-1.5">
             <Filter className="h-3 w-3" /> Filtrar
           </Button>
         </form>
@@ -285,7 +289,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
             <table className="table-fixed border-separate border-spacing-0" style={{ width: `${fullTableWidth}px` }}>
               <colgroup>{colWidths.map((w, i) => <col key={i} style={{ width: `${w}px` }} />)}</colgroup>
               <thead>
-                <tr className="bg-canvas text-left text-[10px] font-black uppercase tracking-widest text-brand">
+                <tr className="bg-canvas text-left text-[10px] font-bold uppercase tracking-widest text-brand">
                   <th className="sticky left-0 z-40 px-3 py-3 border-b border-line bg-canvas">Acciones</th>
                   <th className="px-3 py-3 border-b border-line">Ubicación</th>
                   <th className="px-3 py-3 border-b border-line">Área / Fracción</th>
@@ -354,7 +358,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
                      <td className="px-3">
                        <p className="font-bold text-brand leading-tight truncate">{row.name}</p>
                        <div className="flex gap-1.5 mt-0.5">
-                         <span className="px-1 py-px rounded-[2px] bg-canvas text-[9px] font-black text-ink-soft/50 uppercase">{row.code}</span>
+                         <span className="px-1 py-px rounded-[2px] bg-canvas text-[9px] font-bold text-ink-soft/50 uppercase">{row.code}</span>
                          <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="h-3.5 px-1">{row.statusLabel}</Badge>
                        </div>
                      </td>
@@ -410,14 +414,14 @@ export default async function AreasPrivativasPage(props: PageProps) {
 
       {/* Pagination Footer */}
       <div className="flex items-center justify-between h-10 px-1 border-t border-line/30 pt-4">
-        <p className="text-[11px] font-black uppercase text-ink-soft/50 tracking-tighter">
+        <p className="text-[11px] font-bold uppercase text-ink-soft/50 tracking-tighter">
           Página {vm.pagination.page} de {vm.pagination.totalPages} · {vm.pagination.totalRows} Unidades
         </p>
         <div className="flex items-center gap-2">
-           <Button variant="ghost" size="sm" asChild className={cn("h-8 px-4 text-[10px] font-black uppercase gap-1", !vm.pagination.hasPrev && "opacity-20 pointer-events-none")}>
+           <Button variant="ghost" size="sm" asChild className={cn("h-8 px-4 text-[10px] font-bold uppercase gap-1", !vm.pagination.hasPrev && "opacity-20 pointer-events-none")}>
              <Link href={buildHref(Math.max(1, vm.pagination.page - 1))}><ChevronLeft className="h-3.5 w-3.5" /> Anterior</Link>
            </Button>
-           <Button variant="ghost" size="sm" asChild className={cn("h-8 px-4 text-[10px] font-black uppercase gap-1", !vm.pagination.hasNext && "opacity-20 pointer-events-none")}>
+           <Button variant="ghost" size="sm" asChild className={cn("h-8 px-4 text-[10px] font-bold uppercase gap-1", !vm.pagination.hasNext && "opacity-20 pointer-events-none")}>
              <Link href={buildHref(Math.min(vm.pagination.totalPages, vm.pagination.page + 1))}>Siguiente <ChevronRight className="h-3.5 w-3.5" /></Link>
            </Button>
         </div>

@@ -2,7 +2,6 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { 
-  ExternalLink, 
   Edit2, 
   Trash2, 
   Phone, 
@@ -23,6 +22,8 @@ import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/modal/modal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { RowActions } from "@/components/ui/row-actions";
+import { ExternalLinkButton } from "@/components/ui/external-link-button";
 
 interface ContactosWorkbenchProps {
   types: ContactDirectoryTypeVM[];
@@ -116,7 +117,7 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
       header: "Tipo",
       accessorKey: "typeName",
       cell: (row) => (
-        <Badge variant={row.typeId === "phone" ? "success" : "brand"}>
+        <Badge variant={row.typeId === "phone" ? "success" : "brand"} className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
           {row.typeName}
         </Badge>
       )
@@ -131,8 +132,8 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
       accessorKey: "value",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          {row.value.includes("@") ? <Mail className="h-3 w-3 text-ink-soft/40" /> : <Phone className="h-3 w-3 text-ink-soft/40" />}
-          {row.value}
+          {row.value.includes("@") ? <Mail className="h-3.5 w-3.5 text-ink-soft/60" /> : <Phone className="h-3.5 w-3.5 text-ink-soft/60" />}
+          <span className="text-[11px] font-medium text-ink-soft">{row.value}</span>
         </div>
       )
     },
@@ -140,41 +141,21 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
       header: "Enlace",
       accessorKey: "linkUrl",
       cell: (row) => row.linkUrl ? (
-        <a 
-          href={row.linkUrl} 
-          target="_blank" 
-          rel="noreferrer"
-          className="inline-flex items-center gap-1 text-[11px] font-bold text-brand-accent hover:underline uppercase tracking-tighter"
-        >
-          Ir <ExternalLink className="h-2.5 w-2.5" />
-        </a>
-      ) : <span className="text-ink-soft/20 text-[10px]">—</span>
+        <ExternalLinkButton href={row.linkUrl} label="Ir" />
+      ) : <span className="text-ink-soft/50 text-[10px]">—</span>
     },
     {
       header: "Orden",
       accessorKey: "sortOrder",
       align: "center",
-      cell: (row) => <span className="text-ink-soft/60">{row.sortOrder}</span>
+      cell: (row) => <span className="text-[11px] font-medium text-ink-soft/70">{row.sortOrder}</span>
     },
     {
       header: "Acciones",
       accessorKey: "id",
       align: "right",
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button 
-            onClick={() => openEditModal(row)}
-            className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard"
-          >
-            <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          <button 
-            onClick={() => handleDelete(row.id)}
-            className="p-1.5 rounded hover:bg-danger/10 text-ink-soft/40 hover:text-danger transition-standard"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
+        <RowActions onEdit={() => openEditModal(row)} onDelete={() => handleDelete(row.id)} />
       )
     }
   ];
@@ -187,7 +168,7 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
             variant={typeFilter === "all" ? "primary" : "outline"} 
             size="sm" 
             onClick={() => setTypeFilter("all")}
-            className="h-7 text-[10px] uppercase font-black"
+            className="h-7 text-[10px] uppercase font-bold"
           >
             Todos
           </Button>
@@ -197,7 +178,7 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
               variant={typeFilter === t.id ? "primary" : "outline"} 
               size="sm" 
               onClick={() => setTypeFilter(t.id)}
-              className="h-7 text-[10px] uppercase font-black whitespace-nowrap"
+              className="h-7 text-[10px] uppercase font-bold whitespace-nowrap"
             >
               {t.name}
             </Button>
@@ -221,11 +202,11 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
         title={editingId ? "Editar Contacto" : "Nuevo Contacto"}
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
             <Button 
               disabled={isPending || !formData.name || !formData.value} 
               onClick={handleSave}
-              className="h-8 px-6 text-[10px] font-black uppercase"
+              className="h-8 px-6 text-[10px] font-bold uppercase"
             >
               {isPending ? "Guardando..." : (editingId ? "Guardar Cambios" : "Crear Contacto")}
             </Button>
@@ -242,7 +223,7 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
               >
                 {types.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
-              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Categoría</label>
+              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Categoría</label>
             </div>
             <Input 
               label="Orden" 
@@ -265,7 +246,7 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
           />
 
           <div className="space-y-3 pt-2 border-t border-line/50">
-            <p className="text-[10px] font-black uppercase tracking-widest text-ink-soft/40">Acción de Enlace (Opcional)</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/40">Acción de Enlace (Opcional)</p>
             <Input 
               label="URL de Enlace" 
               placeholder="https://"
@@ -281,7 +262,7 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
                 <option value="SAME_TAB">Abrir en misma pestaña</option>
                 <option value="NEW_TAB">Abrir en nueva pestaña</option>
               </select>
-              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Destino</label>
+              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Destino</label>
             </div>
           </div>
         </div>

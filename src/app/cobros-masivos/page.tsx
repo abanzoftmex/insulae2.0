@@ -1,6 +1,7 @@
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import type { Metadata } from "next";
 import { MassChargeWorkbench } from "./components/mass-charge-workbench";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 
 export const metadata: Metadata = {
   title: "Cobros Masivos | Insulae 2.0",
@@ -39,11 +40,16 @@ export default async function MassChargePage() {
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-0">
-        <h1 className="text-lg font-black text-brand tracking-tighter uppercase">Cobros Masivos</h1>
-        <p className="text-ink-soft/50 text-[11px] font-bold">
-          {condominium.name} · Procesamiento por lote de cargos financieros.
-        </p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Cobros Masivos</h1>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {condominium.name} · Procesamiento por lote de cargos financieros.
+            </p>
+          </div>
+        </div>
       </div>
 
       <MassChargeWorkbench

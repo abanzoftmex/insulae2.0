@@ -236,7 +236,7 @@ export function IncomeWorkbench({
       accessorKey: "amount",
       align: "right",
       cell: (row) => (
-        <span className="text-[13px] font-black text-brand">
+        <span className="text-[13px] font-bold text-brand">
           {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(row.amount)}
         </span>
       )
@@ -277,7 +277,7 @@ export function IncomeWorkbench({
           <select 
             value={filterCatalog} 
             onChange={(e) => setFilterCatalog(e.target.value)}
-            className="h-7 px-2 rounded bg-card border border-line text-[10px] font-black uppercase outline-none focus:ring-1 focus:ring-brand-accent/30"
+            className="h-7 px-2 rounded bg-card border border-line text-[10px] font-bold uppercase outline-none focus:ring-1 focus:ring-brand-accent/30"
           >
             <option value="all">Todas las Categorías</option>
             {catalogs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -285,10 +285,10 @@ export function IncomeWorkbench({
           <Badge variant="brand">{initialIncomes.length} Total</Badge>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/listado-ingresos/plantilla" className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-black uppercase hover:bg-canvas transition-standard">
+          <Link href="/listado-ingresos/plantilla" className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard">
             <FileDown className="h-3 w-3 mr-1" /> Plantilla
           </Link>
-          <label className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-black uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard">
+          <label className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard">
             <Upload className="h-3 w-3 mr-1" />
             {importing ? "..." : "Importar"}
             <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
@@ -313,11 +313,11 @@ export function IncomeWorkbench({
         size="lg"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
             <Button 
               disabled={isPending || !formConcept || !formAmount} 
               onClick={handleSave}
-              className="h-8 px-6 text-[10px] font-black uppercase"
+              className="h-8 px-6 text-[10px] font-bold uppercase"
             >
               {isPending ? "Guardando..." : "Guardar Registro"}
             </Button>
@@ -335,7 +335,7 @@ export function IncomeWorkbench({
                 <option value="">Sin Categoría</option>
                 {catalogs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
-              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Categoría</label>
+              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Categoría</label>
             </div>
             <div className="relative">
               <select
@@ -346,7 +346,7 @@ export function IncomeWorkbench({
                 <option value="">Sin Grupo de Cobro</option>
                 {chargeGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
               </select>
-              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Grupo Financiero</label>
+              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Grupo Financiero</label>
             </div>
           </div>
 
@@ -364,7 +364,7 @@ export function IncomeWorkbench({
               placeholder="Buscar propiedad..."
               className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
             />
-            <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Propiedad Vinculada</label>
+            <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Propiedad Vinculada</label>
             {showAreaDropdown && filteredAreas.length > 0 && (
               <div className="absolute z-50 w-full mt-1 bg-card border border-line rounded-md shadow-2xl max-h-40 overflow-y-auto">
                 {filteredAreas.map(a => (
@@ -385,17 +385,17 @@ export function IncomeWorkbench({
             >
               {PAYMENT_METHODS.map(m => <option key={m} value={m}>{PAYMENT_METHOD_LABELS[m]}</option>)}
             </select>
-            <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Método de Pago</label>
+            <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Método de Pago</label>
           </div>
 
           <Textarea label="Concepto del Ingreso" value={formConcept} onChange={(e) => setFormConcept(e.target.value)} className="min-h-[60px]" />
           <Input label="Notas Internas" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
 
           <div className="pt-2 border-t border-line/50">
-            <p className="text-[10px] font-black uppercase text-ink-soft/40 tracking-widest mb-2">Comprobante Digital</p>
+            <p className="text-[10px] font-bold uppercase text-ink-soft/40 tracking-widest mb-2">Comprobante Digital</p>
             {receiptUrl ? (
               <div className="flex items-center justify-between p-2 bg-canvas rounded-md">
-                <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-[11px] font-black text-brand-accent flex items-center gap-1 uppercase">
+                <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-[11px] font-bold text-brand-accent flex items-center gap-1 uppercase">
                   Ver Comprobante <ArrowRight className="h-3 w-3" />
                 </a>
                 <button onClick={() => setReceiptUrl(null)} className="text-danger p-1 rounded hover:bg-danger/10 transition-colors">
@@ -403,7 +403,7 @@ export function IncomeWorkbench({
                 </button>
               </div>
             ) : (
-              <label className="h-9 flex items-center justify-center gap-2 border border-dashed border-line rounded-md cursor-pointer hover:bg-canvas transition-colors text-[10px] font-black uppercase text-brand-accent">
+              <label className="h-9 flex items-center justify-center gap-2 border border-dashed border-line rounded-md cursor-pointer hover:bg-canvas transition-colors text-[10px] font-bold uppercase text-brand-accent">
                 {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 Subir PDF o Imagen
                 <input type="file" className="hidden" accept="image/*,application/pdf" onChange={async (e) => {

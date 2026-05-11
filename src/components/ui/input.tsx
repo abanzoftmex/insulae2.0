@@ -12,24 +12,23 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     const inputId = id || generatedId;
 
     return (
-      <div className="relative group w-full">
+      <div className="flex flex-col gap-1.5 w-full">
+        <label
+          htmlFor={inputId}
+          className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none"
+        >
+          {label}
+        </label>
         <input
           type={type}
           className={cn(
-            "peer flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium transition-standard file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent disabled:cursor-not-allowed disabled:opacity-50",
+            "flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium transition-standard file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           id={inputId}
           ref={ref}
-          placeholder={label}
           {...props}
         />
-        <label
-          htmlFor={inputId}
-          className="absolute left-2.5 -top-1.5 px-1 bg-[inherit] text-[10px] font-black uppercase tracking-widest text-brand-accent/60 transition-all peer-placeholder-shown:text-[12px] peer-placeholder-shown:font-bold peer-placeholder-shown:text-ink-soft/40 peer-placeholder-shown:top-2 peer-placeholder-shown:bg-transparent peer-focus:-top-1.5 peer-focus:px-1 peer-focus:bg-[inherit] peer-focus:text-[10px] peer-focus:font-black peer-focus:text-brand-accent pointer-events-none"
-        >
-          {label}
-        </label>
       </div>
     );
   }
@@ -47,23 +46,22 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     const inputId = id || generatedId;
 
     return (
-      <div className="relative group w-full">
+      <div className="flex flex-col gap-1.5 w-full">
+        <label
+          htmlFor={inputId}
+          className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none"
+        >
+          {label}
+        </label>
         <textarea
           className={cn(
-            "peer flex min-h-[80px] w-full rounded-md border border-line bg-card px-3 py-2 text-[13px] font-medium transition-standard placeholder:text-transparent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent disabled:cursor-not-allowed disabled:opacity-50",
+            "flex min-h-[80px] w-full rounded-md border border-line bg-card px-3 py-2 text-[13px] font-medium transition-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent disabled:cursor-not-allowed disabled:opacity-50",
             className
           )}
           id={inputId}
           ref={ref}
-          placeholder={label}
           {...props}
         />
-        <label
-          htmlFor={inputId}
-          className="absolute left-2.5 -top-1.5 px-1 bg-[inherit] text-[10px] font-black uppercase tracking-widest text-brand-accent/60 transition-all peer-placeholder-shown:text-[12px] peer-placeholder-shown:font-bold peer-placeholder-shown:text-ink-soft/40 peer-placeholder-shown:top-2 peer-placeholder-shown:bg-transparent peer-focus:-top-1.5 peer-focus:px-1 peer-focus:bg-[inherit] peer-focus:text-[10px] peer-focus:font-black peer-focus:text-brand-accent pointer-events-none"
-        >
-          {label}
-        </label>
       </div>
     );
   }

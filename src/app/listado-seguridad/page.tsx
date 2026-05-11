@@ -10,6 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/shared/utils/cn";
@@ -96,7 +97,7 @@ function Paginator({ page, totalPages, buildHref }: { page: number; totalPages: 
       <Link href={buildHref(Math.max(1, page - 1))} className={cn("p-1 rounded hover:bg-canvas transition-colors", page === 1 && "opacity-20 pointer-events-none")}>
         <ChevronLeft className="h-4 w-4" />
       </Link>
-      <span className="text-[11px] font-black uppercase text-ink-soft/60">Pág {page} de {totalPages}</span>
+      <span className="text-[11px] font-bold uppercase text-ink-soft/60">Pág {page} de {totalPages}</span>
       <Link href={buildHref(Math.min(totalPages, page + 1))} className={cn("p-1 rounded hover:bg-canvas transition-colors", page === totalPages && "opacity-20 pointer-events-none")}>
         <ChevronRight className="h-4 w-4" />
       </Link>
@@ -141,21 +142,22 @@ export default async function ListadoSeguridadPage(props: PageProps) {
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
       {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-black text-brand tracking-tighter uppercase">Filtro de Seguridad</h1>
-            <Badge variant="brand">Vigilancia</Badge>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Filtro de Seguridad</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Vigilancia</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              Consulta rápida de contactos por unidad privativa y barrio.
+            </p>
           </div>
-          <p className="text-ink-soft/50 text-[11px] font-bold uppercase tracking-tight">
-            Consulta rápida de contactos por unidad privativa y barrio.
-          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Paginator page={vm.pagination.page} totalPages={vm.pagination.totalPages} buildHref={buildHref} />
-          <Button variant="outline" size="sm" asChild className="h-8 px-4 text-[10px] font-black uppercase ml-2">
-            <Link href="/areas-privativas">Ver Inventario Maestro <ArrowRight className="h-3.5 w-3.5 ml-1.5" /></Link>
+          <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+            <Link href="/areas-privativas"><ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden /> Ver Inventario Maestro</Link>
           </Button>
         </div>
       </div>
@@ -168,7 +170,7 @@ export default async function ListadoSeguridadPage(props: PageProps) {
               <div className="flex-1">
                 <Input label="Buscador por Código o Nombre" name="q" defaultValue={query} placeholder="Ej. BL-01, Nombre Propietario..." className="h-9" />
               </div>
-              <Button type="submit" className="h-9 px-6 text-[10px] font-black uppercase gap-2">
+              <Button type="submit" className="h-9 px-6 text-[10px] font-bold uppercase gap-2">
                 <Search className="h-4 w-4" /> Buscar
               </Button>
             </form>
@@ -181,7 +183,7 @@ export default async function ListadoSeguridadPage(props: PageProps) {
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+              <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">
                 <th className="px-4 w-[180px]">Barrio / Ubicación</th>
                 <th className="px-4">Área Privativa / Estatus</th>
                 <th className="px-4">Dominio Pleno (Legal)</th>
@@ -201,12 +203,12 @@ export default async function ListadoSeguridadPage(props: PageProps) {
                     <td className="px-4 align-top py-4">
                       <div className="flex items-center gap-2 mb-1">
                         <MapPin className="h-3 w-3 text-brand/30" />
-                        <span className="text-[11px] font-black uppercase tracking-tight text-brand">{row.zone}</span>
+                        <span className="text-[11px] font-bold uppercase tracking-tight text-brand">{row.zone}</span>
                       </div>
                     </td>
 
                     <td className="px-4 align-top py-4">
-                      <p className="text-[13px] font-black text-ink leading-tight">{row.name}</p>
+                      <p className="text-[13px] font-bold text-ink leading-tight">{row.name}</p>
                       <div className="flex items-center gap-2 mt-1.5">
                         <Badge variant="outline" className="h-4 px-1.5 text-[9px] bg-canvas/50">{row.code}</Badge>
                         <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="h-4 px-1 text-[9px]">{row.businessStatusLabel}</Badge>

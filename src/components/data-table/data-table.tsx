@@ -71,11 +71,11 @@ export function DataTable<T extends { id: string | number }>({
   return (
     <Card className="overflow-hidden border-transparent shadow-layered">
       {/* Toolbar */}
-      <div className="h-14 px-4 border-b border-line flex items-center justify-between bg-card">
+      <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <h2 className="text-sm font-black uppercase tracking-tight text-brand">{title}</h2>
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-white">{title}</h2>
           {count !== undefined && (
-            <span className="px-1.5 py-0.5 rounded bg-canvas text-[10px] font-black text-ink-soft/60">
+            <span className="px-2.5 py-1 rounded-full bg-white text-[9px] font-bold text-brand">
               {count}
             </span>
           )}
@@ -84,19 +84,19 @@ export function DataTable<T extends { id: string | number }>({
         <div className="flex items-center gap-3">
           {onSearch && (
             <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-soft/40" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-soft/50" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar..."
-                className="h-8 w-48 lg:w-64 pl-8 pr-3 bg-canvas/50 border-none rounded-md text-[12px] font-medium focus:ring-2 focus:ring-brand-accent/20 transition-all"
+                className="h-8 w-48 lg:w-64 pl-8 pr-3 bg-white border-none rounded-full text-[12px] font-medium text-ink placeholder:text-ink-soft/50 focus:ring-2 focus:ring-white/30 transition-all"
               />
             </form>
           )}
           
           {onAdd && (
-            <Button onClick={onAdd} size="sm" className="h-8 px-3 gap-1 text-[11px] font-black uppercase tracking-tight">
+            <Button onClick={onAdd} size="sm" className="h-8 px-4 gap-1.5 text-[10px] font-bold uppercase tracking-tight rounded-full bg-white text-brand hover:bg-brand-mint border-0 shadow-none">
               <Plus className="h-3.5 w-3.5" />
               {addLabel}
             </Button>
@@ -108,12 +108,12 @@ export function DataTable<T extends { id: string | number }>({
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-black uppercase tracking-widest text-ink-soft/60">
+            <tr className="h-10 bg-canvas/30 border-b border-line">
               {columns.map((col) => (
                 <th 
                   key={String(col.accessorKey)} 
                   className={cn(
-                    "px-4 text-[10px] font-black uppercase tracking-widest text-ink-soft/60",
+                    "px-4 text-[10px] font-bold uppercase tracking-widest text-ink-soft/70",
                     col.align === "right" && "text-right",
                     col.align === "center" && "text-center"
                   )}
@@ -172,7 +172,7 @@ export function DataTable<T extends { id: string | number }>({
                 <td colSpan={columns.length + (actions ? 1 : 0)} className="py-20">
                   {emptyState || (
                     <div className="flex flex-col items-center justify-center text-ink-soft/30">
-                      <p className="text-[11px] font-black uppercase tracking-widest">Sin registros</p>
+                      <p className="text-[11px] font-bold uppercase tracking-widest">Sin registros</p>
                     </div>
                   )}
                 </td>

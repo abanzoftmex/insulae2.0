@@ -148,11 +148,11 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
         footer={
           !isLoadingForm && (
             <>
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
               <Button 
                 disabled={isPending || !name} 
                 onClick={handleSave}
-                className="h-8 px-6 text-[10px] font-black uppercase"
+                className="h-8 px-6 text-[10px] font-bold uppercase"
               >
                 {isPending ? "Guardando..." : "Guardar Barrio"}
               </Button>
@@ -163,7 +163,7 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
         {isLoadingForm ? (
           <div className="flex flex-col items-center justify-center py-10 gap-3 text-brand/40">
             <Loader2 className="h-6 w-6 animate-spin" />
-            <p className="text-[10px] font-black uppercase tracking-widest">Cargando datos...</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest">Cargando datos...</p>
           </div>
         ) : (
           <div className="space-y-5">

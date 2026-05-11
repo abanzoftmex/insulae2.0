@@ -4,6 +4,7 @@ import { getBudgetStructureUseCase } from "@/modules/budget";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { YearSelector } from "../presupuestos/components/year-selector";
 import { BudgetStructureWorkbench } from "./components/budget-structure-workbench";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 
 export const metadata: Metadata = {
   title: "Estructura Presupuesto | Insulae 2.0",
@@ -24,15 +25,18 @@ export default async function BudgetStructurePage(props: { searchParams: Promise
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="flex flex-col gap-0.5">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-black text-brand tracking-tighter uppercase">Estructura Presupuestal</h1>
-            <YearSelector currentYear={currentYear} selectedYear={year} />
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura Presupuestal</h1>
+              <YearSelector currentYear={currentYear} selectedYear={year} />
+            </div>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {condo.name} · Definición de grupos de gasto y partidas operativas.
+            </p>
           </div>
-          <p className="text-ink-soft/50 text-[11px] font-bold uppercase tracking-tight">
-            {condo.name} · Definición de grupos de gasto y partidas operativas.
-          </p>
         </div>
       </div>
 

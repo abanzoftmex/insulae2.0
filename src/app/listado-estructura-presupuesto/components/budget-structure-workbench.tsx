@@ -131,7 +131,7 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
       cell: (row) => (
         <div className="flex flex-col">
           <span className="font-bold text-brand">{row.name}</span>
-          <span className="text-[9px] font-black uppercase text-ink-soft/40 tracking-widest">{CATEGORY_LABELS[row.category] || row.category}</span>
+          <span className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">{CATEGORY_LABELS[row.category] || row.category}</span>
         </div>
       )
     },
@@ -169,7 +169,7 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
   return (
     <>
       <div className="flex items-center gap-2 mb-2 px-1">
-        <div className="h-7 px-3 flex items-center justify-center rounded bg-brand/5 border border-brand/10 text-brand text-[9px] font-black uppercase tracking-tighter">
+        <div className="h-7 px-3 flex items-center justify-center rounded bg-brand/5 border border-brand/10 text-brand text-[9px] font-bold uppercase tracking-tighter">
           <Layers className="h-3 w-3 mr-1.5 opacity-50" />
           {initialGroups.length} Grupos definidos para {year}
         </div>
@@ -195,11 +195,11 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
         size="lg"
         footer={
           <>
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-black uppercase">Cancelar</Button>
+            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
             <Button 
               disabled={isPending || !formName} 
               onClick={handleSave}
-              className="h-8 px-6 text-[10px] font-black uppercase"
+              className="h-8 px-6 text-[10px] font-bold uppercase"
             >
               {isPending ? "Guardando..." : "Guardar Estructura"}
             </Button>
@@ -217,14 +217,14 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
               >
                 {Object.entries(CATEGORY_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
               </select>
-              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-black uppercase tracking-widest text-brand-accent/60">Categoría Contable</label>
+              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Categoría Contable</label>
             </div>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between border-b border-line pb-1">
-              <p className="text-[10px] font-black uppercase tracking-widest text-ink-soft/60">Conceptos / Partidas</p>
-              <button onClick={handleAddConcept} className="text-[9px] font-black text-brand-accent flex items-center gap-1 uppercase hover:underline">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">Conceptos / Partidas</p>
+              <button onClick={handleAddConcept} className="text-[9px] font-bold text-brand-accent flex items-center gap-1 uppercase hover:underline">
                 <Plus className="h-3 w-3" /> Agregar Partida
               </button>
             </div>

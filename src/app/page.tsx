@@ -9,6 +9,7 @@ import {
   FileText,
   Zap,
   Bell,
+  Activity,
 } from "lucide-react";
 
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
@@ -19,6 +20,8 @@ import { getTicketListingUseCase } from "@/modules/tickets";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/ui/stat-card";
 import { FinancialChart } from "@/components/ui/financial-chart";
 
 export const metadata: Metadata = {
@@ -72,51 +75,58 @@ export default async function Home() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-xl font-bold text-brand tracking-tight">
-          Resumen del condominio
-        </h1>
-        <p className="text-[13px] text-ink-soft mt-0.5">
-          {condominiumName} · {today}
-        </p>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
+            Resumen del condominio
+          </h1>
+          <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Panel Operativo</Badge>
+          <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+            {condominiumName} · {today}
+          </p>
+        </div>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
+          accent="brand"
           label="Áreas privativas"
           value={stats.areas.toLocaleString()}
-          icon={<MapPin strokeWidth={1.5} style={{ width: 14, height: 14 }} />}
-          trend={{ label: "0.5%", up: true }}
+          icon={<MapPin className="h-3.5 w-3.5" />}
+          trend={{ value: "+0.5%", isUp: true }}
         />
         <StatCard
+          accent="lime"
           label="Residentes"
           value={stats.residents.toLocaleString()}
-          icon={<Users strokeWidth={1.5} style={{ width: 14, height: 14 }} />}
+          icon={<Users className="h-3.5 w-3.5" />}
         />
         <StatCard
+          accent="gold"
           label="Cobranza"
           value={`$${(stats.collections / 1000).toFixed(1)}k`}
-          icon={<DollarSign strokeWidth={1.5} style={{ width: 14, height: 14 }} />}
-          trend={{ label: "12%", up: true }}
+          icon={<DollarSign className="h-3.5 w-3.5" />}
+          trend={{ value: "+12%", isUp: true }}
         />
         <StatCard
+          accent="cyan"
           label="Tickets abiertos"
           value={String(stats.openTickets)}
-          icon={<TicketIcon strokeWidth={1.5} style={{ width: 14, height: 14 }} />}
-          trend={stats.openTickets > 0 ? { label: String(stats.openTickets), up: false } : undefined}
+          icon={<TicketIcon className="h-3.5 w-3.5" />}
+          trend={stats.openTickets > 0 ? { value: String(stats.openTickets), isUp: false } : undefined}
         />
       </div>
 
       {/* Charts + recent tickets */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         <Card className="lg:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-line">
-            <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-row items-center justify-between">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
               Actividad financiera
             </CardTitle>
-            <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px] font-semibold text-brand">
-              Ver reporte
+            <Button variant="ghost" size="sm" className="h-7 px-3 gap-1.5 text-[10px] font-bold text-brand bg-white rounded-full uppercase tracking-tight hover:bg-brand-mint">
+              <Activity className="h-3 w-3" /> Ver reporte
             </Button>
           </CardHeader>
           <CardContent className="px-2 pb-3 pt-2">
@@ -125,13 +135,13 @@ export default async function Home() {
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-line">
-            <CardTitle className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-row items-center justify-between">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
               Tickets recientes
             </CardTitle>
             <Link href="/tickets">
-              <Button variant="ghost" size="sm" className="h-6 px-2 text-[11px] font-semibold text-brand">
-                Todos
+              <Button variant="ghost" size="sm" className="h-7 px-3 gap-1.5 text-[10px] font-bold text-brand bg-white rounded-full uppercase tracking-tight hover:bg-brand-mint">
+                <ArrowRight className="h-3 w-3" /> Todos
               </Button>
             </Link>
           </CardHeader>
@@ -149,15 +159,15 @@ export default async function Home() {
                       <p className="text-[13px] font-medium text-ink truncate leading-snug">
                         {ticket.title}
                       </p>
-                      <p className="text-[11px] text-ink-soft/60 truncate mt-0.5">
+                      <p className="text-[11px] text-ink-soft/70 truncate mt-0.5">
                         {ticket.residentName}
                       </p>
                     </div>
                     <span
-                      className={`shrink-0 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                      className={`shrink-0 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
                         ticket.status === "OPEN"
-                          ? "bg-brand-mint/50 text-brand"
-                          : "bg-canvas text-ink-soft/50"
+                          ? "bg-brand/15 text-brand border border-brand/25"
+                          : "bg-canvas text-ink-soft/60 border border-line"
                       }`}
                     >
                       {ticket.status}
@@ -166,9 +176,9 @@ export default async function Home() {
                 ))}
               </ul>
             ) : (
-              <div className="flex flex-col items-center justify-center py-8 text-ink-soft/20">
-                <TicketIcon style={{ width: 20, height: 20 }} className="mb-2 opacity-20" />
-                <p className="text-[11px] font-medium tracking-widest uppercase">
+              <div className="flex flex-col items-center justify-center py-8 text-ink-soft/50">
+                <TicketIcon style={{ width: 20, height: 20 }} className="mb-2 opacity-40" />
+                <p className="text-[11px] font-bold tracking-widest uppercase">
                   Sin tickets
                 </p>
               </div>
@@ -181,21 +191,21 @@ export default async function Home() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <QuickAction
           href="/reporte-condominio"
-          icon={<FileText strokeWidth={1.5} style={{ width: 16, height: 16 }} />}
+          icon={<FileText className="h-4 w-4" />}
           title="Generar reporte"
           description="Estado actual del condominio en PDF."
           cta="Continuar"
         />
         <QuickAction
           href="/cobros-masivos"
-          icon={<Zap strokeWidth={1.5} style={{ width: 16, height: 16 }} />}
+          icon={<Zap className="h-4 w-4" />}
           title="Cobros masivos"
           description="Proceso de cobranza para todas las áreas."
           cta="Lanzar"
         />
         <QuickAction
           href="/notificaciones"
-          icon={<Bell strokeWidth={1.5} style={{ width: 16, height: 16 }} />}
+          icon={<Bell className="h-4 w-4" />}
           title="Notificación masiva"
           description="Comunicados masivos vía email/push."
           cta="Redactar"
@@ -206,49 +216,6 @@ export default async function Home() {
 }
 
 // ─── Local sub-components ────────────────────────────────────────────────────
-
-function StatCard({
-  label,
-  value,
-  icon,
-  trend,
-}: {
-  label: string;
-  value: string;
-  icon?: React.ReactNode;
-  trend?: { label: string; up: boolean };
-}) {
-  return (
-    <Card className="p-4">
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-ink-soft/60 leading-tight">
-          {label}
-        </p>
-        {icon && (
-          <span className="p-1.5 rounded-md bg-canvas text-brand-accent/50">
-            {icon}
-          </span>
-        )}
-      </div>
-      <div className="flex items-end justify-between">
-        <span className="text-[26px] font-bold text-brand leading-none tracking-tight">
-          {value}
-        </span>
-        {trend && (
-          <span
-            className={`inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded ${
-              trend.up
-                ? "bg-brand-mint/40 text-brand"
-                : "bg-danger/10 text-danger"
-            }`}
-          >
-            {trend.up ? "↑" : "↓"} {trend.label}
-          </span>
-        )}
-      </div>
-    </Card>
-  );
-}
 
 function QuickAction({
   href,
@@ -267,18 +234,16 @@ function QuickAction({
     <Link href={href} className="block group">
       <Card className="p-5 h-full transition-standard hover:shadow-md cursor-pointer">
         <div className="flex items-center gap-3 mb-3">
-          <span className="inline-flex items-center justify-center rounded-lg bg-canvas text-brand-accent group-hover:bg-brand-mint/30 transition-standard"
-            style={{ width: 32, height: 32 }}>
+          <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-brand-deep text-brand-mint shrink-0 group-hover:bg-brand transition-colors">
             {icon}
           </span>
-          <h3 className="text-[13px] font-semibold text-brand">{title}</h3>
+          <h3 className="text-[13px] font-bold text-brand">{title}</h3>
         </div>
-        <p className="text-[12px] text-ink-soft leading-relaxed mb-4">
+        <p className="text-[12px] text-ink-soft/80 leading-relaxed mb-4">
           {description}
         </p>
-        <span className="inline-flex items-center gap-1 text-[12px] font-semibold text-brand-accent group-hover:gap-1.5 transition-all">
-          {cta}
-          <ArrowRight style={{ width: 12, height: 12 }} />
+        <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase tracking-tight shadow-md shadow-brand-deep/25 group-hover:bg-brand transition-colors">
+          <ArrowRight className="h-3 w-3" /> {cta}
         </span>
       </Card>
     </Link>
