@@ -31,11 +31,5 @@ export default async function EditRolePage(props: Props) {
     notFound();
   }
 
-  return (
-    <main className="min-h-screen bg-[#fcf9f5] pb-24">
-      <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <RoleForm initialData={role} modules={modules} condominiumId={condominium.id} />
-      </div>
-    </main>
-  );
+  return <RoleForm initialData={role} modules={modules} condominiumId={condominium.id} />;
 }

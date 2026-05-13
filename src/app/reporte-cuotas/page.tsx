@@ -22,12 +22,12 @@ function Cell({ cell }: { cell: FeeReportCellVM }) {
     <div className="flex flex-col gap-0.5 py-0.5 leading-none">
       <div className="inline-flex items-center gap-1">
         <span className="rounded-[1px] bg-brand-deep/5 px-1 py-px text-[8px] font-bold text-brand-deep/40">P</span>
-        <span className="text-[10px] font-bold text-ink truncate max-w-[80px]">{cell.ownerLabel}</span>
+        <span className="text-[10px] font-bold text-ink truncate max-w-20">{cell.ownerLabel}</span>
       </div>
       {cell.hasCommerce && (
         <div className="inline-flex items-center gap-1">
           <span className="rounded-[1px] bg-danger/5 px-1 py-px text-[8px] font-bold text-danger/40">C</span>
-          <span className="text-[10px] font-bold text-danger truncate max-w-[80px]">{cell.commerceLabel}</span>
+          <span className="text-[10px] font-bold text-danger truncate max-w-20">{cell.commerceLabel}</span>
         </div>
       )}
     </div>
@@ -50,13 +50,27 @@ function Paginator({ page, totalPages }: { page: number; totalPages: number }) {
   if (totalPages <= 1) return null;
   const buildHref = (p: number) => `/reporte-cuotas?page=${p}`;
   return (
-    <div className="flex items-center gap-1.5 h-8">
-      <Link href={buildHref(Math.max(1, page - 1))} className={cn("p-1 rounded hover:bg-canvas transition-colors", page === 1 && "opacity-20 pointer-events-none")}>
-        <ChevronLeft className="h-4 w-4" />
+    <div className="flex items-center gap-3">
+      <Link
+        href={buildHref(Math.max(1, page - 1))}
+        className={cn(
+          "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+          page === 1 && "opacity-30 pointer-events-none"
+        )}
+      >
+        <ChevronLeft className="h-3.5 w-3.5" /> Anterior
       </Link>
-      <span className="text-[11px] font-bold uppercase text-ink-soft/60">Página {page} de {totalPages}</span>
-      <Link href={buildHref(Math.min(totalPages, page + 1))} className={cn("p-1 rounded hover:bg-canvas transition-colors", page === totalPages && "opacity-20 pointer-events-none")}>
-        <ChevronRight className="h-4 w-4" />
+      <span className="text-[11px] font-bold uppercase text-ink-soft/80 tabular-nums">
+        Pág {page} / {totalPages}
+      </span>
+      <Link
+        href={buildHref(Math.min(totalPages, page + 1))}
+        className={cn(
+          "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+          page === totalPages && "opacity-30 pointer-events-none"
+        )}
+      >
+        Siguiente <ChevronRight className="h-3.5 w-3.5" />
       </Link>
     </div>
   );
@@ -93,38 +107,46 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estado de Cartera Ordinaria</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Cobranza Ordinaria</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {vm.subtitle} · Corte {vm.lastUpdatedLabel}
             </p>
           </div>
         </div>
-        <Paginator page={vm.page} totalPages={vm.totalPages} />
       </div>
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <StatCard label="Total Unidades" value={vm.totalAreas} icon={<Layers className="h-3.5 w-3.5" />} />
-        <StatCard label="Ciclo Fiscal" value={`${primaryYear} – ${secondaryYear}`} icon={<MapPin className="h-3.5 w-3.5" />} />
+        <StatCard accent="brand" label="Total Unidades" value={vm.totalAreas} icon={<Layers className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="Ciclo Fiscal" value={`${primaryYear} – ${secondaryYear}`} icon={<MapPin className="h-3.5 w-3.5" />} />
         <div className="md:col-span-2 flex items-center gap-4 px-4 py-3 bg-canvas/40 border border-line/30 rounded-md">
            <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-tighter">
              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-brand rounded-full" /> Propietario</span>
              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-danger rounded-full" /> Comercio</span>
-             <span className="flex items-center gap-1"><span className="w-2 h-2 bg-success/40 border border-success/60 rounded-[2px]" /> Fracción (FAP)</span>
+             <span className="flex items-center gap-1"><span className="w-2 h-2 bg-success/40 border border-success/60 rounded-xs" /> Fracción (FAP)</span>
            </div>
         </div>
       </div>
 
       {/* Main Table */}
-      <div className="overflow-hidden rounded-md border border-line shadow-layered bg-card">
+      {vm.totalPages > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70">
+            {vm.totalAreas} unidades · página {vm.page} de {vm.totalPages}
+          </p>
+          <Paginator page={vm.page} totalPages={vm.totalPages} />
+        </div>
+      )}
+      <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
         <div className="overflow-auto max-h-[70vh] no-scrollbar">
           <table className="min-w-max border-collapse text-[11px]">
             <thead className="sticky top-0 z-30 shadow-sm border-b border-line">
               {/* Group Headers */}
               <tr className="bg-canvas/95 backdrop-blur-md">
-                <th rowSpan={2} className="sticky left-0 z-40 px-4 py-3 text-left border-r border-line bg-canvas font-bold uppercase tracking-widest text-brand w-[180px]">
+                <th rowSpan={2} className="sticky left-0 z-40 px-4 py-3 text-left border-r border-line bg-canvas font-bold uppercase tracking-widest text-brand w-45">
                   Unidad / FAP
                 </th>
-                <th colSpan={2} className="px-2 py-1.5 text-center border-r border-line bg-brand-deep/[0.03] font-bold uppercase tracking-widest text-brand-deep/50">
+                <th colSpan={2} className="px-2 py-1.5 text-center border-r border-line bg-brand-deep/3 font-bold uppercase tracking-widest text-brand-deep/50">
                   Histórico {previousYear}
                 </th>
                 <th colSpan={3} className="px-2 py-1.5 text-center border-r border-line bg-brand-mint/20 font-bold uppercase tracking-widest text-brand">
@@ -154,7 +176,7 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
             </thead>
             <tbody className="divide-y divide-line/30">
               {vm.rows.map((row) => (
-                <tr key={row.id} className={cn("h-10 hover:bg-canvas/10 transition-colors group", row.isChild && "bg-success/[0.02]")}>
+                <tr key={row.id} className={cn("h-10 hover:bg-canvas/10 transition-colors group", row.isChild && "bg-success/2")}>
                   <td className={cn(
                     "sticky left-0 z-10 px-3 py-1.5 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
                     row.isChild ? "bg-success/5" : "bg-card group-hover:bg-canvas transition-colors"
@@ -170,15 +192,15 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
                   {/* Years Cells */}
                   {row.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
                     <React.Fragment key={yc.year}>
-                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/[0.02]"><Cell cell={yc.annual} /></td>
-                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/[0.02]"><Cell cell={yc.monthly} /></td>
+                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/2"><Cell cell={yc.annual} /></td>
+                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/2"><Cell cell={yc.monthly} /></td>
                       <td className="px-2 border-r border-line text-center bg-brand-mint/5"><Cell cell={yc.balance} /></td>
                     </React.Fragment>
                   ))}
                   {row.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
                     <React.Fragment key={yc.year}>
-                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/[0.04]"><Cell cell={yc.annual} /></td>
-                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/[0.04]"><Cell cell={yc.monthly} /></td>
+                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/4"><Cell cell={yc.annual} /></td>
+                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/4"><Cell cell={yc.monthly} /></td>
                       <td className="px-2 border-r border-line text-center bg-brand-mint/10"><Cell cell={yc.balance} /></td>
                     </React.Fragment>
                   ))}
@@ -226,7 +248,10 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
         </div>
       </div>
       
-      <div className="flex justify-center py-2">
+      <div className="flex justify-between items-center py-2 px-1">
+        <p className="text-[11px] font-bold text-ink-soft/70 uppercase tracking-widest">
+          Cartera ordinaria consolidada · {vm.totalAreas} unidades en sistema
+        </p>
         <Paginator page={vm.page} totalPages={vm.totalPages} />
       </div>
     </div>

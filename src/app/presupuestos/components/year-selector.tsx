@@ -4,13 +4,12 @@ import React from "react";
 
 export function YearSelector({ currentYear, selectedYear }: { currentYear: number, selectedYear: number }) {
   return (
-    <form method="GET" className="flex items-center gap-2">
-      <label className="text-sm font-semibold text-gray-600">Año:</label>
+    <form method="GET" className="flex items-center">
       <select 
         name="anio" 
         defaultValue={selectedYear}
         onChange={(e) => e.target.form?.submit()}
-        className="border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm py-1.5"
+        className="h-8 rounded-md border border-line bg-card px-2 text-[13px] font-bold text-brand outline-none appearance-none focus:ring-2 focus:ring-brand-accent/30 cursor-pointer"
       >
         {[currentYear-1, currentYear, currentYear+1, currentYear+2].map(y => (
           <option key={y} value={y}>{y}</option>

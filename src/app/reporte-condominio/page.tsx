@@ -70,7 +70,7 @@ export default async function ReporteCondominioPage() {
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             <div className="grid grid-cols-2 gap-3">
-              <div className="p-4 rounded-xl bg-[linear-gradient(135deg,#fff8e1_0%,#fff1b8_100%)] border border-yellow-200/50 flex flex-col justify-between min-h-[100px]">
+              <div className="p-4 rounded-xl bg-[linear-gradient(135deg,#fff8e1_0%,#fff1b8_100%)] border border-yellow-200/50 flex flex-col justify-between min-h-25">
                 <div className="flex justify-between items-start">
                   <span className="text-[9px] font-bold uppercase text-yellow-700 tracking-widest">Soles</span>
                   <span className="flex items-center justify-center h-7 w-7 rounded-lg bg-yellow-900/80">
@@ -83,7 +83,7 @@ export default async function ReporteCondominioPage() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-[linear-gradient(135deg,#e3f2fd_0%,#bbdefb_100%)] border border-blue-200/50 flex flex-col justify-between min-h-[100px]">
+              <div className="p-4 rounded-xl bg-[linear-gradient(135deg,#e3f2fd_0%,#bbdefb_100%)] border border-blue-200/50 flex flex-col justify-between min-h-25">
                 <div className="flex justify-between items-start">
                   <span className="text-[9px] font-bold uppercase text-blue-700 tracking-widest">Sombras</span>
                   <span className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-900/80">
@@ -135,8 +135,8 @@ export default async function ReporteCondominioPage() {
                 { label: "Actualización", value: vm.updatedAtLabel },
               ].map((f) => (
                 <div key={f.label} className="p-3 rounded bg-canvas border border-line/50">
-                  <p className="text-[9px] font-bold uppercase text-ink-soft/70 tracking-tight leading-none">{f.label}</p>
-                  <p className="text-[12px] font-bold text-ink mt-1.5 break-words">{f.value}</p>
+                  <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-tight leading-none">{f.label}</p>
+                  <p className="text-sm font-bold text-ink mt-1.5 wrap-break-word">{f.value}</p>
                 </div>
               ))}
             </div>
@@ -149,9 +149,9 @@ export default async function ReporteCondominioPage() {
           </CardHeader>
           <CardContent className="p-4 space-y-2">
             {vm.caveats.map((note, idx) => (
-              <div key={idx} className="flex gap-2 p-2.5 rounded bg-brand-deep/[0.02] border border-line/50">
-                 <Info className="h-3.5 w-3.5 text-brand-accent shrink-0 mt-0.5" />
-                 <p className="text-[11px] font-medium text-ink-soft/80 leading-relaxed italic">{note}</p>
+              <div key={idx} className="flex gap-2 p-2.5 rounded bg-brand-deep/2 border border-line/50">
+                 <Info className="h-4 w-4 text-brand-accent shrink-0 mt-0.5" />
+                 <p className="text-xs font-medium text-ink-soft/80 leading-relaxed italic">{note}</p>
               </div>
             ))}
           </CardContent>
@@ -165,36 +165,36 @@ export default async function ReporteCondominioPage() {
           <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest mt-2 bg-white text-brand border-0">Total: {vm.grandTotal}</Badge>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="overflow-x-auto overflow-y-auto no-scrollbar max-h-[500px]">
+          <div className="overflow-x-auto overflow-y-auto no-scrollbar max-h-125">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="h-9 bg-canvas/30 text-[9px] font-bold uppercase tracking-widest text-ink-soft/80 border-b border-line">
-                  <th className="sticky top-0 z-20 px-4 py-2 bg-canvas/95 backdrop-blur-sm border-r border-line/30 min-w-[280px]">Descripción del Uso</th>
-                  <th className="sticky top-0 z-20 px-4 py-2 bg-canvas/95 backdrop-blur-sm border-r border-line/30 min-w-[140px] text-center">Sigla</th>
-                  <th className="sticky top-0 z-20 px-4 py-2 bg-canvas/95 backdrop-blur-sm border-r border-line/30 w-[100px] text-right">Total</th>
+                  <th className="sticky top-0 z-20 px-4 py-2 bg-canvas/95 backdrop-blur-sm border-r border-line/30 min-w-70">Descripción del Uso</th>
+                  <th className="sticky top-0 z-20 px-4 py-2 bg-canvas/95 backdrop-blur-sm border-r border-line/30 min-w-35 text-center">Sigla</th>
+                  <th className="sticky top-0 z-20 px-4 py-2 bg-canvas/95 backdrop-blur-sm border-r border-line/30 w-25 text-right">Total</th>
                   {vm.zones.map(z => (
-                    <th key={z} className="sticky top-0 z-20 px-4 py-2 bg-canvas/95 backdrop-blur-sm border-r border-line/30 min-w-[120px] text-right">{z}</th>
+                    <th key={z} className="sticky top-0 z-20 px-4 py-2 bg-canvas/95 backdrop-blur-sm border-r border-line/30 min-w-30 text-right">{z}</th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line/30">
-                {vm.rows.map(row => (
-                  <tr key={row.landUseName} className="h-10 hover:bg-canvas/5 transition-colors">
-                    <td className="px-4 py-1.5 text-[12px] font-bold text-ink border-r border-line/30">{row.landUseName}</td>
-                    <td className="px-4 py-1.5 text-center border-r border-line/30"><Badge variant="brand" className="px-2.5 py-1 rounded-md text-[9px] font-bold tracking-widest">{row.landUseInitials}</Badge></td>
-                    <td className="px-4 py-1.5 text-right font-bold text-brand border-r border-line/30 text-[12px]">{row.total}</td>
+                <tbody className="divide-y divide-black/5">
+                {vm.rows.map((row, index) => (
+                  <tr key={row.landUseName} className={cn("hover:bg-brand-mint/20 transition-colors", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
+                    <td className="px-4 py-2 text-sm font-bold text-ink border-r border-black/8">{row.landUseName}</td>
+                    <td className="px-4 py-2 text-center border-r border-black/8"><Badge variant="brand" className="px-2.5 py-1 rounded-md text-[9px] font-bold tracking-widest">{row.landUseInitials}</Badge></td>
+                    <td className="px-4 py-2 text-right font-bold text-brand border-r border-black/8 text-sm">{row.total}</td>
                     {row.byZone.map((count, idx) => (
-                      <td key={idx} className="px-4 py-1.5 text-right text-[11px] font-medium text-ink-soft border-r border-line/30">{count}</td>
+                      <td key={idx} className="px-4 py-2 text-right text-xs font-medium text-ink-soft border-r border-black/8">{count}</td>
                     ))}
                   </tr>
                 ))}
               </tbody>
               <tfoot>
-                 <tr className="h-10 sticky bottom-0 z-10 bg-brand-deep text-white font-bold uppercase text-[10px]">
+                 <tr className="h-10 sticky bottom-0 z-10 bg-brand-deep text-white font-bold uppercase text-xs">
                     <td colSpan={2} className="px-4 py-2 text-right border-r border-white/10">Total General</td>
-                    <td className="px-4 py-2 text-right border-r border-white/10 text-[12px]">{vm.grandTotal}</td>
+                    <td className="px-4 py-2 text-right border-r border-white/10 text-sm">{vm.grandTotal}</td>
                     {vm.totalsByZone.map((t, idx) => (
-                      <td key={idx} className="px-4 py-2 text-right border-r border-white/10 text-[11px]">{t}</td>
+                      <td key={idx} className="px-4 py-2 text-right border-r border-white/10 text-xs">{t}</td>
                     ))}
                  </tr>
               </tfoot>

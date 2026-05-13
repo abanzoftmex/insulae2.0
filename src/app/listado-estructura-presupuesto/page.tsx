@@ -4,6 +4,7 @@ import { getBudgetStructureUseCase } from "@/modules/budget";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { YearSelector } from "../presupuestos/components/year-selector";
 import { BudgetStructureWorkbench } from "./components/budget-structure-workbench";
+import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 
 export const metadata: Metadata = {
@@ -33,6 +34,7 @@ export default async function BudgetStructurePage(props: { searchParams: Promise
               <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura Presupuestal</h1>
               <YearSelector currentYear={currentYear} selectedYear={year} />
             </div>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Catálogo Financiero</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {condo.name} · Definición de grupos de gasto y partidas operativas.
             </p>

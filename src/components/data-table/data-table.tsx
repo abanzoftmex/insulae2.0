@@ -131,7 +131,7 @@ export function DataTable<T extends { id: string | number }>({
               {actions && <th className="w-10"></th>}
             </tr>
           </thead>
-          <tbody className="divide-y divide-line/50">
+          <tbody className="divide-y divide-black/5">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="h-12 animate-pulse">
@@ -144,13 +144,13 @@ export function DataTable<T extends { id: string | number }>({
                 </tr>
               ))
             ) : data.length > 0 ? (
-              data.map((row) => (
-                <tr key={row.id} className="h-12 hover:bg-canvas/20 transition-colors group">
+              data.map((row, index) => (
+                <tr key={row.id} className={cn("hover:bg-brand-mint/20 transition-colors group", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
                   {columns.map((col) => (
                     <td 
                       key={String(col.accessorKey)} 
                       className={cn(
-                        "px-4 text-[13px] font-medium text-ink",
+                        "px-4 py-3 text-sm font-medium text-ink",
                         col.align === "right" && "text-right font-mono",
                         col.align === "center" && "text-center"
                       )}

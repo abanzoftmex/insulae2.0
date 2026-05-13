@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTicketListingUseCase, toTicketListingVM } from "@/modules/tickets";
 import { TicketsWorkbench } from "./tickets-workbench";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
   title: "Tickets | Insulae 2.0",
@@ -31,6 +32,7 @@ export default async function TicketsPage() {
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Tickets de Soporte</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Mesa de Ayuda</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               Mesa de atención y seguimiento a solicitudes de residentes.
             </p>

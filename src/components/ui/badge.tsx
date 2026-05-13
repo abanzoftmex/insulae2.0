@@ -8,12 +8,12 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: "bg-canvas text-ink-soft/60",
-        success: "bg-brand-mint text-brand",
-        warning: "bg-gold-soft text-gold",
-        danger: "bg-danger/10 text-danger",
+        success: "border border-brand/25 bg-brand-mint text-brand shadow-sm",
+        warning: "border border-gold/30 bg-gold-soft text-gold shadow-sm",
+        danger: "border border-danger/25 bg-danger/10 text-danger shadow-sm",
         brand:
           "border border-brand/25 bg-brand/15 text-brand shadow-sm",
-        outline: "border border-line text-ink-soft",
+        outline: "border border-black/15 text-ink-soft",
       },
     },
     defaultVariants: {

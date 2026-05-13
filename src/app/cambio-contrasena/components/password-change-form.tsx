@@ -9,6 +9,9 @@ import {
 } from "firebase/auth";
 import { getClientAuth } from "@/shared/infrastructure/storage/firebase-client";
 import { useRouter } from "next/navigation";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Save } from "lucide-react";
 
 export function PasswordChangeForm() {
   const router = useRouter();
@@ -75,101 +78,55 @@ export function PasswordChangeForm() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-[#e8dbcc] overflow-hidden">
-        <div className="p-8 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Current Password */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#6d422a] block text-center">
-                Contraseña actual (o provisional si tienes una)
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  required
-                  placeholder="Contraseña"
-                  className="w-full px-4 py-3 rounded-xl border border-[#e8dbcc] focus:outline-none focus:ring-2 focus:ring-[#5a7b56]/20 focus:border-[#5a7b56] transition-all bg-[#fcf9f5]/30 pr-10"
-                />
-                {currentPassword && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                  </div>
-                )}
-              </div>
-            </div>
+    <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
+      <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-white">Datos de acceso</p>
+      </div>
+      <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <Input
+            label="Contraseña actual"
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+            placeholder="Contraseña actual"
+          />
+          <Input
+            label="Contraseña nueva"
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+            placeholder="Nueva contraseña"
+          />
+          <Input
+            label="Confirmar contraseña"
+            type="password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+            placeholder="Confirmar contraseña"
+          />
+        </div>
 
-            {/* New Password */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#6d422a] block text-center">
-                Contraseña nueva
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  placeholder="Contraseña"
-                  className="w-full px-4 py-3 rounded-xl border border-[#e8dbcc] focus:outline-none focus:ring-2 focus:ring-[#5a7b56]/20 focus:border-[#5a7b56] transition-all bg-[#fcf9f5]/30 pr-10"
-                />
-                {newPassword && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Confirm Password */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-wider text-[#6d422a] block text-center">
-                Confirmación de contraseña
-              </label>
-              <div className="relative">
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  placeholder="Confirmar contraseña"
-                  className="w-full px-4 py-3 rounded-xl border border-[#e8dbcc] focus:outline-none focus:ring-2 focus:ring-[#5a7b56]/20 focus:border-[#5a7b56] transition-all bg-[#fcf9f5]/30 pr-10"
-                />
-                {confirmPassword && confirmPassword === newPassword && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-green-600">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                  </div>
-                )}
-              </div>
-            </div>
+        {error && (
+          <div className="p-3 bg-danger/5 border border-danger/20 text-danger rounded-md text-[11px] font-bold text-center animate-in fade-in slide-in-from-top-2">
+            {error}
           </div>
+        )}
 
-          <div className="flex justify-center pt-4">
-            <button
-              type="submit"
-              disabled={loading || success}
-              className="px-12 py-4 rounded-xl bg-[#2f394d] text-white font-bold uppercase tracking-widest hover:bg-[#1e2532] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg flex items-center gap-3"
-            >
-              {loading && (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              )}
-              Guardar información
-            </button>
+        {success && (
+          <div className="p-3 bg-success/5 border border-success/20 text-success rounded-md text-[11px] font-bold text-center animate-in fade-in slide-in-from-top-2">
+            ¡Contraseña actualizada con éxito! Cerrando sesión...
           </div>
+        )}
 
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl text-sm font-medium text-center animate-in fade-in slide-in-from-top-2">
-              {error}
-            </div>
-          )}
-
-          {success && (
-            <div className="p-4 bg-green-50 border border-green-100 text-green-700 rounded-xl text-sm font-medium text-center animate-in fade-in slide-in-from-top-2">
-              ¡Contraseña actualizada con éxito! Cerrando sesión...
-            </div>
-          )}
+        <div className="flex justify-end">
+          <Button type="submit" disabled={loading || success} className="h-8 px-6 text-[10px] font-bold uppercase tracking-widest gap-2">
+            <Save className="h-3.5 w-3.5" />
+            {loading ? "Guardando..." : "Guardar contraseña"}
+          </Button>
         </div>
       </form>
     </div>

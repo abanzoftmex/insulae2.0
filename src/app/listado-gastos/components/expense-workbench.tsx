@@ -45,6 +45,14 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   OTHER: "Otro",
 };
 
+const PAYMENT_METHOD_VARIANT: Record<string, "success" | "brand" | "warning" | "outline"> = {
+  CASH: "success",
+  TRANSFER: "brand",
+  CARD: "warning",
+  CHECK: "outline",
+  OTHER: "outline",
+};
+
 const PAYMENT_METHODS = ["CASH", "TRANSFER", "CARD", "CHECK", "OTHER"];
 
 const BUDGET_GROUP_LABELS: Record<string, string> = {
@@ -192,24 +200,31 @@ export function ExpenseWorkbench({
       header: "Concepto / Categoría",
       accessorKey: "budgetConceptName",
       cell: (row) => (
-        <div className="max-w-[200px]">
-          <p className="font-bold truncate leading-tight">{row.budgetConceptName || "Sin Concepto"}</p>
-          <p className="text-[10px] text-ink-soft/50 truncate uppercase tracking-tighter">
+        <div className="max-w-50 space-y-1">
+          <p className="text-[13px] font-bold text-ink truncate leading-tight">{row.budgetConceptName || "Sin Concepto"}</p>
+          <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[9px] font-bold tracking-widest">
             {row.budgetGroupName ? BUDGET_GROUP_LABELS[row.budgetGroupName] || row.budgetGroupName : "N/A"}
-          </p>
+          </Badge>
         </div>
       )
     },
     {
       header: "Proyecto",
       accessorKey: "projectName",
+      cell: (row) => row.projectName
+        ? <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.projectName}</Badge>
+        : <span className="text-[11px] text-ink-soft/40 font-bold uppercase">—</span>
+    },
+    {
+      header: "Método",
+      accessorKey: "paymentMethod",
       cell: (row) => (
-        <div className="flex items-center gap-1.5">
-          <Briefcase className="h-3 w-3 text-ink-soft/30" />
-          <span className="text-[11px] font-bold text-ink-soft/70 uppercase truncate max-w-[120px]">
-            {row.projectName || "—"}
-          </span>
-        </div>
+        <Badge
+          variant={PAYMENT_METHOD_VARIANT[row.paymentMethod || ""] ?? "outline"}
+          className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest"
+        >
+          {PAYMENT_METHOD_LABELS[row.paymentMethod || ""] || "N/A"}
+        </Badge>
       )
     },
     {
@@ -217,7 +232,7 @@ export function ExpenseWorkbench({
       accessorKey: "amount",
       align: "right",
       cell: (row) => (
-        <span className="text-[13px] font-bold text-danger">
+        <span className="text-[13px] font-bold text-danger tabular-nums">
           {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(row.amount)}
         </span>
       )
@@ -225,28 +240,40 @@ export function ExpenseWorkbench({
     {
       header: "Fecha",
       accessorKey: "date",
-      cell: (row) => <span className="text-[11px] text-ink-soft/60 uppercase">{new Date(row.date).toLocaleDateString("es-MX", { day: '2-digit', month: 'short', year: '2-digit' })}</span>
+      cell: (row) => (
+        <span className="text-[11px] font-bold text-ink-soft/60 uppercase tracking-tight">
+          {new Date(row.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit", timeZone: "UTC" })}
+        </span>
+      )
     },
     {
       header: "Dcto",
       accessorKey: "receiptUrl",
       align: "center",
       cell: (row) => row.receiptUrl ? (
-        <a href={row.receiptUrl} target="_blank" rel="noreferrer" className="p-1 rounded bg-brand-mint/20 text-brand transition-colors hover:bg-brand-mint/40">
+        <a href={row.receiptUrl} target="_blank" rel="noreferrer" className="h-7 w-7 inline-flex items-center justify-center rounded-full bg-brand-mint/30 text-brand hover:bg-brand-mint/60 transition-colors">
           <FileText className="h-3.5 w-3.5" />
         </a>
       ) : <span className="text-ink-soft/20 text-[10px]">—</span>
     },
     {
-      header: "Acción",
+      header: "Acciones",
       accessorKey: "id",
       align: "right",
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button onClick={() => openEditModal(row)} className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard">
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => openEditModal(row)}
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+            title="Editar"
+          >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => handleDelete(row.id)} className="p-1.5 rounded hover:bg-danger/10 text-ink-soft/40 hover:text-danger transition-standard">
+          <button
+            onClick={() => handleDelete(row.id)}
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+            title="Eliminar"
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -257,9 +284,9 @@ export function ExpenseWorkbench({
   return (
     <>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <StatCard label="Total Registros" value={filteredExpenses.length} icon={<Layers className="h-3.5 w-3.5" />} />
-        <StatCard label="Egreso Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} className="bg-danger/[0.03] border-danger/10" />
-        <StatCard label="Conceptos" value={budgetConcepts.length} icon={<Briefcase className="h-3.5 w-3.5" />} />
+        <StatCard accent="brand" label="Total Registros" value={filteredExpenses.length} icon={<Layers className="h-3.5 w-3.5" />} />
+        <StatCard accent="gold" label="Egreso Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} className="bg-danger/3 border-danger/10" />
+        <StatCard accent="cyan" label="Conceptos" value={budgetConcepts.length} icon={<Briefcase className="h-3.5 w-3.5" />} />
       </div>
 
       <div className="flex items-center justify-between gap-4 mt-2">
@@ -309,16 +336,16 @@ export function ExpenseWorkbench({
       >
         <div className="space-y-4 pt-2">
           <div className="grid grid-cols-2 gap-4">
-            <div className="relative">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Concepto Presupuestal</label>
               <select
                 value={formBudgetConceptId}
                 onChange={(e) => setFormBudgetConceptId(e.target.value)}
-                className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
+                className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
               >
                 <option value="">Sin Categoría</option>
                 {budgetConcepts.map(c => <option key={c.id} value={c.id}>{c.name} ({BUDGET_GROUP_LABELS[c.budgetGroup] || c.budgetGroup})</option>)}
               </select>
-              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Concepto Presupuestal</label>
             </div>
             <Input label="Proyecto / Centro de Costo" value={formProjectName} onChange={(e) => setFormProjectName(e.target.value)} placeholder="Opcional" />
           </div>
@@ -328,18 +355,18 @@ export function ExpenseWorkbench({
             <Input label="Monto (MXN)" type="number" step="0.01" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
           </div>
 
-          <div className="relative">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Método de Pago</label>
             <select
               value={formMethod}
               onChange={(e) => setFormMethod(e.target.value)}
-              className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
+              className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
             >
               {PAYMENT_METHODS.map(m => <option key={m} value={m}>{PAYMENT_METHOD_LABELS[m]}</option>)}
             </select>
-            <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Método de Pago</label>
           </div>
 
-          <Textarea label="Concepto / Descripción" value={formConcept} onChange={(e) => setFormConcept(e.target.value)} className="min-h-[60px]" />
+          <Textarea label="Concepto / Descripción" value={formConcept} onChange={(e) => setFormConcept(e.target.value)} className="min-h-15" />
           <Input label="Notas Internas" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
 
           <div className="pt-2 border-t border-line/50">

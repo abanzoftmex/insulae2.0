@@ -5,6 +5,7 @@ import { BudgetVM } from "@/modules/budget";
 import { updateBudgetAmountAction, createBudgetAmountAction } from "../actions";
 import { cn } from "@/shared/utils/cn";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 function formatMXN(num: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -58,16 +59,16 @@ export default function BudgetTable({ vm }: { vm: BudgetVM }) {
 
   return (
     <Card className="overflow-hidden border-transparent shadow-layered">
-      <CardHeader className="px-4 py-3 border-b border-line bg-card flex flex-row items-center justify-between">
-        <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand">Desglose Presupuestal Mensual</CardTitle>
-        {isClosed && <Badge variant="danger">Lectura Protegida</Badge>}
+      <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-row items-center justify-between">
+        <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Desglose Presupuestal Mensual</CardTitle>
+        {isClosed && <Badge variant="danger" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">Lectura Protegida</Badge>}
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[120rem]">
+          <table className="w-full text-left border-collapse min-w-480">
             <thead>
               <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
-                <th className="sticky left-0 z-30 px-4 border-r border-line bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-[240px]">Concepto</th>
+                <th className="sticky left-0 z-30 px-4 border-r border-line bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-60">Concepto</th>
                 <th className="px-4 text-right border-r border-line bg-brand/5 text-brand">Anual Presupuesto</th>
                 <th className="px-4 text-right border-r border-line bg-brand/5 text-brand">Anual Ejercido</th>
                 <th className="px-4 text-right border-r border-line bg-brand/5 text-brand">Anual Saldo</th>
@@ -83,8 +84,8 @@ export default function BudgetTable({ vm }: { vm: BudgetVM }) {
               {vm.groups.map(group => (
                 <Fragment key={group.groupData}>
                   {/* Group Header Row */}
-                  <tr className="h-9 bg-brand-deep/[0.03] border-b border-line/50">
-                    <td className="sticky left-0 px-4 font-bold uppercase text-[11px] text-brand border-r border-line bg-brand-deep/[0.01] shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
+                  <tr className="h-9 bg-brand-deep/3 border-b border-line/50">
+                    <td className="sticky left-0 px-4 font-bold uppercase text-[11px] text-brand border-r border-line bg-brand-deep/1 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                       {groupTitles[group.groupData] || group.groupData}
                     </td>
                     <td className="px-4 text-right font-bold text-[12px] text-brand border-r border-line">{formatMXN(group.budgeted)}</td>
@@ -150,5 +151,4 @@ export default function BudgetTable({ vm }: { vm: BudgetVM }) {
     </Card>
   );
 }
-
-import { Badge } from "@/components/ui/badge";
+// Badge is imported at the top of the file

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getExpenseUseCase } from "@/modules/expense";
 import { ExpenseWorkbench } from "./components/expense-workbench";
+import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 
 export const metadata: Metadata = {
@@ -43,6 +44,7 @@ export default async function ListadoGastosPage() {
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Egresos</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Finanzas</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {condominium.name} · Auditoría y control de flujo de salida.
             </p>

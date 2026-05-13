@@ -2,10 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-
 import { createSanctionAction, updateSanctionAction } from "../actions";
 import { Sanction } from "@/modules/sanction/domain/sanction.types";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
+import { Save } from "lucide-react";
 
 interface Props {
   initialData?: Sanction | null;
@@ -62,92 +65,80 @@ export function SanctionForm({ initialData }: Props) {
   };
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6 py-8 px-4 sm:px-6">
-      <div className="flex items-center gap-4">
-        <Link 
-          href="/sanciones"
-          className="p-2 hover:bg-[#e8dbcc] text-[#6d422a] rounded-xl transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold text-[#2f221a]">
-            {isEditing ? "Editar Sanción" : "Nueva Sanción"}
-          </h1>
-          <p className="text-[#6d422a] mt-1 text-sm">
-            {isEditing ? "Modifica los detalles de la sanción." : "Completa la información para registrar una nueva sanción."}
-          </p>
+    <div className="space-y-4 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
+              {isEditing ? "Editar Sanción" : "Nueva Sanción"}
+            </h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">
+              Catálogo Reglamentario
+            </Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {isEditing ? "Modifica los datos de la sanción registrada" : "Registra una nueva sanción en el catálogo"}
+            </p>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-[#ccb49c]/30 overflow-hidden">
-        <div className="p-6 md:p-8 space-y-6">
-          <h2 className="text-lg font-bold text-[#2f221a] border-b border-[#ccb49c]/20 pb-3">
-            Información General
-          </h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2 col-span-1 md:col-span-2">
-              <label className="text-sm font-semibold text-[#6d422a]">Nombre de la sanción <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
-                placeholder="Ej. Multa por ruido excesivo"
-                className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-3 text-[#2f221a] outline-none focus:border-[#5a7b56] transition-colors"
-              />
-            </div>
-            
-            <div className="space-y-2 col-span-1 md:col-span-2">
-              <label className="text-sm font-semibold text-[#6d422a]">Fundamento en Artículo</label>
-              <input
-                type="text"
-                value={formData.article}
-                onChange={(e) => setFormData(p => ({ ...p, article: e.target.value }))}
-                placeholder="Ej. Artículo 42, inciso B"
-                className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-3 text-[#2f221a] outline-none focus:border-[#5a7b56] transition-colors"
-              />
-              <p className="text-xs text-[#958172]">El artículo del reglamento en el que se basa esta sanción.</p>
-            </div>
+      {/* Form Card */}
+      <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
+        <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white">Información General</p>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          <Input
+            label="Nombre / Descripción de la Infracción *"
+            value={formData.name}
+            onChange={(e) => setFormData(p => ({ ...p, name: e.target.value }))}
+            placeholder="Ej. Multa por ruido excesivo"
+            required
+          />
+
+          <div className="space-y-1">
+            <Input
+              label="Fundamento en Artículo"
+              value={formData.article}
+              onChange={(e) => setFormData(p => ({ ...p, article: e.target.value }))}
+              placeholder="Ej. Artículo 42, inciso B"
+            />
+            <p className="text-[10px] text-ink-soft/50 italic">El artículo del reglamento en el que se basa esta sanción.</p>
           </div>
 
           {error && (
-            <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-              <p className="text-sm font-medium">{error}</p>
+            <div className="p-3 bg-danger/5 border border-danger/20 text-danger rounded-md text-[11px] font-bold">
+              {error}
             </div>
           )}
-
           {success && (
-            <div className="flex items-center gap-2 p-4 bg-green-50 text-green-700 rounded-xl">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
-              <p className="text-sm font-medium">Información guardada con éxito. Redirigiendo...</p>
+            <div className="p-3 bg-success/5 border border-success/20 text-success rounded-md text-[11px] font-bold">
+              Información guardada con éxito. Redirigiendo...
             </div>
           )}
-        </div>
 
-        <div className="bg-[#fcf9f5] px-6 py-4 border-t border-[#ccb49c]/20 flex justify-end gap-3">
-          <Link
-            href="/sanciones"
-            className="px-5 py-2.5 rounded-xl font-medium text-[#6d422a] hover:bg-[#e8dbcc] transition-colors"
-          >
-            Cancelar
-          </Link>
-          <button
-            type="submit"
-            disabled={loading || success}
-            className="inline-flex items-center gap-2 bg-[#5a7b56] hover:bg-[#4a6b46] disabled:opacity-50 text-white px-6 py-2.5 rounded-xl font-medium transition-colors"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            )}
-            Guardar información
-          </button>
-        </div>
-      </form>
+          <div className="flex justify-end gap-3 pt-2 border-t border-line">
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => router.push("/sanciones")}
+              className="h-8 text-[10px] font-bold uppercase tracking-widest"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={loading || success}
+              className="h-8 px-6 text-[10px] font-bold uppercase tracking-widest gap-2"
+            >
+              <Save className="h-3.5 w-3.5" />
+              {loading ? "Guardando..." : "Guardar Sanción"}
+            </Button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { StatCard } from "@/components/ui/stat-card";
 import { cn } from "@/shared/utils/cn";
 
 interface WorkbenchProps {
@@ -139,9 +140,9 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
       header: "Conceptos / Partidas",
       accessorKey: "concepts",
       cell: (row) => (
-        <div className="flex flex-wrap gap-1 max-w-[400px]">
+        <div className="flex flex-wrap gap-1 max-w-100">
           {row.concepts.map(c => (
-            <Badge key={c.id} variant="outline" className="bg-canvas/30 py-0 px-1.5 h-4 normal-case font-medium text-ink-soft">
+            <Badge key={c.id} variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
               {c.name}
             </Badge>
           ))}
@@ -154,11 +155,19 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
       accessorKey: "id",
       align: "right",
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button onClick={() => openEditModal(row)} className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard">
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => openEditModal(row)}
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+            title="Editar"
+          >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => handleDeleteGroup(row.id)} className="p-1.5 rounded hover:bg-danger/10 text-ink-soft/40 hover:text-danger transition-standard">
+          <button
+            onClick={() => handleDeleteGroup(row.id)}
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+            title="Eliminar"
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -168,14 +177,9 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-2 px-1">
-        <div className="h-7 px-3 flex items-center justify-center rounded bg-brand/5 border border-brand/10 text-brand text-[9px] font-bold uppercase tracking-tighter">
-          <Layers className="h-3 w-3 mr-1.5 opacity-50" />
-          {initialGroups.length} Grupos definidos para {year}
-        </div>
-        <div className="flex items-center gap-2 ml-auto">
-          <Badge variant="brand">Estructura Editable</Badge>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+        <StatCard accent="brand" label={`Grupos definidos • ${year}`} value={initialGroups.length} icon={<Layers className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="Total de Partidas" value={initialGroups.reduce((s, g) => s + g.concepts.length, 0)} icon={<Layers className="h-3.5 w-3.5" />} />
       </div>
 
       <DataTable
@@ -209,15 +213,15 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
         <div className="space-y-6 pt-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Nombre del Grupo" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Ej. Gastos de Limpieza" />
-            <div className="relative">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Categoría Contable</label>
               <select
                 value={formCategory}
                 onChange={(e) => setFormCategory(e.target.value)}
-                className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
+                className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
               >
                 {Object.entries(CATEGORY_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
               </select>
-              <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Categoría Contable</label>
             </div>
           </div>
 
@@ -229,7 +233,7 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
               </button>
             </div>
 
-            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1 no-scrollbar">
+            <div className="space-y-2 max-h-75 overflow-y-auto pr-1 no-scrollbar">
               {formConcepts.map((concept, idx) => (
                 <div key={idx} className="flex items-center gap-2 group/row">
                   <div className="h-9 w-8 flex items-center justify-center bg-canvas/30 rounded border border-dashed border-line text-ink-soft/20">

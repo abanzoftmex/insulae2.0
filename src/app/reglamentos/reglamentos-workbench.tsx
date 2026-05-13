@@ -130,8 +130,8 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
             <FileText className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-             <p className="font-bold truncate leading-tight">{row.name}</p>
-             <p className="text-[10px] text-ink-soft/70 uppercase tracking-widest font-bold mt-0.5">{row.uploadedAtLabel}</p>
+             <p className="font-bold text-sm leading-tight">{row.name}</p>
+             <p className="text-xs text-ink-soft/70 uppercase tracking-widest font-bold mt-0.5">{row.uploadedAtLabel}</p>
           </div>
         </div>
       )
@@ -252,7 +252,7 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
                <div className="flex items-center justify-between p-3 bg-canvas/40 rounded-lg border border-line/50">
                   <div className="flex items-center gap-2">
                     <FileText className="h-5 w-5 text-brand" />
-                    <span className="text-[12px] font-bold text-ink truncate max-w-[200px]">{formName || "Archivo cargado"}</span>
+                    <span className="text-[12px] font-bold text-ink truncate max-w-50">{formName || "Archivo cargado"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                      <a href={formFileUrl} target="_blank" className="p-1.5 rounded hover:bg-canvas text-brand transition-colors"><ExternalLink className="h-3.5 w-3.5" /></a>
@@ -271,7 +271,7 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
              )}
           </div>
 
-          <div className="p-3 bg-brand-deep/[0.02] border border-line rounded flex gap-2">
+          <div className="p-3 bg-brand-deep/2 border border-line rounded flex gap-2">
             <Info className="h-4 w-4 text-brand-accent shrink-0 mt-0.5" />
             <p className="text-[10px] font-bold text-ink-soft/60 leading-tight uppercase tracking-tight">
               Los reglamentos generales son visibles en la sección informativa del portal de residentes. Los documentos internos solo son accesibles para administración.

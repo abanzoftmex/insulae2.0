@@ -99,33 +99,33 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
     {
       header: "Ticket",
       accessorKey: "ticketNumber",
-      cell: (row) => <span className="font-mono font-bold text-brand-accent">#{row.ticketNumber}</span>
+      cell: (row) => <span className="font-mono font-bold text-base text-brand-accent">#{row.ticketNumber}</span>
     },
     {
       header: "Asunto",
       accessorKey: "title",
       cell: (row) => (
-        <div className="max-w-[240px]">
-          <p className="font-bold truncate leading-tight">{row.title}</p>
-          <p className="text-[10px] text-ink-soft/50 truncate uppercase tracking-tighter">{row.departmentName}</p>
+        <div className="max-w-60">
+          <p className="font-bold text-sm leading-tight">{row.title}</p>
+          <p className="text-xs text-ink-soft uppercase tracking-tighter mt-0.5">{row.departmentName}</p>
         </div>
       )
     },
     {
       header: "Residente",
       accessorKey: "residentName",
-      cell: (row) => <span className="text-[12px] font-medium">{row.residentName}</span>
+      cell: (row) => <span className="text-sm font-medium">{row.residentName}</span>
     },
     {
       header: "Fecha",
       accessorKey: "openedAtLabel",
-      cell: (row) => <span className="text-[11px] text-ink-soft/60">{row.openedAtLabel}</span>
+      cell: (row) => <span className="text-xs text-ink-soft">{row.openedAtLabel}</span>
     },
     {
       header: "Estado",
       accessorKey: "statusLabel",
       cell: (row) => (
-        <Badge variant={row.statusTone === "open" ? "success" : "default"}>
+        <Badge variant={row.statusTone === "open" ? "success" : "default"} className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
           {row.statusLabel}
         </Badge>
       )
@@ -136,12 +136,12 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
       align: "right",
       cell: (row) => (
         <Button 
-          variant="subtle" 
+          variant="dark" 
           size="sm" 
           onClick={() => openResponseModal(row.id)}
-          className="h-7 px-2 text-[10px] font-bold uppercase gap-1"
+          className="h-8 px-4 text-[10px] font-bold uppercase gap-1.5 rounded-full shadow-md shadow-brand-deep/25"
         >
-          <MessageSquare className="h-3 w-3" />
+          <MessageSquare className="h-3.5 w-3.5" />
           Atender
         </Button>
       )
@@ -188,17 +188,17 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
             {/* Info Section */}
             <div className="bg-canvas/50 rounded-lg p-3 border border-line/50 grid grid-cols-2 gap-y-3 gap-x-6">
               <div>
-                <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">Residente</p>
-                <p className="text-[12px] font-bold text-ink leading-tight">{formData.snapshot.residentName}</p>
-                <p className="text-[10px] text-ink-soft/60">{formData.snapshot.residentEmail || "Sin email"}</p>
+                <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest">Residente</p>
+                <p className="text-sm font-bold text-ink leading-tight">{formData.snapshot.residentName}</p>
+                <p className="text-xs text-ink-soft">{formData.snapshot.residentEmail || "Sin email"}</p>
               </div>
               <div>
-                <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">Departamento</p>
-                <p className="text-[12px] font-bold text-brand leading-tight">{formData.snapshot.departmentName}</p>
+                <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest">Departamento</p>
+                <p className="text-sm font-bold text-brand leading-tight">{formData.snapshot.departmentName}</p>
               </div>
               <div className="col-span-2 pt-2 border-t border-line/30">
-                <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest mb-1">Descripción del Problema</p>
-                <p className="text-[12px] font-medium text-ink bg-card p-2 rounded border border-line/30 italic">
+                <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest mb-1">Descripción del Problema</p>
+                <p className="text-sm font-medium text-ink bg-card p-2.5 rounded border border-line/30 italic">
                   &quot;{formData.snapshot.description}&quot;
                 </p>
               </div>
@@ -210,11 +210,11 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
                 label="Respuesta Operativa" 
                 value={response} 
                 onChange={(e) => setResponse(e.target.value)} 
-                className="min-h-[120px]"
+                className="min-h-30"
               />
 
               <div className="space-y-2">
-                <p className="text-[10px] font-bold uppercase text-ink-soft/40 tracking-widest">Cambiar Estado</p>
+                <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest">Cambiar Estado</p>
                 <div className="flex flex-wrap gap-2">
                   {formData.statusOptions.map((opt) => (
                     <button
@@ -236,7 +236,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
               {/* Evidence */}
               <div className="grid grid-cols-2 gap-4 pt-2 border-t border-line/50">
                 <div className="space-y-2">
-                  <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">Evidencia Visual</p>
+                  <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest">Evidencia Visual</p>
                   <div className="flex flex-col gap-2">
                     <input 
                       type="file" 
@@ -260,7 +260,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">Documento PDF</p>
+                  <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest">Documento PDF</p>
                   <div className="flex flex-col gap-2">
                     <input 
                       type="file" 

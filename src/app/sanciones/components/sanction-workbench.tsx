@@ -6,15 +6,16 @@ import {
   Trash2, 
   Plus, 
   Scale,
-  Gavel,
   Info,
-  Layers
+  Layers,
+  Gavel
 } from "lucide-react";
 import type { Sanction } from "@/modules/sanction/domain/sanction.types";
 import { createSanctionAction, updateSanctionAction, deleteSanctionAction } from "../actions";
 
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/ui/stat-card";
 import { Modal } from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -87,8 +88,10 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
       accessorKey: "name",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <Gavel className="h-3.5 w-3.5 text-brand/30" />
-          <span className="font-bold text-brand">{row.name}</span>
+          <Badge variant="brand" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest shrink-0">
+            Sanción
+          </Badge>
+          <span className="font-bold text-sm text-ink">{row.name}</span>
         </div>
       )
     },
@@ -96,8 +99,8 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
       header: "Fundamento Legal",
       accessorKey: "article",
       cell: (row) => row.article ? (
-        <Badge variant="brand" className="normal-case py-0 h-5 px-2 bg-brand/5 border-brand/10">
-          <Scale className="h-2.5 w-2.5 mr-1 opacity-50" />
+        <Badge variant="warning" className="rounded-full px-3 py-1.5 text-[11px] font-bold tracking-wide normal-case gap-1.5">
+          <Scale className="h-3.5 w-3.5 opacity-60 shrink-0" />
           {row.article}
         </Badge>
       ) : (
@@ -110,10 +113,10 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
       align: "right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
-          <button onClick={() => openEditModal(row)} className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard">
+          <button onClick={() => openEditModal(row)} className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors">
             <Edit2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => handleDelete(row.id)} className="p-1.5 rounded hover:bg-danger/10 text-ink-soft/40 hover:text-danger transition-standard">
+          <button onClick={() => handleDelete(row.id)} disabled={isPending} className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors disabled:opacity-40">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -123,14 +126,8 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
 
   return (
     <>
-      <div className="flex items-center gap-2 mb-2 px-1">
-        <div className="h-7 px-3 flex items-center justify-center rounded bg-brand/5 border border-brand/10 text-brand text-[9px] font-bold uppercase tracking-tighter">
-          <Layers className="h-3 w-3 mr-1.5 opacity-50" />
-          {initialSanctions.length} Tipos de sanciones
-        </div>
-        <div className="flex items-center gap-2 ml-auto">
-          <Badge variant="success">Catálogo Operativo</Badge>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+        <StatCard accent="brand" label="Tipos de Sanción" value={initialSanctions.length} icon={<Gavel className="h-3.5 w-3.5" />} />
       </div>
 
       <DataTable
@@ -186,7 +183,7 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
             placeholder="Ej. Artículo 45, Inciso B"
           />
 
-          <div className="p-3 bg-brand-deep/[0.02] border border-line rounded italic text-[11px] text-ink-soft/60">
+          <div className="p-3 bg-brand-deep/2 border border-line rounded italic text-[11px] text-ink-soft/60">
             Los nombres cortos y claros facilitan la lectura en el estado de cuenta del residente.
           </div>
         </div>

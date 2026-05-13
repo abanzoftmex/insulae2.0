@@ -195,24 +195,24 @@ export function MassChargeWorkbench({
               </CardHeader>
               <CardContent className="p-5 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="relative">
-                    <select value={zone} onChange={(e) => setZone(e.target.value)} className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Barrio</label>
+                    <select value={zone} onChange={(e) => setZone(e.target.value)} className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
                       {zones.map(z => <option key={z} value={z}>{z}</option>)}
                     </select>
-                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Barrio</label>
                   </div>
-                  <div className="relative">
-                    <select value={targetType} onChange={(e) => setTargetType(e.target.value as TargetType)} className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Destino</label>
+                    <select value={targetType} onChange={(e) => setTargetType(e.target.value as TargetType)} className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
                       <option value="COMERCIO">Comercio</option>
                       <option value="PROPIETARIO">Propietario</option>
                     </select>
-                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Destino</label>
                   </div>
-                  <div className="relative">
-                    <select value={chargeGroupId} onChange={(e) => setChargeGroupId(e.target.value)} className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Tipo de Cobro</label>
+                    <select value={chargeGroupId} onChange={(e) => setChargeGroupId(e.target.value)} className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20">
                       {chargeGroups.map(cg => <option key={cg.id} value={cg.id}>{cg.name}</option>)}
                     </select>
-                    <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Tipo de Cobro</label>
                   </div>
                 </div>
 
@@ -316,7 +316,7 @@ export function MassChargeWorkbench({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <StatCard label="Total Propiedades" value={previewData.summary.totalProperties} icon={<MapPin className="h-3.5 w-3.5" />} />
             <StatCard label="Para Cobrar" value={selectedCount} icon={<CheckCircle2 className="h-3.5 w-3.5" />} className="bg-brand-mint/20 border-brand-mint/30" />
-            <StatCard label="Omitidas" value={previewData.summary.skippedCount} icon={<AlertTriangle className="h-3.5 w-3.5" />} className="bg-danger/[0.03] border-danger/10" />
+            <StatCard label="Omitidas" value={previewData.summary.skippedCount} icon={<AlertTriangle className="h-3.5 w-3.5" />} className="bg-danger/3 border-danger/10" />
             <StatCard label="Meses" value={previewData.months.length} icon={<Calendar className="h-3.5 w-3.5" />} />
           </div>
 
@@ -326,7 +326,7 @@ export function MassChargeWorkbench({
               <button onClick={toggleAllProperties} className="text-[9px] font-bold text-brand-accent hover:underline uppercase">Alternar Selección</button>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto max-h-[500px] no-scrollbar">
+              <div className="overflow-x-auto max-h-125 no-scrollbar">
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0 z-20 bg-canvas/90 backdrop-blur-sm border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/70">
                     <tr>

@@ -4,9 +4,14 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
+import { Bell, FileText, ImageIcon, X, ExternalLink } from "lucide-react";
 
 import { saveNotificationAction } from "./actions";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input, Textarea } from "@/components/ui/input";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 
 interface NotificationTypeOption {
   id: string;
@@ -249,260 +254,213 @@ export function NotificacionFormShell({
   };
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#f2ece2] px-5 pb-16 pt-8 text-[#231912] sm:px-8 lg:px-12">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-11rem] top-[-8rem] h-[24rem] w-[24rem] rounded-full bg-[#1e7b78]/15 blur-3xl" />
-        <div className="absolute right-[-8rem] top-[12rem] h-[22rem] w-[24rem] rounded-full bg-[#c36d2f]/18 blur-3xl" />
-        <div className="absolute inset-0 opacity-45 [background-image:radial-gradient(rgba(90,62,45,0.12)_1px,transparent_1px)] [background-size:15px_15px]" />
+    <div className="space-y-4 animate-in fade-in duration-500">
+
+      {/* ── Header ───────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">{titleText}</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Comunicación Operativa</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              Comunica avisos relevantes para el condominio, comercios o ambos.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <section className="relative mx-auto flex w-full max-w-5xl flex-col gap-6">
-        <header className="rounded-[2rem] border border-[#c8b5a3]/55 bg-[linear-gradient(120deg,rgba(255,255,255,0.95)_0%,rgba(248,236,219,0.92)_58%,rgba(236,222,201,0.9)_100%)] p-6 shadow-[0_22px_40px_rgba(35,23,16,0.12)] sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Link
-              href="/notificaciones"
-              className="inline-flex items-center rounded-xl border border-[#c9af97] bg-white/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#6b4936] transition hover:bg-[#fff6ea]"
-            >
-              Volver al listado
-            </Link>
+      {/* ── Form card ────────────────────────────────────────── */}
+      <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
+        <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex items-center gap-2">
+          <Bell className="h-4 w-4 text-white/80" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-white/90">Contenido de la notificación</span>
+        </div>
 
-            <span className="inline-flex rounded-full border border-[#0d5f66]/40 bg-[#0d5f66]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0b5a62]">
-              Notificaciones
-            </span>
+        <div className="p-5 sm:p-6 grid gap-5 md:grid-cols-2">
+
+          {/* Título — full width */}
+          <div className="md:col-span-2">
+            <Input
+              label="Título"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Ej. Mantenimiento preventivo"
+            />
           </div>
 
-          <h1 className="mt-4 text-4xl font-semibold leading-none text-[#2f2219] sm:text-5xl">{titleText}</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[#5f5044] sm:text-base">
-            Comunica avisos relevantes para condominio, comercios o ambos, usando el nuevo catalogo de categorias.
-          </p>
-        </header>
+          {/* Descripción — full width */}
+          <div className="md:col-span-2">
+            <Textarea
+              label="Descripción"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Detalle de la notificación..."
+              className="min-h-28"
+            />
+          </div>
 
-        <section className="rounded-3xl border border-[#cab7a6]/55 bg-white/82 p-5 shadow-[0_18px_34px_rgba(35,23,16,0.1)] backdrop-blur-sm sm:p-6">
-          <article className="rounded-2xl border border-[#d8c6b7] bg-[#fffaf3] p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f6348]">Contenido de notificacion</p>
+          {/* Tipo */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Tipo de audiencia</label>
+            <select
+              value={audienceTypeId}
+              onChange={(e) => setAudienceTypeId(e.target.value)}
+              className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium transition-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent"
+            >
+              {options.typeOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
 
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="space-y-1 md:col-span-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Titulo</span>
-                <input
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  className="w-full rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17] outline-none transition focus:border-[#0c7c86] focus:ring-2 focus:ring-[#0c7c86]/20"
-                  placeholder="Ejemplo: Mantenimiento preventivo"
+          {/* Categoría */}
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Categoría</label>
+            <div className="flex items-center gap-2">
+              {selectedCategory && (
+                <span
+                  className="h-5 w-5 shrink-0 rounded-full border border-black/10"
+                  style={{ backgroundColor: normalizeColor(selectedCategory.color) }}
+                  aria-hidden
                 />
-              </label>
+              )}
+              <select
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium transition-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent"
+              >
+                <option value="">Sin categoría</option>
+                {options.categoryOptions.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{cat.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
 
-              <label className="space-y-1 md:col-span-2">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Descripcion</span>
-                <textarea
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
-                  className="min-h-32 w-full rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17] outline-none transition focus:border-[#0c7c86] focus:ring-2 focus:ring-[#0c7c86]/20"
-                  placeholder="Detalle de la notificacion"
-                />
-              </label>
+          {/* Fecha publicación */}
+          <Input
+            label="Fecha de publicación"
+            type="date"
+            value={sentAt}
+            onChange={(e) => setSentAt(e.target.value)}
+          />
 
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Tipo</span>
-                <select
-                  value={audienceTypeId}
-                  onChange={(event) => setAudienceTypeId(event.target.value)}
-                  className="w-full rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17] outline-none transition focus:border-[#0c7c86] focus:ring-2 focus:ring-[#0c7c86]/20"
-                >
-                  {options.typeOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+          {/* Vigencia */}
+          <Input
+            label="Vigencia"
+            type="date"
+            value={validUntil}
+            onChange={(e) => setValidUntil(e.target.value)}
+          />
 
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Categoria</span>
-                <select
-                  value={categoryId}
-                  onChange={(event) => setCategoryId(event.target.value)}
-                  className="w-full rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17] outline-none transition focus:border-[#0c7c86] focus:ring-2 focus:ring-[#0c7c86]/20"
-                >
-                  <option value="">Sin categoria</option>
-                  {options.categoryOptions.map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+          {/* Adjunto imagen — full width */}
+          <div className="md:col-span-2 rounded-card border border-line/40 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 flex items-center gap-1.5">
+                <ImageIcon className="h-3.5 w-3.5" /> Adjunto imagen
+              </p>
+              {uploadingAsset === "image" && (
+                <Badge variant="warning" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">Subiendo...</Badge>
+              )}
+            </div>
 
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Fecha de publicacion</span>
-                <input
-                  type="date"
-                  value={sentAt}
-                  onChange={(event) => setSentAt(event.target.value)}
-                  className="w-full rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17] outline-none transition focus:border-[#0c7c86] focus:ring-2 focus:ring-[#0c7c86]/20"
-                />
-              </label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => onUploadImage(e.target.files?.[0] ?? null)}
+              className="block w-full text-xs text-ink-soft file:mr-3 file:rounded-full file:border-0 file:bg-brand file:px-3 file:py-1 file:text-xs file:font-bold file:text-white file:uppercase file:tracking-widest cursor-pointer"
+            />
 
-              <label className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Vigencia</span>
-                <input
-                  type="date"
-                  value={validUntil}
-                  onChange={(event) => setValidUntil(event.target.value)}
-                  className="w-full rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17] outline-none transition focus:border-[#0c7c86] focus:ring-2 focus:ring-[#0c7c86]/20"
-                />
-              </label>
-
-              <div className="space-y-1">
-                <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Color categoria</span>
-                <div className="flex items-center gap-2 rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17]">
-                  <span
-                    className="h-5 w-5 rounded-md border border-black/10"
-                    style={{ backgroundColor: normalizeColor(selectedCategory?.color ?? null) }}
-                    aria-hidden
-                  />
-                  <span>{selectedCategory?.name ?? "Sin categoria seleccionada"}</span>
+            <div className="overflow-hidden rounded-md border border-line/40 bg-canvas/60">
+              {canUseAssetUrlInRuntime(imageUrl) ? (
+                <div className="relative h-36 w-full">
+                  <Image src={imageUrl} alt="Adjunto de notificación" fill unoptimized sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" />
                 </div>
-              </div>
-
-              <div className="space-y-2 rounded-2xl border border-[#d8c6b7] bg-white p-3 md:col-span-2">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Adjunto imagen</span>
-                  {uploadingAsset === "image" ? (
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8f2e23]">Subiendo...</span>
-                  ) : null}
+              ) : (
+                <div className="flex h-28 items-center justify-center text-[10px] font-bold uppercase tracking-widest text-ink-soft/50">
+                  Sube una imagen para ver previsualización
                 </div>
+              )}
+            </div>
 
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => onUploadImage(event.target.files?.[0] ?? null)}
-                  className="block w-full text-xs text-[#5d4f46] file:mr-3 file:rounded-full file:border-0 file:bg-[#2e221c] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[#fff5e8]"
-                />
+            <div className="flex items-center justify-between gap-3">
+              <p className="break-all text-xs text-ink-soft">{getAssetDisplayName(imageUrl || imagePath)}</p>
+              {(imageUrl || imagePath) && (
+                <button type="button" onClick={clearImage} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-danger hover:underline">
+                  <X className="h-3 w-3" /> Quitar
+                </button>
+              )}
+            </div>
+          </div>
 
-                <div className="overflow-hidden rounded-xl border border-[#ddccb9] bg-[#f8efe4]">
-                  {canUseAssetUrlInRuntime(imageUrl) ? (
-                    <div className="relative h-36 w-full">
-                      <Image
-                        src={imageUrl}
-                        alt="Adjunto de notificacion"
-                        fill
-                        unoptimized
-                        sizes="(max-width: 768px) 100vw, 50vw"
-                        className="object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-36 w-full items-center justify-center px-3 text-center text-[11px] uppercase tracking-[0.14em] text-[#8f7b6a]">
-                      Sube una imagen para ver previsualizacion
-                    </div>
-                  )}
+          {/* Adjunto PDF — full width */}
+          <div className="md:col-span-2 rounded-card border border-line/40 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5" /> Adjunto PDF
+              </p>
+              {uploadingAsset === "pdf" && (
+                <Badge variant="warning" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">Subiendo...</Badge>
+              )}
+            </div>
+
+            <input
+              type="file"
+              accept="application/pdf"
+              onChange={(e) => onUploadPdf(e.target.files?.[0] ?? null)}
+              className="block w-full text-xs text-ink-soft file:mr-3 file:rounded-full file:border-0 file:bg-brand file:px-3 file:py-1 file:text-xs file:font-bold file:text-white file:uppercase file:tracking-widest cursor-pointer"
+            />
+
+            <div className="overflow-hidden rounded-md border border-line/40 bg-canvas/60">
+              {canUseAssetUrlInRuntime(pdfUrl) ? (
+                <iframe title="Adjunto PDF" src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`} className="h-48 w-full bg-white" />
+              ) : (
+                <div className="flex h-28 items-center justify-center text-[10px] font-bold uppercase tracking-widest text-ink-soft/50">
+                  Sube un PDF para ver previsualización
                 </div>
+              )}
+            </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="break-all rounded-lg bg-[#f7efe5] px-2 py-1 text-[11px] text-[#6d5d52]">
-                    {getAssetDisplayName(imageUrl || imagePath)}
-                  </p>
-                  {(imageUrl || imagePath) ? (
-                    <button
-                      type="button"
-                      onClick={clearImage}
-                      className="rounded-lg border border-[#b75b46] bg-[#fff1ed] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a3402e] transition hover:bg-[#ffe6df]"
-                    >
-                      Quitar imagen
-                    </button>
-                  ) : null}
-                </div>
-              </div>
-
-              <div className="space-y-2 rounded-2xl border border-[#d8c6b7] bg-white p-3 md:col-span-2">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">Adjunto PDF</span>
-                  {uploadingAsset === "pdf" ? (
-                    <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[#8f2e23]">Subiendo...</span>
-                  ) : null}
-                </div>
-
-                <input
-                  type="file"
-                  accept="application/pdf"
-                  onChange={(event) => onUploadPdf(event.target.files?.[0] ?? null)}
-                  className="block w-full text-xs text-[#5d4f46] file:mr-3 file:rounded-full file:border-0 file:bg-[#2e221c] file:px-3 file:py-1 file:text-xs file:font-semibold file:text-[#fff5e8]"
-                />
-
-                <div className="overflow-hidden rounded-xl border border-[#ddccb9] bg-[#f8efe4]">
-                  {canUseAssetUrlInRuntime(pdfUrl) ? (
-                    <iframe
-                      title="Adjunto PDF de notificacion"
-                      src={`${pdfUrl}#toolbar=0&navpanes=0&scrollbar=0`}
-                      className="h-48 w-full bg-white"
-                    />
-                  ) : (
-                    <div className="flex h-36 w-full items-center justify-center px-3 text-center text-[11px] uppercase tracking-[0.14em] text-[#8f7b6a]">
-                      Sube un PDF para ver previsualizacion
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="break-all rounded-lg bg-[#f7efe5] px-2 py-1 text-[11px] text-[#6d5d52]">
-                    {getAssetDisplayName(pdfUrl || pdfPath)}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    {canUseAssetUrlInRuntime(pdfUrl) ? (
-                      <a
-                        href={pdfUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="rounded-lg border border-[#c8ae97] bg-[#fff7ed] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b4b39] transition hover:bg-[#ffeedb]"
-                      >
-                        Abrir PDF
-                      </a>
-                    ) : null}
-                    {(pdfUrl || pdfPath) ? (
-                      <button
-                        type="button"
-                        onClick={clearPdf}
-                        className="rounded-lg border border-[#b75b46] bg-[#fff1ed] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a3402e] transition hover:bg-[#ffe6df]"
-                      >
-                        Quitar PDF
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="break-all text-xs text-ink-soft">{getAssetDisplayName(pdfUrl || pdfPath)}</p>
+              <div className="flex items-center gap-2">
+                {canUseAssetUrlInRuntime(pdfUrl) && (
+                  <a href={pdfUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-brand hover:underline">
+                    <ExternalLink className="h-3 w-3" /> Abrir PDF
+                  </a>
+                )}
+                {(pdfUrl || pdfPath) && (
+                  <button type="button" onClick={clearPdf} className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-danger hover:underline">
+                    <X className="h-3 w-3" /> Quitar
+                  </button>
+                )}
               </div>
             </div>
-          </article>
-
-          <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[#d8c4b0] pt-5">
-            <button
-              type="button"
-              onClick={save}
-              disabled={isPending || uploadingAsset !== null}
-              className="rounded-xl border border-[#0c5a62] bg-[linear-gradient(150deg,#0C7C86_0%,#0C5A62_100%)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-[0_12px_22px_rgba(12,90,98,0.28)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isPending ? "Guardando..." : "Guardar notificacion"}
-            </button>
-
-            <Link
-              href="/notificaciones"
-              className="inline-flex rounded-xl border border-[#c8ae95] bg-white/90 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#694938] transition hover:bg-[#fff4e8]"
-            >
-              Cancelar
-            </Link>
-
-            {messageState ? (
-              <p
-                className={`text-xs font-semibold uppercase tracking-[0.1em] ${
-                  messageState.toLowerCase().includes("correct") ? "text-[#2f6a40]" : "text-[#9c3d2b]"
-                }`}
-              >
-                {messageState}
-              </p>
-            ) : null}
           </div>
-        </section>
-      </section>
-    </main>
+
+        </div>
+
+        {/* Footer actions */}
+        <div className="px-5 pb-5 sm:px-6 sm:pb-6 flex flex-wrap items-center gap-3 border-t border-line/30 pt-4">
+          <Button
+            type="button"
+            onClick={save}
+            disabled={isPending || uploadingAsset !== null}
+            className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25"
+          >
+            {isPending ? "Guardando..." : "Guardar notificación"}
+          </Button>
+          <Button variant="subtle" asChild size="sm" className="h-8 rounded-full">
+            <Link href="/notificaciones">Cancelar</Link>
+          </Button>
+          {messageState ? (
+            <p className={`text-xs font-bold uppercase tracking-wide ${messageState.toLowerCase().includes("correct") || messageState.toLowerCase().includes("cargad") ? "text-brand" : "text-danger"}`}>
+              {messageState}
+            </p>
+          ) : null}
+        </div>
+      </div>
+    </div>
   );
 }

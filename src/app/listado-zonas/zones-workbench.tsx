@@ -3,8 +3,6 @@
 import { useState, useTransition, useMemo } from "react";
 import { 
   Plus, 
-  Edit2, 
-  Trash2, 
   Map as MapIcon,
   Loader2,
   Info
@@ -15,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RowActions } from "@/components/ui/row-actions";
 import { getZoneFormDataAction, saveZoneAction } from "./actions";
 
 interface ZonesWorkbenchProps {
@@ -80,8 +79,8 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
       accessorKey: "name",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          <MapIcon className="h-3.5 w-3.5 text-brand/30" />
-          <span className="font-bold">{row.name}</span>
+          <MapIcon className="h-5 w-5 text-brand/70" />
+          <span className="font-bold text-base">{row.name}</span>
         </div>
       )
     },
@@ -89,7 +88,7 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
       header: "Iniciales",
       accessorKey: "initials",
       cell: (row) => (
-        <Badge variant="brand">
+        <Badge variant="brand" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
           {row.initials}
         </Badge>
       )
@@ -99,7 +98,7 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
       accessorKey: "activeSubzones",
       align: "center",
       cell: (row) => (
-        <span className="px-2 py-0.5 rounded bg-canvas text-[11px] font-bold text-ink-soft/70">
+        <span className="px-2 py-0.5 rounded bg-canvas text-xs font-bold text-ink-soft/70">
           {row.activeSubzones}
         </span>
       )
@@ -109,22 +108,10 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
       accessorKey: "id",
       align: "right",
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button 
-            onClick={() => openEditModal(row.id)}
-            className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard"
-          >
-            <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          {row.canDelete && (
-            <button 
-              className="p-1.5 rounded hover:bg-danger/10 text-ink-soft/40 hover:text-danger transition-standard"
-              onClick={() => alert("Eliminación disponible en la siguiente versión")}
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
+        <RowActions
+          onEdit={() => openEditModal(row.id)}
+          onDelete={() => alert("Eliminación disponible en la siguiente versión")}
+        />
       )
     }
   ];

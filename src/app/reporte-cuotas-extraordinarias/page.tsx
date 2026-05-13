@@ -1,21 +1,20 @@
 import React from "react";
 import Link from "next/link";
-import { Playfair_Display, Inter } from "next/font/google";
-
+import type { Metadata } from "next";
 import { getFeeReportUseCase, toExtraordinaryFeeReportListingVM } from "@/modules/fee-report";
 import type { FeeReportCellVM } from "@/modules/fee-report";
+import { Badge } from "@/components/ui/badge";
+import { StatCard } from "@/components/ui/stat-card";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
+import { cn } from "@/shared/utils/cn";
+import { Layers, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 
-const displayFont = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  variable: "--font-report-display",
-});
+export const metadata: Metadata = {
+  title: "Cuotas Extraordinarias | Insulae 2.0",
+  description: "Reporte detallado de cobranza extraordinaria y saldos por unidad.",
+};
 
-const uiFont = Inter({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-report-ui",
-});
+export const dynamic = "force-dynamic";
 
 // ─── Componentes atómicos ─────────────────────────────────────────────────────
 
@@ -57,58 +56,31 @@ function StatusBadge({ label, css }: { label: string; css: string }) {
 
 function Paginator({ page, totalPages }: { page: number; totalPages: number }) {
   if (totalPages <= 1) return null;
-
   const buildHref = (p: number) => `/reporte-cuotas-extraordinarias?page=${p}`;
-
-  const delta = 2;
-  const start = Math.max(1, page - delta);
-  const end = Math.min(totalPages, page + delta);
-  const pages: (number | "...")[] = [];
-
-  if (start > 1) { pages.push(1); if (start > 2) pages.push("..."); }
-  for (let p = start; p <= end; p++) pages.push(p);
-  if (end < totalPages) { if (end < totalPages - 1) pages.push("..."); pages.push(totalPages); }
-
   return (
-    <nav aria-label="Paginación" className="flex flex-wrap items-center justify-center gap-1.5 py-4">
-      {page > 1 && (
-        <Link
-          href={buildHref(page - 1)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#c8b49a] bg-white text-[#5a4030] transition hover:bg-[#f5ede0]"
-          aria-label="Página anterior"
-        >
-          ‹
-        </Link>
-      )}
-
-      {pages.map((p, i) =>
-        p === "..." ? (
-          <span key={`ellipsis-${i}`} className="px-1 text-[#8a6e58]">…</span>
-        ) : (
-          <Link
-            key={p}
-            href={buildHref(p)}
-            aria-current={p === page ? "page" : undefined}
-            className={`flex h-8 min-w-[2rem] items-center justify-center rounded-lg border px-2 text-[13px] font-semibold transition ${p === page
-                ? "border-[#7a4820] bg-[#7a4820] text-white shadow-sm"
-                : "border-[#d0c0a8] bg-white text-[#5a4030] hover:bg-[#f5ede0]"
-              }`}
-          >
-            {p}
-          </Link>
-        )
-      )}
-
-      {page < totalPages && (
-        <Link
-          href={buildHref(page + 1)}
-          className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#c8b49a] bg-white text-[#5a4030] transition hover:bg-[#f5ede0]"
-          aria-label="Página siguiente"
-        >
-          ›
-        </Link>
-      )}
-    </nav>
+    <div className="flex items-center gap-3">
+      <Link
+        href={buildHref(Math.max(1, page - 1))}
+        className={cn(
+          "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+          page === 1 && "opacity-30 pointer-events-none"
+        )}
+      >
+        <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+      </Link>
+      <span className="text-[11px] font-bold uppercase text-ink-soft/80 tabular-nums">
+        Pág {page} / {totalPages}
+      </span>
+      <Link
+        href={buildHref(Math.min(totalPages, page + 1))}
+        className={cn(
+          "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+          page === totalPages && "opacity-30 pointer-events-none"
+        )}
+      >
+        Siguiente <ChevronRight className="h-3.5 w-3.5" />
+      </Link>
+    </div>
   );
 }
 
@@ -149,65 +121,51 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
   const { primaryYear, secondaryYear, previousYear } = vm;
 
   return (
-    <main
-      className={`${displayFont.variable} ${uiFont.variable} relative isolate min-h-screen overflow-hidden bg-[#f0ebe1] font-[var(--font-report-ui)]`}
-    >
-      {/* Blobs decorativos */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-        <div className="absolute -left-32 -top-20 h-96 w-96 rotate-[-15deg] rounded-[3rem] bg-[#0a4f6b]/10 blur-3xl" />
-        <div className="absolute right-[-8rem] top-32 h-80 w-96 rotate-12 rounded-[3rem] bg-[#b35c1c]/12 blur-3xl" />
-        <div className="absolute inset-0 opacity-30 [background-image:radial-gradient(rgba(80,60,40,0.14)_1px,transparent_1px)] [background-size:18px_18px]" />
+    <div className="space-y-4 animate-in fade-in duration-500">
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estado de Cartera Extraordinaria</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Cobranza Extraordinaria</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {vm.subtitle} · Corte {vm.lastUpdatedLabel}
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="relative mx-auto max-w-[1920px] px-4 pb-20 pt-8 sm:px-6">
+      {/* KPI Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <StatCard accent="brand" label="Total Unidades" value={vm.totalAreas} icon={<Layers className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="Ciclo Fiscal" value={`${primaryYear} – ${secondaryYear}`} icon={<MapPin className="h-3.5 w-3.5" />} />
+      </div>
 
-        {/* ── HEADER ── */}
-        <header className="mb-5 overflow-hidden rounded-[2rem] border border-[#c8b89e]/60 bg-[linear-gradient(135deg,rgba(255,255,255,0.96)_0%,rgba(248,238,224,0.95)_100%)] p-6 shadow-[0_20px_48px_rgba(20,14,8,0.14)] sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="inline-flex items-center gap-1.5 rounded-full border border-[#c8b098] bg-white/70 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b4c2e]">
-                <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                </svg>
-                Cuotas Extraordinarias
-              </p>
-              <h1 className="mt-2 font-[var(--font-report-display)] text-3xl leading-tight text-[#2b1e12] sm:text-4xl">
-                {vm.title}
-              </h1>
-              <p className="mt-1.5 text-sm text-[#5e4a38]">
-                {vm.subtitle} · Última actualización: <strong>{vm.lastUpdatedLabel}</strong>
-              </p>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <div className="rounded-2xl border border-[#c8b49a] bg-white/80 px-4 py-2.5 text-right shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a6045]">Total áreas</p>
-                <p className="mt-0.5 text-2xl font-bold text-[#2b1e12]">{vm.totalAreas}</p>
-              </div>
-              <div className="rounded-2xl border border-[#c8b49a] bg-white/80 px-4 py-2.5 text-right shadow-sm">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a6045]">Período</p>
-                <p className="mt-0.5 text-lg font-bold text-[#2b1e12]">{primaryYear} – {secondaryYear}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2 text-[11px]">
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#b0c8f5] bg-[#dce8fd] px-2.5 py-0.5 font-semibold text-[#1a3d8f]">
-              <span className="rounded bg-[#1a3d8f] px-1 py-px text-[9px] text-white">P</span>
-              Propietario
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#f5b0c8] bg-[#fddce8] px-2.5 py-0.5 font-semibold text-[#8f1a3d]">
-              <span className="rounded bg-[#8f1a3d] px-1 py-px text-[9px] text-white">C</span>
-              Comercio
-            </span>
-            <span className="inline-flex items-center gap-1 rounded-full border border-[#b0e0b0] bg-[#e0f7e0] px-2.5 py-0.5 font-semibold text-[#1a6020]">
-              Fondo verde = FAP (Fracción de Área Privativa)
-            </span>
-          </div>
-        </header>
+      {/* Simbología */}
+      <div className="flex flex-wrap items-center gap-2 px-1">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/50 shrink-0">Simbología:</p>
+        <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wide" style={{ backgroundColor: "#dce8fd", color: "#1a3d8f" }}>
+          Propietario
+        </span>
+        <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wide" style={{ backgroundColor: "#fddce8", color: "#8f1a3d" }}>
+          Comercio
+        </span>
+        <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wide" style={{ backgroundColor: "#eef8ee", color: "#1a6020" }}>
+          Filas con fondo verde son fracciones privativas (FAP)
+        </span>
+      </div>
 
         {/* ── Paginador top ── */}
-        <Paginator page={vm.page} totalPages={vm.totalPages} />
+        {vm.totalPages > 1 && (
+          <div className="flex items-center justify-between px-1">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70">
+              {vm.totalAreas} unidades · página {vm.page} de {vm.totalPages}
+            </p>
+            <Paginator page={vm.page} totalPages={vm.totalPages} />
+          </div>
+        )}
 
         {/* ── TABLA ── */}
         <section className="overflow-hidden rounded-[1.6rem] border border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm">
@@ -228,7 +186,7 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
                   <tr>
                     <th
                       rowSpan={2}
-                      className="sticky left-0 top-0 z-40 min-w-[200px] border-b-2 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]"
+                      className="sticky left-0 top-0 z-40 min-w-50 border-b-2 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]"
                     >
                       Área Privativa / FAP
                     </th>
@@ -254,7 +212,7 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
                     {vm.columns.map((col) => (
                       <th
                         key={col.key}
-                        className="min-w-[120px] border-b border-[#d8c8b4] px-2 py-2 text-center"
+                        className="min-w-30 border-b border-[#d8c8b4] px-2 py-2 text-center"
                       >
                         <span className="block leading-snug">{col.label}</span>
                         {col.subLabel && (
@@ -277,7 +235,7 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
                     return (
                       <tr key={row.id} className={`border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] ${baseBg}`}>
                         {/* Columna sticky */}
-                        <td className={`sticky left-0 z-10 min-w-[200px] border-r-2 border-[#ddd0be] px-3 py-2 ${stickyBg}`}>
+                        <td className={`sticky left-0 z-10 min-w-50 border-r-2 border-[#ddd0be] px-3 py-2 ${stickyBg}`}>
                           <p className={`font-semibold leading-tight ${isChild ? "text-[#1a5c2e] text-[11px]" : "text-[#2b1e12] text-[12px]"}`}>
                             {row.areaLabel}
                           </p>
@@ -349,8 +307,12 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
         </section>
 
         {/* ── Paginador bottom ── */}
-        <Paginator page={vm.page} totalPages={vm.totalPages} />
-      </div>
-    </main>
+        <div className="flex justify-between items-center py-2 px-1">
+          <p className="text-[11px] font-bold text-ink-soft/70 uppercase tracking-widest">
+            Cartera extraordinaria consolidada · {vm.totalAreas} unidades en sistema
+          </p>
+          <Paginator page={vm.page} totalPages={vm.totalPages} />
+        </div>
+    </div>
   );
 }

@@ -110,7 +110,10 @@ export function MiscIncomeWorkbench({
       header: "Categoría Base",
       accessorKey: "chargeGroupId",
       cell: (row) => (
-        <Badge variant={row.chargeGroupId === ordinaryGroup.id ? "brand" : "warning"}>
+        <Badge
+          variant={row.chargeGroupId === ordinaryGroup.id ? "brand" : "warning"}
+          className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest"
+        >
           {row.chargeGroupId === ordinaryGroup.id ? "Ordinaria" : "Extraordinaria"}
         </Badge>
       )
@@ -122,15 +125,23 @@ export function MiscIncomeWorkbench({
       cell: (row) => <span className="text-[11px] font-bold text-ink-soft/60">{row.order}</span>
     },
     {
-      header: "Acción",
+      header: "Acciones",
       accessorKey: "id",
       align: "right",
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button onClick={() => openEditModal(row)} className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard">
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => openEditModal(row)}
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+            title="Editar"
+          >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => handleDelete(row.id)} className="p-1.5 rounded hover:bg-danger/10 text-ink-soft/40 hover:text-danger transition-standard">
+          <button
+            onClick={() => handleDelete(row.id)}
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+            title="Eliminar"
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>

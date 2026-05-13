@@ -65,22 +65,31 @@ function resolveTenantContacts(row: PrivateAreaRowVM) {
 
 function renderContacts(
   contacts: Array<{ name: string; email: string | null; phone: string | null }>,
+  highlight = false,
 ): ReactNode {
-  if (contacts.length === 0) return <span className="text-ink-soft/20">—</span>;
+  if (contacts.length === 0) return <span className="text-xs text-ink-soft/60">—</span>;
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-2">
       {contacts.map((contact, index) => (
-        <div key={index} className="p-2 rounded bg-canvas/40 border border-line/30">
-          <p className="font-bold text-ink leading-tight text-[11px] uppercase">{contact.name}</p>
-          <div className="flex flex-col gap-0.5 mt-1">
+        <div
+          key={index}
+          className={cn(
+            "p-2.5 rounded border",
+            highlight
+              ? "bg-lime-50 border-lime-200 shadow-sm shadow-lime-100"
+              : "bg-canvas/40 border-black/8"
+          )}
+        >
+          <p className="font-bold text-ink leading-tight text-sm uppercase">{contact.name}</p>
+          <div className="flex flex-col gap-1 mt-1.5">
              {contact.email && (
-               <p className="text-[10px] text-ink-soft/60 flex items-center gap-1 truncate">
-                 <Mail className="h-2 w-2" /> {contact.email}
+               <p className="text-xs text-ink-soft flex items-center gap-1.5">
+                 <Mail className={cn("h-4 w-4 shrink-0", highlight ? "text-lime-600" : "text-ink-soft/70")} /> {contact.email}
                </p>
              )}
              {contact.phone && (
-               <p className="text-[10px] text-ink-soft/60 flex items-center gap-1">
-                 <Phone className="h-2 w-2" /> {contact.phone}
+               <p className="text-xs text-ink-soft flex items-center gap-1.5">
+                 <Phone className={cn("h-4 w-4 shrink-0", highlight ? "text-lime-600" : "text-ink-soft/70")} /> {contact.phone}
                </p>
              )}
           </div>
@@ -93,13 +102,27 @@ function renderContacts(
 function Paginator({ page, totalPages, buildHref }: { page: number; totalPages: number; buildHref: (p: number) => string }) {
   if (totalPages <= 1) return null;
   return (
-    <div className="flex items-center gap-1.5 h-8">
-      <Link href={buildHref(Math.max(1, page - 1))} className={cn("p-1 rounded hover:bg-canvas transition-colors", page === 1 && "opacity-20 pointer-events-none")}>
-        <ChevronLeft className="h-4 w-4" />
+    <div className="flex items-center gap-3">
+      <Link
+        href={buildHref(Math.max(1, page - 1))}
+        className={cn(
+          "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+          page === 1 && "opacity-30 pointer-events-none"
+        )}
+      >
+        <ChevronLeft className="h-3.5 w-3.5" /> Anterior
       </Link>
-      <span className="text-[11px] font-bold uppercase text-ink-soft/60">Pág {page} de {totalPages}</span>
-      <Link href={buildHref(Math.min(totalPages, page + 1))} className={cn("p-1 rounded hover:bg-canvas transition-colors", page === totalPages && "opacity-20 pointer-events-none")}>
-        <ChevronRight className="h-4 w-4" />
+      <span className="text-[11px] font-bold uppercase text-ink-soft/80 tabular-nums">
+        Pág {page} / {totalPages}
+      </span>
+      <Link
+        href={buildHref(Math.min(totalPages, page + 1))}
+        className={cn(
+          "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+          page === totalPages && "opacity-30 pointer-events-none"
+        )}
+      >
+        Siguiente <ChevronRight className="h-3.5 w-3.5" />
       </Link>
     </div>
   );
@@ -155,7 +178,6 @@ export default async function ListadoSeguridadPage(props: PageProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Paginator page={vm.pagination.page} totalPages={vm.pagination.totalPages} buildHref={buildHref} />
           <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
             <Link href="/areas-privativas"><ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden /> Ver Inventario Maestro</Link>
           </Button>
@@ -163,7 +185,7 @@ export default async function ListadoSeguridadPage(props: PageProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <StatCard label="Total Registros" value={vm.pagination.totalRows} icon={<Users className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Total Registros" value={vm.pagination.totalRows} icon={<Users className="h-3.5 w-3.5" />} />
         <div className="md:col-span-3">
           <Card className="p-3 shadow-layered border-transparent">
             <form method="get" className="flex gap-3">
@@ -179,57 +201,68 @@ export default async function ListadoSeguridadPage(props: PageProps) {
       </div>
 
       {/* Main Table */}
+      {vm.pagination.totalPages > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70">
+            {vm.pagination.totalRows} registros · página {vm.pagination.page} de {vm.pagination.totalPages}
+          </p>
+          <Paginator page={vm.pagination.page} totalPages={vm.pagination.totalPages} buildHref={buildHref} />
+        </div>
+      )}
       <Card className="overflow-hidden border-transparent shadow-layered">
+        <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white">Registro de Seguridad</p>
+        </div>
         <div className="overflow-x-auto no-scrollbar">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-separate border-spacing-0">
             <thead>
-              <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">
-                <th className="px-4 w-[180px]">Barrio / Ubicación</th>
+              <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/80">
+                <th className="px-4 w-45">Barrio / Ubicación</th>
                 <th className="px-4">Área Privativa / Estatus</th>
-                <th className="px-4">Dominio Pleno (Legal)</th>
-                <th className="px-4">Arrendatario / Operativo</th>
+                <th className="px-4 border-l border-black/10">Dominio Pleno (Legal)</th>
+                <th className="px-4 border-l border-black/10">Arrendatario / Operativo</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line/30">
               {vm.rows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-20 text-center text-ink-soft/30 italic font-bold uppercase text-[11px]">
+                  <td colSpan={4} className="py-20 text-center text-ink-soft/50 italic font-bold uppercase text-[11px]">
                     No se encontraron resultados
                   </td>
                 </tr>
               ) : (
-                vm.rows.map((row) => (
-                  <tr key={row.id} className="h-14 hover:bg-canvas/10 transition-colors group">
-                    <td className="px-4 align-top py-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <MapPin className="h-3 w-3 text-brand/30" />
-                        <span className="text-[11px] font-bold uppercase tracking-tight text-brand">{row.zone}</span>
+                vm.rows.map((row, index) => (
+                  <tr key={row.id} className={cn("hover:bg-brand-mint/20 transition-colors group", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
+                    <td className="px-4 align-top py-5">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-6 w-6 shrink-0 text-brand" />
+                        <span className="text-base font-bold uppercase tracking-tight text-brand">{row.zone}</span>
                       </div>
                     </td>
 
-                    <td className="px-4 align-top py-4">
-                      <p className="text-[13px] font-bold text-ink leading-tight">{row.name}</p>
-                      <div className="flex items-center gap-2 mt-1.5">
-                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] bg-canvas/50">{row.code}</Badge>
-                        <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="h-4 px-1 text-[9px]">{row.businessStatusLabel}</Badge>
+                    <td className="px-4 align-top py-5">
+                      <p className="text-base font-bold text-ink leading-tight">{row.name}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest bg-canvas/50">{row.code}</Badge>
+                        <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.businessStatusLabel}</Badge>
                       </div>
-                      <p className="mt-1.5 text-[11px] text-ink-soft/40 flex items-center gap-1">
-                        <Layers className="h-2.5 w-2.5 opacity-50" /> {row.hierarchyLabel}
+                      <p className="mt-2 text-xs text-ink-soft/70 flex items-center gap-1.5">
+                        <Layers className="h-4 w-4 shrink-0" /> {row.hierarchyLabel}
                       </p>
                     </td>
 
-                    <td className="px-4 align-top py-4 border-l border-line/30 bg-canvas/[0.02]">
-                       <div className="flex items-center gap-1.5 mb-2">
-                         <User className="h-3 w-3 text-brand/20" />
-                         <span className="text-[10px] font-semibold text-ink-soft/50">Titulares</span>
+                    <td className="px-4 align-top py-5 border-l border-black/10 bg-canvas/2">
+                       <div className="flex items-center gap-2 mb-2.5">
+                         <User className="h-5 w-5 text-brand/70" />
+                         <span className="text-xs font-bold text-ink-soft uppercase tracking-wide">Titulares</span>
                        </div>
-                       {renderContacts(resolveDomainContacts(row))}
+                       {renderContacts(resolveDomainContacts(row), true)}
                     </td>
 
-                    <td className="px-4 align-top py-4 border-l border-line/30">
-                       <div className="flex items-center gap-1.5 mb-2">
-                         <Shield className="h-3 w-3 text-brand/20" />
-                         <span className="text-[10px] font-semibold text-ink-soft/50">Ocupantes</span>
+                    <td className="px-4 align-top py-5 border-l border-black/10">
+                       <div className="flex items-center gap-2 mb-2.5">
+                         <Shield className="h-5 w-5 text-brand/70" />
+                         <span className="text-xs font-bold text-ink-soft uppercase tracking-wide">Ocupantes</span>
                        </div>
                        {renderContacts(resolveTenantContacts(row))}
                     </td>
@@ -242,7 +275,7 @@ export default async function ListadoSeguridadPage(props: PageProps) {
       </Card>
 
       <div className="flex justify-between items-center py-2 px-1">
-         <p className="text-[11px] font-bold text-ink-soft/40 uppercase tracking-widest">
+         <p className="text-[11px] font-bold text-ink-soft/70 uppercase tracking-widest">
            Resguardo de información · Uso restringido a seguridad
          </p>
          <Paginator page={vm.pagination.page} totalPages={vm.pagination.totalPages} buildHref={buildHref} />

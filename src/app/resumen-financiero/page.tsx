@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Fragment } from "react";
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
   Calendar,
-  ChevronRight,
-  Info
+  Info,
+  Plus,
 } from "lucide-react";
 
 import {
@@ -104,7 +104,7 @@ function CompactFinancialTable({
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[120rem]">
+          <table className="w-full text-left border-collapse min-w-480">
             <thead>
               <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
                 <th className={cn("sticky left-0 z-30 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", tone.headerBg, tone.textTone)}>
@@ -219,14 +219,15 @@ export default async function ResumenFinancieroPage({
 
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-        <StatCard label="Ingresos Ordinarios" value={vm.totals.ordinaryIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} />
-        <StatCard label="Extraordinarios" value={vm.totals.extraordinaryIncome} icon={<DollarSign className="h-3.5 w-3.5" />} />
-        <StatCard label="Otros Ingresos" value={vm.totals.otherIncome} icon={<PlusIcon className="h-3.5 w-3.5" />} />
-        <StatCard label="Ingresos Totales" value={vm.totals.totalIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} className="bg-brand-mint/20 border-brand-mint" />
-        <StatCard label="Egresos Totales" value={vm.totals.totalExpenses} icon={<TrendingDown className="h-3.5 w-3.5" />} />
-        <StatCard 
-          label="Balance Anual" 
-          value={vm.totals.annualBalance} 
+        <StatCard accent="brand" label="Ingresos Ordinarios" value={vm.totals.ordinaryIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="Extraordinarios" value={vm.totals.extraordinaryIncome} icon={<DollarSign className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Otros Ingresos" value={vm.totals.otherIncome} icon={<Plus className="h-3.5 w-3.5" />} />
+        <StatCard accent="brand" label="Ingresos Totales" value={vm.totals.totalIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} className="bg-brand-mint/20 border-brand-mint" />
+        <StatCard accent="gold" label="Egresos Totales" value={vm.totals.totalExpenses} icon={<TrendingDown className="h-3.5 w-3.5" />} />
+        <StatCard
+          accent={vm.totals.annualBalanceValue >= 0 ? "brand" : "gold"}
+          label="Balance Anual"
+          value={vm.totals.annualBalance}
           icon={<Calendar className="h-3.5 w-3.5" />}
           className={cn(vm.totals.annualBalanceValue >= 0 ? "bg-brand-mint/40" : "bg-danger/10 border-danger/20")}
         />
@@ -276,7 +277,7 @@ export default async function ResumenFinancieroPage({
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto no-scrollbar">
-                  <table className="w-full text-left border-collapse min-w-[110rem]">
+                  <table className="w-full text-left border-collapse min-w-440">
                     <thead>
                       <tr className="h-9 bg-danger/10 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-danger">
                         <th className="sticky left-0 z-30 px-4 border-r border-line bg-danger/10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Tipo de Egreso</th>
@@ -291,7 +292,7 @@ export default async function ResumenFinancieroPage({
                         const s2 = row.yearly[1];
                         return (
                           <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-danger/10 text-danger font-bold")}>
-                            <td className={cn("sticky left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-danger/10" : "bg-danger/[0.02]")}>{row.label}</td>
+                            <td className={cn("sticky left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-danger/10" : "bg-danger/2")}>{row.label}</td>
                             <td className="px-4 text-right font-bold border-r border-line">{s1?.annualTotal}</td>
                             {s1?.months.map((v, i) => <td key={i} className="px-3 text-right text-ink-soft border-r border-line/30">{v}</td>)}
                             <td className="px-4 text-right font-bold border-r border-line">{s2?.annualTotal}</td>
@@ -316,7 +317,7 @@ export default async function ResumenFinancieroPage({
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="overflow-x-auto no-scrollbar">
-                      <table className="w-full text-left border-collapse min-w-[60rem]">
+                      <table className="w-full text-left border-collapse min-w-240">
                         <thead>
                           <tr className="h-9 bg-gold-soft border-b border-line text-[10px] font-bold uppercase tracking-tighter text-gold">
                             <th className="sticky left-0 z-30 px-4 border-r border-line bg-gold-soft shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Saldo</th>
@@ -410,10 +411,4 @@ export default async function ResumenFinancieroPage({
   );
 }
 
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
-      <path d="M10.75 4.75a.75.75 0 0 0-1.5 0v4.5h-4.5a.75.75 0 0 0 0 1.5h4.5v4.5a.75.75 0 0 0 1.5 0v-4.5h4.5a.75.75 0 0 0 0-1.5h-4.5v-4.5Z" />
-    </svg>
-  );
-}
+

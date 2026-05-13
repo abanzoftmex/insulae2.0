@@ -2,10 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Playfair_Display, Sora } from "next/font/google";
 import { useMemo, useState, useTransition } from "react";
+import { Building2, Mail, Ticket, User } from "lucide-react";
 
 import { saveTicketDepartmentAction } from "./actions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 
 interface DepartamentoTicketFormShellProps {
   mode: "create" | "edit";
@@ -16,55 +20,8 @@ interface DepartamentoTicketFormShellProps {
   };
 }
 
-const displayFont = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
-  variable: "--font-ticket-display",
-});
-
-const uiFont = Sora({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-ticket-ui",
-});
-
 function sanitizeEmail(value: string): string {
   return value.trim().toLowerCase();
-}
-
-function DotGridIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
-      <circle cx="5" cy="5" r="2" fill="currentColor" />
-      <circle cx="12" cy="5" r="2" fill="currentColor" />
-      <circle cx="19" cy="5" r="2" fill="currentColor" />
-      <circle cx="5" cy="12" r="2" fill="currentColor" />
-      <circle cx="12" cy="12" r="2" fill="currentColor" />
-      <circle cx="19" cy="12" r="2" fill="currentColor" />
-      <circle cx="5" cy="19" r="2" fill="currentColor" />
-      <circle cx="12" cy="19" r="2" fill="currentColor" />
-      <circle cx="19" cy="19" r="2" fill="currentColor" />
-    </svg>
-  );
-}
-
-function MailIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-      <rect x="3" y="5" width="18" height="14" rx="3" />
-      <path d="M4.5 7.5 12 13l7.5-5.5" />
-    </svg>
-  );
-}
-
-function UserSquareIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden>
-      <rect x="3" y="3" width="18" height="18" rx="4" />
-      <circle cx="12" cy="10" r="3" />
-      <path d="M7.5 18a5.5 5.5 0 0 1 9 0" />
-    </svg>
-  );
 }
 
 export function DepartamentoTicketFormShell({
@@ -79,166 +36,122 @@ export function DepartamentoTicketFormShell({
   const [name, setName] = useState(initialData.name);
   const [email, setEmail] = useState(initialData.email);
 
-  const title = mode === "create" ? "Nuevo departamento" : "Editar departamento";
+  const title = mode === "create" ? "Nuevo Departamento" : "Editar Departamento";
 
   const initials = useMemo(() => {
     const trimmed = name.trim();
-    if (!trimmed) {
-      return "DT";
-    }
-
+    if (!trimmed) return "DT";
     const chunks = trimmed.split(/\s+/).slice(0, 2);
-    const value = chunks.map((chunk) => chunk.slice(0, 1).toUpperCase()).join("");
-    return value || "DT";
+    return chunks.map((chunk) => chunk.slice(0, 1).toUpperCase()).join("") || "DT";
   }, [name]);
 
   const save = () => {
     setMessage("");
-
     startTransition(async () => {
       const result = await saveTicketDepartmentAction({
         id: departmentId,
         name,
         email: sanitizeEmail(email),
       });
-
       setMessage(result.message);
-      if (!result.ok) {
-        return;
-      }
-
+      if (!result.ok) return;
       router.push("/departamentos-tickets");
       router.refresh();
     });
   };
 
+  const isError = message && !message.toLowerCase().includes("correct");
+
   return (
-    <main
-      className={`${displayFont.variable} ${uiFont.variable} relative isolate min-h-screen overflow-hidden bg-[#f5efe6] px-5 pb-16 pt-8 text-[#1f1712] sm:px-8 lg:px-12`}
-    >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-10rem] top-[-8rem] h-[24rem] w-[24rem] rounded-full bg-[#0c7c86]/17 blur-3xl" />
-        <div className="absolute right-[-8rem] top-[14rem] h-[22rem] w-[24rem] rounded-full bg-[#d07a2c]/14 blur-3xl" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgba(255,255,255,0.55),transparent_32%)]" />
+    <div className="space-y-4 animate-in fade-in duration-500">
+
+      {/* ── Header ───────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">{title}</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Mesa de Atención</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              Configura el responsable y correo de atención para enrutar tickets.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <section className="relative mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <header className="rounded-[2rem] border border-[#cbb8a6]/50 bg-[linear-gradient(122deg,rgba(255,255,255,0.94)_0%,rgba(248,237,224,0.92)_54%,rgba(238,224,202,0.9)_100%)] p-6 shadow-[0_22px_42px_rgba(35,23,16,0.12)] sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <Link
-              href="/departamentos-tickets"
-              className="inline-flex items-center rounded-xl border border-[#c9af97] bg-white/85 px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#6b4936] transition hover:bg-[#fff6ea]"
-            >
-              Volver al listado
-            </Link>
+      {/* ── Form + Preview grid ───────────────────────────────── */}
+      <div className="grid gap-5 lg:grid-cols-[1fr_auto]">
 
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#0d5f66]/40 bg-[#0d5f66]/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0b5a62]">
-              <DotGridIcon />
-              Tickets
-            </span>
+        {/* Form card */}
+        <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
+          <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex items-center gap-2">
+            <Ticket className="h-4 w-4 text-white/80" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-white/90">Datos del departamento</span>
           </div>
 
-          <h1 className="mt-4 font-[var(--font-ticket-display)] text-4xl leading-none text-[#2f2219] sm:text-5xl">{title}</h1>
-          <p className="mt-3 max-w-3xl font-[var(--font-ticket-ui)] text-sm leading-relaxed text-[#5f5044] sm:text-base">
-            Configura el responsable y correo de atencion para enrutar tickets en Insulae 2.0. El flujo opera solo
-            con Neon y arquitectura hexagonal.
-          </p>
-        </header>
+          <div className="p-5 sm:p-6 grid gap-4">
+            <Input
+              label="Nombre del departamento"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ej. Soporte técnico"
+            />
+            <Input
+              label="Correo electrónico"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="equipo@dominio.com"
+            />
+          </div>
 
-        <section className="grid gap-5 lg:grid-cols-[1.25fr_0.75fr]">
-          <article className="rounded-3xl border border-[#cab7a6]/55 bg-white/84 p-5 shadow-[0_18px_34px_rgba(35,23,16,0.1)] backdrop-blur-sm sm:p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#8f6348]">Datos del departamento</p>
-
-            <div className="mt-4 grid gap-4">
-              <label className="space-y-1">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">
-                  <UserSquareIcon />
-                  Nombre
-                </span>
-                <input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="w-full rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17] outline-none transition focus:border-[#0c7c86] focus:ring-2 focus:ring-[#0c7c86]/20"
-                  placeholder="Ejemplo: Soporte tecnico"
-                />
-              </label>
-
-              <label className="space-y-1">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#936347]">
-                  <MailIcon />
-                  Correo electronico
-                </span>
-                <input
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  className="w-full rounded-xl border border-[#d9c2ad] bg-white px-3 py-2.5 text-sm text-[#2c1f17] outline-none transition focus:border-[#0c7c86] focus:ring-2 focus:ring-[#0c7c86]/20"
-                  placeholder="equipo@dominio.com"
-                  type="email"
-                />
-              </label>
-            </div>
-
-            <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-[#d8c4b0] pt-5">
-              <button
-                type="button"
-                onClick={save}
-                disabled={isPending}
-                className="rounded-xl border border-[#0c5a62] bg-[linear-gradient(150deg,#0C7C86_0%,#0C5A62_100%)] px-5 py-2.5 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-[0_12px_22px_rgba(12,90,98,0.28)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isPending ? "Guardando..." : "Guardar departamento"}
-              </button>
-
-              <Link
-                href="/departamentos-tickets"
-                className="inline-flex rounded-xl border border-[#c8ae95] bg-white/90 px-4 py-2.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#694938] transition hover:bg-[#fff4e8]"
-              >
-                Cancelar
-              </Link>
-
-              {message ? (
-                <p
-                  className={`text-xs font-semibold uppercase tracking-[0.1em] ${
-                    message.toLowerCase().includes("correct") ? "text-[#2f6a40]" : "text-[#9c3d2b]"
-                  }`}
-                >
-                  {message}
-                </p>
-              ) : null}
-            </div>
-          </article>
-
-          <aside className="rounded-3xl border border-[#c4b39f]/60 bg-[linear-gradient(160deg,#2f2218_0%,#3c2b1f_48%,#251a14_100%)] p-5 text-[#f7eadb] shadow-[0_18px_30px_rgba(27,18,12,0.3)]">
-            <p className="inline-flex items-center gap-2 rounded-full border border-[#f2ddc9]/35 bg-white/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#f5e4d3]">
-              <DotGridIcon />
-              Vista previa
-            </p>
-
-            <div className="mt-4 rounded-2xl border border-[#f2dfcd]/22 bg-white/6 p-4 [animation:ticketOrbit_8s_ease-in-out_infinite]">
-              <div className="flex items-center gap-3">
-                <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[#f3dfcc]/35 bg-[#fff4e8]/12 font-[var(--font-ticket-display)] text-xl text-[#fff1e1]">
-                  {initials}
-                </div>
-
-                <div>
-                  <p className="font-[var(--font-ticket-display)] text-2xl leading-none text-[#fff3e6]">
-                    {name.trim() || "Sin nombre"}
-                  </p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.14em] text-[#f5decb]/82">Departamento de atencion</p>
-                </div>
-              </div>
-
-              <p className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[#f0dcc8]/35 bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-[#ffefdf]">
-                <MailIcon />
-                {sanitizeEmail(email) || "sin-correo@pendiente.com"}
+          <div className="px-5 pb-5 sm:px-6 sm:pb-6 flex flex-wrap items-center gap-3 border-t border-line/30 pt-4">
+            <Button
+              type="button"
+              onClick={save}
+              disabled={isPending}
+              className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25"
+            >
+              {isPending ? "Guardando..." : "Guardar departamento"}
+            </Button>
+            <Button variant="subtle" asChild size="sm" className="h-8 rounded-full">
+              <Link href="/departamentos-tickets">Cancelar</Link>
+            </Button>
+            {message ? (
+              <p className={`text-xs font-bold uppercase tracking-wide ${isError ? "text-danger" : "text-brand"}`}>
+                {message}
               </p>
-            </div>
+            ) : null}
+          </div>
+        </div>
 
-            <p className="mt-4 text-xs leading-relaxed text-[#f2decb]/82">
-              Recomendacion: usa un correo de grupo para facilitar continuidad operativa durante cambios de personal.
+        {/* Preview card */}
+        <div className="w-64 overflow-hidden rounded-card border border-line/40 bg-brand-deep shadow-sm shrink-0">
+          <div className="px-4 py-3 border-b border-white/10 flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-white/60" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-white/70">Vista previa</span>
+          </div>
+          <div className="p-5 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-xl font-bold text-white">
+                {initials}
+              </div>
+              <div>
+                <p className="font-bold text-white leading-tight">{name.trim() || "Sin nombre"}</p>
+                <p className="text-[10px] uppercase tracking-widest text-white/50 mt-0.5">Departamento</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5">
+              <Mail className="h-3.5 w-3.5 shrink-0 text-white/60" />
+              <span className="text-[11px] text-white/80 break-all">{sanitizeEmail(email) || "sin-correo@pendiente.com"}</span>
+            </div>
+            <p className="text-[10px] text-white/40 leading-relaxed">
+              Usa un correo de grupo para facilitar la continuidad operativa.
             </p>
-          </aside>
-        </section>
-      </section>
-    </main>
+          </div>
+        </div>
+
+      </div>
+    </div>
   );
 }

@@ -27,7 +27,10 @@ import {
   Activity,
   User,
   ShoppingBag,
-  ExternalLink
+  ExternalLink,
+  Home,
+  Mail,
+  Phone
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -59,16 +62,46 @@ function parsePositiveInteger(value: string | undefined, fallback: number): numb
   return (Number.isNaN(parsed) || parsed <= 0) ? fallback : parsed;
 }
 
-function renderPartyContacts(contacts: Array<{ name: string; email: string | null; phone: string | null }>): ReactNode {
-  if (contacts.length === 0) return <span className="text-ink-soft/20">—</span>;
+function renderHierarchyBadge(label: string): ReactNode {
+  const map: Record<string, string> = {
+    "Individual": "bg-cyan-100 text-cyan-800 border-cyan-200",
+    "Padre":      "bg-purple-100 text-purple-800 border-purple-200",
+    "Hijo":       "bg-lime-100 text-lime-800 border-lime-200",
+    "Fusion":     "bg-gold-soft text-gold border-gold/30",
+  };
+  const cls = map[label] ?? "bg-canvas text-ink-soft border-line/40";
   return (
-    <div className="space-y-1">
+    <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest ${cls}`}>
+      {label}
+    </span>
+  );
+}
+
+function renderPartyContacts(contacts: Array<{ name: string; email: string | null; phone: string | null }>): ReactNode {
+  if (contacts.length === 0) return <span className="text-ink-soft/40">—</span>;
+  return (
+    <div className="space-y-1.5 py-0.5">
       {contacts.map((contact, index) => (
-        <div key={index}>
-          <p className="font-bold text-ink leading-tight">{contact.name}</p>
-          <p className="text-[9px] text-ink-soft/60 uppercase tracking-tighter">
-            {contact.email || "S/C"} · {contact.phone || "S/T"}
-          </p>
+        <div key={index} className="rounded-md border border-lime-200 bg-lime-50 px-2 py-1.5 space-y-1">
+          <p className="text-xs font-bold text-ink leading-tight">{contact.name}</p>
+          {contact.email && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-lime-100 border border-lime-200 px-2 py-0.5 text-[10px] font-bold text-lime-800">
+              <Mail className="h-2.5 w-2.5 shrink-0" />
+              {contact.email}
+            </span>
+          )}
+          {!contact.email && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-lime-50 border border-lime-100 px-2 py-0.5 text-[10px] font-bold text-ink-soft/50">
+              <Mail className="h-2.5 w-2.5 shrink-0" />
+              S/C
+            </span>
+          )}
+          {contact.phone && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-lime-100 border border-lime-200 px-2 py-0.5 text-[10px] font-bold text-lime-800">
+              <Phone className="h-2.5 w-2.5 shrink-0" />
+              {contact.phone}
+            </span>
+          )}
         </div>
       ))}
     </div>
@@ -78,14 +111,14 @@ function renderPartyContacts(contacts: Array<{ name: string; email: string | nul
 function renderFinancialCards(ownerAmount: string, commerceAmount: string, showCommerce: boolean): ReactNode {
   return (
     <div className="space-y-0.5">
-      <div className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded bg-brand-deep/[0.03] border border-brand-deep/5">
-        <span className="text-[8px] font-bold text-brand-deep/40">P</span>
-        <span className="text-[10px] font-bold text-brand-deep/80">{ownerAmount}</span>
+      <div className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded bg-brand-deep/3 border border-brand-deep/5">
+        <span className="text-[8px] font-bold text-brand-deep/60">P</span>
+        <span className="text-xs font-bold text-brand-deep">{ownerAmount}</span>
       </div>
       {showCommerce && (
         <div className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded bg-danger/5 border border-danger/5">
-          <span className="text-[8px] font-bold text-danger/40">C</span>
-          <span className="text-[10px] font-bold text-danger/80">{commerceAmount}</span>
+          <span className="text-[8px] font-bold text-danger/60">C</span>
+          <span className="text-xs font-bold text-danger/80">{commerceAmount}</span>
         </div>
       )}
     </div>
@@ -111,6 +144,42 @@ function renderLegacyAction(action: PrivateAreaLegacyAction): ReactNode {
     >
        <ExternalLink className="h-3 w-3" />
     </Link>
+  );
+}
+
+type PaginatorProps = {
+  pagination: { page: number; totalPages: number; totalRows: number; hasPrev: boolean; hasNext: boolean };
+  buildHref: (p: number) => string;
+};
+
+function Paginator({ pagination, buildHref }: PaginatorProps) {
+  if (pagination.totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between px-1">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 tabular-nums">
+        {pagination.totalRows} unidades &middot; página {pagination.page} de {pagination.totalPages}
+      </p>
+      <div className="flex items-center gap-3">
+        <Link
+          href={buildHref(Math.max(1, pagination.page - 1))}
+          className={cn(
+            "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+            !pagination.hasPrev && "opacity-30 pointer-events-none"
+          )}
+        >
+          <ChevronLeft className="h-3.5 w-3.5" /> Anterior
+        </Link>
+        <Link
+          href={buildHref(Math.min(pagination.totalPages, pagination.page + 1))}
+          className={cn(
+            "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
+            !pagination.hasNext && "opacity-30 pointer-events-none"
+          )}
+        >
+          Siguiente <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -242,45 +311,52 @@ export default async function AreasPrivativasPage(props: PageProps) {
 
       {/* Comparisons / Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <StatCard label="Lotes Totales" value={vm.summary.projectTotalApoles} icon={<Layers className="h-3.5 w-3.5" />} />
-        <StatCard label="M2 Privativos" value={vm.summary.projectTotalM2} icon={<MapPin className="h-3.5 w-3.5" />} />
-        <StatCard label="Lotes Construidos" value={vm.summary.legacyBuiltLots} icon={<Activity className="h-3.5 w-3.5" />} />
+        <StatCard accent="brand" label="Lotes Totales" value={vm.summary.projectTotalApoles} icon={<Layers className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="M2 Privativos" value={vm.summary.projectTotalM2} icon={<MapPin className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Lotes Construidos" value={vm.summary.legacyBuiltLots} icon={<Home className="h-3.5 w-3.5" />} />
       </div>
 
       {/* Advanced Filter */}
-      <div className="p-3 bg-card border border-line rounded-md shadow-layered">
-        <form className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end" method="get">
-          <Input label="Buscar" name="q" defaultValue={vm.filters.query} placeholder="Código, nombre..." className="h-8 text-[12px]" />
-          <div className="relative">
-            <select name="useType" defaultValue={vm.filters.useType} className="peer h-8 w-full rounded border border-line bg-card px-2 text-[12px] font-medium outline-none appearance-none">
+      <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
+        <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex items-center gap-2">
+          <Filter className="h-3 w-3 text-white/70" />
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white">Filtros de búsqueda</p>
+        </div>
+        <form className="p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end" method="get">
+          <Input label="Buscar" name="q" defaultValue={vm.filters.query} placeholder="Código, nombre..." className="h-8 text-xs" />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Uso Suelo</label>
+            <select name="useType" defaultValue={vm.filters.useType} className="h-8 w-full rounded-md border border-line bg-card px-2 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent appearance-none">
               <option value="">Todos los usos</option>
               {vm.facets.useTypes.map(o => <option key={o.value} value={o.value}>{o.label} ({o.count})</option>)}
             </select>
-            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-bold uppercase tracking-widest text-brand-accent/60">Uso Suelo</label>
           </div>
-          <div className="relative">
-            <select name="status" defaultValue={vm.filters.status} className="peer h-8 w-full rounded border border-line bg-card px-2 text-[12px] font-medium outline-none appearance-none">
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Estatus</label>
+            <select name="status" defaultValue={vm.filters.status} className="h-8 w-full rounded-md border border-line bg-card px-2 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent appearance-none">
               <option value="ALL">Todos</option>
               <option value="ACTIVE">Activos</option>
               <option value="INACTIVE">Inactivos</option>
             </select>
-            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-bold uppercase tracking-widest text-brand-accent/60">Estatus</label>
           </div>
-          <Input label="M2 Min" name="m2Min" type="number" step="0.01" defaultValue={vm.filters.m2Min} className="h-8 text-[12px]" />
-          <Input label="M2 Max" name="m2Max" type="number" step="0.01" defaultValue={vm.filters.m2Max} className="h-8 text-[12px]" />
-          <div className="relative">
-             <select name="pageSize" defaultValue={vm.filters.pageSize} className="peer h-8 w-full rounded border border-line bg-card px-2 text-[12px] font-medium outline-none appearance-none">
+          <Input label="M2 Min" name="m2Min" type="number" step="0.01" defaultValue={vm.filters.m2Min} className="h-8 text-xs" />
+          <Input label="M2 Max" name="m2Max" type="number" step="0.01" defaultValue={vm.filters.m2Max} className="h-8 text-xs" />
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Registros</label>
+            <select name="pageSize" defaultValue={vm.filters.pageSize} className="h-8 w-full rounded-md border border-line bg-card px-2 text-xs font-medium outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent appearance-none">
               <option value="30">30</option>
               <option value="50">50</option>
               <option value="80">80</option>
             </select>
-            <label className="absolute left-2 -top-1.5 px-1 bg-card text-[9px] font-bold uppercase tracking-widest text-brand-accent/60">Registros</label>
           </div>
           <Button type="submit" className="h-8 text-[10px] font-bold uppercase gap-1.5">
             <Filter className="h-3 w-3" /> Filtrar
           </Button>
         </form>
       </div>
+
+      {/* Paginator top */}
+      <Paginator pagination={vm.pagination} buildHref={buildHref} />
 
       {/* Main Extensive Table */}
       <div className="overflow-hidden rounded-md border border-line shadow-layered bg-card">
@@ -305,8 +381,8 @@ export default async function AreasPrivativasPage(props: PageProps) {
                   <th className="px-3 py-3 border-b border-line">% Indiviso</th>
                   <th className="px-3 py-3 border-b border-line">Ind. Cond</th>
                   <th className="px-3 py-3 border-b border-line">Uso Suelo</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-deep/[0.03] text-brand-deep/50">Cartera Vencida</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-deep/[0.03] text-brand-deep/50">Anticipado</th>
+                  <th className="px-3 py-3 border-b border-line bg-brand-deep/3 text-brand-deep/50">Cartera Vencida</th>
+                  <th className="px-3 py-3 border-b border-line bg-brand-deep/3 text-brand-deep/50">Anticipado</th>
                   <th className="px-3 py-3 border-b border-line bg-brand-mint/20">Anual {legacyOrdinaryYear}</th>
                   <th className="px-3 py-3 border-b border-line bg-brand-mint/20">Mensual {legacyOrdinaryYear}</th>
                   <th className="px-3 py-3 border-b border-line bg-brand-mint/20">Saldo {legacyOrdinaryYear}</th>
@@ -339,8 +415,8 @@ export default async function AreasPrivativasPage(props: PageProps) {
         >
           <table className="table-fixed border-separate border-spacing-0" style={{ width: `${fullTableWidth}px` }}>
             <colgroup>{colWidths.map((w, i) => <col key={i} style={{ width: `${w}px` }} />)}</colgroup>
-            <tbody className="divide-y divide-line/30 text-ink">
-              {vm.rows.map(row => {
+            <tbody className="divide-y divide-ink/10 text-ink">
+              {vm.rows.map((row, rowIdx) => {
                  const actions = legacyActionsByPrivateAreaId[row.id] ?? [];
                  const hasCom = row.hasRentalLabel === "Si";
                  const empty = "$0.00";
@@ -350,33 +426,33 @@ export default async function AreasPrivativasPage(props: PageProps) {
                  };
 
                  return (
-                   <tr key={row.id} className={cn("h-12 hover:bg-canvas/10 transition-colors", row.hierarchyLabel === "Hijo" && "bg-success/[0.02]")}>
+                   <tr key={`${row.id}-${rowIdx}`} className={cn("h-12 hover:bg-canvas/10 transition-colors", row.hierarchyLabel === "Hijo" && "bg-success/[0.02]")}>
                      <td className="sticky left-0 z-10 px-3 py-1.5 border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                        <div className="flex flex-wrap gap-1">{actions.map(renderLegacyAction)}</div>
                      </td>
-                     <td className="px-3 text-[11px] font-bold text-ink-soft/70 uppercase">{row.zone}</td>
+                     <td className="px-3 text-xs font-bold text-ink-soft uppercase">{row.zone}</td>
                      <td className="px-3">
                        <p className="font-bold text-brand leading-tight truncate">{row.name}</p>
                        <div className="flex gap-1.5 mt-0.5">
-                         <span className="px-1 py-px rounded-[2px] bg-canvas text-[9px] font-bold text-ink-soft/50 uppercase">{row.code}</span>
-                         <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="h-3.5 px-1">{row.statusLabel}</Badge>
+                         <span className="px-1.5 py-px rounded-xs bg-canvas border border-line/40 text-xs font-bold text-ink-soft/70 uppercase">{row.code}</span>
+                         <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.statusLabel}</Badge>
                        </div>
                      </td>
                      <td className="px-3">
-                       <p className="text-[11px] font-bold leading-tight">{row.hierarchyLabel}</p>
-                       <p className="text-[10px] text-ink-soft/40 italic">P: {row.parentName}</p>
+                       {renderHierarchyBadge(row.hierarchyLabel)}
+                       <p className="text-xs text-ink-soft/60 italic mt-0.5">P: {row.parentName}</p>
                      </td>
-                     <td className="px-3 text-[11px] font-mono">{row.m2Updated}</td>
-                     <td className="px-3 text-[11px] font-mono">{row.m2Original}</td>
-                     <td className="px-3 text-[11px] font-mono">{row.indiviso}</td>
-                     <td className="px-3 text-[11px] font-mono">{row.m2CommonArea}</td>
-                     <td className="px-3 text-[11px] font-mono font-bold">{row.totalAreaM2}</td>
-                     <td className="px-3 text-[11px] font-mono">{row.m2Construction}</td>
-                     <td className="px-3 text-[11px] font-mono">{row.m2CommonAreaChildren}</td>
-                     <td className="px-3 text-[11px] font-mono">{row.m2ConstructionChildren}</td>
-                     <td className="px-3 text-[11px] font-mono">{row.indiviso}</td>
-                     <td className="px-3 text-[11px] font-mono">{row.vccc}</td>
-                     <td className="px-3"><Badge variant="outline" className="h-4 px-1 text-[10px]">{row.useTypeInitials}</Badge></td>
+                     <td className="px-3 text-xs tabular-nums">{row.m2Updated}</td>
+                     <td className="px-3 text-xs tabular-nums">{row.m2Original}</td>
+                     <td className="px-3 text-xs tabular-nums">{row.indiviso}</td>
+                     <td className="px-3 text-xs tabular-nums">{row.m2CommonArea}</td>
+                     <td className="px-3 text-xs tabular-nums font-bold">{row.totalAreaM2}</td>
+                     <td className="px-3 text-xs tabular-nums">{row.m2Construction}</td>
+                     <td className="px-3 text-xs tabular-nums">{row.m2CommonAreaChildren}</td>
+                     <td className="px-3 text-xs tabular-nums">{row.m2ConstructionChildren}</td>
+                     <td className="px-3 text-xs tabular-nums">{row.indiviso}</td>
+                     <td className="px-3 text-xs tabular-nums">{row.vccc}</td>
+                     <td className="px-3"><Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.useTypeInitials}</Badge></td>
                      <td className="px-2">{f("arrears_2017_2024")}</td>
                      <td className="px-2">{f("advance_2024")}</td>
                      <td className="px-2">{f("ordinary_2025_annual")}</td>
@@ -412,20 +488,8 @@ export default async function AreasPrivativasPage(props: PageProps) {
         </StickyHorizontalTableFrame>
       </div>
 
-      {/* Pagination Footer */}
-      <div className="flex items-center justify-between h-10 px-1 border-t border-line/30 pt-4">
-        <p className="text-[11px] font-bold uppercase text-ink-soft/50 tracking-tighter">
-          Página {vm.pagination.page} de {vm.pagination.totalPages} · {vm.pagination.totalRows} Unidades
-        </p>
-        <div className="flex items-center gap-2">
-           <Button variant="ghost" size="sm" asChild className={cn("h-8 px-4 text-[10px] font-bold uppercase gap-1", !vm.pagination.hasPrev && "opacity-20 pointer-events-none")}>
-             <Link href={buildHref(Math.max(1, vm.pagination.page - 1))}><ChevronLeft className="h-3.5 w-3.5" /> Anterior</Link>
-           </Button>
-           <Button variant="ghost" size="sm" asChild className={cn("h-8 px-4 text-[10px] font-bold uppercase gap-1", !vm.pagination.hasNext && "opacity-20 pointer-events-none")}>
-             <Link href={buildHref(Math.min(vm.pagination.totalPages, vm.pagination.page + 1))}>Siguiente <ChevronRight className="h-3.5 w-3.5" /></Link>
-           </Button>
-        </div>
-      </div>
+      {/* Paginator bottom */}
+      <Paginator pagination={vm.pagination} buildHref={buildHref} />
     </div>
   );
 }

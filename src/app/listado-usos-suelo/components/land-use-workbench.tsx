@@ -2,15 +2,12 @@
 
 import React, { useState, useTransition, useMemo, Fragment } from "react";
 import { 
-  Edit2, 
-  Trash2, 
   Plus, 
   Layers,
   MapPin,
   Loader2,
   Info,
-  DollarSign,
-  ArrowRight
+  DollarSign
 } from "lucide-react";
 import type { LandUseListingVM } from "@/modules/land-uses/presentation/land-use-listing.vm";
 import { getLandUseFormDataAction, saveLandUseAction } from "../actions";
@@ -21,6 +18,7 @@ import { Modal } from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/ui/stat-card";
+import { RowActions } from "@/components/ui/row-actions";
 import { cn } from "@/shared/utils/cn";
 
 export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM }) {
@@ -119,8 +117,8 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <StatCard label="Categorías" value={initialVm.totalRows} icon={<Layers className="h-3.5 w-3.5" />} />
-        <StatCard label="M2 Operativos" value={initialVm.rows.reduce((acc, r) => acc + parseFloat(r.totalM2.replace(/[^0-9.]/g, '')), 0).toLocaleString()} icon={<MapPin className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Categorías" value={initialVm.totalRows} icon={<Layers className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="M2 Operativos" value={initialVm.rows.reduce((acc, r) => acc + parseFloat(r.totalM2.replace(/[^0-9.]/g, '')), 0).toLocaleString()} icon={<MapPin className="h-3.5 w-3.5" />} />
         <div className="md:col-span-2 flex items-center justify-between p-3 bg-card border border-line rounded-md shadow-layered">
           <div className="flex-1 max-w-xs">
             <Input label="Buscar Uso" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre o iniciales..." className="h-9" />
@@ -132,51 +130,49 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
       </div>
 
       <Card className="overflow-hidden border-transparent shadow-layered mt-4">
-        <CardHeader className="px-4 py-3 border-b border-line bg-card flex flex-row items-center justify-between">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand">Matriz de Configuración por Uso</CardTitle>
-          <Badge variant={initialVm.usesLandUseFormula ? "success" : "warning"}>
+        <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-row items-center justify-between">
+          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Matriz de Configuración por Uso</CardTitle>
+          <Badge variant={initialVm.usesLandUseFormula ? "success" : "warning"} className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
             Fórmula: {initialVm.usesLandUseFormula ? "ACTIVA" : "INACTIVA"}
           </Badge>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto no-scrollbar">
-            <table className="w-full text-left border-collapse min-w-[120rem]">
+            <table className="w-full text-left border-separate border-spacing-0 min-w-480">
               <thead>
-                <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">
-                  <th className="sticky left-0 z-30 px-4 border-r border-line bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-[80px]">Orden</th>
-                  <th className="sticky left-[80px] z-30 px-4 border-r border-line bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-[240px]">Nombre</th>
+                <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/80">
+                  <th className="sticky left-0 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-20">Orden</th>
+                  <th className="sticky left-20 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-60">Nombre</th>
                   <th className="px-4">Iniciales</th>
                   <th className="px-4 text-right">Unidades</th>
                   <th className="px-4 text-right">M2 Totales</th>
                   {initialVm.columns.map(col => (
-                    <th key={col.key} className="px-4 text-center border-l border-line/30 bg-brand-mint/5 text-brand">{col.label}</th>
+                    <th key={col.key} className="px-4 text-center border-l border-black/10 bg-brand-mint/5 text-brand">{col.label}</th>
                   ))}
-                  <th className="px-4 text-right border-l border-line">Acción</th>
+                  <th className="px-4 text-right border-l border-black/10">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line/30">
-                {filteredRows.map(row => (
-                  <tr key={row.id} className="h-12 hover:bg-canvas/10 transition-colors group">
-                    <td className="sticky left-0 px-4 text-[12px] font-bold text-ink-soft/40 border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)]">{row.order}</td>
-                    <td className="sticky left-[80px] px-4 text-[13px] font-bold text-brand border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)] group-hover:bg-canvas transition-colors">{row.name}</td>
-                    <td className="px-4"><Badge variant="outline" className="h-5 px-1.5">{row.initials}</Badge></td>
-                    <td className="px-4 text-right text-[12px] font-bold">{row.totalAreas}</td>
-                    <td className="px-4 text-right text-[12px] font-mono text-ink-soft">{row.totalM2}</td>
+              <tbody className="divide-y divide-black/5">
+                {filteredRows.map((row, index) => (
+                  <tr key={row.id} className={cn("hover:bg-brand-mint/20 transition-colors group", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
+                    <td className="sticky left-0 px-4 text-xs font-bold text-ink-soft border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)]">{row.order}</td>
+                    <td className="sticky left-20 px-4 text-base font-bold text-brand border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)] py-3">{row.name}</td>
+                    <td className="px-4 py-3"><Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.initials}</Badge></td>
+                    <td className="px-4 py-3 text-right text-sm font-bold">{row.totalAreas}</td>
+                    <td className="px-4 py-3 text-right text-xs font-mono text-ink-soft">{row.totalM2}</td>
                     {initialVm.columns.map(col => {
                       const charge = row.charges[col.key];
                       return (
-                        <td key={col.key} className="px-4 border-l border-line/30">
+                        <td key={col.key} className="px-4 py-3 border-l border-black/10">
                           <div className="flex flex-col items-center leading-none">
-                            <span className="text-[12px] font-bold text-brand">{charge?.amount || "$0.00"}</span>
-                            <span className="text-[8px] font-bold uppercase text-ink-soft/40 tracking-tighter mt-0.5">{charge?.applicationModeLabel || "N/A"}</span>
+                            <span className="text-sm font-bold text-brand">{charge?.amount || "$0.00"}</span>
+                            <span className="text-[9px] font-bold uppercase text-ink-soft/60 tracking-tighter mt-0.5">{charge?.applicationModeLabel || "N/A"}</span>
                           </div>
                         </td>
                       );
                     })}
-                    <td className="px-4 text-right border-l border-line">
-                       <button onClick={() => openEditModal(row.id)} className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard">
-                         <Edit2 className="h-4 w-4" />
-                       </button>
+                    <td className="px-4 py-3 text-right border-l border-black/10">
+                       <RowActions onEdit={() => openEditModal(row.id)} onDelete={() => alert("Eliminación no disponible para usos de suelo activos")} />
                     </td>
                   </tr>
                 ))}

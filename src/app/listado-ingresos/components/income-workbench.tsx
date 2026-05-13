@@ -47,6 +47,14 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
   OTHER: "Otro",
 };
 
+const PAYMENT_METHOD_VARIANT: Record<string, "success" | "brand" | "warning" | "outline"> = {
+  CASH: "success",
+  TRANSFER: "brand",
+  CARD: "warning",
+  CHECK: "outline",
+  OTHER: "outline",
+};
+
 const PAYMENT_METHODS = ["CASH", "TRANSFER", "CARD", "CHECK", "OTHER"];
 
 export function IncomeWorkbench({ 
@@ -209,24 +217,29 @@ export function IncomeWorkbench({
       header: "Concepto / Categoría",
       accessorKey: "concept",
       cell: (row) => (
-        <div className="max-w-[200px]">
-          <p className="font-bold truncate leading-tight">{row.concept}</p>
-          <p className="text-[10px] text-ink-soft/50 truncate uppercase tracking-tighter">
-            {row.chargeGroupName || row.miscCatalogName || "Sin Categoría"}
-          </p>
+        <div className="max-w-55 space-y-1">
+          <p className="text-[13px] font-bold text-ink truncate leading-tight">{row.concept}</p>
+          <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[9px] font-bold tracking-widest">
+            {row.chargeGroupName || row.miscCatalogName || "Sin categoría"}
+          </Badge>
         </div>
       )
     },
     {
       header: "Propiedad",
       accessorKey: "privateAreaName",
-      cell: (row) => <span className="text-[11px] font-bold text-ink-soft/70 uppercase">{row.privateAreaName || "—"}</span>
+      cell: (row) => row.privateAreaName
+        ? <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.privateAreaName}</Badge>
+        : <span className="text-[11px] text-ink-soft/40 font-bold uppercase">—</span>
     },
     {
       header: "Método",
       accessorKey: "paymentMethod",
       cell: (row) => (
-        <Badge variant="outline">
+        <Badge
+          variant={PAYMENT_METHOD_VARIANT[row.paymentMethod || ""] ?? "outline"}
+          className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest"
+        >
           {PAYMENT_METHOD_LABELS[row.paymentMethod || ""] || "N/A"}
         </Badge>
       )
@@ -236,7 +249,7 @@ export function IncomeWorkbench({
       accessorKey: "amount",
       align: "right",
       cell: (row) => (
-        <span className="text-[13px] font-bold text-brand">
+        <span className="text-[13px] font-bold text-brand tabular-nums">
           {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(row.amount)}
         </span>
       )
@@ -244,18 +257,30 @@ export function IncomeWorkbench({
     {
       header: "Fecha",
       accessorKey: "date",
-      cell: (row) => <span className="text-[11px] text-ink-soft/60 uppercase">{new Date(row.date).toLocaleDateString("es-MX", { day: '2-digit', month: 'short', year: '2-digit' })}</span>
+      cell: (row) => (
+        <span className="text-[11px] font-bold text-ink-soft/60 uppercase tracking-tight">
+          {new Date(row.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit", timeZone: "UTC" })}
+        </span>
+      )
     },
     {
-      header: "Acción",
+      header: "Acciones",
       accessorKey: "id",
       align: "right",
       cell: (row) => (
-        <div className="flex items-center justify-end gap-1">
-          <button onClick={() => openEditModal(row)} className="p-1.5 rounded hover:bg-canvas text-ink-soft/40 hover:text-brand transition-standard">
+        <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => openEditModal(row)}
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+            title="Editar"
+          >
             <Edit2 className="h-3.5 w-3.5" />
           </button>
-          <button onClick={() => handleDelete(row.id)} className="p-1.5 rounded hover:bg-danger/10 text-ink-soft/40 hover:text-danger transition-standard">
+          <button
+            onClick={() => handleDelete(row.id)}
+            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+            title="Eliminar"
+          >
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -267,9 +292,9 @@ export function IncomeWorkbench({
     <>
       {/* Summary Section */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <StatCard label="Total Registros" value={filteredIncomes.length} icon={<Layers className="h-3.5 w-3.5" />} />
-        <StatCard label="Monto Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} />
-        <StatCard label="Categorías" value={catalogs.length} icon={<Filter className="h-3.5 w-3.5" />} />
+        <StatCard accent="brand" label="Total Registros" value={filteredIncomes.length} icon={<Layers className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Monto Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="Categorías" value={catalogs.length} icon={<Filter className="h-3.5 w-3.5" />} />
       </div>
 
       <div className="flex items-center justify-between gap-4 mt-2">
@@ -388,7 +413,7 @@ export function IncomeWorkbench({
             <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Método de Pago</label>
           </div>
 
-          <Textarea label="Concepto del Ingreso" value={formConcept} onChange={(e) => setFormConcept(e.target.value)} className="min-h-[60px]" />
+          <Textarea label="Concepto del Ingreso" value={formConcept} onChange={(e) => setFormConcept(e.target.value)} className="min-h-15" />
           <Input label="Notas Internas" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
 
           <div className="pt-2 border-t border-line/50">

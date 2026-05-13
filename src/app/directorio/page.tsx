@@ -160,7 +160,7 @@ export default async function DirectorioPage(props: PageProps) {
                 <th className="px-4 text-right">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-line/30">
+            <tbody className="divide-y divide-black/5">
               {vm.people.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-20 text-center text-ink-soft/50 italic font-bold uppercase text-[11px]">
@@ -168,24 +168,24 @@ export default async function DirectorioPage(props: PageProps) {
                   </td>
                 </tr>
               ) : (
-                vm.people.map((person) => (
-                  <tr key={person.id} className="h-14 hover:bg-canvas/10 transition-colors group">
+                vm.people.map((person, index) => (
+                  <tr key={person.id} className={cn("hover:bg-brand-mint/20 transition-colors group", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                          <div className="h-8 w-8 rounded-full bg-brand-mint/30 flex items-center justify-center text-brand font-bold text-[10px]">
                            {person.legalNameLabel.slice(0, 2).toUpperCase()}
                          </div>
                          <div className="min-w-0">
-                           <p className="text-[13px] font-bold text-ink leading-tight truncate">{person.legalNameLabel}</p>
-                           <p className="text-[11px] font-semibold text-ink-soft/70 mt-0.5">{person.primaryRoleLabel}</p>
+                           <p className="text-base font-bold text-ink leading-tight">{person.legalNameLabel}</p>
+                           <p className="text-xs font-semibold text-ink-soft mt-0.5">{person.primaryRoleLabel}</p>
                          </div>
                       </div>
                     </td>
 
                     <td className="px-4 py-3">
                        <div className="flex items-center gap-2">
-                         <Briefcase className="h-3.5 w-3.5 text-ink-soft/60" />
-                         <span className="text-[11px] font-bold text-ink-soft">{person.commerceLabel || "Individual"}</span>
+                         <Briefcase className="h-4 w-4 text-ink-soft/60" />
+                         <span className="text-xs font-bold text-ink-soft">{person.commerceLabel || "Individual"}</span>
                        </div>
                     </td>
 
@@ -193,14 +193,14 @@ export default async function DirectorioPage(props: PageProps) {
                        <div className="flex flex-col gap-1">
                          {person.email && (
                            <div className="flex items-center gap-2 text-ink-soft">
-                             <Mail className="h-3.5 w-3.5 shrink-0 text-ink-soft/60" />
-                             <span className="text-[11px] font-medium truncate max-w-[160px]">{person.email}</span>
+                             <Mail className="h-4 w-4 shrink-0 text-ink-soft/60" />
+                             <span className="text-xs font-medium">{person.email}</span>
                            </div>
                          )}
                          {person.phone && (
                            <div className="flex items-center gap-2 text-ink-soft">
-                             <Phone className="h-3.5 w-3.5 shrink-0 text-ink-soft/60" />
-                             <span className="text-[11px] font-medium">{person.phone}</span>
+                             <Phone className="h-4 w-4 shrink-0 text-ink-soft/60" />
+                             <span className="text-xs font-medium">{person.phone}</span>
                            </div>
                          )}
                        </div>
@@ -211,7 +211,7 @@ export default async function DirectorioPage(props: PageProps) {
                          {person.requiresInvoiceLabel === "Si" ? (
                            <Badge variant="brand" className="px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest">Factura</Badge>
                          ) : (
-                           <span className="text-[11px] font-medium text-ink-soft/60">Sin Factura</span>
+                           <span className="text-xs font-medium text-ink-soft/60">Sin Factura</span>
                          )}
                        </div>
                     </td>

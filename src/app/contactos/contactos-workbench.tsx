@@ -2,8 +2,6 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { 
-  Edit2, 
-  Trash2, 
   Phone, 
   Mail
 } from "lucide-react";
@@ -125,15 +123,15 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
     {
       header: "Nombre",
       accessorKey: "name",
-      cell: (row) => <span className="font-bold">{row.name}</span>
+      cell: (row) => <span className="font-bold text-sm">{row.name}</span>
     },
     {
       header: "Dato / Valor",
       accessorKey: "value",
       cell: (row) => (
         <div className="flex items-center gap-2">
-          {row.value.includes("@") ? <Mail className="h-3.5 w-3.5 text-ink-soft/60" /> : <Phone className="h-3.5 w-3.5 text-ink-soft/60" />}
-          <span className="text-[11px] font-medium text-ink-soft">{row.value}</span>
+          {row.value.includes("@") ? <Mail className="h-4 w-4 text-ink-soft/60" /> : <Phone className="h-4 w-4 text-ink-soft/60" />}
+          <span className="text-xs font-medium text-ink-soft">{row.value}</span>
         </div>
       )
     },
@@ -142,13 +140,13 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
       accessorKey: "linkUrl",
       cell: (row) => row.linkUrl ? (
         <ExternalLinkButton href={row.linkUrl} label="Ir" />
-      ) : <span className="text-ink-soft/50 text-[10px]">—</span>
+      ) : <span className="text-ink-soft/50 text-xs">—</span>
     },
     {
       header: "Orden",
       accessorKey: "sortOrder",
       align: "center",
-      cell: (row) => <span className="text-[11px] font-medium text-ink-soft/70">{row.sortOrder}</span>
+      cell: (row) => <span className="text-xs font-medium text-ink-soft/70">{row.sortOrder}</span>
     },
     {
       header: "Acciones",

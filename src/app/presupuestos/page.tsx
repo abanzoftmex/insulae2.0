@@ -103,6 +103,7 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
               <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Presupuesto {year}</h1>
               <YearSelector currentYear={currentYear} selectedYear={year} />
             </div>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Planeación Financiera</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {condo.name} · Planeación y ejecución financiera anual.
             </p>
@@ -125,11 +126,13 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <StatCard 
+          accent="brand"
           label={`Prespuesto ${year}`} 
           value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalBudgeted)} 
           icon={<Calculator className="h-3.5 w-3.5" />} 
         />
         <StatCard 
+          accent="lime"
           label={`Ejercido ${year}`} 
           value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalGenerated)} 
           icon={<TrendingUp className="h-3.5 w-3.5" />} 

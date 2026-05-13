@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus, Tag } from "lucide-react";
 
 import { deleteNotificationCategoryAction } from "./actions";
 
@@ -6,6 +7,12 @@ import {
   getNotificationCategoryListingUseCase,
   toNotificationCategoryListingVM,
 } from "@/modules/notification-categories";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
+import { StatCard } from "@/components/ui/stat-card";
+
+export const dynamic = "force-dynamic";
 
 export default async function CategoriasNotificacionPage() {
   const submitDeleteCategory = async (formData: FormData): Promise<void> => {
@@ -17,133 +24,121 @@ export default async function CategoriasNotificacionPage() {
 
   if (!listing) {
     return (
-      <main className="relative isolate min-h-screen overflow-hidden bg-[#f4efe8] px-6 py-10 text-[#221913] sm:px-10">
-        <section className="mx-auto w-full max-w-4xl rounded-[2rem] border border-[#d5c3b2] bg-white/85 p-8 shadow-[0_18px_36px_rgba(33,20,14,0.12)]">
-          <h1 className="text-3xl font-semibold text-[#35261d]">Categorias de notificacion</h1>
-          <p className="mt-3 text-sm text-[#6d5948]">
-            Aun no hay un condominio activo para operar este catalogo. Verifica la configuracion inicial del proyecto.
-          </p>
-        </section>
-      </main>
+      <div className="space-y-4 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+          <div className="flex items-start gap-3">
+            <PageBackBadge className="mt-1.5 shrink-0" />
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Categorías de Notificación</h1>
+              <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Catálogo Operativo</Badge>
+            </div>
+          </div>
+        </div>
+        <p className="text-sm text-ink-soft">Aún no hay un condominio activo para operar este catálogo.</p>
+      </div>
     );
   }
 
   const vm = toNotificationCategoryListingVM(listing);
 
   return (
-    <main className="relative isolate min-h-screen overflow-hidden bg-[#f4efe8] px-5 pb-16 pt-8 text-[#1f1714] sm:px-8 lg:px-12">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute left-[-9rem] top-[-7rem] h-[24rem] w-[22rem] rotate-[-18deg] rounded-[3rem] bg-[#0c7c86]/14 blur-3xl" />
-        <div className="absolute right-[-10rem] top-[10rem] h-[23rem] w-[26rem] rotate-[14deg] rounded-[3rem] bg-[#d17a22]/14 blur-3xl" />
-        <div className="absolute inset-0 opacity-50 [background-image:radial-gradient(rgba(128,92,69,0.12)_1px,transparent_1px)] [background-size:16px_16px]" />
+    <div className="space-y-4 animate-in fade-in duration-500">
+
+      {/* ── Header ───────────────────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">{vm.title}</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Catálogo Operativo</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">{vm.subtitle}</p>
+          </div>
+        </div>
+        <Button size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25 shrink-0">
+          <Link href="/categorias-notificacion/nuevo">
+            <Plus className="h-3.5 w-3.5" /> Nueva categoría
+          </Link>
+        </Button>
       </div>
 
-      <section className="relative mx-auto flex w-full max-w-6xl flex-col gap-6">
-        <header className="rounded-[2.2rem] border border-[#c8b7a9]/55 bg-[linear-gradient(120deg,rgba(255,255,255,0.96)_0%,rgba(248,237,224,0.93)_52%,rgba(238,223,199,0.92)_100%)] p-6 shadow-[0_22px_44px_rgba(35,23,16,0.12)] sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#7c5944]">Catalogo operativo</p>
-              <h1 className="mt-2 text-4xl font-semibold leading-none text-[#2f2219] sm:text-5xl">{vm.title}</h1>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-[#5f5044] sm:text-base">{vm.subtitle}</p>
-            </div>
+      {/* ── Stat ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <StatCard accent="brand" label="Total categorías" value={vm.total} icon={<Tag className="h-3.5 w-3.5" />} />
+      </div>
 
-            <div className="flex flex-wrap gap-2">
-              <div className="rounded-2xl border border-[#ccb8a5] bg-white/85 px-4 py-3 text-right shadow-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8e6550]">Total categorias</p>
-                <p className="mt-1 text-2xl font-semibold text-[#2f2218]">{vm.total}</p>
-              </div>
+      {/* ── Table card ───────────────────────────────────────── */}
+      <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
+        <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex items-center gap-2">
+          <Tag className="h-4 w-4 text-white/80" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-white/90">Categorías registradas</span>
+        </div>
 
-              <Link
-                href="/categorias-notificacion/nuevo"
-                className="inline-flex items-center rounded-2xl border border-[#0d5e66] bg-[linear-gradient(150deg,#0C7C86_0%,#0C5A62_100%)] px-4 py-3 text-xs font-semibold uppercase tracking-[0.14em] text-white shadow-[0_14px_28px_rgba(12,90,98,0.25)] transition hover:brightness-110"
-              >
-                Nueva categoria
-              </Link>
-            </div>
+        {vm.rows.length === 0 ? (
+          <div className="p-10 text-center">
+            <p className="text-sm font-semibold text-ink">No hay categorías registradas</p>
+            <p className="mt-1 text-xs text-ink-soft">Crea la primera para clasificar notificaciones.</p>
+            <Button size="sm" asChild className="mt-4 h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full">
+              <Link href="/categorias-notificacion/nuevo"><Plus className="h-3.5 w-3.5" /> Nueva categoría</Link>
+            </Button>
           </div>
-        </header>
-
-        <section className="overflow-hidden rounded-[1.9rem] border border-[#cbb8a7]/55 bg-white/82 shadow-[0_18px_34px_rgba(35,23,16,0.1)] backdrop-blur-sm">
-          {vm.rows.length === 0 ? (
-            <div className="p-8 sm:p-10">
-              <div className="rounded-2xl border border-dashed border-[#d5c2b0] bg-[#fff9f1] p-8 text-center">
-                <p className="text-lg font-semibold text-[#3f2f24]">No hay categorias registradas</p>
-                <p className="mt-2 text-sm text-[#6d5948]">
-                  Comienza creando una categoria para clasificar notificaciones del condominio.
-                </p>
-                <Link
-                  href="/categorias-notificacion/nuevo"
-                  className="mt-4 inline-flex rounded-xl border border-[#0d5e66] bg-[#0d5e66] px-4 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-white transition hover:brightness-110"
-                >
-                  Crear primera categoria
-                </Link>
-              </div>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-collapse text-sm">
-                <thead className="bg-[#f5ebdf] text-xs uppercase tracking-[0.12em] text-[#7f5f4a]">
-                  <tr>
-                    <th className="px-4 py-3 text-left font-semibold">Categoria</th>
-                    <th className="px-4 py-3 text-left font-semibold">Color</th>
-                    <th className="px-4 py-3 text-left font-semibold">Uso</th>
-                    <th className="px-4 py-3 text-right font-semibold">Acciones</th>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border-separate border-spacing-0 text-sm">
+              <thead>
+                <tr className="bg-canvas/60">
+                  <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">Categoría</th>
+                  <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 border-l border-black/5">Color</th>
+                  <th className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 border-l border-black/5">Uso</th>
+                  <th className="px-4 py-2.5 text-right text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 border-l border-black/5">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/5">
+                {vm.rows.map((row, i) => (
+                  <tr key={row.id} className={`${i % 2 === 0 ? "bg-white" : "bg-canvas/60"} hover:bg-brand-mint/20 transition-colors`}>
+                    <td className="px-4 py-3 font-semibold text-ink">{row.name}</td>
+                    <td className="px-4 py-3 border-l border-black/5">
+                      <div className="inline-flex items-center gap-2">
+                        <span
+                          className="h-5 w-5 rounded-full border border-black/10 shrink-0"
+                          style={{ backgroundColor: row.color }}
+                          aria-hidden
+                        />
+                        <span className="text-xs font-mono text-ink-soft">{row.color}</span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 border-l border-black/5 text-xs text-ink-soft">{row.notificationsCountLabel}</td>
+                    <td className="px-4 py-3 border-l border-black/5">
+                      <div className="flex justify-end items-center gap-2">
+                        <Link
+                          href={`/categorias-notificacion/${row.id}/editar`}
+                          className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+                          title="Editar"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </Link>
+                        {row.canDelete ? (
+                          <form action={submitDeleteCategory}>
+                            <input type="hidden" name="categoryId" value={row.id} />
+                            <button
+                              type="submit"
+                              className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+                              title="Eliminar"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                            </button>
+                          </form>
+                        ) : (
+                          <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">En uso</Badge>
+                        )}
+                      </div>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {vm.rows.map((row) => (
-                    <tr key={row.id} className="border-t border-[#eadbce] bg-white/90">
-                      <td className="px-4 py-4">
-                        <p className="font-semibold text-[#2f231a]">{row.name}</p>
-                      </td>
-
-                      <td className="px-4 py-4">
-                        <div className="inline-flex items-center gap-2 rounded-lg border border-[#d8c3b0] bg-[#fff9f3] px-2.5 py-1.5 text-xs font-semibold tracking-[0.06em] text-[#684f3f]">
-                          <span
-                            className="h-4 w-4 rounded-sm border border-black/15"
-                            style={{ backgroundColor: row.color }}
-                            aria-hidden
-                          />
-                          {row.color}
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-4 text-[#5b4c40]">{row.notificationsCountLabel}</td>
-
-                      <td className="px-4 py-4">
-                        <div className="flex justify-end gap-2">
-                          <Link
-                            href={`/categorias-notificacion/${row.id}/editar`}
-                            className="rounded-lg border border-[#c8ae97] bg-[#fff7ed] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b4b39] transition hover:bg-[#ffeedb]"
-                          >
-                            Editar
-                          </Link>
-
-                          {row.canDelete ? (
-                            <form action={submitDeleteCategory}>
-                              <input type="hidden" name="categoryId" value={row.id} />
-                              <button
-                                type="submit"
-                                className="rounded-lg border border-[#b75b46] bg-[#fff1ed] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#a3402e] transition hover:bg-[#ffe6df]"
-                              >
-                                Eliminar
-                              </button>
-                            </form>
-                          ) : (
-                            <span className="inline-flex items-center rounded-lg border border-[#c6b39f] bg-[#f4ece3] px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.1em] text-[#8a6d57]">
-                              En uso
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      </section>
-    </main>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
