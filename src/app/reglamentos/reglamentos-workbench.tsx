@@ -8,7 +8,9 @@ import {
   Upload, 
   Loader2,
   Layers,
-  Info
+  Info,
+  ExternalLink,
+  Trash2
 } from "lucide-react";
 import type { RegulationDirectoryVM, RegulationDocumentVM } from "@/modules/regulations/presentation/regulation-directory.vm";
 import { 

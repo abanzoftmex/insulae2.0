@@ -73,7 +73,7 @@ export function RichTextEditor({
     const current = editor.getHTML();
     const incoming = value || "";
     if (current !== incoming) {
-      editor.commands.setContent(incoming, false);
+      editor.commands.setContent(incoming, { emitUpdate: false });
     }
   }, [value, editor]);
 
@@ -84,10 +84,10 @@ export function RichTextEditor({
     const url = window.prompt("URL del enlace:", prev ?? "https://");
     if (url === null) return; // cancelled
     if (url === "") {
-      editor.chain().focus().extendMarkToWordIfEmpty().unsetLink().run();
+      (editor.chain().focus() as any).extendMarkToWordIfEmpty().unsetLink().run();
       return;
     }
-    editor.chain().focus().extendMarkToWordIfEmpty().setLink({ href: url }).run();
+    (editor.chain().focus() as any).extendMarkToWordIfEmpty().setLink({ href: url }).run();
   }, [editor]);
 
   if (!editor) return null;
