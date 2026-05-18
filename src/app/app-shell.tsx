@@ -140,6 +140,7 @@ function normalizePath(path: string): string {
 
 export function AppShell({
   children,
+  navbarLogoUrl = null,
   navbarLogoAlt = "Val'Quirico",
 }: {
   children: React.ReactNode;
@@ -322,14 +323,26 @@ export function AppShell({
       <div
         className={cn(
           "flex items-center border-b border-line shrink-0",
-          isCollapsed ? "h-[52px] justify-center" : "h-[52px] px-4"
+          isCollapsed ? "h-[52px] justify-center" : "px-4 py-3"
         )}
       >
         <Link href="/" className="flex items-center min-w-0">
           {isCollapsed ? (
-            <span className="font-bold text-brand text-base">I</span>
+            navbarLogoUrl ? (
+              <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-8 w-8 object-contain" />
+            ) : (
+              <span className="font-bold text-brand text-base">I</span>
+            )
           ) : (
-            <span className="font-bold text-brand text-[16px] tracking-tight">INSULAE</span>
+            <div className="flex flex-col items-center gap-1.5 w-full">
+              {navbarLogoUrl && (
+                <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-10 object-contain" />
+              )}
+              <div className="text-center">
+                <span className="font-bold text-brand text-[16px] tracking-tight block">INSULAE</span>
+                <span className="text-[10px] font-medium text-ink-soft/60 tracking-wider block">Sistema condominal</span>
+              </div>
+            </div>
           )}
         </Link>
       </div>
@@ -339,7 +352,7 @@ export function AppShell({
         {NAV_SECTIONS.map((section) => (
           <div key={section.title}>
             {!isCollapsed && (
-              <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/40">
+              <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
                 {section.title}
               </p>
             )}
@@ -429,7 +442,12 @@ export function AppShell({
           >
             <Menu style={{ width: 18, height: 18 }} />
           </button>
-          <span className="font-semibold text-brand text-sm">INSULAE</span>
+          <span className="font-semibold text-brand text-sm truncate">
+            INSULAE
+            {navbarLogoAlt && (
+              <span className="font-normal text-ink-soft/80"> · {navbarLogoAlt}</span>
+            )}
+          </span>
         </div>
 
         <main className="flex-1 p-4 md:p-6 lg:py-8 lg:px-10 max-w-[1440px] w-full mx-auto">
@@ -458,8 +476,16 @@ export function AppShell({
             isMobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="h-[52px] flex items-center justify-between px-4 border-b border-line shrink-0">
-            <span className="font-bold text-brand text-[16px]">INSULAE</span>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
+            <div className="flex flex-col items-start gap-1">
+              {navbarLogoUrl && (
+                <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-8 object-contain" />
+              )}
+              <div>
+                <span className="font-bold text-brand text-[16px] block">INSULAE</span>
+                <span className="text-[10px] font-medium text-ink-soft/60 tracking-wider block">Sistema condominal</span>
+              </div>
+            </div>
             <button
               onClick={closeMobile}
               className="p-1.5 rounded-lg hover:bg-canvas text-ink-soft transition-standard"
@@ -471,7 +497,7 @@ export function AppShell({
           <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
             {NAV_SECTIONS.map((s) => (
               <div key={s.title}>
-                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/40">
+                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
                   {s.title}
                 </p>
                 <div className="space-y-0.5">
