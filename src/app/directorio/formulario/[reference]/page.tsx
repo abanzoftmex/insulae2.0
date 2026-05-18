@@ -1,24 +1,10 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, Manrope } from "next/font/google";
 import { 
   getDirectoryContactParticipationUseCase, 
   getDirectoryRolesUseCase 
 } from "@/modules/directory";
 import { DirectoryForm } from "./directory-form";
 import { PROJECT_SCOPE } from "@/config/project-scope";
-import { cn } from "@/shared/utils/cn";
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  variable: "--font-directory-display",
-});
-
-const manrope = Manrope({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-directory-body",
-});
 
 export const metadata: Metadata = {
   title: "Expediente Maestro | Insulae 2.0",
@@ -70,18 +56,18 @@ export default async function DirectorioFormularioPage({ params, searchParams }:
 
   if (!detail) {
     return (
-      <main className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center p-6 text-center">
         <h1 className="text-xl font-bold text-brand">Contacto no encontrado</h1>
         <p className="mt-2 text-ink-soft">No existe un contacto activo con esa referencia.</p>
-        <a href="/directorio" className="mt-6 inline-flex h-11 items-center justify-center rounded-full bg-brand-accent px-8 text-xs font-bold uppercase tracking-widest text-white transition-standard active-scale">
+        <a href="/directorio" className="mt-6 flex items-center gap-2 h-9 px-6 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors">
           Volver al listado
         </a>
-      </main>
+      </div>
     );
   }
 
   return (
-    <main className={cn("flex-1 px-4 py-8 md:px-10 lg:px-12", cormorant.variable, manrope.variable)}>
+    <div className="animate-in fade-in duration-500">
       <DirectoryForm 
         reference={reference}
         condominiumSlug={PROJECT_SCOPE.condominiumCode}
@@ -89,6 +75,7 @@ export default async function DirectorioFormularioPage({ params, searchParams }:
         roleOptions={roles}
         backHref={backHref}
       />
-    </main>
+    </div>
   );
 }
+

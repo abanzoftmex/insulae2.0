@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createAnnouncementAction } from "../actions";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { Upload, Check, Plus, Trash2 } from "lucide-react";
 
 interface SpecialGuest {
   id: string;
@@ -27,7 +28,7 @@ interface FormData {
     time: string;
     location: string;
   }[];
-  topicIds: string[]; // For invited positions from organigrama
+  topicIds: string[];
   specialGuests: SpecialGuest[];
   agendaTopics: {
     title: string;
@@ -104,8 +105,6 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
 
     setUploadingFile(true);
     try {
-      // We use a dummy project ID or fetch a real one if needed. 
-      // For now, using "general" as projectId since announcements are condominium-level.
       const result = await uploadCondominiumAsset({
         file,
         condominiumSlug: "valquirico",
@@ -134,32 +133,40 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     const result = await createAnnouncementAction(formData);
-    
+
     if (result.success) {
       router.push("/gobernanza/convocatorias");
       router.refresh();
     } else {
       alert("Error al guardar: " + result.error);
     }
-    
+
     setIsSubmitting(false);
   };
 
+  const fieldCls = "w-full h-9 px-3 rounded-sm border border-line bg-white text-sm text-ink outline-none focus:ring-1 focus:ring-brand transition-colors";
+  const labelCls = "text-[10px] font-bold uppercase tracking-widest text-ink-soft";
+  const sectionHeaderCls = "px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card";
+  const sectionTitleCls = "text-[10px] font-bold uppercase tracking-widest text-white";
+  const sectionBodyCls = "p-5";
+  const sectionCls = "overflow-hidden rounded-card border border-line/40 bg-white shadow-sm";
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 pb-20">
+    <form onSubmit={handleSubmit} className="space-y-4 pb-20">
+
       {/* Información General */}
-      <section className="bg-white rounded-3xl border border-[#e8dbcc] overflow-hidden shadow-sm">
-        <div className="bg-[#fcf9f5] px-6 py-4 border-b border-[#f3e9dc]">
-          <h2 className="text-lg font-bold text-[#2f221a]">Información general</h2>
+      <section className={sectionCls}>
+        <div className={sectionHeaderCls}>
+          <h2 className={sectionTitleCls}>Información general</h2>
         </div>
-        <div className="p-6 space-y-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#958172] uppercase tracking-wider">Convoca</label>
-              <select 
-                className="w-full h-12 px-4 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm"
+        <div className={`${sectionBodyCls} space-y-5`}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="space-y-1.5">
+              <label className={labelCls}>Convoca</label>
+              <select
+                className={fieldCls}
                 value={formData.conveningPersonId || ""}
                 onChange={(e) => setFormData({...formData, conveningPersonId: e.target.value})}
               >
@@ -167,19 +174,19 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
                 {initialData.directory.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#958172] uppercase tracking-wider">Puesto de quien convoca</label>
-              <input 
-                type="text" 
-                className="w-full h-12 px-4 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm"
+            <div className="space-y-1.5">
+              <label className={labelCls}>Puesto de quien convoca</label>
+              <input
+                type="text"
+                className={fieldCls}
                 value={formData.conveningPosition}
                 onChange={(e) => setFormData({...formData, conveningPosition: e.target.value})}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#958172] uppercase tracking-wider">Moderador</label>
-              <select 
-                className="w-full h-12 px-4 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm"
+            <div className="space-y-1.5">
+              <label className={labelCls}>Moderador</label>
+              <select
+                className={fieldCls}
                 value={formData.moderatorPersonId || ""}
                 onChange={(e) => setFormData({...formData, moderatorPersonId: e.target.value})}
               >
@@ -187,19 +194,19 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
                 {initialData.directory.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#958172] uppercase tracking-wider">Puesto del moderador</label>
-              <input 
-                type="text" 
-                className="w-full h-12 px-4 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm"
+            <div className="space-y-1.5">
+              <label className={labelCls}>Puesto del moderador</label>
+              <input
+                type="text"
+                className={fieldCls}
                 value={formData.moderatorPosition}
                 onChange={(e) => setFormData({...formData, moderatorPosition: e.target.value})}
               />
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#958172] uppercase tracking-wider">Tipo de convocatoria</label>
-              <select 
-                className="w-full h-12 px-4 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm"
+            <div className="space-y-1.5">
+              <label className={labelCls}>Tipo de convocatoria</label>
+              <select
+                className={fieldCls}
                 value={formData.typeId}
                 onChange={(e) => setFormData({...formData, typeId: e.target.value})}
                 required
@@ -208,10 +215,10 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
                 {initialData.types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-[#958172] uppercase tracking-wider">Subtipo</label>
-              <select 
-                className="w-full h-12 px-4 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm"
+            <div className="space-y-1.5">
+              <label className={labelCls}>Subtipo</label>
+              <select
+                className={fieldCls}
                 value={formData.subtypeId}
                 onChange={(e) => setFormData({...formData, subtypeId: e.target.value})}
                 required
@@ -220,11 +227,11 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
                 {initialData.subtypes.filter(s => s.typeId === formData.typeId).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            <div className="lg:col-span-2 space-y-2">
-              <label className="text-xs font-bold text-[#958172] uppercase tracking-wider">Nombre</label>
-              <input 
-                type="text" 
-                className="w-full h-12 px-4 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm"
+            <div className="lg:col-span-2 space-y-1.5">
+              <label className={labelCls}>Nombre</label>
+              <input
+                type="text"
+                className={fieldCls}
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
                 required
@@ -232,30 +239,30 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
             </div>
           </div>
 
-          <div className="space-y-3">
-            <label className="text-xs font-bold text-[#958172] uppercase tracking-wider">Archivo PDF</label>
-            <div className="flex items-center gap-4">
-              <button 
+          <div className="space-y-1.5">
+            <label className={labelCls}>Archivo PDF</label>
+            <div className="flex items-center gap-3">
+              <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="px-6 py-2.5 bg-[#2a364e] text-white rounded-xl text-sm font-bold hover:bg-[#1e2738] transition-colors flex items-center gap-2"
+                className="flex items-center gap-2 h-8 px-4 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand transition-colors disabled:opacity-50"
                 disabled={uploadingFile}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                <Upload className="h-3 w-3" />
                 {uploadingFile ? "Subiendo..." : "Seleccionar archivo"}
               </button>
-              <input 
+              <input
                 ref={fileInputRef}
-                type="file" 
+                type="file"
                 accept=".pdf"
                 className="hidden"
                 onChange={handleFileUpload}
               />
               {formData.pdfUrl && (
-                <div className="flex items-center gap-2 text-[#5a7b56] font-bold text-sm">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  Archivo cargado correctamente
-                </div>
+                <span className="flex items-center gap-1.5 text-brand text-[10px] font-bold uppercase tracking-widest">
+                  <Check className="h-3.5 w-3.5" />
+                  Archivo cargado
+                </span>
               )}
             </div>
           </div>
@@ -263,50 +270,50 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
       </section>
 
       {/* Llamados */}
-      <section className="bg-white rounded-3xl border border-[#e8dbcc] overflow-hidden shadow-sm">
-        <div className="bg-[#fcf9f5] px-6 py-4 border-b border-[#f3e9dc]">
-          <h2 className="text-lg font-bold text-[#2f221a]">Llamados</h2>
+      <section className={sectionCls}>
+        <div className={sectionHeaderCls}>
+          <h2 className={sectionTitleCls}>Llamados</h2>
         </div>
-        <div className="p-6 space-y-6">
+        <div className={`${sectionBodyCls} space-y-4`}>
           {formData.dates.map((call, idx) => (
-            <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end pb-6 border-b border-[#f3e9dc] last:border-0 last:pb-0">
-              <div className="text-sm font-bold text-[#6d422a] pb-3">{call.callType}</div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-[#958172] uppercase">Fecha</label>
-                <input 
-                  type="date" 
-                  className="w-full h-10 px-4 rounded-lg border border-[#e8dbcc] text-sm outline-none"
+            <div key={idx} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end pb-4 border-b border-line last:border-0 last:pb-0">
+              <div className="text-[10px] font-bold text-brand uppercase tracking-widest pb-1">{call.callType}</div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Fecha</label>
+                <input
+                  type="date"
+                  className={fieldCls}
                   value={call.date}
                   onChange={(e) => {
-                    const newDates = [...formData.dates];
-                    newDates[idx].date = e.target.value;
-                    setFormData({...formData, dates: newDates});
+                    const d = [...formData.dates];
+                    d[idx].date = e.target.value;
+                    setFormData({...formData, dates: d});
                   }}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-[#958172] uppercase">Hora</label>
-                <input 
-                  type="time" 
-                  className="w-full h-10 px-4 rounded-lg border border-[#e8dbcc] text-sm outline-none"
+              <div className="space-y-1.5">
+                <label className={labelCls}>Hora</label>
+                <input
+                  type="time"
+                  className={fieldCls}
                   value={call.time}
                   onChange={(e) => {
-                    const newDates = [...formData.dates];
-                    newDates[idx].time = e.target.value;
-                    setFormData({...formData, dates: newDates});
+                    const d = [...formData.dates];
+                    d[idx].time = e.target.value;
+                    setFormData({...formData, dates: d});
                   }}
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-[#958172] uppercase">Lugar</label>
-                <input 
-                  type="text" 
-                  className="w-full h-10 px-4 rounded-lg border border-[#e8dbcc] text-sm outline-none"
+              <div className="space-y-1.5">
+                <label className={labelCls}>Lugar</label>
+                <input
+                  type="text"
+                  className={fieldCls}
                   value={call.location}
                   onChange={(e) => {
-                    const newDates = [...formData.dates];
-                    newDates[idx].location = e.target.value;
-                    setFormData({...formData, dates: newDates});
+                    const d = [...formData.dates];
+                    d[idx].location = e.target.value;
+                    setFormData({...formData, dates: d});
                   }}
                 />
               </div>
@@ -316,219 +323,213 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
       </section>
 
       {/* Convocados */}
-      <section className="bg-white rounded-3xl border border-[#e8dbcc] overflow-hidden shadow-sm">
-        <div className="bg-[#fcf9f5] px-6 py-4 border-b border-[#f3e9dc]">
-          <h2 className="text-lg font-bold text-[#2f221a]">Convocados</h2>
+      <section className={sectionCls}>
+        <div className={sectionHeaderCls}>
+          <h2 className={sectionTitleCls}>Convocados</h2>
         </div>
-        <div className="p-6">
-          <div className="space-y-12">
-            <div className="space-y-4">
-              <h3 className="text-sm font-bold text-[#6d422a]">Organigrama</h3>
-              <div className="flex gap-4">
-                <button 
-                  type="button"
-                  onClick={() => handleSelectAll(initialData.departments.flatMap(d => d.positions.map((p:any) => p.id)))}
-                  className="px-4 py-2 bg-white border border-[#e8dbcc] rounded-lg text-xs font-bold text-[#2f221a] flex items-center gap-2 hover:bg-[#fcf9f5] transition-colors"
-                >
-                  <div className="w-4 h-4 rounded border border-[#6d422a] bg-[#6d422a] flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                  </div>
-                  Seleccionar todos
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => handleDeselectAll(initialData.departments.flatMap(d => d.positions.map((p:any) => p.id)))}
-                  className="px-4 py-2 bg-white border border-[#e8dbcc] rounded-lg text-xs font-bold text-[#2f221a] flex items-center gap-2 hover:bg-[#fcf9f5] transition-colors"
-                >
-                  <div className="w-4 h-4 rounded border border-[#e8dbcc]" />
-                  Deseleccionar todos
-                </button>
+        <div className={`${sectionBodyCls} space-y-6`}>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => handleSelectAll(initialData.departments.flatMap(d => d.positions.map((p: any) => p.id)))}
+              className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border border-line text-[9px] font-bold uppercase tracking-widest text-ink hover:bg-brand hover:text-white hover:border-brand transition-colors"
+            >
+              <div className="w-3 h-3 rounded-sm border-2 border-current flex items-center justify-center">
+                <Check className="w-2 h-2" />
               </div>
-            </div>
+              Todos
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDeselectAll(initialData.departments.flatMap(d => d.positions.map((p: any) => p.id)))}
+              className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-white border border-line text-[9px] font-bold uppercase tracking-widest text-ink hover:bg-canvas transition-colors"
+            >
+              <div className="w-3 h-3 rounded-sm border border-line" />
+              Ninguno
+            </button>
+          </div>
 
+          <div className="space-y-5">
             {initialData.departments
               .filter(dept => dept.name && dept.positions.length > 0)
               .map(dept => (
-              <div key={dept.id} className="space-y-4">
-                <div className="flex items-center justify-between bg-[#fcf9f5]/50 py-3 px-4 rounded-xl border-l-[6px] border-[#6d422a]">
-                  <h4 className="text-sm font-bold text-[#2f221a] uppercase tracking-wider">{dept.name}</h4>
-                  <div className="flex gap-4">
-                    <button 
-                      type="button" 
-                      onClick={() => handleSelectAll(dept.positions.map((p:any) => p.id))}
-                      className="text-[10px] font-bold text-[#6d422a] hover:underline"
-                    >
-                      Todos
-                    </button>
-                    <button 
-                      type="button" 
-                      onClick={() => handleDeselectAll(dept.positions.map((p:any) => p.id))}
-                      className="text-[10px] font-bold text-[#958172] hover:underline"
-                    >
-                      Ninguno
-                    </button>
+                <div key={dept.id} className="space-y-3">
+                  <div className="flex items-center justify-between bg-canvas py-2 px-3 rounded-sm border-l-2 border-brand">
+                    <h4 className="text-[10px] font-bold text-ink uppercase tracking-widest">{dept.name}</h4>
+                    <div className="flex gap-3">
+                      <button
+                        type="button"
+                        onClick={() => handleSelectAll(dept.positions.map((p: any) => p.id))}
+                        className="text-[9px] font-bold text-brand hover:underline uppercase tracking-widest"
+                      >
+                        Todos
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeselectAll(dept.positions.map((p: any) => p.id))}
+                        className="text-[9px] font-bold text-ink-soft hover:underline uppercase tracking-widest"
+                      >
+                        Ninguno
+                      </button>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-2.5 gap-x-6 pl-4">
+                    {dept.positions.map((pos: any) => (
+                      <label key={pos.id} className="flex items-center gap-2.5 cursor-pointer group">
+                        <div className="relative flex items-center justify-center shrink-0">
+                          <input
+                            type="checkbox"
+                            className="peer appearance-none w-4 h-4 rounded-sm border border-line checked:bg-brand checked:border-brand transition-all cursor-pointer"
+                            checked={formData.topicIds.includes(pos.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData({...formData, topicIds: [...formData.topicIds, pos.id]});
+                              } else {
+                                setFormData({...formData, topicIds: formData.topicIds.filter(id => id !== pos.id)});
+                              }
+                            }}
+                          />
+                          <Check className="absolute w-2.5 h-2.5 text-white pointer-events-none hidden peer-checked:block" />
+                        </div>
+                        <span className="text-[11px] text-ink-soft group-hover:text-ink transition-colors">{pos.name}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-y-4 gap-x-8 pl-6">
-                  {dept.positions.map((pos: any) => (
-                    <label key={pos.id} className="flex items-center gap-3 cursor-pointer group">
-                      <div className="relative flex items-center justify-center">
-                        <input 
-                          type="checkbox" 
-                          className="peer appearance-none w-5 h-5 rounded border-2 border-[#e8dbcc] checked:bg-[#6d422a] checked:border-[#6d422a] transition-all cursor-pointer"
-                          checked={formData.topicIds.includes(pos.id)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData({...formData, topicIds: [...formData.topicIds, pos.id]});
-                            } else {
-                              setFormData({...formData, topicIds: formData.topicIds.filter(id => id !== pos.id)});
-                            }
-                          }}
-                        />
-                        <svg className="absolute w-3 h-3 text-white pointer-events-none hidden peer-checked:block" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                      </div>
-                      <span className="text-sm text-[#958172] group-hover:text-[#2f221a] transition-colors">{pos.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </section>
 
       {/* Invitados especiales */}
-      <section className="bg-white rounded-3xl border border-[#e8dbcc] overflow-hidden shadow-sm">
-        <div className="bg-[#fcf9f5] px-6 py-4 border-b border-[#f3e9dc] flex justify-between items-center">
-          <h2 className="text-lg font-bold text-[#2f221a]">Invitados especiales</h2>
-          <button 
-            type="button" 
+      <section className={sectionCls}>
+        <div className={`${sectionHeaderCls} flex justify-between items-center`}>
+          <h2 className={sectionTitleCls}>Invitados especiales</h2>
+          <button
+            type="button"
             onClick={handleAddSpecialGuest}
-            className="px-4 py-2 bg-[#bf9441] text-white rounded-xl text-xs font-bold hover:bg-[#a67d35] transition-colors flex items-center gap-2"
+            className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand text-white text-[9px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Agregar un invitado especial
+            <Plus className="h-3 w-3" />
+            Agregar
           </button>
         </div>
-        <div className="p-6 space-y-4">
+        <div className={`${sectionBodyCls} space-y-3`}>
           {formData.specialGuests.length > 0 ? (
-            <div className="space-y-4">
-              {formData.specialGuests.map((guest) => (
-                <div key={guest.id} className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 rounded-2xl bg-[#fcf9f5]/50 border border-[#f3e9dc] relative group">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-[#958172] uppercase">Nombre completo</label>
-                    <input 
-                      type="text"
-                      className="w-full h-10 px-4 rounded-xl border border-[#e8dbcc] text-sm outline-none"
-                      value={guest.name}
-                      onChange={(e) => handleSpecialGuestChange(guest.id, "name", e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-[#958172] uppercase">Correo electrónico</label>
-                    <input 
-                      type="email"
-                      className="w-full h-10 px-4 rounded-xl border border-[#e8dbcc] text-sm outline-none"
-                      value={guest.email}
-                      onChange={(e) => handleSpecialGuestChange(guest.id, "email", e.target.value)}
-                    />
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={() => setFormData(prev => ({ ...prev, specialGuests: prev.specialGuests.filter(g => g.id !== guest.id) }))}
-                    className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-red-200 text-red-500 rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                  </button>
+            formData.specialGuests.map((guest) => (
+              <div key={guest.id} className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 rounded-card bg-canvas border border-line relative group">
+                <div className="space-y-1.5">
+                  <label className={labelCls}>Nombre completo</label>
+                  <input
+                    type="text"
+                    className={fieldCls}
+                    value={guest.name}
+                    onChange={(e) => handleSpecialGuestChange(guest.id, "name", e.target.value)}
+                  />
                 </div>
-              ))}
-            </div>
+                <div className="space-y-1.5">
+                  <label className={labelCls}>Correo electrónico</label>
+                  <input
+                    type="email"
+                    className={fieldCls}
+                    value={guest.email}
+                    onChange={(e) => handleSpecialGuestChange(guest.id, "email", e.target.value)}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, specialGuests: prev.specialGuests.filter(g => g.id !== guest.id) }))}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-line text-danger rounded-full flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+            ))
           ) : (
-            <div className="py-8 text-center text-[#958172] text-sm italic">
+            <p className="py-6 text-center text-ink-soft text-[11px]">
               No se han agregado invitados externos para esta convocatoria.
-            </div>
+            </p>
           )}
         </div>
       </section>
 
       {/* Orden del Día */}
-      <section className="bg-white rounded-3xl border border-[#e8dbcc] overflow-hidden shadow-sm">
-        <div className="bg-[#fcf9f5] px-6 py-4 border-b border-[#f3e9dc] flex justify-between items-center">
-          <h2 className="text-lg font-bold text-[#2f221a]">Orden del día</h2>
-          <button 
-            type="button" 
+      <section className={sectionCls}>
+        <div className={`${sectionHeaderCls} flex justify-between items-center`}>
+          <h2 className={sectionTitleCls}>Orden del día</h2>
+          <button
+            type="button"
             onClick={handleAddTopic}
-            className="px-4 py-2 bg-[#6d422a] text-white rounded-xl text-xs font-bold hover:bg-[#5a3622] transition-colors flex items-center gap-2"
+            className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand text-white text-[9px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <Plus className="h-3 w-3" />
             Agregar tema
           </button>
         </div>
-        <div className="p-6 space-y-8">
+        <div className={`${sectionBodyCls} space-y-3`}>
           {formData.agendaTopics.map((topic, idx) => (
-            <div key={idx} className="p-6 rounded-2xl border border-[#f3e9dc] bg-[#fcf9f5]/30 space-y-6 relative group">
-              <div className="grid grid-cols-1 gap-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-[#958172] uppercase tracking-widest">Tema</label>
-                  <textarea 
-                    className="w-full px-4 py-3 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm min-h-[100px] resize-none"
-                    value={topic.title}
-                    onChange={(e) => handleTopicChange(idx, "title", e.target.value)}
-                    placeholder="Describa el punto a tratar..."
+            <div key={idx} className="p-4 rounded-card border border-line bg-canvas space-y-4 relative group">
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-sm bg-brand text-white text-[9px] font-bold flex items-center justify-center shrink-0">{idx + 1}</span>
+                <span className={labelCls}>Punto del orden del día</span>
+              </div>
+              <textarea
+                className="w-full px-3 py-2 rounded-sm border border-line bg-white text-sm text-ink outline-none focus:ring-1 focus:ring-brand transition-colors min-h-20 resize-none"
+                value={topic.title}
+                onChange={(e) => handleTopicChange(idx, "title", e.target.value)}
+                placeholder="Describa el punto a tratar..."
+              />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <label className={labelCls}>Presentador</label>
+                  <select
+                    className={fieldCls}
+                    value={topic.presenterId || ""}
+                    onChange={(e) => handleTopicChange(idx, "presenterId", e.target.value)}
+                  >
+                    <option value="">Seleccione</option>
+                    {initialData.directory.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-1.5">
+                  <label className={labelCls}>Tiempo (minutos)</label>
+                  <input
+                    type="number"
+                    className={fieldCls}
+                    value={topic.durationMinutes || ""}
+                    onChange={(e) => handleTopicChange(idx, "durationMinutes", Number(e.target.value))}
                   />
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-[#958172] uppercase tracking-widest">Presentador</label>
-                    <select 
-                      className="w-full h-10 px-4 rounded-xl border border-[#e8dbcc] text-sm outline-none"
-                      value={topic.presenterId || ""}
-                      onChange={(e) => handleTopicChange(idx, "presenterId", e.target.value)}
-                    >
-                      <option value="">Seleccione</option>
-                      {initialData.directory.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-[#958172] uppercase tracking-widest">Tiempo (minutos)</label>
-                    <input 
-                      type="number" 
-                      className="w-full h-10 px-4 rounded-xl border border-[#e8dbcc] text-sm outline-none"
-                      value={topic.durationMinutes || ""}
-                      onChange={(e) => handleTopicChange(idx, "durationMinutes", Number(e.target.value))}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-[#958172] uppercase tracking-widest block pb-2">Tipo de acción</label>
-                    <div className="flex gap-4">
-                      {["VOTE", "CONFIRMATION", "NONE"].map(action => (
-                        <label key={action} className="flex items-center gap-2 cursor-pointer group/radio">
-                          <div className="relative flex items-center justify-center">
-                            <input 
-                              type="radio" 
-                              name={`action-${idx}`}
-                              className="peer appearance-none w-4 h-4 rounded-full border-2 border-[#e8dbcc] checked:border-[#6d422a] transition-all"
-                              checked={topic.actionType === action}
-                              onChange={() => handleTopicChange(idx, "actionType", action)}
-                            />
-                            <div className="absolute w-2 h-2 bg-[#6d422a] rounded-full hidden peer-checked:block" />
-                          </div>
-                          <span className="text-xs text-[#958172] group-hover/radio:text-[#6d422a] transition-colors">
-                            {action === "VOTE" ? "Votación" : action === "CONFIRMATION" ? "Confirmación" : "Nada"}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
+                <div className="space-y-1.5">
+                  <label className={labelCls}>Tipo de acción</label>
+                  <div className="flex items-center gap-4 h-9">
+                    {["VOTE", "CONFIRMATION", "NONE"].map(action => (
+                      <label key={action} className="flex items-center gap-1.5 cursor-pointer group/radio">
+                        <div className="relative flex items-center justify-center">
+                          <input
+                            type="radio"
+                            name={`action-${idx}`}
+                            className="peer appearance-none w-3.5 h-3.5 rounded-full border border-line checked:border-brand transition-all"
+                            checked={topic.actionType === action}
+                            onChange={() => handleTopicChange(idx, "actionType", action)}
+                          />
+                          <div className="absolute w-1.5 h-1.5 bg-brand rounded-full hidden peer-checked:block" />
+                        </div>
+                        <span className="text-[10px] text-ink-soft group-hover/radio:text-brand transition-colors">
+                          {action === "VOTE" ? "Votación" : action === "CONFIRMATION" ? "Confirmación" : "Nada"}
+                        </span>
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>
               {formData.agendaTopics.length > 1 && (
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setFormData(prev => ({ ...prev, agendaTopics: prev.agendaTopics.filter((_, i) => i !== idx) }))}
-                  className="absolute top-4 right-4 p-2 text-[#958172] hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                  className="absolute top-3 right-3 w-6 h-6 rounded-sm bg-white border border-line text-ink-soft hover:text-danger hover:border-danger transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  <Trash2 className="h-3 w-3" />
                 </button>
               )}
             </div>
@@ -537,13 +538,13 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
       </section>
 
       {/* Comentarios */}
-      <section className="bg-white rounded-3xl border border-[#e8dbcc] overflow-hidden shadow-sm">
-        <div className="bg-[#fcf9f5] px-6 py-4 border-b border-[#f3e9dc]">
-          <h2 className="text-lg font-bold text-[#2f221a]">Comentarios generales</h2>
+      <section className={sectionCls}>
+        <div className={sectionHeaderCls}>
+          <h2 className={sectionTitleCls}>Comentarios generales</h2>
         </div>
-        <div className="p-6">
-          <textarea 
-            className="w-full px-4 py-3 rounded-xl border border-[#e8dbcc] focus:ring-2 focus:ring-[#6d422a] outline-none transition-all text-sm min-h-[120px] resize-none"
+        <div className={sectionBodyCls}>
+          <textarea
+            className="w-full px-3 py-2 rounded-sm border border-line bg-white text-sm text-ink outline-none focus:ring-1 focus:ring-brand transition-colors min-h-25 resize-none"
             value={formData.comments}
             onChange={(e) => setFormData({...formData, comments: e.target.value})}
             placeholder="Observaciones adicionales..."
@@ -552,18 +553,18 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
       </section>
 
       {/* Footer Actions */}
-      <div className="flex justify-end gap-4">
-        <button 
-          type="button" 
+      <div className="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
           onClick={() => router.back()}
-          className="px-8 py-3 bg-[#fcf9f5] text-[#6d422a] rounded-xl font-bold text-sm hover:bg-[#f3e9dc] transition-colors border border-[#e8dbcc]"
+          className="flex items-center gap-2 h-9 px-6 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink hover:bg-canvas transition-colors"
         >
           Cancelar
         </button>
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           disabled={isSubmitting || uploadingFile}
-          className="px-8 py-3 bg-[#6d422a] text-white rounded-xl font-bold text-sm hover:bg-[#5a3622] transition-colors shadow-lg shadow-[#6d422a]/20 disabled:opacity-50"
+          className="flex items-center gap-2 h-9 px-6 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors disabled:opacity-50"
         >
           {isSubmitting ? "Guardando..." : "Guardar convocatoria"}
         </button>
@@ -571,3 +572,4 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
     </form>
   );
 }
+

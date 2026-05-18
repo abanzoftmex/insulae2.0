@@ -46,7 +46,7 @@ export function StatCard({ label, value, trend, icon, accent, className, ...prop
   const colors = accent ? accentMap[accent] : null;
 
   return (
-    <Card className={cn("p-4 flex flex-col justify-between min-h-[100px] shadow-sm", colors?.card, className)} {...props}>
+    <Card className={cn("p-4 flex flex-col justify-between min-h-25 shadow-sm", colors?.card, className)} {...props}>
       <div className="flex items-start justify-between">
         <p className={cn("text-[10px] font-bold uppercase tracking-wider", colors ? colors.label : "text-ink-soft/70")}>
           {label}

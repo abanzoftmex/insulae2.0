@@ -58,7 +58,7 @@ export function RoleList({ roles, condominiumId }: Props) {
     },
     {
       header: "Permisos",
-      accessorKey: "id",
+      accessorKey: "permissions",
       cell: (row) => {
         const count = row.permissions?.length ?? 0;
         return count > 0 ? (
@@ -72,7 +72,7 @@ export function RoleList({ roles, condominiumId }: Props) {
     },
     {
       header: "Acción",
-      accessorKey: "id",
+      accessorKey: "_actions",
       align: "right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">

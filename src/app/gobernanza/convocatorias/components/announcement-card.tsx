@@ -1,99 +1,103 @@
 import { Announcement } from "@/modules/announcement/domain/announcement.types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { FileText, MapPin, Clock, Users, MoreVertical } from "lucide-react";
 
 interface AnnouncementCardProps {
   announcement: Announcement;
 }
 
 export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
-  const statusColor = announcement.status.color || "#6d422a";
-  
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-[#e8dbcc] overflow-hidden hover:shadow-md transition-shadow">
-      <div className="p-6 space-y-4">
+    <Card className="overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+      {/* Brand accent bar */}
+      <div className="h-0.5 bg-brand w-full" />
+
+      <div className="p-5 flex flex-col gap-4 flex-1">
         {/* Header */}
-        <div className="flex justify-between items-start">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span 
-                className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: `${statusColor}15`, color: statusColor }}
-              >
-                {announcement.type.name}
-              </span>
-              <span className="text-[10px] font-medium text-[#958172] uppercase tracking-widest">
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex flex-col gap-1.5 min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Badge variant="brand">{announcement.type.name}</Badge>
+              <span className="text-[9px] font-bold uppercase tracking-widest text-ink-soft">
                 {announcement.subtype.name}
               </span>
             </div>
-            <h3 className="text-lg font-bold text-[#2f221a] leading-tight">
+            <h3 className="text-sm font-bold text-ink leading-tight line-clamp-2">
               {announcement.name}
             </h3>
           </div>
-          <div 
-            className="px-3 py-1 rounded-lg text-xs font-bold text-white shadow-sm"
-            style={{ backgroundColor: statusColor }}
-          >
+          <span className="shrink-0 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm bg-canvas border border-line text-ink-soft whitespace-nowrap">
             {announcement.status.name}
-          </div>
+          </span>
         </div>
 
         {/* Dates */}
-        <div className="space-y-3 pt-2">
-          {announcement.dates.map((date, idx) => (
-            <div key={date.id} className="flex items-start gap-3 p-3 rounded-xl bg-[#fcf9f5] border border-[#f3e9dc]">
-              <div className="bg-[#6d422a] text-white p-2 rounded-lg text-center min-w-[50px]">
-                <div className="text-[10px] uppercase font-bold opacity-80">
+        <div className="space-y-2">
+          {announcement.dates.map((date) => (
+            <div key={date.id} className="flex items-start gap-3 p-3 rounded-card bg-canvas border border-line">
+              <div className="bg-brand text-white text-center rounded-sm min-w-11 py-1 shrink-0">
+                <div className="text-[9px] uppercase font-bold opacity-70 leading-none">
                   {format(date.date, "MMM", { locale: es })}
                 </div>
-                <div className="text-lg font-bold leading-none">
+                <div className="text-base font-bold leading-tight">
                   {format(date.date, "dd")}
                 </div>
               </div>
-              <div className="flex-1 space-y-1">
-                <div className="flex justify-between items-center">
-                  <span className="text-xs font-bold text-[#6d422a]">{date.callType}</span>
-                  <span className="text-[10px] font-medium text-[#958172]">{date.time}</span>
+              <div className="flex-1 space-y-1 min-w-0">
+                <div className="flex justify-between items-center gap-2">
+                  <span className="text-[10px] font-bold text-brand uppercase tracking-tight">{date.callType}</span>
+                  {date.time && (
+                    <span className="flex items-center gap-0.5 text-[9px] font-medium text-ink-soft shrink-0">
+                      <Clock className="h-2.5 w-2.5" />
+                      {date.time}
+                    </span>
+                  )}
                 </div>
-                <p className="text-xs text-[#2f221a] line-clamp-1">
-                  <span className="font-medium">Lugar:</span> {date.location}
-                </p>
+                {date.location && (
+                  <p className="flex items-center gap-0.5 text-[10px] text-ink-soft truncate">
+                    <MapPin className="h-2.5 w-2.5 shrink-0" />
+                    {date.location}
+                  </p>
+                )}
               </div>
             </div>
           ))}
         </div>
 
-        {/* Footer Info */}
-        <div className="pt-4 flex items-center justify-between border-t border-[#f3e9dc]">
-          <div className="flex items-center gap-4 text-[11px] text-[#958172]">
-            <div className="flex items-center gap-1">
-              <span className="font-bold text-[#6d422a]">{announcement.topics.length}</span> Temas
-            </div>
+        {/* Footer */}
+        <div className="mt-auto pt-3 flex items-center justify-between border-t border-line">
+          <div className="flex items-center gap-3 text-[10px] text-ink-soft font-bold uppercase tracking-tight">
+            <span>
+              <span className="text-brand">{announcement.topics.length}</span> Temas
+            </span>
             {announcement.actualAttendance > 0 && (
-              <div className="flex items-center gap-1">
-                <span className="font-bold text-[#6d422a]">{announcement.attendancePercentage}%</span> Asistencia
-              </div>
+              <span className="flex items-center gap-1">
+                <Users className="h-2.5 w-2.5" />
+                <span className="text-brand">{announcement.attendancePercentage}%</span> Asist.
+              </span>
             )}
           </div>
-          
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {announcement.pdfUrl && (
-              <a 
-                href={announcement.pdfUrl} 
-                target="_blank" 
+              <a
+                href={announcement.pdfUrl}
+                target="_blank"
                 rel="noopener noreferrer"
-                className="p-2 rounded-lg bg-[#fcf9f5] text-[#6d422a] hover:bg-[#6d422a] hover:text-white transition-colors border border-[#e8dbcc]"
+                className="flex items-center justify-center w-7 h-7 rounded-sm bg-canvas border border-line text-ink-soft hover:bg-brand hover:text-white hover:border-brand transition-colors"
                 title="Ver PDF"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <FileText className="h-3.5 w-3.5" />
               </a>
             )}
-            <button className="p-2 rounded-lg bg-[#fcf9f5] text-[#6d422a] hover:bg-[#6d422a] hover:text-white transition-colors border border-[#e8dbcc]">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+            <button className="flex items-center justify-center w-7 h-7 rounded-sm bg-canvas border border-line text-ink-soft hover:bg-brand hover:text-white hover:border-brand transition-colors">
+              <MoreVertical className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

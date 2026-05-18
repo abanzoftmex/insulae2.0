@@ -1,22 +1,18 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { 
-  User as UserIcon, 
-  Building2, 
   FileText, 
   Upload, 
-  ChevronLeft, 
   Check, 
   AlertCircle,
   Plus,
-  Users
+  Users,
+  Building2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
 import { saveDirectoryContactAction } from "./actions";
@@ -37,12 +33,10 @@ export function DirectoryForm({
   roleOptions,
   backHref,
 }: DirectoryFormProps) {
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Form State
   const [formData, setFormData] = useState({
     userType: initialData.userType,
     requiresInvoice: initialData.requiresInvoice,
@@ -84,7 +78,7 @@ export function DirectoryForm({
         file,
         condominiumSlug,
         projectId: "directory",
-        kind: "project-document", // Using project-document as a fallback or could add tax-status-pdf
+        kind: "project-document",
       });
 
       handleChange("taxStatusPdfUrl", uploaded.url);
@@ -100,7 +94,6 @@ export function DirectoryForm({
   const handleSave = () => {
     setMessage(null);
     startTransition(async () => {
-      // Map back to lastName if needed, or just send the individual fields
       const result = await saveDirectoryContactAction(reference, {
         ...formData,
         lastName: `${formData.lastNamePaterno} ${formData.lastNameMaterno}`.trim(),
@@ -108,82 +101,95 @@ export function DirectoryForm({
 
       if (result.ok) {
         setMessage({ type: "success", text: result.message });
-        router.refresh();
       } else {
         setMessage({ type: "error", text: result.message });
       }
     });
   };
 
+  const sectionCls = "overflow-hidden rounded-card border border-line/40 bg-white shadow-sm";
+  const sectionHeaderCls = "px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card";
+  const sectionTitleCls = "text-[10px] font-bold uppercase tracking-widest text-white";
+  const sectionBodyCls = "p-5";
+  const fieldCls = "w-full h-9 px-3 rounded-sm border border-line bg-white text-sm text-ink outline-none focus:ring-1 focus:ring-brand transition-colors";
+  const labelCls = "text-[10px] font-bold uppercase tracking-widest text-ink-soft";
+
+  const indiviso = initialData.participationBlocks.find(b => b.title === "Dominio actual")?.totalPercentage.toFixed(4) || "0.0000";
+
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Background Decorations */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden -z-10">
-        <div className="absolute left-[-10%] top-[-10%] h-[40rem] w-[40rem] rounded-full bg-brand/5 blur-3xl" />
-        <div className="absolute right-[-5%] top-[20%] h-[35rem] w-[35rem] rounded-full bg-brand-accent/5 blur-3xl" />
+    <div className="space-y-4">
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Expediente Maestro</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Directorio</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {formData.firstName} {formData.lastNamePaterno} {formData.lastNameMaterno}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          <a
+            href={backHref}
+            className="flex items-center gap-2 h-9 px-6 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink hover:bg-canvas transition-colors"
+          >
+            Cancelar
+          </a>
+          <button
+            onClick={handleSave}
+            disabled={isPending || isUploading}
+            className="flex items-center gap-2 h-9 px-6 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors disabled:opacity-50"
+          >
+            {isPending ? "Guardando..." : "Guardar cambios"}
+          </button>
+        </div>
       </div>
 
-      {/* Form Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 pb-4">
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="bg-brand-mint/20 text-brand border-brand-mint/30 px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest">
-              {formData.userType === "LEGAL_ENTITY" ? "Persona Moral" : "Persona Física"}
-            </Badge>
-            <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-ink-soft/40">
-              Expediente Maestro
-            </span>
-          </div>
-          <h1 className="text-3xl md:text-5xl font-semibold text-brand tracking-tight">
-            {formData.firstName} {formData.lastNamePaterno} {formData.lastNameMaterno}
-          </h1>
+      {/* Feedback */}
+      {message && (
+        <div className={cn(
+          "flex items-center gap-3 p-3 rounded-card animate-in fade-in zoom-in-95 duration-300 border",
+          message.type === "success"
+            ? "bg-brand-mint/20 text-brand border-brand-mint/40"
+            : "bg-danger/5 text-danger border-danger/10"
+        )}>
+          {message.type === "success" ? <Check className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+          <span className="text-[11px] font-bold uppercase tracking-tight">{message.text}</span>
         </div>
-        
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" asChild className="rounded-full h-11 px-6 text-[11px] font-bold uppercase tracking-widest hover:bg-white/50">
-            <a href={backHref}>
-              <ChevronLeft className="w-4 h-4 mr-2" /> Cancelar
-            </a>
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={isPending || isUploading}
-            className="rounded-full h-11 px-8 text-[11px] font-bold uppercase tracking-widest bg-brand-accent shadow-lg shadow-brand-accent/20 hover:shadow-brand-accent/30 active-scale"
-          >
-            {isPending ? "Guardando..." : "Guardar Cambios"}
-          </Button>
-        </div>
-      </header>
+      )}
 
-      {/* Main Form Content */}
-      <div className="grid gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Configuration Section */}
-          <Card className="rounded-[2.5rem] border border-brand/10 bg-white/80 backdrop-blur-md p-8 shadow-xl shadow-brand/5 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand/5 rounded-full -mr-16 -mt-16 blur-2xl" />
-            
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
-              <span className="w-6 h-px bg-brand/20" /> Configuración Inicial
-            </h2>
+      {/* Main Grid */}
+      <div className="grid gap-4 lg:grid-cols-3">
 
-            <div className="grid gap-x-12 gap-y-10 sm:grid-cols-2">
-              <div className="space-y-4">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 block ml-1">Tipo de Persona</label>
-                <div className="flex flex-wrap gap-2">
+        {/* Left — form sections */}
+        <div className="lg:col-span-2 space-y-4">
+
+          {/* Configuración */}
+          <div className={sectionCls}>
+            <div className={sectionHeaderCls}>
+              <p className={sectionTitleCls}>Configuración inicial</p>
+            </div>
+            <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-5`}>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Tipo de persona</label>
+                <div className="flex gap-2">
                   {[
                     { value: "INDIVIDUAL", label: "Física" },
                     { value: "LEGAL_ENTITY", label: "Moral" },
-                    { value: "S_A", label: "Sin Actividad" }
+                    { value: "S_A", label: "Sin Actividad" },
                   ].map((opt) => (
                     <button
                       key={opt.value}
+                      type="button"
                       onClick={() => handleChange("userType", opt.value)}
                       className={cn(
-                        "flex-1 min-w-[70px] py-3 px-2 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all border",
-                        formData.userType === opt.value 
-                          ? "bg-brand text-white border-brand shadow-md shadow-brand/20" 
-                          : "bg-white text-ink-soft border-line hover:border-brand/30"
+                        "flex-1 h-9 px-2 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-colors",
+                        formData.userType === opt.value
+                          ? "bg-brand text-white border-brand"
+                          : "bg-white text-ink-soft border-line hover:border-brand/40"
                       )}
                     >
                       {opt.label}
@@ -192,21 +198,19 @@ export function DirectoryForm({
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 block ml-1">Requiere Factura</label>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Requiere factura</label>
                 <div className="flex gap-2">
-                  {[
-                    { value: true, label: "Sí" },
-                    { value: false, label: "No" }
-                  ].map((opt) => (
+                  {[{ value: true, label: "Sí" }, { value: false, label: "No" }].map((opt) => (
                     <button
                       key={String(opt.value)}
+                      type="button"
                       onClick={() => handleChange("requiresInvoice", opt.value)}
                       className={cn(
-                        "flex-1 py-3 px-4 rounded-2xl text-[10px] font-bold uppercase tracking-wider transition-all border",
-                        formData.requiresInvoice === opt.value 
-                          ? "bg-brand text-white border-brand shadow-md shadow-brand/20" 
-                          : "bg-white text-ink-soft border-line hover:border-brand/30"
+                        "flex-1 h-9 px-4 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-colors",
+                        formData.requiresInvoice === opt.value
+                          ? "bg-brand text-white border-brand"
+                          : "bg-white text-ink-soft border-line hover:border-brand/40"
                       )}
                     >
                       {opt.label}
@@ -215,61 +219,61 @@ export function DirectoryForm({
                 </div>
               </div>
 
-              <div className="sm:col-span-1 space-y-4">
-                 <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 block ml-1">Rol Inicial</label>
-                 <div className="relative bg-white rounded-2xl">
-                   <select 
-                     value={formData.initialRole}
-                     onChange={(e) => handleChange("initialRole", e.target.value)}
-                     className="w-full h-11 rounded-2xl border border-line bg-transparent px-4 text-[13px] font-medium text-ink focus:border-brand-accent focus:ring-2 focus:ring-brand-accent/10 outline-none appearance-none transition-standard"
-                   >
-                     <option value="">Seleccionar rol...</option>
-                     {roleOptions.map(role => (
-                       <option key={role.id} value={role.name}>{role.name}</option>
-                     ))}
-                   </select>
-                 </div>
+              <div className="space-y-1.5">
+                <label className={labelCls}>Rol inicial</label>
+                <select
+                  value={formData.initialRole}
+                  onChange={(e) => handleChange("initialRole", e.target.value)}
+                  className={fieldCls}
+                >
+                  <option value="">Seleccionar rol...</option>
+                  {roleOptions.map(role => (
+                    <option key={role.id} value={role.name}>{role.name}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className="sm:col-span-1 space-y-4">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 block ml-1">Constancia Fiscal (PDF)</label>
-                <div className="flex items-center gap-3">
-                  <div className="relative flex-1 bg-white rounded-2xl">
-                    <input 
-                      type="file" 
-                      accept="application/pdf" 
+              <div className="space-y-1.5">
+                <label className={labelCls}>Constancia fiscal (PDF)</label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="file"
+                      accept="application/pdf"
                       onChange={handleFileUpload}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                     />
                     <div className={cn(
-                      "flex items-center justify-between h-11 px-4 rounded-2xl border text-[12px] font-medium transition-standard",
-                      isUploading ? "bg-canvas animate-pulse" : "bg-transparent border-line"
+                      "flex items-center justify-between h-9 px-3 rounded-sm border text-sm transition-colors",
+                      isUploading ? "bg-canvas animate-pulse border-line" : "bg-white border-line"
                     )}>
-                      <span className="truncate max-w-[150px]">
+                      <span className="text-[11px] text-ink-soft truncate max-w-30">
                         {formData.taxStatusPdfUrl ? "Archivo cargado" : "Elegir archivo..."}
                       </span>
-                      <Upload className="w-4 h-4 text-brand-accent/50" />
+                      <Upload className="w-3.5 h-3.5 text-ink-soft shrink-0" />
                     </div>
                   </div>
                   {formData.taxStatusPdfUrl && (
-                    <Button variant="outline" size="sm" asChild className="rounded-xl h-11 w-11 p-0 border-brand/20 text-brand hover:bg-brand/5">
-                      <a href={formData.taxStatusPdfUrl} target="_blank" rel="noopener noreferrer">
-                        <FileText className="w-5 h-5" />
-                      </a>
-                    </Button>
+                    <a
+                      href={formData.taxStatusPdfUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center w-9 h-9 rounded-sm border border-line bg-white text-brand hover:bg-brand hover:text-white hover:border-brand transition-colors shrink-0"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                    </a>
                   )}
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Personal Info Section */}
-          <Card className="rounded-[2.5rem] border border-brand/10 bg-white/80 backdrop-blur-md p-8 shadow-xl shadow-brand/5">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
-              <span className="w-6 h-px bg-brand/20" /> Información General del Propietario
-            </h2>
-
-            <div className="grid gap-6 sm:grid-cols-3">
+          {/* Información personal */}
+          <div className={sectionCls}>
+            <div className={sectionHeaderCls}>
+              <p className={sectionTitleCls}>Información del propietario</p>
+            </div>
+            <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-3 gap-4`}>
               <Input label="Nombre" value={formData.firstName} onChange={(e) => handleChange("firstName", e.target.value)} />
               <Input label="Apellido Paterno" value={formData.lastNamePaterno} onChange={(e) => handleChange("lastNamePaterno", e.target.value)} />
               <Input label="Apellido Materno" value={formData.lastNameMaterno} onChange={(e) => handleChange("lastNameMaterno", e.target.value)} />
@@ -280,15 +284,14 @@ export function DirectoryForm({
                 <Input label="Dirección" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} />
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Billing Info Section */}
-          <Card className="rounded-[2.5rem] border border-brand/10 bg-white/80 backdrop-blur-md p-8 shadow-xl shadow-brand/5">
-            <h2 className="text-[11px] font-bold uppercase tracking-[0.25em] text-ink-soft/40 mb-8 flex items-center gap-2">
-              <span className="w-6 h-px bg-brand/20" /> Información de Facturación
-            </h2>
-
-            <div className="grid gap-6 sm:grid-cols-2">
+          {/* Información de facturación */}
+          <div className={sectionCls}>
+            <div className={sectionHeaderCls}>
+              <p className={sectionTitleCls}>Información de facturación</p>
+            </div>
+            <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-4`}>
               <Input label="Nombre Comercial" value={formData.commercialName} onChange={(e) => handleChange("commercialName", e.target.value)} />
               <Input label="Razón Social" value={formData.businessName} onChange={(e) => handleChange("businessName", e.target.value)} />
               <Input label="RFC" value={formData.rfc} onChange={(e) => handleChange("rfc", e.target.value)} />
@@ -298,177 +301,125 @@ export function DirectoryForm({
                 <Input label="Dirección Fiscal" value={formData.taxAddress} onChange={(e) => handleChange("taxAddress", e.target.value)} />
               </div>
             </div>
-          </Card>
+          </div>
 
-          {/* Bottom Feedback */}
-          {message && (
-            <div className={cn(
-              "flex items-center gap-3 p-4 rounded-2xl animate-in fade-in zoom-in-95 duration-300",
-              message.type === "success" ? "bg-brand-mint/30 text-brand border border-brand-mint/50" : "bg-danger/5 text-danger border border-danger/10"
-            )}>
-              {message.type === "success" ? <Check className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-              <span className="text-[13px] font-semibold tracking-tight">{message.text}</span>
-            </div>
-          )}
         </div>
 
-        {/* Sidebar Info */}
-        <div className="space-y-8">
-           {/* System Access Card */}
-           <Card className="rounded-[2.5rem] border border-brand-deep/10 bg-brand-deep p-8 text-white shadow-2xl shadow-brand-deep/20">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/40 mb-6 flex items-center gap-2">
-                <span className="w-4 h-px bg-white/20" /> Acceso al Sistema
-              </h3>
-              
-              <div className="space-y-8">
-                <div className="space-y-1">
-                  <p className="text-[10px] uppercase tracking-widest text-white/30">Usuario</p>
-                  <p className="text-[15px] font-medium truncate">{formData.personalEmail || initialData.email || "N/D"}</p>
+        {/* Right sidebar */}
+        <div className="space-y-4">
+
+          {/* Acceso al sistema */}
+          <div className="overflow-hidden rounded-card border border-brand-deep bg-brand-deep shadow-sm">
+            <div className="px-4 py-3 border-b border-white/10">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-white">Acceso al sistema</p>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="space-y-1">
+                <p className="text-[9px] uppercase tracking-widest text-white/40">Usuario</p>
+                <p className="text-[12px] font-medium text-white truncate">{formData.personalEmail || initialData.email || "N/D"}</p>
+              </div>
+              <div className="space-y-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 leading-none">Nueva Contraseña</label>
+                  <input type="password" className="h-9 w-full rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" />
                 </div>
-                
-                <div className="space-y-8">
-                  <div className="bg-brand-deep rounded-md pt-2">
-                    <Input 
-                      type="password" 
-                      label="Nueva Contraseña" 
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 focus:ring-white/10" 
-                    />
-                  </div>
-                  <div className="bg-brand-deep rounded-md pt-2">
-                    <Input 
-                      type="password" 
-                      label="Confirmar Contraseña" 
-                      className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-white/30 focus:ring-white/10" 
-                    />
-                  </div>
-                </div>
-                
-                <div className="pt-2">
-                  <button className="text-[11px] font-bold uppercase tracking-widest text-brand-mint hover:text-white transition-colors">
-                    Generar Contraseña
-                  </button>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 leading-none">Confirmar Contraseña</label>
+                  <input type="password" className="h-9 w-full rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" />
                 </div>
               </div>
-           </Card>
+              <button className="text-[10px] font-bold uppercase tracking-widest text-brand-mint hover:text-white transition-colors">
+                Generar contraseña
+              </button>
+            </div>
+          </div>
 
-           {/* Participation Summary */}
-           <Card className="rounded-[2.5rem] border border-brand/10 bg-white/60 backdrop-blur-sm p-8 shadow-lg shadow-brand/5">
-              <h3 className="text-[10px] font-bold uppercase tracking-[0.25em] text-ink-soft/40 mb-6 flex items-center gap-2">
-                <span className="w-4 h-px bg-brand/20" /> Participación
-              </h3>
-              
-              <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-canvas/50 flex justify-between items-end">
-                   <div>
-                     <p className="text-[10px] uppercase text-ink-soft/50 mb-1">Áreas Vinculadas</p>
-                     <p className="text-3xl font-bold text-brand">{initialData.assignments.length}</p>
-                   </div>
-                   <Users className="w-6 h-6 text-brand/20" />
-                </div>
-                
-                <div className="p-4 rounded-2xl bg-brand-mint/20 border border-brand-mint/30 flex justify-between items-end">
-                   <div>
-                     <p className="text-[10px] uppercase text-brand/60 mb-1">Indiviso Total</p>
-                     <p className="text-3xl font-bold text-brand">
-                       {initialData.participationBlocks.find(b => b.title === "Dominio actual")?.totalPercentage.toFixed(4) || "0.00"}%
-                     </p>
-                   </div>
-                   <Building2 className="w-6 h-6 text-brand/20" />
-                </div>
+          {/* Participación */}
+          <div className={sectionCls}>
+            <div className={sectionHeaderCls}>
+              <p className={sectionTitleCls}>Participación</p>
+            </div>
+            <div className={`${sectionBodyCls} grid grid-cols-2 gap-3`}>
+              <div className="p-3 rounded-sm bg-canvas border border-line space-y-1">
+                <p className="text-[9px] uppercase tracking-widest text-ink-soft">Áreas</p>
+                <p className="text-2xl font-bold text-brand">{initialData.assignments.length}</p>
+                <Users className="w-4 h-4 text-brand/20" />
               </div>
-           </Card>
+              <div className="p-3 rounded-sm bg-brand-mint/20 border border-brand-mint/30 space-y-1">
+                <p className="text-[9px] uppercase tracking-widest text-brand/60">Indiviso</p>
+                <p className="text-2xl font-bold text-brand">{indiviso}%</p>
+                <Building2 className="w-4 h-4 text-brand/20" />
+              </div>
+            </div>
+          </div>
 
-           {/* Quick Actions */}
-           <div className="grid gap-3">
-              <button className="w-full h-14 rounded-[1.25rem] border border-brand/10 bg-white px-6 flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 transition-standard active-scale group">
-                <span>Agregar ficha de contacto</span>
-                <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" />
-              </button>
-              <button className="w-full h-14 rounded-[1.25rem] border border-brand/10 bg-white px-6 flex items-center justify-between text-[11px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 transition-standard active-scale group">
-                <span>Agregar comercio</span>
-                <Building2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              </button>
-           </div>
+          {/* Acciones rápidas */}
+          <div className="space-y-2">
+            <button className="w-full flex items-center justify-between h-10 px-4 rounded-card border border-line bg-white text-[10px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 transition-colors group">
+              <span>Agregar ficha de contacto</span>
+              <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" />
+            </button>
+            <button className="w-full flex items-center justify-between h-10 px-4 rounded-card border border-line bg-white text-[10px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 transition-colors group">
+              <span>Agregar comercio</span>
+              <Building2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+            </button>
+          </div>
+
         </div>
       </div>
 
-      {/* Participation Tables Section */}
-      <section className="space-y-12 pt-12 pb-20">
-        <div className="flex flex-col items-center text-center space-y-2">
-          <h2 className="text-xl md:text-2xl font-semibold text-brand">
-            ¿Dónde y cómo participa este contacto dentro del sistema?
-          </h2>
-          <div className="w-20 h-1 bg-brand-accent/20 rounded-full" />
-        </div>
-
-        <div className="grid gap-12">
+      {/* Participation Tables */}
+      {initialData.participationBlocks.length > 0 && (
+        <div className="space-y-4 pt-4">
+          <div className="pb-3 border-b border-brand">
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">Participación en el condominio</h2>
+          </div>
           {initialData.participationBlocks.map((block) => (
-            <div key={block.title} className="space-y-4">
-              <h3 className="text-[12px] font-bold uppercase tracking-[0.3em] text-brand/60 text-center">{block.title}</h3>
-              <Card className="rounded-3xl border border-brand/10 bg-white/70 backdrop-blur-sm overflow-hidden shadow-xl shadow-brand/5">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-brand-mint/10 text-[10px] font-bold uppercase tracking-[0.15em] text-brand">
-                        <th className="px-8 py-4 border-b border-brand/5">Tipo de entidad</th>
-                        <th className="px-8 py-4 border-b border-brand/5">Areas Privativas</th>
-                        <th className="px-8 py-4 border-b border-brand/5 text-right">Porcentaje</th>
-                        <th className="px-8 py-4 border-b border-brand/5 text-center">Comercios</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-brand/5">
-                      {/* Total Row */}
-                      <tr className="bg-brand-mint/5 font-bold">
-                        <td className="px-8 py-4 text-[11px] uppercase tracking-wider text-brand">TOTAL</td>
-                        <td className="px-8 py-4 text-[13px] text-brand">{block.totalAreas}</td>
-                        <td className="px-8 py-4 text-right font-mono text-[13px] text-brand-accent">
-                          {block.totalPercentage.toFixed(4)}%
+            <div key={block.title} className={sectionCls}>
+              <div className={sectionHeaderCls}>
+                <p className={sectionTitleCls}>{block.title}</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-canvas border-b border-line">
+                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Tipo de entidad</th>
+                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Área privativa</th>
+                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-right">Porcentaje</th>
+                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-center">Comercios</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    <tr className="bg-brand-mint/10 font-bold">
+                      <td className="px-4 py-2 text-[10px] uppercase tracking-wider text-brand">TOTAL</td>
+                      <td className="px-4 py-2 text-[12px] text-brand">{block.totalAreas}</td>
+                      <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{block.totalPercentage.toFixed(4)}%</td>
+                      <td className="px-4 py-2 text-center text-[10px] text-ink-soft">0</td>
+                    </tr>
+                    {block.rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-ink-soft text-[11px]">
+                          Sin registros de participación en este bloque.
                         </td>
-                        <td className="px-8 py-4 text-center text-[11px] text-ink-soft/40">0</td>
                       </tr>
-                      {/* Data Rows */}
-                      {block.rows.length === 0 ? (
-                        <tr>
-                          <td colSpan={4} className="px-8 py-12 text-center text-ink-soft/40 italic text-sm">
-                            Sin registros de participación en este bloque.
-                          </td>
+                    ) : (
+                      block.rows.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-canvas/50 transition-colors">
+                          <td className="px-4 py-2 text-[11px] text-ink-soft">{row.entityType}</td>
+                          <td className="px-4 py-2 text-[12px] font-medium text-ink">{row.privateAreaName}</td>
+                          <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{row.percentage.toFixed(4)}%</td>
+                          <td className="px-4 py-2 text-center text-[10px] text-ink-soft">No</td>
                         </tr>
-                      ) : (
-                        block.rows.map((row, idx) => (
-                          <tr key={idx} className="group hover:bg-brand-mint/5 transition-colors">
-                            <td className="px-8 py-4 text-[12px] text-ink-soft/60">{row.entityType}</td>
-                            <td className="px-8 py-4 text-[13px] font-medium text-brand">{row.privateAreaName}</td>
-                            <td className="px-8 py-4 text-right font-mono text-[13px] font-medium text-brand-accent/80">
-                              {row.percentage.toFixed(4)}%
-                            </td>
-                            <td className="px-8 py-4 text-center">
-                              <span className="text-[11px] font-medium text-ink-soft/30">No</span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </Card>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ))}
         </div>
-      </section>
+      )}
 
-      {/* Invitados Especiales (Placeholder for now as per prev context) */}
-      <Card className="rounded-[2.5rem] border border-dashed border-brand/20 bg-transparent p-12 text-center">
-         <div className="mx-auto w-16 h-16 rounded-full bg-brand/5 flex items-center justify-center mb-4">
-            <Users className="w-8 h-8 text-brand/20" />
-         </div>
-         <h3 className="text-sm font-bold text-brand uppercase tracking-widest mb-2">Invitados Especiales</h3>
-         <p className="text-[12px] text-ink-soft/50 max-w-sm mx-auto mb-6">
-           Administra las personas externas vinculadas a este expediente maestro. Próximamente disponible.
-         </p>
-         <Button variant="outline" className="rounded-full border-brand/20 text-brand hover:bg-brand/5">
-           <Plus className="w-4 h-4 mr-2" /> Agregar Invitado
-         </Button>
-      </Card>
     </div>
   );
 }
