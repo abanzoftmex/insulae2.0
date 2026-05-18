@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { AlertCircle, Receipt, Wallet } from "lucide-react";
 
 import { getPrivateAreaActionPageDataUseCase } from "@/modules/private-area-actions";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/ui/stat-card";
 
 import { PrivateAreaActionShell } from "../_components/private-area-action-shell";
 import {
@@ -28,19 +33,18 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
   if (!resolvedReference) {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-6 py-20">
-        <div className="rounded-3xl border border-[#cdb39a]/50 bg-[#fff8ef] p-8 text-center shadow-[0_16px_34px_rgba(43,28,20,0.12)]">
-          <p className="text-sm uppercase tracking-[0.16em] text-[#8f6247]">Listado pagos</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#2d2018]">ID invalido</h1>
-          <p className="mt-3 text-sm text-[#604f42]">
-            Para abrir esta pantalla necesitas enviar un identificador valido.
+        <Card className="w-full max-w-sm text-center border-transparent shadow-layered p-8">
+          <Badge variant="brand" className="w-fit mx-auto rounded-full px-4 py-2 text-[10px] tracking-widest mb-4">
+            Listado de Pagos
+          </Badge>
+          <h1 className="text-2xl font-bold text-ink tracking-tighter uppercase">ID inválido</h1>
+          <p className="mt-3 text-[12px] text-ink-soft">
+            Para abrir esta pantalla necesitas enviar un identificador válido.
           </p>
-          <Link
-            href="/areas-privativas"
-            className="mt-5 inline-flex rounded-full border border-[#2b211d]/25 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#2b211d] transition hover:border-[#2b211d] hover:bg-[#2b211d] hover:text-[#fff7ec]"
-          >
-            Volver a Areas Privativas
-          </Link>
-        </div>
+          <Button variant="dark" size="sm" asChild className="mt-6">
+            <Link href="/areas-privativas">Volver a Áreas Privativas</Link>
+          </Button>
+        </Card>
       </main>
     );
   }
@@ -53,19 +57,18 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
   if (!pageData) {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-6 py-20">
-        <div className="rounded-3xl border border-[#cdb39a]/50 bg-[#fff8ef] p-8 text-center shadow-[0_16px_34px_rgba(43,28,20,0.12)]">
-          <p className="text-sm uppercase tracking-[0.16em] text-[#8f6247]">Listado pagos</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#2d2018]">Area no encontrada</h1>
-          <p className="mt-3 text-sm text-[#604f42]">
-            No encontramos una Area Privativa con ese identificador.
+        <Card className="w-full max-w-sm text-center border-transparent shadow-layered p-8">
+          <Badge variant="brand" className="w-fit mx-auto rounded-full px-4 py-2 text-[10px] tracking-widest mb-4">
+            Listado de Pagos
+          </Badge>
+          <h1 className="text-2xl font-bold text-ink tracking-tighter uppercase">Área no encontrada</h1>
+          <p className="mt-3 text-[12px] text-ink-soft">
+            No encontramos un Área Privativa con ese identificador.
           </p>
-          <Link
-            href="/areas-privativas"
-            className="mt-5 inline-flex rounded-full border border-[#2b211d]/25 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#2b211d] transition hover:border-[#2b211d] hover:bg-[#2b211d] hover:text-[#fff7ec]"
-          >
-            Volver a Areas Privativas
-          </Link>
-        </div>
+          <Button variant="dark" size="sm" asChild className="mt-6">
+            <Link href="/areas-privativas">Volver a Áreas Privativas</Link>
+          </Button>
+        </Card>
       </main>
     );
   }
@@ -86,137 +89,148 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
     0,
   );
 
-  const tabClasses = (isActive: boolean) =>
-    isActive
-      ? "rounded-full border border-[#7f4e34] bg-[#7f4e34] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#fff8ef]"
-      : "rounded-full border border-[#7f4e34]/35 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#6b442f] transition hover:bg-[#f6ebdf]";
+  const isComercio = opc === "1";
 
   return (
     <PrivateAreaActionShell
       area={area}
-      title={opc === "1" ? "Listado de Pagos - Comercio" : "Listado de Pagos - Propietario"}
-      subtitle="Consolidado de cargos y pagos sobre el area privada, con navegacion interna y filtros por contexto legacy opc."
-      activePage={opc === "1" ? "listado-pagos-comercio" : "listado-pagos-propietario"}
+      title={isComercio ? "Pagos · Comercio" : "Pagos · Propietario"}
+      subtitle="Consolidado de cargos y pagos sobre el área privativa, con navegación por contexto legacy opc."
+      activePage={isComercio ? "listado-pagos-comercio" : "listado-pagos-propietario"}
     >
-      <section className="rounded-3xl border border-[#bea993]/45 bg-[#fff9f1]/90 p-5 shadow-[0_16px_34px_rgba(35,23,16,0.1)]">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-semibold text-[#2d2018]">Filtro de contexto legacy</h2>
-            <p className="mt-1 text-sm text-[#6a594c]">
-              `opc=2` para Propietario y `opc=1` para Comercio.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
+      {/* Context switcher */}
+      <Card className="border-transparent shadow-layered">
+        <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex-row items-center justify-between gap-3">
+          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
+            Contexto de cargos
+          </CardTitle>
+          <div className="flex gap-2">
             <Link
               href={buildActionHref("listado-pagos", area.privateAreaId, "2")}
-              className={tabClasses(opc === "2")}
+              className={
+                !isComercio
+                  ? "rounded-full bg-white/20 border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white"
+                  : "rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white hover:border-white/30 transition-standard"
+              }
             >
               Propietario
             </Link>
             <Link
               href={buildActionHref("listado-pagos", area.privateAreaId, "1")}
-              className={tabClasses(opc === "1")}
+              className={
+                isComercio
+                  ? "rounded-full bg-white/20 border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white"
+                  : "rounded-full border border-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/50 hover:text-white hover:border-white/30 transition-standard"
+              }
             >
               Comercio
             </Link>
           </div>
-        </div>
+        </CardHeader>
+        {didFallbackToAllCharges && (
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 rounded bg-gold-soft border border-gold/20 px-3 py-2">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 text-gold" aria-hidden />
+              <p className="text-[11px] font-medium text-ink-soft">
+                No se detectaron cargos específicos para este contexto; se muestran todos los cargos del área.
+              </p>
+            </div>
+          </CardContent>
+        )}
+      </Card>
 
-        {didFallbackToAllCharges ? (
-          <div className="mt-3 rounded-2xl border border-[#d8c7b5] bg-[#fffdf9] px-3 py-2 text-sm text-[#6b5a4d]">
-            No se detectaron cargos especificos para este contexto; se muestran todos los cargos del area.
-          </div>
-        ) : null}
+      {/* Summary KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard accent="brand" label="Total cargado" value={formatCurrency(totalCharged)} icon={<Receipt className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Total pagado" value={formatCurrency(totalPaid)} icon={<Wallet className="h-3.5 w-3.5" />} />
+        <StatCard
+          accent={totalBalance > 0 ? "gold" : "cyan"}
+          label="Saldo"
+          value={formatCurrency(totalBalance)}
+          icon={<Receipt className="h-3.5 w-3.5" />}
+        />
+      </div>
 
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <article className="rounded-2xl border border-[#cfb8a1] bg-white p-4">
-            <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Total cargado</p>
-            <p className="mt-1 text-2xl font-semibold text-[#2f221a]">{formatCurrency(totalCharged)}</p>
-          </article>
-          <article className="rounded-2xl border border-[#cfb8a1] bg-white p-4">
-            <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Total pagado</p>
-            <p className="mt-1 text-2xl font-semibold text-[#2f221a]">{formatCurrency(totalPaid)}</p>
-          </article>
-          <article className="rounded-2xl border border-[#cfb8a1] bg-white p-4">
-            <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Saldo</p>
-            <p className="mt-1 text-2xl font-semibold text-[#2f221a]">{formatCurrency(totalBalance)}</p>
-          </article>
-        </div>
-      </section>
-
+      {/* Tables */}
       <section className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
-        <article className="rounded-3xl border border-[#bea993]/45 bg-[#fff9f1]/90 p-5 shadow-[0_16px_34px_rgba(35,23,16,0.1)]">
-          <h3 className="text-lg font-semibold text-[#2d2018]">Cargos</h3>
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-0 text-sm">
-              <thead>
-                <tr className="text-left text-[11px] uppercase tracking-[0.12em] text-[#7a553f]">
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Periodo</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Grupo</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Cargo</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Pagado</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Saldo</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Vence</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleChargeLines.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-sm text-[#6a594c]">
-                      No hay cargos registrados para esta area.
-                    </td>
+        <Card className="border-transparent shadow-layered">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Cargos</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-0 text-[12px]">
+                <thead>
+                  <tr className="bg-canvas text-left text-[10px] font-bold uppercase tracking-widest text-brand">
+                    <th className="border-b border-line px-3 py-2.5">Periodo</th>
+                    <th className="border-b border-line px-3 py-2.5">Grupo</th>
+                    <th className="border-b border-line px-3 py-2.5">Cargo</th>
+                    <th className="border-b border-line px-3 py-2.5">Pagado</th>
+                    <th className="border-b border-line px-3 py-2.5">Saldo</th>
+                    <th className="border-b border-line px-3 py-2.5">Vence</th>
                   </tr>
-                ) : (
-                  visibleChargeLines.map((charge) => (
-                    <tr key={charge.id} className="odd:bg-[#f9f4ec] even:bg-[#f5ede3]">
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">
-                        {periodLabel(charge.periodYear, charge.periodMonth)}
+                </thead>
+                <tbody>
+                  {visibleChargeLines.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="px-3 py-8 text-center text-[11px] text-ink-soft">
+                        No hay cargos registrados para esta área.
                       </td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{charge.chargeGroupName}</td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{formatCurrency(charge.amount)}</td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{formatCurrency(charge.paidAmount)}</td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{formatCurrency(charge.balanceAmount)}</td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{formatDate(charge.dueDate)}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </article>
+                  ) : (
+                    visibleChargeLines.map((charge) => (
+                      <tr key={charge.id} className="hover:bg-canvas/60 transition-colors">
+                        <td className="border-b border-line/40 px-3 py-2 font-bold tabular-nums text-ink">
+                          {periodLabel(charge.periodYear, charge.periodMonth)}
+                        </td>
+                        <td className="border-b border-line/40 px-3 py-2 text-ink-soft">{charge.chargeGroupName}</td>
+                        <td className="border-b border-line/40 px-3 py-2 font-bold tabular-nums text-ink">{formatCurrency(charge.amount)}</td>
+                        <td className="border-b border-line/40 px-3 py-2 tabular-nums text-ink-soft">{formatCurrency(charge.paidAmount)}</td>
+                        <td className="border-b border-line/40 px-3 py-2 font-bold tabular-nums text-ink">{formatCurrency(charge.balanceAmount)}</td>
+                        <td className="border-b border-line/40 px-3 py-2 text-ink-soft">{formatDate(charge.dueDate)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
 
-        <article className="rounded-3xl border border-[#bea993]/45 bg-[#fff9f1]/90 p-5 shadow-[0_16px_34px_rgba(35,23,16,0.1)]">
-          <h3 className="text-lg font-semibold text-[#2d2018]">Pagos aplicados</h3>
-          <div className="mt-4 space-y-3">
+        <Card className="border-transparent shadow-layered">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Pagos aplicados</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-2">
             {visiblePaymentMovements.length === 0 ? (
-              <div className="rounded-2xl border border-[#d8c7b5] bg-[#fffdf9] px-3 py-4 text-sm text-[#6a594c]">
+              <p className="rounded border border-dashed border-line bg-canvas px-3 py-4 text-center text-[11px] text-ink-soft">
                 No hay pagos asociados a los cargos visibles.
-              </div>
+              </p>
             ) : (
               visiblePaymentMovements.map((payment) => (
-                <article
+                <div
                   key={payment.paymentId}
-                  className="rounded-2xl border border-[#d8c7b5] bg-[#fffdf9] p-3"
+                  className="rounded bg-canvas border border-line/50 p-3 space-y-1.5"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-semibold text-[#2f221a]">{formatDate(payment.paidAt)}</p>
-                    <span className="rounded-full border border-[#d9c9b8] bg-[#fff8ef] px-2 py-0.5 text-[10px] uppercase tracking-[0.12em] text-[#8b6a52]">
+                    <p className="text-[12px] font-bold text-ink">{formatDate(payment.paidAt)}</p>
+                    <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
                       {payment.method}
-                    </span>
+                    </Badge>
                   </div>
-                  <p className="mt-1 text-xs text-[#6b5a4d]">Referencia: {payment.reference ?? "-"}</p>
-                  <p className="mt-1 text-xs text-[#6b5a4d]">Notas: {payment.notes ?? "-"}</p>
-                  <p className="mt-2 text-sm font-semibold text-[#2f221a]">
-                    Aplicado: {formatCurrency(payment.allocatedAmount)}
-                  </p>
-                  <p className="text-xs text-[#6b5a4d]">
-                    Monto pago: {formatCurrency(payment.paymentTotalAmount)}
-                  </p>
-                </article>
+                  <div className="grid grid-cols-2 gap-x-3 text-[10px] text-ink-soft">
+                    <p><span className="font-bold uppercase tracking-wider">Ref.</span> {payment.reference ?? "—"}</p>
+                    <p><span className="font-bold uppercase tracking-wider">Notas</span> {payment.notes ?? "—"}</p>
+                  </div>
+                  <div className="flex items-center justify-between pt-1 border-t border-line/40">
+                    <p className="text-[10px] text-ink-soft">Monto pago: <span className="font-bold text-ink">{formatCurrency(payment.paymentTotalAmount)}</span></p>
+                    <p className="text-[10px] text-ink-soft">Aplicado: <span className="font-bold text-brand">{formatCurrency(payment.allocatedAmount)}</span></p>
+                  </div>
+                </div>
               ))
             )}
-          </div>
-        </article>
+          </CardContent>
+        </Card>
       </section>
     </PrivateAreaActionShell>
   );

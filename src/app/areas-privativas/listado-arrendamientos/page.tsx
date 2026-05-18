@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { KeyRound } from "lucide-react";
 
 import { getPrivateAreaActionPageDataUseCase } from "@/modules/private-area-actions";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { StatCard } from "@/components/ui/stat-card";
 
 import { createPrivateAreaRentalAction } from "../actions";
 import { PrivateAreaActionShell } from "../_components/private-area-action-shell";
@@ -37,19 +43,18 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
   if (!resolvedReference) {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-6 py-20">
-        <div className="rounded-3xl border border-[#cdb39a]/50 bg-[#fff8ef] p-8 text-center shadow-[0_16px_34px_rgba(43,28,20,0.12)]">
-          <p className="text-sm uppercase tracking-[0.16em] text-[#8f6247]">Arrendamientos</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#2d2018]">ID invalido</h1>
-          <p className="mt-3 text-sm text-[#604f42]">
-            Para abrir esta pantalla necesitas enviar un identificador valido.
+        <Card className="w-full max-w-sm text-center border-transparent shadow-layered p-8">
+          <Badge variant="brand" className="w-fit mx-auto rounded-full px-4 py-2 text-[10px] tracking-widest mb-4">
+            Arrendamientos
+          </Badge>
+          <h1 className="text-2xl font-bold text-ink tracking-tighter uppercase">ID inválido</h1>
+          <p className="mt-3 text-[12px] text-ink-soft">
+            Para abrir esta pantalla necesitas enviar un identificador válido.
           </p>
-          <Link
-            href="/areas-privativas"
-            className="mt-5 inline-flex rounded-full border border-[#2b211d]/25 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#2b211d] transition hover:border-[#2b211d] hover:bg-[#2b211d] hover:text-[#fff7ec]"
-          >
-            Volver a Areas Privativas
-          </Link>
-        </div>
+          <Button variant="dark" size="sm" asChild className="mt-6">
+            <Link href="/areas-privativas">Volver a Áreas Privativas</Link>
+          </Button>
+        </Card>
       </main>
     );
   }
@@ -62,19 +67,18 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
   if (!pageData) {
     return (
       <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-6 py-20">
-        <div className="rounded-3xl border border-[#cdb39a]/50 bg-[#fff8ef] p-8 text-center shadow-[0_16px_34px_rgba(43,28,20,0.12)]">
-          <p className="text-sm uppercase tracking-[0.16em] text-[#8f6247]">Arrendamientos</p>
-          <h1 className="mt-2 text-3xl font-semibold text-[#2d2018]">Area no encontrada</h1>
-          <p className="mt-3 text-sm text-[#604f42]">
-            No encontramos una Area Privativa con ese identificador.
+        <Card className="w-full max-w-sm text-center border-transparent shadow-layered p-8">
+          <Badge variant="brand" className="w-fit mx-auto rounded-full px-4 py-2 text-[10px] tracking-widest mb-4">
+            Arrendamientos
+          </Badge>
+          <h1 className="text-2xl font-bold text-ink tracking-tighter uppercase">Área no encontrada</h1>
+          <p className="mt-3 text-[12px] text-ink-soft">
+            No encontramos un Área Privativa con ese identificador.
           </p>
-          <Link
-            href="/areas-privativas"
-            className="mt-5 inline-flex rounded-full border border-[#2b211d]/25 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#2b211d] transition hover:border-[#2b211d] hover:bg-[#2b211d] hover:text-[#fff7ec]"
-          >
-            Volver a Areas Privativas
-          </Link>
-        </div>
+          <Button variant="dark" size="sm" asChild className="mt-6">
+            <Link href="/areas-privativas">Volver a Áreas Privativas</Link>
+          </Button>
+        </Card>
       </main>
     );
   }
@@ -85,135 +89,125 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
   const activeRentals = area.rentals.filter((rental) =>
     isRentalActive(rental.startsAt, rental.endsAt, now),
   );
+  const finishedCount = Math.max(0, area.rentals.length - activeRentals.length);
 
   return (
     <PrivateAreaActionShell
       area={area}
-      title="Listado de Arrendamientos"
-      subtitle="Modulo operativo de arrendamientos para AP/FAP con estructura preparada para evolucion de contratos y contactos."
+      title="Arrendamientos"
+      subtitle="Módulo operativo de arrendamientos para AP/FAP. Contratos y contactos preparados para evolución."
       activePage="listado-arrendamientos"
     >
+      {/* KPI strip */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard accent="brand" label="Total" value={area.rentals.length} icon={<KeyRound className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Activos" value={activeRentals.length} icon={<KeyRound className="h-3.5 w-3.5" />} />
+        <StatCard accent={finishedCount > 0 ? "gold" : "cyan"} label="Finalizados" value={finishedCount} icon={<KeyRound className="h-3.5 w-3.5" />} />
+      </div>
+
       <section className="grid gap-4 xl:grid-cols-[1.1fr_1fr]">
-        <article className="rounded-3xl border border-[#bea993]/45 bg-[#fff9f1]/90 p-5 shadow-[0_16px_34px_rgba(35,23,16,0.1)]">
-          <h2 className="text-lg font-semibold text-[#2d2018]">Arrendamientos registrados</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <article className="rounded-2xl border border-[#cfb8a1] bg-white p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Total</p>
-              <p className="mt-1 text-2xl font-semibold text-[#2f221a]">{area.rentals.length}</p>
-            </article>
-            <article className="rounded-2xl border border-[#cfb8a1] bg-white p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Activos</p>
-              <p className="mt-1 text-2xl font-semibold text-[#2f221a]">{activeRentals.length}</p>
-            </article>
-            <article className="rounded-2xl border border-[#cfb8a1] bg-white p-4">
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Finalizados</p>
-              <p className="mt-1 text-2xl font-semibold text-[#2f221a]">
-                {Math.max(0, area.rentals.length - activeRentals.length)}
-              </p>
-            </article>
-          </div>
-
-          <div className="mt-4 overflow-x-auto">
-            <table className="min-w-full border-separate border-spacing-0 text-sm">
-              <thead>
-                <tr className="text-left text-[11px] uppercase tracking-[0.12em] text-[#7a553f]">
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Arrendatario</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Estatus</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Inicio</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Fin</th>
-                  <th className="border-b border-[#d7c7b5] px-3 py-2">Notas</th>
-                </tr>
-              </thead>
-              <tbody>
-                {area.rentals.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-3 py-8 text-center text-sm text-[#6a594c]">
-                      No hay arrendamientos cargados para esta area.
-                    </td>
+        {/* Rental list */}
+        <Card className="border-transparent shadow-layered">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
+              Arrendamientos registrados
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="min-w-full border-separate border-spacing-0 text-[12px]">
+                <thead>
+                  <tr className="bg-canvas text-left text-[10px] font-bold uppercase tracking-widest text-brand">
+                    <th className="border-b border-line px-3 py-2.5">Arrendatario</th>
+                    <th className="border-b border-line px-3 py-2.5">Estatus</th>
+                    <th className="border-b border-line px-3 py-2.5">Inicio</th>
+                    <th className="border-b border-line px-3 py-2.5">Fin</th>
+                    <th className="border-b border-line px-3 py-2.5">Notas</th>
                   </tr>
-                ) : (
-                  area.rentals.map((rental) => (
-                    <tr key={rental.id} className="odd:bg-[#f9f4ec] even:bg-[#f5ede3]">
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">
-                        {rental.tenantName ?? "Sin arrendatario"}
+                </thead>
+                <tbody>
+                  {area.rentals.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-3 py-8 text-center text-[11px] text-ink-soft">
+                        No hay arrendamientos cargados para esta área.
                       </td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{rental.status ?? "-"}</td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{formatDate(rental.startsAt)}</td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{formatDate(rental.endsAt)}</td>
-                      <td className="border-b border-[#e0d2c2] px-3 py-2">{rental.notes ?? "-"}</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </article>
-
-        <article className="rounded-3xl border border-[#bea993]/45 bg-[#fff9f1]/90 p-5 shadow-[0_16px_34px_rgba(35,23,16,0.1)]">
-          <h3 className="text-lg font-semibold text-[#2d2018]">Nuevo arrendamiento</h3>
-          <p className="mt-1 text-sm text-[#6a594c]">
-            Alta rapida para registrar movimientos operativos de la unidad.
-          </p>
-
-          <form action={createPrivateAreaRentalAction} className="mt-4 space-y-3">
-            <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
-
-            <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-[#785741]">
-              Arrendatario
-              <input
-                type="text"
-                name="tenantName"
-                required
-                className="mt-1 w-full rounded-lg border border-[#ccb7a3] bg-white px-3 py-2 text-sm text-[#2d241f]"
-              />
-            </label>
-
-            <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-[#785741]">
-              Estatus
-              <input
-                type="text"
-                name="status"
-                placeholder="Activo"
-                className="mt-1 w-full rounded-lg border border-[#ccb7a3] bg-white px-3 py-2 text-sm text-[#2d241f]"
-              />
-            </label>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="text-xs font-semibold uppercase tracking-[0.12em] text-[#785741]">
-                Inicio
-                <input
-                  type="date"
-                  name="startsAt"
-                  className="mt-1 w-full rounded-lg border border-[#ccb7a3] bg-white px-3 py-2 text-sm text-[#2d241f]"
-                />
-              </label>
-              <label className="text-xs font-semibold uppercase tracking-[0.12em] text-[#785741]">
-                Fin
-                <input
-                  type="date"
-                  name="endsAt"
-                  className="mt-1 w-full rounded-lg border border-[#ccb7a3] bg-white px-3 py-2 text-sm text-[#2d241f]"
-                />
-              </label>
+                  ) : (
+                    area.rentals.map((rental) => {
+                      const active = isRentalActive(rental.startsAt, rental.endsAt, now);
+                      return (
+                        <tr key={rental.id} className="hover:bg-canvas/60 transition-colors">
+                          <td className="border-b border-line/40 px-3 py-2 font-bold text-ink">
+                            {rental.tenantName ?? "Sin arrendatario"}
+                          </td>
+                          <td className="border-b border-line/40 px-3 py-2">
+                            <Badge
+                              variant={active ? "success" : "outline"}
+                              className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest"
+                            >
+                              {rental.status ?? "—"}
+                            </Badge>
+                          </td>
+                          <td className="border-b border-line/40 px-3 py-2 text-ink-soft tabular-nums">
+                            {formatDate(rental.startsAt)}
+                          </td>
+                          <td className="border-b border-line/40 px-3 py-2 text-ink-soft tabular-nums">
+                            {formatDate(rental.endsAt)}
+                          </td>
+                          <td className="border-b border-line/40 px-3 py-2 text-ink-soft">
+                            {rental.notes ?? "—"}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
+          </CardContent>
+        </Card>
 
-            <label className="block text-xs font-semibold uppercase tracking-[0.12em] text-[#785741]">
-              Notas
-              <textarea
-                name="notes"
-                rows={4}
-                className="mt-1 w-full rounded-lg border border-[#ccb7a3] bg-white px-3 py-2 text-sm text-[#2d241f]"
-              />
-            </label>
+        {/* New rental form */}
+        <Card className="border-transparent shadow-layered">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
+              Nuevo arrendamiento
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3">
+            <p className="text-[11px] text-ink-soft">
+              Alta rápida para registrar movimientos operativos de la unidad.
+            </p>
 
-            <button
-              type="submit"
-              className="w-full rounded-xl border border-[#5b6b45] bg-[#5b6b45] px-3 py-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#f3f8e8] transition hover:brightness-110"
-            >
-              Guardar arrendamiento
-            </button>
-          </form>
-        </article>
+            <form action={createPrivateAreaRentalAction} className="space-y-3">
+              <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
+
+              <Input label="Arrendatario" type="text" name="tenantName" required />
+
+              <Input label="Estatus" type="text" name="status" placeholder="Activo" />
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Input label="Inicio" type="date" name="startsAt" />
+                <Input label="Fin" type="date" name="endsAt" />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">
+                  Notas
+                </label>
+                <textarea
+                  name="notes"
+                  rows={4}
+                  className="w-full rounded-md border border-line bg-card px-3 py-2 text-[13px] font-medium text-ink transition-standard resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent"
+                />
+              </div>
+
+              <Button type="submit" variant="dark" size="md" className="w-full font-bold uppercase tracking-widest text-[11px]">
+                Guardar arrendamiento
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </section>
     </PrivateAreaActionShell>
   );

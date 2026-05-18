@@ -2,6 +2,16 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import type { PrivateAreaActionPageData } from "@/modules/private-area-actions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PageBackBadge } from "@/components/ui/page-back-badge";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  MapPin,
+  Layers,
+  Activity,
+  Ruler,
+} from "lucide-react";
 
 import {
   buildActionHref,
@@ -22,13 +32,13 @@ interface PrivateAreaActionShellProps {
   children: ReactNode;
 }
 
-function actionLinkClass(isActive: boolean): string {
-  if (isActive) {
-    return "rounded-full border border-[#7f4e34] bg-[#7f4e34] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#fff8ef]";
-  }
-
-  return "rounded-full border border-[#7f4e34]/35 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#6b442f] transition hover:bg-[#f6ebdf]";
-}
+const NAV_TABS = [
+  { key: "formulario-apol" as const, label: "Formulario AP" },
+  { key: "formulario-apol-imagenes" as const, label: "Imágenes AP" },
+  { key: "listado-pagos-propietario" as const, label: "Pagos Propietario", opc: "2" },
+  { key: "listado-pagos-comercio" as const, label: "Pagos Comercio", opc: "1" },
+  { key: "listado-arrendamientos" as const, label: "Arrendamientos" },
+] as const;
 
 export function PrivateAreaActionShell({
   area,
@@ -40,86 +50,82 @@ export function PrivateAreaActionShell({
   const privateAreaId = area.privateAreaId;
 
   return (
-    <main className="min-h-screen bg-[#f2ece4] px-5 pb-12 pt-8 sm:px-8 lg:px-12">
-      <section className="mx-auto flex w-full max-w-[1200px] flex-col gap-6">
-        <header className="rounded-[2rem] border border-[#bfaa93]/45 bg-[#fff7eb]/90 p-6 shadow-[0_18px_45px_rgba(43,27,17,0.12)] sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.16em] text-[#7a553f]">
-                Areas privativas · Acciones
-              </p>
-              <h1 className="mt-2 text-3xl font-semibold text-[#2f221a] sm:text-4xl">
-                {title}
-              </h1>
-              <p className="mt-2 text-sm text-[#5f4f44]">{subtitle}</p>
-            </div>
-            <Link
-              href="/areas-privativas"
-              className="rounded-full border border-[#2b211d]/25 px-4 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#2b211d] transition hover:border-[#2b211d] hover:bg-[#2b211d] hover:text-[#fff7ec]"
-            >
-              Volver a tabla
-            </Link>
+    <div className="space-y-5 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
+              {title}
+            </h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">
+              Áreas Privativas · Acciones
+            </Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {subtitle}
+            </p>
           </div>
+        </div>
 
-          <div className="mt-4 grid gap-3 rounded-2xl border border-[#d8c7b5] bg-white/75 p-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Area</p>
-              <p className="mt-1 text-lg font-semibold text-[#2f221a]">{area.name}</p>
-              <p className="text-xs text-[#6b5849]">ID canonico: {privateAreaId}</p>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Zona</p>
-              <p className="mt-1 text-sm font-semibold text-[#2f221a]">{area.zone ?? "Sin zona"}</p>
-              <p className="text-xs text-[#6b5849]">Uso: {area.useType ?? "Sin uso"}</p>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">Estatus</p>
-              <p className="mt-1 text-sm font-semibold text-[#2f221a]">{statusLabel(area.isActive)}</p>
-              <p className="text-xs text-[#6b5849]">Estado de dominio: {area.businessStatusLabel}</p>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-[#8a6247]">M2 actualizado</p>
-              <p className="mt-1 text-sm font-semibold text-[#2f221a]">{formatNumber(area.m2Apole, 4)}</p>
-              <p className="text-xs text-[#6b5849]">Codigo: {area.code ?? "-"}</p>
-            </div>
-          </div>
+        <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25 shrink-0">
+          <Link href="/areas-privativas">
+            <Layers className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            Volver a tabla
+          </Link>
+        </Button>
+      </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
-            <Link
-              href={buildActionHref("formulario-apol", privateAreaId)}
-              className={actionLinkClass(activePage === "formulario-apol")}
-            >
-              Formulario AP
-            </Link>
-            <Link
-              href={buildActionHref("formulario-apol-imagenes", privateAreaId)}
-              className={actionLinkClass(activePage === "formulario-apol-imagenes")}
-            >
-              Imagenes AP
-            </Link>
-            <Link
-              href={buildActionHref("listado-pagos", privateAreaId, "2")}
-              className={actionLinkClass(activePage === "listado-pagos-propietario")}
-            >
-              Pagos Propietario
-            </Link>
-            <Link
-              href={buildActionHref("listado-pagos", privateAreaId, "1")}
-              className={actionLinkClass(activePage === "listado-pagos-comercio")}
-            >
-              Pagos Comercio
-            </Link>
-            <Link
-              href={buildActionHref("listado-arrendamientos", privateAreaId)}
-              className={actionLinkClass(activePage === "listado-arrendamientos")}
-            >
-              Arrendamientos
-            </Link>
-          </div>
-        </header>
+      {/* Area KPI strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: "Área", value: area.name, sub: `ID: ${privateAreaId}`, icon: <Layers className="h-3.5 w-3.5" /> },
+          { label: "Zona", value: area.zone ?? "Sin zona", sub: `Uso: ${area.useType ?? "—"}`, icon: <MapPin className="h-3.5 w-3.5" /> },
+          { label: "Estatus", value: statusLabel(area.isActive), sub: area.businessStatusLabel, icon: <Activity className="h-3.5 w-3.5" /> },
+          { label: "M2 actualizado", value: `${formatNumber(area.m2Apole, 4)} m²`, sub: `Código: ${area.code ?? "—"}`, icon: <Ruler className="h-3.5 w-3.5" /> },
+        ].map((item) => (
+          <Card key={item.label} className="border-transparent shadow-layered">
+            <CardContent className="p-3">
+              <div className="flex items-center justify-between mb-1.5">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/70">{item.label}</p>
+                <span className="text-brand/60">{item.icon}</span>
+              </div>
+              <p className="text-[13px] font-bold text-ink truncate">{item.value}</p>
+              <p className="text-[10px] text-ink-soft/70 mt-0.5 truncate">{item.sub}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-        {children}
-      </section>
-    </main>
+      {/* Sub-navigation tabs */}
+      <div className="flex flex-wrap gap-1.5">
+        {NAV_TABS.map((tab) => {
+          const isActive = activePage === tab.key;
+          const href =
+            tab.key === "listado-pagos-propietario"
+              ? buildActionHref("listado-pagos", privateAreaId, "2")
+              : tab.key === "listado-pagos-comercio"
+                ? buildActionHref("listado-pagos", privateAreaId, "1")
+                : buildActionHref(tab.key, privateAreaId);
+
+          return (
+            <Link
+              key={tab.key}
+              href={href}
+              className={
+                isActive
+                  ? "rounded-full bg-brand-deep text-white px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-standard"
+                  : "rounded-full border border-line bg-canvas text-ink-soft hover:text-ink hover:border-brand/40 px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest transition-standard"
+              }
+            >
+              {tab.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Page content */}
+      {children}
+    </div>
   );
 }

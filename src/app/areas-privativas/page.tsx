@@ -27,10 +27,13 @@ import {
   Activity,
   User,
   ShoppingBag,
-  ExternalLink,
   Home,
   Mail,
-  Phone
+  Phone,
+  Pencil,
+  Images,
+  Receipt,
+  Store,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -125,24 +128,60 @@ function renderFinancialCards(ownerAmount: string, commerceAmount: string, showC
   );
 }
 
+const ACTION_META: Record<
+  PrivateAreaLegacyAction["id"],
+  { icon: ReactNode; activeClass: string }
+> = {
+  EDIT_BASE: {
+    icon: <Pencil className="h-3 w-3" />,
+    activeClass:
+      "bg-brand-accent/10 border-brand-accent/25 text-brand-accent hover:bg-brand-accent hover:text-white hover:border-brand-accent",
+  },
+  EDIT_IMAGES: {
+    icon: <Images className="h-3 w-3" />,
+    activeClass:
+      "bg-cyan-50 border-cyan-200 text-cyan-600 hover:bg-cyan-600 hover:text-white hover:border-cyan-600",
+  },
+  OWNER_PAYMENTS: {
+    icon: <Receipt className="h-3 w-3" />,
+    activeClass:
+      "bg-purple-50 border-purple-200 text-purple-600 hover:bg-purple-600 hover:text-white hover:border-purple-600",
+  },
+  COMMERCE_PAYMENTS: {
+    icon: <ShoppingBag className="h-3 w-3" />,
+    activeClass:
+      "bg-gold-soft border-gold/30 text-gold hover:bg-gold hover:text-white hover:border-gold",
+  },
+  RENTALS: {
+    icon: <Store className="h-3 w-3" />,
+    activeClass:
+      "bg-lime-50 border-lime-200 text-lime-700 hover:bg-lime-600 hover:text-white hover:border-lime-600",
+  },
+};
+
 function renderLegacyAction(action: PrivateAreaLegacyAction): ReactNode {
-  const isIcon = action.kind === "icon";
+  const meta = ACTION_META[action.id];
+
   if (!action.isEnabled || !action.href) {
     return (
-      <span key={action.id} className="h-6 w-6 flex items-center justify-center rounded border border-line bg-canvas/30 text-ink-soft/30 cursor-not-allowed">
-        {isIcon ? <Activity className="h-3 w-3" /> : <span className="text-[9px]">{action.label}</span>}
+      <span
+        key={action.id}
+        title={action.label}
+        className="h-6 w-6 flex items-center justify-center rounded border border-line/40 bg-canvas/30 text-ink-soft/20 cursor-not-allowed"
+      >
+        {meta.icon}
       </span>
     );
   }
 
   return (
-    <Link 
-      key={action.id} 
-      href={action.href} 
+    <Link
+      key={action.id}
+      href={action.href}
       title={action.label}
-      className="h-6 w-6 flex items-center justify-center rounded border border-brand-accent/20 bg-brand-accent/5 text-brand-accent hover:bg-brand-accent hover:text-white transition-all active-scale"
+      className={`h-6 w-6 flex items-center justify-center rounded border transition-all active-scale ${meta.activeClass}`}
     >
-       <ExternalLink className="h-3 w-3" />
+      {meta.icon}
     </Link>
   );
 }
@@ -224,7 +263,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
   ];
 
   const colWidths = [
-    120, // Acciones
+    160, // Acciones
     130, // Ubicacion
     200, // Area / Fraccion
     140, // Jerarquia
