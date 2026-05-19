@@ -278,6 +278,38 @@ export function AppShell({
     }
 
     // Regular link
+    if (item.href === "/logout") {
+      return (
+        <div key={item.label} className={cn("relative", isCollapsed && "group/tip")}>
+          <button
+            onClick={() => {
+              window.location.href = "/logout";
+            }}
+            className={cn(
+              "w-full flex items-center h-10 rounded-lg transition-standard",
+              isCollapsed ? "justify-center px-0" : "px-3",
+              "text-ink hover:bg-[#f5f4f0]"
+            )}
+            aria-label={isCollapsed ? item.label : undefined}
+          >
+            <Icon
+              className="shrink-0 transition-standard text-ink-soft"
+              style={{ width: 17, height: 17 }}
+              strokeWidth={1.5}
+            />
+            {!isCollapsed && (
+              <span className="ml-2.5 text-[14px] truncate">{item.label}</span>
+            )}
+          </button>
+          {isCollapsed && (
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-brand-deep text-white text-[12px] font-medium rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover/tip:opacity-100 transition-opacity z-50">
+              {item.label}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div key={item.label} className={cn("relative", isCollapsed && "group/tip")}>
         <Link
