@@ -23,8 +23,9 @@ export function middleware(request: NextRequest) {
   if (!sessionCookie) {
     if (pathname !== "/login") {
       if (isPrefetch) {
-        // Return 401 to prevent the router from caching a 307 redirect
-        const res = new NextResponse(null, { status: 401 });
+        // Return an empty 200 OK response for prefetch requests
+        // This prevents the router from caching a 307 redirect, while keeping data secure.
+        const res = new NextResponse("", { status: 200 });
         res.headers.set("x-middleware-cache", "no-cache");
         return res;
       }
