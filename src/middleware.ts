@@ -14,19 +14,36 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Check if it's a prefetch request (e.g. Next.js Link prefetching)
+  const isPrefetch =
+    request.headers.get("next-router-prefetch") === "1" ||
+    request.headers.get("purpose") === "prefetch";
+
   // If there is no active session
   if (!sessionCookie) {
     if (pathname !== "/login") {
-      return NextResponse.redirect(new URL("/login", request.url));
+      if (isPrefetch) {
+        // Return 401 to prevent the router from caching a 307 redirect
+        const res = new NextResponse(null, { status: 401 });
+        res.headers.set("x-middleware-cache", "no-cache");
+        return res;
+      }
+      const res = NextResponse.redirect(new URL("/login", request.url));
+      res.headers.set("x-middleware-cache", "no-cache");
+      return res;
     }
   } else {
     // If session exists and trying to access login page
     if (pathname === "/login") {
-      return NextResponse.redirect(new URL("/", request.url));
+      const res = NextResponse.redirect(new URL("/", request.url));
+      res.headers.set("x-middleware-cache", "no-cache");
+      return res;
     }
   }
 
-  return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set("x-middleware-cache", "no-cache");
+  return res;
 }
 
 export const config = {
