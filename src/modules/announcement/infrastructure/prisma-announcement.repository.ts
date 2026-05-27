@@ -19,6 +19,12 @@ export class PrismaAnnouncementRepository {
         topics: {
           where: { isActive: true },
           orderBy: { order: "asc" }
+        },
+        invitedPositions: {
+          where: { isActive: true }
+        },
+        specialGuests: {
+          where: { isActive: true }
         }
       },
       orderBy: { createdAt: "desc" }
@@ -29,10 +35,22 @@ export class PrismaAnnouncementRepository {
       attendancePercentage: Number(r.attendancePercentage),
       dates: r.dates.map(d => ({
         ...d,
-        date: d.date
+        date: d.date,
+        checkedPositions: d.checkedPositions
       })),
       topics: r.topics.map(t => ({
-        ...t
+        ...t,
+        conclusions: t.conclusions,
+        votesJson: t.votesJson
+      })),
+      invitedPositions: r.invitedPositions.map(ip => ({
+        id: ip.id,
+        positionId: ip.positionId
+      })),
+      specialGuests: r.specialGuests.map(sg => ({
+        id: sg.id,
+        name: sg.name,
+        email: sg.email
       }))
     }));
   }
@@ -51,6 +69,12 @@ export class PrismaAnnouncementRepository {
         topics: {
           where: { isActive: true },
           orderBy: { order: "asc" }
+        },
+        invitedPositions: {
+          where: { isActive: true }
+        },
+        specialGuests: {
+          where: { isActive: true }
         }
       }
     });
@@ -62,10 +86,22 @@ export class PrismaAnnouncementRepository {
       attendancePercentage: Number(r.attendancePercentage),
       dates: r.dates.map(d => ({
         ...d,
-        date: d.date
+        date: d.date,
+        checkedPositions: d.checkedPositions
       })),
       topics: r.topics.map(t => ({
-        ...t
+        ...t,
+        conclusions: t.conclusions,
+        votesJson: t.votesJson
+      })),
+      invitedPositions: r.invitedPositions.map(ip => ({
+        id: ip.id,
+        positionId: ip.positionId
+      })),
+      specialGuests: r.specialGuests.map(sg => ({
+        id: sg.id,
+        name: sg.name,
+        email: sg.email
       }))
     };
   }

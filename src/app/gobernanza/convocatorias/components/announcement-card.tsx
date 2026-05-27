@@ -1,17 +1,32 @@
+"use client";
+
+import { useState } from "react";
 import { Announcement } from "@/modules/announcement/domain/announcement.types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { FileText, MapPin, Clock, Users, MoreVertical } from "lucide-react";
+import {
+  FileText,
+  MapPin,
+  Clock,
+  Users,
+  MoreVertical,
+  Eye,
+  Edit2,
+  Play
+} from "lucide-react";
+import Link from "next/link";
 
 interface AnnouncementCardProps {
   announcement: Announcement;
 }
 
 export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+
   return (
-    <Card className="overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+    <Card className="overflow-hidden flex flex-col hover:shadow-md transition-shadow relative">
       {/* Brand accent bar */}
       <div className="h-0.5 bg-brand w-full" />
 
@@ -40,10 +55,10 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
             <div key={date.id} className="flex items-start gap-3 p-3 rounded-card bg-canvas border border-line">
               <div className="bg-brand text-white text-center rounded-sm min-w-11 py-1 shrink-0">
                 <div className="text-[9px] uppercase font-bold opacity-70 leading-none">
-                  {format(date.date, "MMM", { locale: es })}
+                  {format(new Date(date.date), "MMM", { locale: es })}
                 </div>
                 <div className="text-base font-bold leading-tight">
-                  {format(date.date, "dd")}
+                  {format(new Date(date.date), "dd")}
                 </div>
               </div>
               <div className="flex-1 space-y-1 min-w-0">
@@ -80,7 +95,8 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
               </span>
             )}
           </div>
-          <div className="flex gap-1.5">
+          
+          <div className="flex gap-1.5 items-center relative">
             {announcement.pdfUrl && (
               <a
                 href={announcement.pdfUrl}
@@ -92,9 +108,57 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
                 <FileText className="h-3.5 w-3.5" />
               </a>
             )}
-            <button className="flex items-center justify-center w-7 h-7 rounded-sm bg-canvas border border-line text-ink-soft hover:bg-brand hover:text-white hover:border-brand transition-colors">
-              <MoreVertical className="h-3.5 w-3.5" />
-            </button>
+
+            {/* Action Dropdown Trigger */}
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center justify-center w-7 h-7 rounded-sm bg-canvas border border-line text-ink-soft hover:bg-brand hover:text-white hover:border-brand transition-colors"
+                title="Opciones"
+              >
+                <MoreVertical className="h-3.5 w-3.5" />
+              </button>
+
+              {/* Dropdown Menu options */}
+              {dropdownOpen && (
+                <>
+                  {/* Invisible click-away overlay */}
+                  <div 
+                    className="fixed inset-0 z-40"
+                    onClick={() => setDropdownOpen(false)}
+                  />
+                  
+                  <div className="absolute right-0 bottom-full mb-2 w-48 rounded-xl border border-line/60 bg-white p-1.5 shadow-layered z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+                    <Link
+                      href={`/gobernanza/convocatorias/${announcement.id}`}
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
+                    >
+                      <Eye className="h-3.5 w-3.5 text-ink-soft" />
+                      Ver detalles
+                    </Link>
+
+                    <Link
+                      href={`/gobernanza/convocatorias/${announcement.id}/editar`}
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
+                    >
+                      <Edit2 className="h-3.5 w-3.5 text-ink-soft" />
+                      Editar convocatoria
+                    </Link>
+
+                    <Link
+                      href={`/gobernanza/convocatorias/${announcement.id}/asamblea`}
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
+                    >
+                      <Play className="h-3.5 w-3.5 text-ink-soft" />
+                      Iniciar asamblea
+                    </Link>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>

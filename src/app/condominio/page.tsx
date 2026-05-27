@@ -7,10 +7,10 @@ import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  FileText, 
-  MapPin, 
-  Activity, 
+import {
+  FileText,
+  MapPin,
+  Activity,
   Database,
   ShieldCheck,
   Building,
@@ -87,6 +87,10 @@ export default async function CondominioPage() {
     hasLoadError = true;
   }
 
+  const activeCount = overview ? parseInt(overview.activePrivateAreas.replace(/,/g, "")) : 0;
+  const inactiveCount = overview ? parseInt(overview.inactivePrivateAreas.replace(/,/g, "")) : 0;
+  const totalRegistered = activeCount + inactiveCount;
+
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       {/* Header Area */}
@@ -101,7 +105,7 @@ export default async function CondominioPage() {
               Ajustes Maestro
             </Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
-              {overview?.projectName || "Sin Proyecto"} · Gestión de metadatos y parámetros operativos.
+              {overview?.projectName || "Sin Proyecto"} · Gestión de datos y parámetros operativos del condominio.
             </p>
           </div>
         </div>
@@ -123,11 +127,10 @@ export default async function CondominioPage() {
       </div>
 
       {/* Main KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <StatCard accent="cyan" label="APoLes Activos" value={overview?.activePrivateAreas ?? "0"} trend={{ value: `Inactivos: ${overview?.inactivePrivateAreas ?? "0"}`, isUp: true }} icon={<Layers className="h-3.5 w-3.5" />} />
         <StatCard accent="brand" label="M2 Privativos" value={overview ? `${overview.totalPrivateAreaM2}` : "0"} icon={<MapPin className="h-3.5 w-3.5" />} />
-        <StatCard accent="lime" label="Usuarios Directorio" value={overview?.activeUsers ?? "0"} icon={<Users className="h-3.5 w-3.5" />} />
-        <StatCard accent="gold" label="Acervos Digitales" value={overview?.projectDocumentCount ?? "0"} icon={<Database className="h-3.5 w-3.5" />} />
+        <StatCard accent="gold" label="Documentos Registrados" value={overview?.projectDocumentCount ?? "0"} icon={<FileText className="h-3.5 w-3.5" />} />
       </div>
 
       {/* Detail Sections */}
@@ -136,17 +139,17 @@ export default async function CondominioPage() {
           {/* General Info Card */}
           <Card className="shadow-layered border-transparent">
             <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Ficha de Identidad</CardTitle>
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Datos del Condominio</CardTitle>
             </CardHeader>
             <CardContent className="p-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {[
                   { label: "Nombre Comercial", value: overview?.projectName },
-                  { label: "Sigla Proyecto", value: overview?.projectInitials },
-                  { label: "Formato Legal", value: overview?.condominiumFormat },
+                  { label: "Nomenclatura", value: overview?.projectInitials },
+                  { label: "Tipo de Condominio", value: overview?.condominiumFormat },
                   { label: "Año Arranque", value: overview?.startYear },
                   { label: "Superficie Total", value: overview ? `${overview.totalM2} m2` : null },
-                  { label: "Inventario Total", value: overview?.totalApoles },
+                  { label: "Total Lotes", value: overview?.totalApoles },
                   { label: "Áreas Comunes", value: overview ? `${overview.commonAreasM2} m2` : null },
                   { label: "Desarrollado Por", value: overview?.developedBy },
                   { label: "Fórmula de Suelo", value: overview?.usesLandUseFormula ? "Sí" : "No" },
@@ -163,31 +166,38 @@ export default async function CondominioPage() {
         </div>
 
         <div className="space-y-5">
-           {/* Operational Health */}
-           <Card className="shadow-layered border-transparent bg-brand-deep text-white">
-             <CardHeader className="px-4 py-3 border-b border-white/10">
-               <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand-mint">Salud Operativa</CardTitle>
-             </CardHeader>
-             <CardContent className="p-4 space-y-4">
+          {/* Estado del Catastro */}
+          <Card className="shadow-layered border-transparent bg-brand-deep text-white">
+            <CardHeader className="px-4 py-3 border-b border-white/10">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand-mint">Estado del Catastro</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+              <div className="flex flex-col gap-1">
                 <div className="flex items-end justify-between gap-3">
-                   <p className="text-[9px] font-bold uppercase text-white/50 tracking-widest">Cobertura de APoLes</p>
-                   <p className="text-2xl font-bold text-white">{overview ? `${overview.activeRatio.toFixed(1)}%` : "0%"}</p>
+                  <p className="text-[9px] font-bold uppercase text-white/50 tracking-widest">Lotes Activos vs Inactivos</p>
+                  <p className="text-2xl font-bold text-white">{overview ? `${overview.activeRatio.toFixed(1)}%` : "0%"}</p>
                 </div>
-                <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                   <div className="h-full bg-brand-accent transition-all duration-700" style={{ width: `${overview?.activeRatio || 0}%` }} />
+                {overview && (
+                  <p className="text-[9px] text-brand-mint/90 font-bold uppercase tracking-wide mt-0.5">
+                    {overview.activePrivateAreas} activos de {totalRegistered.toLocaleString("es-MX")} áreas totales
+                  </p>
+                )}
+              </div>
+              <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                <div className="h-full bg-brand-accent transition-all duration-700" style={{ width: `${overview?.activeRatio || 0}%` }} />
+              </div>
+              <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-white/60">
+                  <ShieldCheck className="h-3 w-3 text-brand-mint" />
+                  <span>{overview?.privateAreasWithUseType || 0} lotes con uso de suelo definido</span>
                 </div>
-                <div className="flex flex-col gap-2 pt-2">
-                   <div className="flex items-center gap-2 text-[10px] font-bold text-white/60">
-                      <ShieldCheck className="h-3 w-3 text-brand-mint" />
-                      <span>{overview?.privateAreasWithUseType || 0} con Uso de Suelo</span>
-                   </div>
-                   <div className="flex items-center gap-2 text-[10px] font-bold text-white/60">
-                      <Building className="h-3 w-3 text-brand-mint" />
-                      <span>{overview?.totalApoles || 0} Unidades Totales</span>
-                   </div>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-white/60">
+                  <Building className="h-3 w-3 text-brand-mint" />
+                  <span>{overview?.totalApoles || 0} lotes base de condominio (Apoles)</span>
                 </div>
-             </CardContent>
-           </Card>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 

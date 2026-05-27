@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createAnnouncementAction } from "../actions";
+import { createAnnouncementAction, updateAnnouncementAction } from "../actions";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
 import { Upload, Check, Plus, Trash2 } from "lucide-react";
 
@@ -45,30 +45,50 @@ interface AnnouncementFormProps {
     directory: any[];
     departments: any[];
   };
+  announcement?: any;
 }
 
-export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
+export function AnnouncementForm({ initialData, announcement }: AnnouncementFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [formData, setFormData] = useState<FormData>({
-    name: "",
-    typeId: "",
-    subtypeId: "",
-    comments: "",
-    conveningPosition: "",
-    moderatorPosition: "",
-    dates: [
-      { callType: "1ra Convocatoria", date: "", time: "", location: "" },
-      { callType: "2da Convocatoria", date: "", time: "", location: "" },
-      { callType: "3ra Convocatoria", date: "", time: "", location: "" },
-    ],
-    topicIds: [],
-    specialGuests: [],
-    agendaTopics: [
-      { title: "", presenterId: undefined, durationMinutes: undefined, actionType: "NONE" }
-    ],
+    name: announcement?.name || "",
+    typeId: announcement?.typeId || "",
+    subtypeId: announcement?.subtypeId || "",
+    comments: announcement?.comments || "",
+    pdfUrl: announcement?.pdfUrl || undefined,
+    conveningPersonId: announcement?.conveningPersonId || "",
+    conveningPosition: announcement?.conveningPosition || "",
+    moderatorPersonId: announcement?.moderatorPersonId || "",
+    moderatorPosition: announcement?.moderatorPosition || "",
+    dates: announcement?.dates && announcement.dates.length > 0 
+      ? announcement.dates.map((d: any) => ({
+          callType: d.callType,
+          date: d.date ? new Date(d.date).toISOString().split("T")[0] : "",
+          time: d.time || "",
+          location: d.location || "",
+        }))
+      : [
+          { callType: "1ra Convocatoria", date: "", time: "", location: "" },
+          { callType: "2da Convocatoria", date: "", time: "", location: "" },
+          { callType: "3ra Convocatoria", date: "", time: "", location: "" },
+        ],
+    topicIds: announcement?.invitedPositions ? announcement.invitedPositions.map((p: any) => p.positionId) : [],
+    specialGuests: announcement?.specialGuests ? announcement.specialGuests.map((g: any) => ({
+      id: g.id || Math.random().toString(36).substr(2, 9),
+      name: g.name,
+      email: g.email || "",
+    })) : [],
+    agendaTopics: announcement?.topics && announcement.topics.length > 0
+      ? announcement.topics.map((t: any) => ({
+          title: t.title,
+          presenterId: t.presenterId || undefined,
+          durationMinutes: t.durationMinutes || undefined,
+          actionType: t.actionType || "NONE",
+        }))
+      : [{ title: "", presenterId: undefined, durationMinutes: undefined, actionType: "NONE" }],
   });
 
   const handleAddTopic = () => {
@@ -134,7 +154,12 @@ export function AnnouncementForm({ initialData }: AnnouncementFormProps) {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const result = await createAnnouncementAction(formData);
+    let result;
+    if (announcement?.id) {
+      result = await updateAnnouncementAction(announcement.id, formData);
+    } else {
+      result = await createAnnouncementAction(formData);
+    }
 
     if (result.success) {
       router.push("/gobernanza/convocatorias");

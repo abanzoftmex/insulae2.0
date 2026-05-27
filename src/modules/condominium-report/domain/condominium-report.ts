@@ -19,9 +19,14 @@ export interface CondominiumReport {
   totalRegisteredPrivateAreas: number;
   activePrivateAreas: number;
   inactivePrivateAreas: number;
+  activeParents: number;
+  activeChildren: number;
+  inactiveParents: number;
+  inactiveChildren: number;
   areasWithUseType: number;
   areasWithoutUseType: number;
   totalPrivateAreaM2: number;
+  totalApoleAreaM2: number;
   totalBuiltAreaM2: number;
   totalIndiviso: number;
   availableAreas: number;
@@ -39,5 +44,6 @@ export interface CondominiumReport {
   classificationMode: LandUseClassificationMode;
   caveats: string[];
   lastUpdatedAt: Date;
+  lastUpdatedBy: string | null;
   generatedAt: Date;
 }

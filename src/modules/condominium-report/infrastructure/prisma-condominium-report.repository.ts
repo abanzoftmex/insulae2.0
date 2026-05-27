@@ -11,12 +11,15 @@ import type {
 import type { CondominiumReportRepository } from "../domain/condominium-report.repository";
 
 type PrivateAreaSnapshot = {
+  id: string;
   isActive: boolean;
   zone: string | null;
   useType: string | null;
   m2Original: Prisma.Decimal | number | null;
   m2Apole: Prisma.Decimal | number | null;
+  m2Construction: Prisma.Decimal | number | null;
   indiviso: Prisma.Decimal | number | null;
+  parentPrivateAreaId: string | null;
 };
 
 type LandUseCatalogSnapshot = {
@@ -79,6 +82,7 @@ export class PrismaCondominiumReportRepository
           name: true,
           slug: true,
           updatedAt: true,
+          updatedBy: true,
           projects: {
             where: { isActive: true },
             take: 1,
@@ -100,6 +104,7 @@ export class PrismaCondominiumReportRepository
           name: true,
           slug: true,
           updatedAt: true,
+          updatedBy: true,
           projects: {
             where: { isActive: true },
             take: 1,
@@ -122,12 +127,15 @@ export class PrismaCondominiumReportRepository
       prisma.privateArea.findMany({
         where: { condominiumId: condominium.id },
         select: {
+          id: true,
           isActive: true,
           zone: true,
           useType: true,
           m2Original: true,
           m2Apole: true,
+          m2Construction: true,
           indiviso: true,
+          parentPrivateAreaId: true,
         },
       }),
       prisma.zoneCatalog.findMany({
@@ -140,9 +148,10 @@ export class PrismaCondominiumReportRepository
         orderBy: [{ order: "asc" }, { legacyId: "asc" }, { name: "asc" }],
         select: { name: true, initials: true },
       }),
-      prisma.privateArea.aggregate({
+      prisma.privateArea.findFirst({
         where: { condominiumId: condominium.id },
-        _max: { updatedAt: true },
+        orderBy: { updatedAt: "desc" },
+        select: { updatedAt: true, updatedBy: true },
       }),
     ]);
 
@@ -154,6 +163,11 @@ export class PrismaCondominiumReportRepository
     const inactivePrivateAreas = totalRegisteredPrivateAreas - activePrivateAreas;
     const reportableAreas = privateAreaSnapshots.filter((area) => area.isActive);
 
+    const activeParents = reportableAreas.filter((area) => area.parentPrivateAreaId === null).length;
+    const activeChildren = reportableAreas.filter((area) => area.parentPrivateAreaId !== null).length;
+    const inactiveParents = privateAreaSnapshots.filter((area) => !area.isActive && area.parentPrivateAreaId === null).length;
+    const inactiveChildren = privateAreaSnapshots.filter((area) => !area.isActive && area.parentPrivateAreaId !== null).length;
+
     const areasWithUseType = reportableAreas.filter((area) => area.useType && area.useType.trim().length > 0).length;
     const areasWithoutUseType = reportableAreas.length - areasWithUseType;
 
@@ -161,8 +175,12 @@ export class PrismaCondominiumReportRepository
       (acc, area) => acc + decimalToNumber(area.m2Original),
       0,
     );
-    const totalBuiltAreaM2 = reportableAreas.reduce(
+    const totalApoleAreaM2 = reportableAreas.reduce(
       (acc, area) => acc + decimalToNumber(area.m2Apole),
+      0,
+    );
+    const totalBuiltAreaM2 = reportableAreas.reduce(
+      (acc, area) => acc + decimalToNumber(area.m2Construction),
       0,
     );
     const totalIndiviso = reportableAreas.reduce(
@@ -386,10 +404,18 @@ export class PrismaCondominiumReportRepository
       caveats.push("Hay areas activas fuera de LT y LT-CR; por eso Soles + Sombras puede ser menor al total operativo.");
     }
 
+    const lastPrivateAreaUpdate = privateAreaLastUpdate?.updatedAt ?? null;
+    const lastPrivateAreaUpdatedBy = privateAreaLastUpdate?.updatedBy ?? null;
+
     const lastUpdatedAt =
-      privateAreaLastUpdate._max.updatedAt && privateAreaLastUpdate._max.updatedAt > condominium.updatedAt
-        ? privateAreaLastUpdate._max.updatedAt
+      lastPrivateAreaUpdate && lastPrivateAreaUpdate > condominium.updatedAt
+        ? lastPrivateAreaUpdate
         : condominium.updatedAt;
+
+    const lastUpdatedBy =
+      lastPrivateAreaUpdate && lastPrivateAreaUpdate > condominium.updatedAt
+        ? lastPrivateAreaUpdatedBy
+        : condominium.updatedBy;
 
     return {
       condominiumId: condominium.id,
@@ -403,9 +429,14 @@ export class PrismaCondominiumReportRepository
       totalRegisteredPrivateAreas,
       activePrivateAreas,
       inactivePrivateAreas,
+      activeParents,
+      activeChildren,
+      inactiveParents,
+      inactiveChildren,
       areasWithUseType,
       areasWithoutUseType,
       totalPrivateAreaM2,
+      totalApoleAreaM2,
       totalBuiltAreaM2,
       totalIndiviso,
       availableAreas,
@@ -423,6 +454,7 @@ export class PrismaCondominiumReportRepository
       classificationMode,
       caveats,
       lastUpdatedAt,
+      lastUpdatedBy,
       generatedAt: new Date(),
     };
   }

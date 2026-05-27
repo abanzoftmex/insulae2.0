@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { getCurrentUser } from "@/app/actions/auth";
 
 export interface UpdateCondominioSettingsInput {
   projectId: string;
@@ -137,6 +138,16 @@ export async function updateCondominioSettingsAction(
         },
       });
     }
+
+    const userName = await getCurrentUser();
+
+    await prisma.condominium.update({
+      where: { id: condominium.id },
+      data: { 
+        updatedAt: new Date(),
+        updatedBy: userName
+      },
+    });
 
     revalidatePath("/condominio");
     return { ok: true, message: "Cambios guardados correctamente." };

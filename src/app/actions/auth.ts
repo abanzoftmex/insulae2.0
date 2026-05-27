@@ -133,3 +133,15 @@ export async function logoutAction() {
   const cookieStore = await cookies();
   cookieStore.delete("insulae_session");
 }
+
+export async function getCurrentUser(): Promise<string> {
+  try {
+    const cookieStore = await cookies();
+    const sessionStr = cookieStore.get("insulae_session")?.value;
+    if (!sessionStr) return "Sistema";
+    const session = JSON.parse(sessionStr);
+    return session.name || "Sistema";
+  } catch {
+    return "Sistema";
+  }
+}

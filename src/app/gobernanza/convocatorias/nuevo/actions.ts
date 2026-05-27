@@ -83,3 +83,76 @@ export async function createAnnouncementAction(formData: any) {
     return { success: false, error: error.message };
   }
 }
+
+export async function updateAnnouncementAction(id: string, formData: any) {
+  try {
+    await prisma.$transaction(async (tx) => {
+      // 1. Delete existing relational dependencies
+      await tx.announcementDate.deleteMany({ where: { announcementId: id } });
+      await tx.announcementTopic.deleteMany({ where: { announcementId: id } });
+      await tx.announcementInvitedPosition.deleteMany({ where: { announcementId: id } });
+      await tx.specialGuest.deleteMany({ where: { announcementId: id } });
+
+      // 2. Update parent Announcement and recreate relations
+      await tx.announcement.update({
+        where: { id },
+        data: {
+          name: formData.name,
+          typeId: formData.typeId,
+          subtypeId: formData.subtypeId,
+          comments: formData.comments,
+          pdfUrl: formData.pdfUrl,
+          conveningPersonId: formData.conveningPersonId,
+          conveningPosition: formData.conveningPosition,
+          moderatorPersonId: formData.moderatorPersonId,
+          moderatorPosition: formData.moderatorPosition,
+
+          dates: {
+            create: formData.dates
+              .filter((d: any) => d.date && d.time)
+              .map((d: any) => ({
+                date: new Date(d.date),
+                time: d.time,
+                location: d.location,
+                callType: d.callType,
+              }))
+          },
+
+          topics: {
+            create: formData.agendaTopics
+              .filter((t: any) => t.title)
+              .map((t: any, idx: number) => ({
+                title: t.title,
+                presenterId: t.presenterId,
+                durationMinutes: t.durationMinutes,
+                actionType: t.actionType,
+                order: idx,
+              }))
+          },
+
+          invitedPositions: {
+            create: formData.topicIds.map((posId: string) => ({
+              positionId: posId
+            }))
+          },
+
+          specialGuests: {
+            create: formData.specialGuests
+              .filter((g: any) => g.name)
+              .map((g: any) => ({
+                name: g.name,
+                email: g.email
+              }))
+          }
+        }
+      });
+    });
+
+    revalidatePath("/gobernanza/convocatorias");
+    return { success: true, id };
+  } catch (error: any) {
+    console.error("Error updating announcement:", error);
+    return { success: false, error: error.message };
+  }
+}
+

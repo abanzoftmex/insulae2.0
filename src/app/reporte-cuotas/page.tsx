@@ -19,15 +19,15 @@ export const dynamic = "force-dynamic";
 // Atomic Cell Component
 function Cell({ cell }: { cell: FeeReportCellVM }) {
   return (
-    <div className="flex flex-col gap-0.5 py-0.5 leading-none">
+    <div className="flex flex-col gap-0.5 py-0.5">
       <div className="inline-flex items-center gap-1">
-        <span className="rounded-[1px] bg-brand-deep/5 px-1 py-px text-[8px] font-bold text-brand-deep/40">P</span>
-        <span className="text-[10px] font-bold text-ink truncate max-w-20">{cell.ownerLabel}</span>
+        <span className="rounded bg-[#dce8fd] px-1 py-px text-[9px] font-bold text-[#1a3d8f]">P</span>
+        <span className="text-[11px] font-semibold text-[#1e2735]">{cell.ownerLabel}</span>
       </div>
       {cell.hasCommerce && (
         <div className="inline-flex items-center gap-1">
-          <span className="rounded-[1px] bg-danger/5 px-1 py-px text-[8px] font-bold text-danger/40">C</span>
-          <span className="text-[10px] font-bold text-danger truncate max-w-20">{cell.commerceLabel}</span>
+          <span className="rounded bg-[#fddce8] px-1 py-px text-[9px] font-bold text-[#8f1a3d]">C</span>
+          <span className="text-[11px] font-semibold text-[#35202a]">{cell.commerceLabel}</span>
         </div>
       )}
     </div>
@@ -35,15 +35,20 @@ function Cell({ cell }: { cell: FeeReportCellVM }) {
 }
 
 function StatusBadge({ label, css }: { label: string; css: string }) {
-  const variantMap: Record<string, any> = {
-    "status-available": "success",
-    "status-sold": "brand",
-    "status-rented": "warning",
-    "status-delinquent": "danger",
-    "status-construction": "warning",
-    "status-unassigned": "default",
+  const colorMap: Record<string, string> = {
+    "status-available": "bg-emerald-50 text-emerald-700 border-emerald-200",
+    "status-sold": "bg-blue-50 text-blue-700 border-blue-200",
+    "status-rented": "bg-amber-50 text-amber-700 border-amber-200",
+    "status-delinquent": "bg-red-50 text-red-700 border-red-200",
+    "status-construction": "bg-orange-50 text-orange-700 border-orange-200",
+    "status-unassigned": "bg-stone-50 text-stone-500 border-stone-200",
   };
-  return <Badge variant={variantMap[css] || "default"} className="mt-0.5">{label}</Badge>;
+  const cls = colorMap[css] ?? "bg-stone-50 text-stone-500 border-stone-200";
+  return (
+    <span className={`mt-0.5 inline-flex items-center rounded-full border px-2 py-px text-[9px] font-semibold uppercase tracking-wide ${cls}`}>
+      {label}
+    </span>
+  );
 }
 
 function Paginator({ page, totalPages }: { page: number; totalPages: number }) {
@@ -85,7 +90,7 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
     primaryYear: currentYear - 1,
     secondaryYear: currentYear,
     page,
-    pageSize: 30,
+    pageSize: 100,
   });
 
   if (!listing) {
@@ -116,16 +121,23 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <StatCard accent="brand" label="Total Unidades" value={vm.totalAreas} icon={<Layers className="h-3.5 w-3.5" />} />
         <StatCard accent="cyan" label="Ciclo Fiscal" value={`${primaryYear} – ${secondaryYear}`} icon={<MapPin className="h-3.5 w-3.5" />} />
-        <div className="md:col-span-2 flex items-center gap-4 px-4 py-3 bg-canvas/40 border border-line/30 rounded-md">
-           <div className="flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-tighter">
-             <span className="flex items-center gap-1"><span className="w-2 h-2 bg-brand rounded-full" /> Propietario</span>
-             <span className="flex items-center gap-1"><span className="w-2 h-2 bg-danger rounded-full" /> Comercio</span>
-             <span className="flex items-center gap-1"><span className="w-2 h-2 bg-success/40 border border-success/60 rounded-xs" /> Fracción (FAP)</span>
-           </div>
-        </div>
+      </div>
+
+      {/* Simbología */}
+      <div className="flex flex-wrap items-center gap-2 px-1">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/50 shrink-0">Simbología:</p>
+        <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wide" style={{ backgroundColor: "#dce8fd", color: "#1a3d8f" }}>
+          Propietario
+        </span>
+        <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wide" style={{ backgroundColor: "#fddce8", color: "#8f1a3d" }}>
+          Comercio
+        </span>
+        <span className="inline-flex items-center rounded-full border border-stone-200 px-3 py-1 text-[10px] font-bold tracking-wide bg-stone-50 text-stone-500">
+          Fracción (FAP)
+        </span>
       </div>
 
       {/* Main Table */}
@@ -137,117 +149,184 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
           <Paginator page={vm.page} totalPages={vm.totalPages} />
         </div>
       )}
-      <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
-        <div className="overflow-auto max-h-[70vh] no-scrollbar">
-          <table className="min-w-max border-collapse text-[11px]">
-            <thead className="sticky top-0 z-30 shadow-sm border-b border-line">
-              {/* Group Headers */}
-              <tr className="bg-canvas/95 backdrop-blur-md">
-                <th rowSpan={2} className="sticky left-0 z-40 px-4 py-3 text-left border-r border-line bg-canvas font-bold uppercase tracking-widest text-brand w-45">
-                  Unidad / FAP
-                </th>
-                <th colSpan={2} className="px-2 py-1.5 text-center border-r border-line bg-brand-deep/3 font-bold uppercase tracking-widest text-brand-deep/50">
-                  Histórico {previousYear}
-                </th>
-                <th colSpan={3} className="px-2 py-1.5 text-center border-r border-line bg-brand-mint/20 font-bold uppercase tracking-widest text-brand">
-                  Ordinarias {primaryYear}
-                </th>
-                <th colSpan={3} className="px-2 py-1.5 text-center border-r border-line bg-brand-mint/40 font-bold uppercase tracking-widest text-brand">
-                  Ordinarias {secondaryYear}
-                </th>
-                <th className="px-4 py-1.5 text-center border-r border-line bg-gold-soft font-bold uppercase tracking-widest text-gold">
-                  Saldo
-                </th>
-                <th colSpan={12} className="px-2 py-1.5 text-center border-r border-line bg-canvas/30 font-bold uppercase tracking-widest text-ink-soft/40">
-                  Mensual {primaryYear}
-                </th>
-                <th colSpan={12} className="px-2 py-1.5 text-center bg-canvas/50 font-bold uppercase tracking-widest text-ink-soft/40">
-                  Mensual {secondaryYear}
-                </th>
-              </tr>
-              {/* Sub Headers */}
-              <tr className="bg-canvas/50 text-[9px] font-bold uppercase tracking-tighter text-ink-soft/60">
-                {vm.columns.map((col, idx) => (
-                  <th key={idx} className={cn("px-2 py-2 text-center border-b border-line", idx < vm.columns.length - 1 && "border-r border-line/30")}>
-                    {col.label}
+
+      {/* ── TABLA ── */}
+      <section className="overflow-hidden rounded-[1.6rem] border border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm">
+        {vm.rows.length === 0 ? (
+          <div className="p-12 text-center">
+            <p className="text-lg font-semibold text-[#3f2f1e]">No hay áreas privativas en esta página</p>
+            <p className="mt-2 text-sm text-[#7a5e48]">
+              Verifica que los datos de áreas privativas estén migrados a Neon.
+            </p>
+          </div>
+        ) : (
+          <div className="overflow-auto max-h-[75vh]">
+            <table className="min-w-max border-collapse text-sm">
+              <thead className="sticky top-0 z-30 shadow-sm">
+                {/* Fila 1: grupos de columnas */}
+                <tr>
+                  <th
+                    rowSpan={2}
+                    className="sticky left-0 top-0 z-40 min-w-50 border-b-2 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]"
+                  >
+                    Área Privativa / FAP
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-line/30">
-              {vm.rows.map((row) => (
-                <tr key={row.id} className={cn("h-10 hover:bg-canvas/10 transition-colors group", row.isChild && "bg-success/2")}>
-                  <td className={cn(
-                    "sticky left-0 z-10 px-3 py-1.5 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
-                    row.isChild ? "bg-success/5" : "bg-card group-hover:bg-canvas transition-colors"
-                  )}>
-                    <p className={cn("font-bold truncate leading-tight", row.isChild ? "text-success text-[10px]" : "text-brand text-[11px]")}>
-                      {row.areaLabel}
-                    </p>
-                    <StatusBadge label={row.statusLabel} css={row.statusCss} />
+                  <th colSpan={2} className="border-b border-r border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                    Histórico {previousYear}
+                  </th>
+                  <th colSpan={3} className="border-b border-r border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                    Ordinarias {primaryYear}
+                  </th>
+                  <th colSpan={3} className="border-b border-r border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                    Ordinarias {secondaryYear}
+                  </th>
+                  <th colSpan={1} className="border-b border-r-2 border-[#d0b898] bg-[#f0e0c8] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a3810]">
+                    Saldo actual
+                  </th>
+                  <th colSpan={12} className="border-b border-r border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                    Pagos mes a mes {primaryYear}
+                  </th>
+                  <th colSpan={12} className="border-b border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                    Pagos mes a mes {secondaryYear}
+                  </th>
+                </tr>
+
+                {/* Fila 2: sub-headers */}
+                <tr className="bg-[#ece5d8] text-[9px] font-semibold uppercase tracking-wider text-[#7a5e44]">
+                  {vm.columns.map((col, idx) => (
+                    <th
+                      key={col.key || idx}
+                      className={cn(
+                        "min-w-30 border-b border-[#d8c8b4] px-2 py-2 text-center",
+                        idx < vm.columns.length - 1 && "border-r border-[#d8c8b4]/60"
+                      )}
+                    >
+                      <span className="block leading-snug">{col.label}</span>
+                      {col.subLabel && (
+                        <span className="block font-normal normal-case text-[#a08060]">{col.subLabel}</span>
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              {/* TBODY */}
+              <tbody>
+                {vm.rows.map((row, idx) => {
+                  const isChild = row.isChild;
+                  const baseBg = idx % 2 === 0 ? "bg-white" : "bg-[#faf6f0]";
+                  const stickyBg = idx % 2 === 0 ? "bg-white" : "bg-[#faf6f0]";
+
+                  return (
+                    <tr key={row.id} className={`border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] ${baseBg}`}>
+                      {/* Columna sticky */}
+                      <td className={`sticky left-0 z-10 min-w-50 border-r-2 border-[#ddd0be] px-3 py-2 ${stickyBg}`}>
+                        <p className={`font-semibold leading-tight text-[#2b1e12] ${isChild ? "text-[11px] pl-4 opacity-80" : "text-[12px]"}`}>
+                          {row.areaLabel}
+                        </p>
+                        <StatusBadge label={row.statusLabel} css={row.statusCss} />
+                      </td>
+
+                      {/* Histórico pastDue y prepaid */}
+                      <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center">
+                        <Cell cell={row.pastDue} />
+                      </td>
+                      <td className="border-r border-[#c8b8a0] px-2 py-1.5 text-center">
+                        <Cell cell={row.prepaid} />
+                      </td>
+
+                      {/* Years Cells for primaryYear */}
+                      {row.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
+                        <React.Fragment key={yc.year}>
+                          <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center"><Cell cell={yc.annual} /></td>
+                          <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center"><Cell cell={yc.monthly} /></td>
+                          <td className="border-r border-[#c8b8a0] px-2 py-1.5 text-center"><Cell cell={yc.balance} /></td>
+                        </React.Fragment>
+                      ))}
+
+                      {/* Years Cells for secondaryYear */}
+                      {row.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
+                        <React.Fragment key={yc.year}>
+                          <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center"><Cell cell={yc.annual} /></td>
+                          <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center"><Cell cell={yc.monthly} /></td>
+                          <td className="border-r border-[#c8b8a0] px-2 py-1.5 text-center"><Cell cell={yc.balance} /></td>
+                        </React.Fragment>
+                      ))}
+
+                      {/* Saldo global */}
+                      <td className="border-r-2 border-[#d0b898] px-2 py-1.5 text-center font-bold">
+                        <Cell cell={row.totalBalance} />
+                      </td>
+
+                      {/* 12 meses primaryYear */}
+                      {row.monthlyCells.filter((_, i) => i < 12).map((mc, i) => (
+                        <td key={`m${primaryYear}-${i + 1}-${row.id}`} className="border-r border-[#e8ddd0] px-2 py-1.5 text-center">
+                          <Cell cell={mc} />
+                        </td>
+                      ))}
+
+                      {/* 12 meses secondaryYear */}
+                      {row.monthlyCells.filter((_, i) => i >= 12).map((mc, i) => (
+                        <td key={`m${secondaryYear}-${i + 1}-${row.id}`} className="border-r border-[#e8ddd0] px-2 py-1.5 text-center">
+                          <Cell cell={mc} />
+                        </td>
+                      ))}
+                    </tr>
+                  );
+                })}
+              </tbody>
+
+              {/* TFOOT — fila de totales */}
+              <tfoot>
+                <tr className="border-t-2 border-[#b0a090] bg-[#e8dfd0] font-bold">
+                  <td className="sticky left-0 z-10 border-r-2 border-[#c8b49a] bg-[#e8dfd0] px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#3a2a18]">
+                    Totales
                   </td>
-                  <td className="px-2 border-r border-line/30 text-center"><Cell cell={row.pastDue} /></td>
-                  <td className="px-2 border-r border-line text-center"><Cell cell={row.prepaid} /></td>
                   
-                  {/* Years Cells */}
-                  {row.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
+                  <td className="border-r border-[#e8ddd0] px-2 py-2 text-center">
+                    <Cell cell={vm.totalsRow.pastDue} />
+                  </td>
+                  <td className="border-r border-[#c8b8a0] px-2 py-2 text-center">
+                    <Cell cell={vm.totalsRow.prepaid} />
+                  </td>
+
+                  {vm.totalsRow.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
                     <React.Fragment key={yc.year}>
-                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/2"><Cell cell={yc.annual} /></td>
-                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/2"><Cell cell={yc.monthly} /></td>
-                      <td className="px-2 border-r border-line text-center bg-brand-mint/5"><Cell cell={yc.balance} /></td>
-                    </React.Fragment>
-                  ))}
-                  {row.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
-                    <React.Fragment key={yc.year}>
-                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/4"><Cell cell={yc.annual} /></td>
-                      <td className="px-2 border-r border-line/30 text-center bg-brand-mint/4"><Cell cell={yc.monthly} /></td>
-                      <td className="px-2 border-r border-line text-center bg-brand-mint/10"><Cell cell={yc.balance} /></td>
+                      <td className="border-r border-[#e8ddd0] px-2 py-2 text-center"><Cell cell={yc.annual} /></td>
+                      <td className="border-r border-[#e8ddd0] px-2 py-2 text-center"><Cell cell={yc.monthly} /></td>
+                      <td className="border-r border-[#c8b8a0] px-2 py-2 text-center"><Cell cell={yc.balance} /></td>
                     </React.Fragment>
                   ))}
 
-                  <td className="px-3 border-r border-line text-center bg-gold-soft/20 font-bold"><Cell cell={row.totalBalance} /></td>
+                  {vm.totalsRow.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
+                    <React.Fragment key={yc.year}>
+                      <td className="border-r border-[#e8ddd0] px-2 py-2 text-center"><Cell cell={yc.annual} /></td>
+                      <td className="border-r border-[#e8ddd0] px-2 py-2 text-center"><Cell cell={yc.monthly} /></td>
+                      <td className="border-r border-[#c8b8a0] px-2 py-2 text-center"><Cell cell={yc.balance} /></td>
+                    </React.Fragment>
+                  ))}
 
-                  {/* Monthly Cells */}
-                  {row.monthlyCells.map((mc, idx) => (
-                    <td key={idx} className={cn("px-2 text-center", idx < row.monthlyCells.length - 1 && "border-r border-line/20", idx >= 12 && "bg-canvas/5")}>
+                  <td className="border-r-2 border-[#d0b898] px-2 py-2 text-center">
+                    <Cell cell={vm.totalsRow.totalBalance} />
+                  </td>
+
+                  {vm.totalsRow.monthlyCells.filter((_, i) => i < 12).map((mc, i) => (
+                    <td key={`tot-m${primaryYear}-${i + 1}`} className="border-r border-[#c8b8a0] px-2 py-2 text-center">
+                      <Cell cell={mc} />
+                    </td>
+                  ))}
+                  {vm.totalsRow.monthlyCells.filter((_, i) => i >= 12).map((mc, i) => (
+                    <td key={`tot-m${secondaryYear}-${i + 1}`} className="border-r border-[#c8b8a0] px-2 py-2 text-center">
                       <Cell cell={mc} />
                     </td>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-            <tfoot>
-               <tr className="h-10 bg-brand-deep text-white font-bold uppercase text-[10px]">
-                  <td className="sticky left-0 px-4 border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Totales Generales</td>
-                  <td className="px-2 border-r border-white/10 text-center"><Cell cell={vm.totalsRow.pastDue} /></td>
-                  <td className="px-2 border-r border-white/10 text-center"><Cell cell={vm.totalsRow.prepaid} /></td>
-                  
-                  {vm.totalsRow.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
-                    <React.Fragment key={yc.year}>
-                      <td className="px-2 border-r border-white/10 text-center"><Cell cell={yc.annual} /></td>
-                      <td className="px-2 border-r border-white/10 text-center"><Cell cell={yc.monthly} /></td>
-                      <td className="px-2 border-r border-white/10 text-center"><Cell cell={yc.balance} /></td>
-                    </React.Fragment>
-                  ))}
-                  {vm.totalsRow.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
-                    <React.Fragment key={yc.year}>
-                      <td className="px-2 border-r border-white/10 text-center"><Cell cell={yc.annual} /></td>
-                      <td className="px-2 border-r border-white/10 text-center"><Cell cell={yc.monthly} /></td>
-                      <td className="px-2 border-r border-white/10 text-center"><Cell cell={yc.balance} /></td>
-                    </React.Fragment>
-                  ))}
-                  <td className="px-3 border-r border-white/10 text-center bg-brand-uplift"><Cell cell={vm.totalsRow.totalBalance} /></td>
-                  {vm.totalsRow.monthlyCells.map((mc, idx) => (
-                    <td key={idx} className={cn("px-2 text-center", idx < vm.totalsRow.monthlyCells.length - 1 && "border-r border-white/5")}>
-                      <Cell cell={mc} />
-                    </td>
-                  ))}
-               </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-      
+              </tfoot>
+            </table>
+          </div>
+        )}
+      </section>
+
       <div className="flex justify-between items-center py-2 px-1">
         <p className="text-[11px] font-bold text-ink-soft/70 uppercase tracking-widest">
           Cartera ordinaria consolidada · {vm.totalAreas} unidades en sistema
@@ -257,3 +336,4 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
     </div>
   );
 }
+

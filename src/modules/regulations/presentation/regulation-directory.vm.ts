@@ -11,6 +11,7 @@ export interface RegulationDocumentVM {
   documentTypeLabel: string;
   publicUrl: string;
   uploadedAtLabel: string;
+  uploadedBy: string | null;
 }
 
 export interface RegulationDirectoryVM {
@@ -44,6 +45,7 @@ function mapDocument(document: RegulationDocument): RegulationDocumentVM {
     documentTypeLabel: documentTypeLabel(document.documentType),
     publicUrl: document.publicUrl,
     uploadedAtLabel: formatUploadedAt(document.uploadedAt),
+    uploadedBy: document.uploadedBy,
   };
 }
 

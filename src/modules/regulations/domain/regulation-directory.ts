@@ -7,6 +7,7 @@ export interface RegulationDocument {
   documentType: RegulationDocumentType;
   publicUrl: string;
   uploadedAt: Date;
+  uploadedBy: string | null;
 }
 
 export interface RegulationDirectory {

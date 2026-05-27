@@ -6,6 +6,7 @@ import {
 } from "@/shared/domain/charge-group-kind";
 import { PRIVATE_AREA_STATUS } from "@/shared/domain/private-area-status";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { getCurrentUser } from "@/app/actions/auth";
 
 import type {
   LandUseCommandResult,
@@ -501,6 +502,16 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
 
       landUseId = created.id;
     }
+
+    const userName = await getCurrentUser();
+
+    await prisma.condominium.update({
+      where: { id: condominium.id },
+      data: { 
+        updatedAt: new Date(),
+        updatedBy: userName
+      },
+    });
 
     const [allLandUses, chargeGroups, privateAreasRaw] = await Promise.all([
       prisma.landUseCatalog.findMany({

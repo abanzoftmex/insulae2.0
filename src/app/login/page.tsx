@@ -182,15 +182,6 @@ export default function LoginPage() {
 
             {/* Logos auxiliares debajo (1 a la izq, 2 a la der) */}
             <div className="mt-7 flex items-center justify-between gap-6">
-              <div className="flex-1 flex items-center justify-start">
-                <Image
-                  src="/brand/reinos-de-mexico-logo-c.png"
-                  alt="Reinos de México"
-                  width={220}
-                  height={120}
-                  className="h-[90px] w-auto object-contain opacity-85"
-                />
-              </div>
               <div className="flex-1 flex items-center justify-end">
                 <Image
                   src="/brand/abanzoft-logo-light.png"
@@ -222,7 +213,7 @@ export default function LoginPage() {
 
           <div className="absolute inset-x-10 bottom-10">
             <p className="text-white/92 text-[44px] leading-[0.95] tracking-[-0.02em] drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] font-bold">
-              Sistema de Administración Condominal
+              Sistema de Gestión Condominal
             </p>
           </div>
         </div>

@@ -41,7 +41,7 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
   
   // Form State
   const [formName, setFormName] = useState("");
-  const [formType, setFormType] = useState<any>("REGLAMENTO_GRAL");
+  const [formType, setFormType] = useState<any>("REGULATION");
   const [formFileUrl, setFormFileUrl] = useState("");
   const [uploading, setUploading] = useState(false);
 
@@ -57,7 +57,7 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
   const openAddModal = () => {
     setEditingId(null);
     setFormName("");
-    setFormType("REGLAMENTO_GRAL");
+    setFormType("REGULATION");
     setFormFileUrl("");
     setIsModalOpen(true);
   };
@@ -131,7 +131,9 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
           </div>
           <div className="min-w-0">
              <p className="font-bold text-sm leading-tight">{row.name}</p>
-             <p className="text-xs text-ink-soft/70 uppercase tracking-widest font-bold mt-0.5">{row.uploadedAtLabel}</p>
+             <p className="text-xs text-ink-soft/70 uppercase tracking-widest font-bold mt-0.5">
+               {row.uploadedAtLabel}{row.uploadedBy ? ` · por ${row.uploadedBy}` : ""}
+             </p>
           </div>
         </div>
       )
@@ -181,17 +183,17 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
               Todos
             </Button>
             <Button 
-              variant={typeFilter === "REGLAMENTO_GRAL" ? "primary" : "outline"} 
+              variant={typeFilter === "REGULATION" ? "primary" : "outline"} 
               size="sm" 
-              onClick={() => setTypeFilter("REGLAMENTO_GRAL")}
+              onClick={() => setTypeFilter("REGULATION")}
               className="h-7 text-[10px] uppercase font-bold"
             >
               Reglamentos
             </Button>
             <Button 
-              variant={typeFilter === "DOCUMENTO_INTERNO" ? "primary" : "outline"} 
+              variant={typeFilter === "INTERNAL_DOCUMENT" ? "primary" : "outline"} 
               size="sm" 
-              onClick={() => setTypeFilter("DOCUMENTO_INTERNO")}
+              onClick={() => setTypeFilter("INTERNAL_DOCUMENT")}
               className="h-7 text-[10px] uppercase font-bold"
             >
               Internos
@@ -240,8 +242,8 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
               onChange={(e) => setFormType(e.target.value as any)}
               className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
             >
-              <option value="REGLAMENTO_GRAL">Reglamento General (Público)</option>
-              <option value="DOCUMENTO_INTERNO">Documento Interno / Manual</option>
+              <option value="REGULATION">Reglamento General (Público)</option>
+              <option value="INTERNAL_DOCUMENT">Documento Interno / Manual</option>
             </select>
             <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Categoría</label>
           </div>

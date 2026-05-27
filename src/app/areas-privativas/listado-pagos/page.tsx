@@ -6,7 +6,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
+import { prisma } from "@/shared/infrastructure/db/prisma";
 
+import { CapturarCuotaDialog } from "./_components/capturar-cuota-dialog";
 import { PrivateAreaActionShell } from "../_components/private-area-action-shell";
 import {
   type ActionPageSearchParams,
@@ -76,6 +78,20 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
   const { area, visibleChargeLines, visiblePaymentMovements, didFallbackToAllCharges } =
     pageData;
 
+  // Query active charge groups for this condominium
+  const areaCondo = await prisma.privateArea.findUnique({
+    where: { id: area.privateAreaId },
+    select: { condominiumId: true },
+  });
+
+  const chargeGroups = areaCondo
+    ? await prisma.chargeGroup.findMany({
+        where: { condominiumId: areaCondo.condominiumId, isActive: true },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      })
+    : [];
+
   const totalCharged = visibleChargeLines.reduce(
     (total, charge) => total + charge.amount,
     0,
@@ -138,6 +154,14 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           </CardContent>
         )}
       </Card>
+
+      {/* Financial Actions Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-white/60 border border-line p-3 rounded-card">
+        <p className="text-[11px] font-bold text-[#5a4838] uppercase tracking-wider">Acciones Financieras</p>
+        <div className="flex gap-2">
+          <CapturarCuotaDialog privateAreaId={area.privateAreaId} opc={opc} chargeGroups={chargeGroups} />
+        </div>
+      </div>
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

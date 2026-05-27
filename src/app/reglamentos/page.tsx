@@ -32,9 +32,9 @@ export default async function ReglamentosPage() {
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Reglamentos y Documentos</h1>
-            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Repositorio Institucional</Badge>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Archivo de Documentos y Reglamentos</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
-              {vm.projectName} · Repositorio institucional de normativa y archivos internos.
+              {vm.projectName} · Repositorio institucional de normativa interna.
             </p>
           </div>
         </div>

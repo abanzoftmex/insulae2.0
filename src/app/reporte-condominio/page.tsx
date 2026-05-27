@@ -8,11 +8,11 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
-import { 
-  Sun, 
-  Moon, 
-  Layers, 
-  Info, 
+import {
+  Sun,
+  Moon,
+  Layers,
+  Info,
   ArrowRight,
   Database,
   FileText,
@@ -46,10 +46,10 @@ export default async function ReporteCondominioPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Información del Condominio</h1>
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estadístca del Condominio</h1>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Dashboard Operativo</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
-              {vm.projectName} · {vm.condominiumName} · Corte {vm.generatedAtLabel}
+              {vm.projectName} · {vm.condominiumName} · Última edición {vm.updatedAtLabel}
             </p>
           </div>
         </div>
@@ -98,21 +98,21 @@ export default async function ReporteCondominioPage() {
             </div>
 
             <div className="space-y-1.5">
-               <div className="h-2 w-full bg-canvas rounded-full overflow-hidden flex">
-                  <div className="h-full bg-yellow-400" style={{ width: `${vm.availableRatioValue}%` }} />
-                  <div className="h-full bg-blue-400" style={{ width: `${vm.builtRatioValue}%` }} />
-               </div>
-               <div className="flex justify-between text-[9px] font-bold uppercase text-ink-soft/70">
-                  <span>Total Base: {vm.classificationBaseTotal}</span>
-                  <span>{vm.classificationModeLabel}</span>
-               </div>
+              <div className="h-2 w-full bg-canvas rounded-full overflow-hidden flex">
+                <div className="h-full bg-yellow-400" style={{ width: `${vm.availableRatioValue}%` }} />
+                <div className="h-full bg-blue-400" style={{ width: `${vm.builtRatioValue}%` }} />
+              </div>
+              <div className="flex justify-between text-[9px] font-bold uppercase text-ink-soft/70">
+                <span>Total Base: {vm.classificationBaseTotal}</span>
+                <span>{vm.classificationModeLabel}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 gap-3">
-          <StatCard accent="cyan" label="Áreas Operativas" value={vm.activePrivateAreas} trend={{ value: `Inactivas: ${vm.inactivePrivateAreas}`, isUp: true }} icon={<Activity className="h-3.5 w-3.5" />} />
-          <StatCard accent="lime" label="Clasificadas" value={vm.classifiedAreas} trend={{ value: `Total Base: ${vm.classificationBaseTotal}`, isUp: true }} icon={<Layers className="h-3.5 w-3.5" />} />
+          <StatCard accent="cyan" label="APoLes (Padres)" value={vm.activeParents} trend={{ value: `Inactivas: ${vm.inactiveParents}`, isUp: true }} icon={<Activity className="h-3.5 w-3.5" />} />
+          <StatCard accent="lime" label="FAPs (Hijos)" value={vm.activeChildren} trend={{ value: `Inactivas: ${vm.inactiveChildren}`, isUp: true }} icon={<Layers className="h-3.5 w-3.5" />} />
         </div>
       </div>
 
@@ -130,6 +130,7 @@ export default async function ReporteCondominioPage() {
                 { label: "Sin uso de suelo", value: vm.areasWithoutUseType },
                 { label: "M2 privativos", value: vm.totalPrivateAreaM2 },
                 { label: "M2 construcción", value: vm.totalBuiltAreaM2 },
+                { label: "M2 base APoLe", value: vm.totalApoleAreaM2 },
                 { label: "M2 áreas comunes", value: vm.projectCommonAreasM2 },
                 { label: "Fracción indiviso", value: vm.totalIndiviso },
                 { label: "Actualización", value: vm.updatedAtLabel },
@@ -150,8 +151,8 @@ export default async function ReporteCondominioPage() {
           <CardContent className="p-4 space-y-2">
             {vm.caveats.map((note, idx) => (
               <div key={idx} className="flex gap-2 p-2.5 rounded bg-brand-deep/2 border border-line/50">
-                 <Info className="h-4 w-4 text-brand-accent shrink-0 mt-0.5" />
-                 <p className="text-xs font-medium text-ink-soft/80 leading-relaxed italic">{note}</p>
+                <Info className="h-4 w-4 text-brand-accent shrink-0 mt-0.5" />
+                <p className="text-xs font-medium text-ink-soft/80 leading-relaxed italic">{note}</p>
               </div>
             ))}
           </CardContent>
@@ -161,7 +162,7 @@ export default async function ReporteCondominioPage() {
       {/* Usage Matrix */}
       <Card className="overflow-hidden border-transparent shadow-layered">
         <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Matriz de Ocupación por Uso y Barrio</CardTitle>
+          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Totales por Usos de suelo</CardTitle>
           <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest mt-2 bg-white text-brand border-0">Total: {vm.grandTotal}</Badge>
         </CardHeader>
         <CardContent className="p-0">
@@ -177,7 +178,7 @@ export default async function ReporteCondominioPage() {
                   ))}
                 </tr>
               </thead>
-                <tbody className="divide-y divide-black/5">
+              <tbody className="divide-y divide-black/5">
                 {vm.rows.map((row, index) => (
                   <tr key={row.landUseName} className={cn("hover:bg-brand-mint/20 transition-colors", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
                     <td className="px-4 py-2 text-sm font-bold text-ink border-r border-black/8">{row.landUseName}</td>
@@ -190,13 +191,13 @@ export default async function ReporteCondominioPage() {
                 ))}
               </tbody>
               <tfoot>
-                 <tr className="h-10 sticky bottom-0 z-10 bg-brand-deep text-white font-bold uppercase text-xs">
-                    <td colSpan={2} className="px-4 py-2 text-right border-r border-white/10">Total General</td>
-                    <td className="px-4 py-2 text-right border-r border-white/10 text-sm">{vm.grandTotal}</td>
-                    {vm.totalsByZone.map((t, idx) => (
-                      <td key={idx} className="px-4 py-2 text-right border-r border-white/10 text-xs">{t}</td>
-                    ))}
-                 </tr>
+                <tr className="h-10 sticky bottom-0 z-10 bg-brand-deep text-white font-bold uppercase text-xs">
+                  <td colSpan={2} className="px-4 py-2 text-right border-r border-white/10">Total General</td>
+                  <td className="px-4 py-2 text-right border-r border-white/10 text-sm">{vm.grandTotal}</td>
+                  {vm.totalsByZone.map((t, idx) => (
+                    <td key={idx} className="px-4 py-2 text-right border-r border-white/10 text-xs">{t}</td>
+                  ))}
+                </tr>
               </tfoot>
             </table>
           </div>
@@ -204,10 +205,10 @@ export default async function ReporteCondominioPage() {
       </Card>
 
       <div className="flex items-center gap-2 p-3 bg-canvas border border-line rounded-md">
-         <Database className="h-3.5 w-3.5 text-brand/40" />
-         <p className="text-[10px] font-bold text-ink-soft/70 uppercase tracking-widest">
-           Sincronización Neon Directa · Motor de Cálculo v2.0
-         </p>
+        <Database className="h-3.5 w-3.5 text-brand/40" />
+        <p className="text-[10px] font-bold text-ink-soft/70 uppercase tracking-widest">
+          Sincronización Neon Directa · Motor de Cálculo v2.0
+        </p>
       </div>
     </div>
   );

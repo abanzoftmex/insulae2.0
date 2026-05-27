@@ -99,7 +99,7 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
     primaryYear: currentYear - 1,
     secondaryYear: currentYear,
     page,
-    pageSize: 20,
+    pageSize: 100,
     reportType: "EXTRAORDINARY",
   });
 
@@ -152,9 +152,6 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
         <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wide" style={{ backgroundColor: "#fddce8", color: "#8f1a3d" }}>
           Comercio
         </span>
-        <span className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-bold tracking-wide" style={{ backgroundColor: "#eef8ee", color: "#1a6020" }}>
-          Filas con fondo verde son fracciones privativas (FAP)
-        </span>
       </div>
 
         {/* ── Paginador top ── */}
@@ -198,11 +195,11 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
                       Saldo actual
                     </th>
                     {/* Meses primaryYear */}
-                    <th colSpan={12} className="border-b border-[#b8c8e0] bg-[#dce8f8] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#1a3860]">
+                    <th colSpan={12} className="border-b border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
                       Pagos mes a mes {primaryYear}
                     </th>
                     {/* Meses secondaryYear */}
-                    <th colSpan={12} className="border-b border-[#b0d0b8] bg-[#d8f8e0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#1a4828]">
+                    <th colSpan={12} className="border-b border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
                       Pagos mes a mes {secondaryYear}
                     </th>
                   </tr>
@@ -227,16 +224,14 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
                 <tbody>
                   {vm.rows.map((row, idx) => {
                     const isChild = row.isChild;
-                    const baseBg = isChild
-                      ? "bg-[#eef8ee]"
-                      : idx % 2 === 0 ? "bg-white" : "bg-[#faf6f0]";
-                    const stickyBg = isChild ? "bg-[#eef8ee]" : idx % 2 === 0 ? "bg-white" : "bg-[#faf6f0]";
+                    const baseBg = idx % 2 === 0 ? "bg-white" : "bg-[#faf6f0]";
+                    const stickyBg = idx % 2 === 0 ? "bg-white" : "bg-[#faf6f0]";
 
                     return (
                       <tr key={row.id} className={`border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] ${baseBg}`}>
                         {/* Columna sticky */}
                         <td className={`sticky left-0 z-10 min-w-50 border-r-2 border-[#ddd0be] px-3 py-2 ${stickyBg}`}>
-                          <p className={`font-semibold leading-tight ${isChild ? "text-[#1a5c2e] text-[11px]" : "text-[#2b1e12] text-[12px]"}`}>
+                          <p className={`font-semibold leading-tight text-[#2b1e12] ${isChild ? "text-[11px] pl-4 opacity-80" : "text-[12px]"}`}>
                             {row.areaLabel}
                           </p>
                           <StatusBadge label={row.statusLabel} css={row.statusCss} />
@@ -256,7 +251,7 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
                         {row.monthlyCells
                           .filter((_, i) => i < 12)
                           .map((mc, i) => (
-                            <td key={`m${primaryYear}-${i + 1}-${row.id}`} className="border-r border-[#dde8f0] px-2 py-1.5 text-center">
+                            <td key={`m${primaryYear}-${i + 1}-${row.id}`} className="border-r border-[#e8ddd0] px-2 py-1.5 text-center">
                               <Cell cell={mc} />
                             </td>
                           ))}
@@ -265,7 +260,7 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
                         {row.monthlyCells
                           .filter((_, i) => i >= 12)
                           .map((mc, i) => (
-                            <td key={`m${secondaryYear}-${i + 1}-${row.id}`} className="border-r border-[#d8eedd] px-2 py-1.5 text-center">
+                            <td key={`m${secondaryYear}-${i + 1}-${row.id}`} className="border-r border-[#e8ddd0] px-2 py-1.5 text-center">
                               <Cell cell={mc} />
                             </td>
                           ))}
@@ -290,12 +285,12 @@ export default async function ReporteCuotasExtraordinariasPage({ searchParams }:
                     </td>
 
                     {vm.totalsRow.monthlyCells.filter((_, i) => i < 12).map((mc, i) => (
-                      <td key={`tot-m${primaryYear}-${i + 1}`} className="border-r border-[#d0e4f0] px-2 py-2 text-center">
+                      <td key={`tot-m${primaryYear}-${i + 1}`} className="border-r border-[#c8b8a0] px-2 py-2 text-center">
                         <Cell cell={mc} />
                       </td>
                     ))}
                     {vm.totalsRow.monthlyCells.filter((_, i) => i >= 12).map((mc, i) => (
-                      <td key={`tot-m${secondaryYear}-${i + 1}`} className="border-r border-[#c8e8d0] px-2 py-2 text-center">
+                      <td key={`tot-m${secondaryYear}-${i + 1}`} className="border-r border-[#c8b8a0] px-2 py-2 text-center">
                         <Cell cell={mc} />
                       </td>
                     ))}

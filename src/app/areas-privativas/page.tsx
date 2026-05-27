@@ -8,7 +8,7 @@ import {
 } from "@/modules/private-area-actions";
 import { getPrivateAreaListingUseCase } from "@/modules/private-areas";
 import { toPrivateAreaListingVM } from "@/modules/private-areas/presentation/private-area-listing.vm";
-import { StickyHorizontalTableFrame } from "./_components/sticky-horizontal-table-frame";
+
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -34,6 +34,8 @@ import {
   Images,
   Receipt,
   Store,
+  Briefcase,
+  Wallet,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -143,12 +145,12 @@ const ACTION_META: Record<
       "bg-cyan-50 border-cyan-200 text-cyan-600 hover:bg-cyan-600 hover:text-white hover:border-cyan-600",
   },
   OWNER_PAYMENTS: {
-    icon: <Receipt className="h-3 w-3" />,
+    icon: <Wallet className="h-3 w-3" />,
     activeClass:
       "bg-purple-50 border-purple-200 text-purple-600 hover:bg-purple-600 hover:text-white hover:border-purple-600",
   },
   COMMERCE_PAYMENTS: {
-    icon: <ShoppingBag className="h-3 w-3" />,
+    icon: <Briefcase className="h-3 w-3" />,
     activeClass:
       "bg-gold-soft border-gold/30 text-gold hover:bg-gold hover:text-white hover:border-gold",
   },
@@ -265,8 +267,8 @@ export default async function AreasPrivativasPage(props: PageProps) {
   const colWidths = [
     160, // Acciones
     130, // Ubicacion
-    200, // Area / Fraccion
-    140, // Jerarquia
+    200, // Apoles
+    140, // Tipo de Apol
     140, // Superficie
     140, // Superficie Orig
     110, // Indiviso
@@ -398,134 +400,150 @@ export default async function AreasPrivativasPage(props: PageProps) {
       <Paginator pagination={vm.pagination} buildHref={buildHref} />
 
       {/* Main Extensive Table */}
-      <div className="overflow-hidden rounded-md border border-line shadow-layered bg-card">
-        <StickyHorizontalTableFrame
-          header={
-            <table className="table-fixed border-separate border-spacing-0" style={{ width: `${fullTableWidth}px` }}>
-              <colgroup>{colWidths.map((w, i) => <col key={i} style={{ width: `${w}px` }} />)}</colgroup>
-              <thead>
-                <tr className="bg-canvas text-left text-[10px] font-bold uppercase tracking-widest text-brand">
-                  <th className="sticky left-0 z-40 px-3 py-3 border-b border-line bg-canvas">Acciones</th>
-                  <th className="px-3 py-3 border-b border-line">Ubicación</th>
-                  <th className="px-3 py-3 border-b border-line">Área / Fracción</th>
-                  <th className="px-3 py-3 border-b border-line">Jerarquía</th>
-                  <th className="px-3 py-3 border-b border-line">M2 Actual</th>
-                  <th className="px-3 py-3 border-b border-line">M2 Orig</th>
-                  <th className="px-3 py-3 border-b border-line">Indiviso</th>
-                  <th className="px-3 py-3 border-b border-line">M2 Comunes</th>
-                  <th className="px-3 py-3 border-b border-line">M2 Totales</th>
-                  <th className="px-3 py-3 border-b border-line">M2 Const</th>
-                  <th className="px-3 py-3 border-b border-line">Subcomunes</th>
-                  <th className="px-3 py-3 border-b border-line">Totales FAP</th>
-                  <th className="px-3 py-3 border-b border-line">% Indiviso</th>
-                  <th className="px-3 py-3 border-b border-line">Ind. Cond</th>
-                  <th className="px-3 py-3 border-b border-line">Uso Suelo</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-deep/3 text-brand-deep/50">Cartera Vencida</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-deep/3 text-brand-deep/50">Anticipado</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-mint/20">Anual {legacyOrdinaryYear}</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-mint/20">Mensual {legacyOrdinaryYear}</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-mint/20">Saldo {legacyOrdinaryYear}</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-mint/40">Anual {nextLegacyOrdinaryYear}</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-mint/40">Mensual {nextLegacyOrdinaryYear}</th>
-                  <th className="px-3 py-3 border-b border-line bg-brand-mint/40">Saldo {nextLegacyOrdinaryYear}</th>
-                  <th className="px-3 py-3 border-b border-line">Extra Condo</th>
-                  <th className="px-3 py-3 border-b border-line">Extra Condo Saldo</th>
-                  <th className="px-3 py-3 border-b border-line">Extra Com</th>
-                  <th className="px-3 py-3 border-b border-line">Extra Com Saldo</th>
-                  <th className="px-3 py-3 border-b border-line">STC</th>
-                  <th className="px-3 py-3 border-b border-line">STC Saldo</th>
-                  <th className="px-3 py-3 border-b border-line">Sanción</th>
-                  <th className="px-3 py-3 border-b border-line">Sanción Saldo</th>
-                  <th className="px-3 py-3 border-b border-line">Comodato</th>
-                  <th className="px-3 py-3 border-b border-line">Comodato Saldo</th>
-                  <th className="px-3 py-3 border-b border-line bg-gold-soft/50 text-gold">Saldo Total</th>
-                  {monthLabels.map(m => <th key={m.key} className="px-3 py-3 border-b border-line font-bold opacity-50">{m.label}</th>)}
-                  <th className="px-3 py-3 border-b border-line">Propietario Hist.</th>
-                  <th className="px-3 py-3 border-b border-line">Prop. Legal</th>
-                  <th className="px-3 py-3 border-b border-line">Dominio Actual</th>
-                  <th className="px-3 py-3 border-b border-line">Dominio Pleno</th>
-                  <th className="px-3 py-3 border-b border-line">Arrendatario</th>
-                  <th className="px-3 py-3 border-b border-line">Contacto Admin</th>
-                  <th className="px-3 py-3 border-b border-line">Contacto Oper</th>
-                </tr>
-              </thead>
-            </table>
-          }
-        >
+      <section className="overflow-hidden rounded-[1.6rem] border border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm">
+        <div className="overflow-auto max-h-[75vh]">
           <table className="table-fixed border-separate border-spacing-0" style={{ width: `${fullTableWidth}px` }}>
             <colgroup>{colWidths.map((w, i) => <col key={i} style={{ width: `${w}px` }} />)}</colgroup>
-            <tbody className="divide-y divide-ink/10 text-ink">
-              {vm.rows.map((row, rowIdx) => {
-                 const actions = legacyActionsByPrivateAreaId[row.id] ?? [];
-                 const hasCom = row.hasRentalLabel === "Si";
-                 const empty = "$0.00";
-                 const f = (k: string) => {
-                   const s = row.financialCells[k as keyof typeof row.financialCells];
-                   return renderFinancialCards(s?.owner ?? empty, s?.commerce ?? empty, hasCom);
-                 };
+            
+            {/* THEAD */}
+            <thead className="sticky top-0 z-30 shadow-sm">
+              <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
+                <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Acciones</th>
+                <th className="sticky left-[160px] top-0 z-50 px-3 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Ubicación</th>
+                <th className="sticky left-[290px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8]">Apoles</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Tipo de Apol</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Actual</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Orig</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Comunes</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Totales</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Const</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Subcomunes</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Totales FAP</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">% Indiviso</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Ind. Cond</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Uso Suelo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Cartera Vencida</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Anticipado</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/20">Anual {legacyOrdinaryYear}</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/20">Mensual {legacyOrdinaryYear}</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/20">Saldo {legacyOrdinaryYear}</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/40">Anual {nextLegacyOrdinaryYear}</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/40">Mensual {nextLegacyOrdinaryYear}</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/40">Saldo {nextLegacyOrdinaryYear}</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Condo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Condo Saldo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Com</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Com Saldo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">STC</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">STC Saldo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Sanción</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Sanción Saldo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Comodato</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Comodato Saldo</th>
+                <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold">Saldo Total</th>
+                {monthLabels.map(m => (
+                  <th key={m.key} className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] leading-snug">{m.label}</th>
+                ))}
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Propietario Hist.</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Prop. Legal</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Dominio Actual</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Dominio Pleno</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Arrendatario</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Contacto Admin</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Contacto Oper</th>
+              </tr>
+            </thead>
 
-                 return (
-                   <tr key={`${row.id}-${rowIdx}`} className={cn("h-12 hover:bg-canvas/10 transition-colors", row.hierarchyLabel === "Hijo" && "bg-success/[0.02]")}>
-                     <td className="sticky left-0 z-10 px-3 py-1.5 border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
-                       <div className="flex flex-wrap gap-1">{actions.map(renderLegacyAction)}</div>
-                     </td>
-                     <td className="px-3 text-xs font-bold text-ink-soft uppercase">{row.zone}</td>
-                     <td className="px-3">
-                       <p className="font-bold text-brand leading-tight truncate">{row.name}</p>
-                       <div className="flex gap-1.5 mt-0.5">
-                         <span className="px-1.5 py-px rounded-xs bg-canvas border border-line/40 text-xs font-bold text-ink-soft/70 uppercase">{row.code}</span>
-                         <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.statusLabel}</Badge>
-                       </div>
-                     </td>
-                     <td className="px-3">
-                       {renderHierarchyBadge(row.hierarchyLabel)}
-                       <p className="text-xs text-ink-soft/60 italic mt-0.5">P: {row.parentName}</p>
-                     </td>
-                     <td className="px-3 text-xs tabular-nums">{row.m2Updated}</td>
-                     <td className="px-3 text-xs tabular-nums">{row.m2Original}</td>
-                     <td className="px-3 text-xs tabular-nums">{row.indiviso}</td>
-                     <td className="px-3 text-xs tabular-nums">{row.m2CommonArea}</td>
-                     <td className="px-3 text-xs tabular-nums font-bold">{row.totalAreaM2}</td>
-                     <td className="px-3 text-xs tabular-nums">{row.m2Construction}</td>
-                     <td className="px-3 text-xs tabular-nums">{row.m2CommonAreaChildren}</td>
-                     <td className="px-3 text-xs tabular-nums">{row.m2ConstructionChildren}</td>
-                     <td className="px-3 text-xs tabular-nums">{row.indiviso}</td>
-                     <td className="px-3 text-xs tabular-nums">{row.vccc}</td>
-                     <td className="px-3"><Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.useTypeInitials}</Badge></td>
-                     <td className="px-2">{f("arrears_2017_2024")}</td>
-                     <td className="px-2">{f("advance_2024")}</td>
-                     <td className="px-2">{f("ordinary_2025_annual")}</td>
-                     <td className="px-2">{f("ordinary_2025_monthly")}</td>
-                     <td className="px-2">{f("ordinary_2025_outstanding")}</td>
-                     <td className="px-2">{f("ordinary_2026_annual")}</td>
-                     <td className="px-2">{f("ordinary_2026_monthly")}</td>
-                     <td className="px-2">{f("ordinary_2026_outstanding")}</td>
-                     <td className="px-2">{f("extra_condo_2024_2025")}</td>
-                     <td className="px-2">{f("extra_condo_2024_2025_outstanding")}</td>
-                     <td className="px-2">{f("extra_commerce_2024_2025")}</td>
-                     <td className="px-2">{f("extra_commerce_2024_2025_outstanding")}</td>
-                     <td className="px-2">{f("stc")}</td>
-                     <td className="px-2">{f("stc_outstanding")}</td>
-                     <td className="px-2">{f("sancion")}</td>
-                     <td className="px-2">{f("sancion_outstanding")}</td>
-                     <td className="px-2">{f("comodato")}</td>
-                     <td className="px-2">{f("comodato_outstanding")}</td>
-                     <td className="px-2 bg-gold-soft/10">{f("total_outstanding")}</td>
-                     {monthLabels.map(m => <td key={m.key} className="px-2 opacity-60 scale-90">{f(m.key)}</td>)}
-                     <td className="px-3">{renderPartyContacts(row.ownerInitialHistory)}</td>
-                     <td className="px-3">{renderPartyContacts(row.ownerLegal)}</td>
-                     <td className="px-3">{renderPartyContacts(row.domainCurrent)}</td>
-                     <td className="px-3">{renderPartyContacts(row.domainFull)}</td>
-                     <td className="px-3">{renderPartyContacts(row.tenantUsers)}</td>
-                     <td className="px-3">{renderPartyContacts(row.rentalAdministrativeContacts)}</td>
-                     <td className="px-3">{renderPartyContacts(row.rentalOperationalContacts)}</td>
-                   </tr>
-                 );
+            {/* TBODY */}
+            <tbody className="divide-y divide-[#e8ddd0] text-[#2b1e12]">
+              {vm.rows.map((row, rowIdx) => {
+                const actions = legacyActionsByPrivateAreaId[row.id] ?? [];
+                const hasCom = row.hasRentalLabel === "Si";
+                const empty = "$0.00";
+                const f = (k: string) => {
+                  const s = row.financialCells[k as keyof typeof row.financialCells];
+                  return renderFinancialCards(s?.owner ?? empty, s?.commerce ?? empty, hasCom);
+                };
+
+                const isChild = row.hierarchyLabel === "Hijo";
+                const rowBg = isChild ? "bg-[#faf6f0]" : "bg-white";
+                
+                return (
+                  <tr key={`${row.id}-${rowIdx}`} className={cn("h-12 border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] group", rowBg)}>
+                    
+                    {/* Sticky Column 1: Acciones */}
+                    <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
+                      <div className="flex flex-wrap gap-1">{actions.map(renderLegacyAction)}</div>
+                    </td>
+
+                    {/* Sticky Column 2: Ubicación */}
+                    <td className={cn("sticky left-[160px] z-20 px-3 text-xs font-bold text-[#5a4838] uppercase border-r border-[#ddd0be] transition-colors", rowBg)}>
+                      {row.zone}
+                    </td>
+
+                    {/* Sticky Column 3: Área / Fracción */}
+                    <td className={cn("sticky left-[290px] z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
+                      <p className="font-bold text-[#2b1e12] leading-tight truncate">{row.name}</p>
+                      <div className="flex gap-1.5 mt-0.5">
+                        <span className="px-1.5 py-px rounded-xs bg-[#faf6f0] border border-[#c8b8a0]/30 text-xs font-bold text-[#7a5e44]/80 uppercase">{row.code}</span>
+                        <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.statusLabel}</Badge>
+                      </div>
+                    </td>
+
+                    <td className="px-3 border-r border-[#e8ddd0]">
+                      {renderHierarchyBadge(row.hierarchyLabel)}
+                      <p className="text-xs text-[#7a5e44]/60 italic mt-0.5">P: {row.parentName}</p>
+                    </td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Updated}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Original}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indiviso}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2CommonArea}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums font-bold">{row.totalAreaM2}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Construction}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2CommonAreaChildren}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2ConstructionChildren}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indiviso}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.vccc}</td>
+                    <td className="px-3 border-r border-[#e8ddd0]">
+                      <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.useTypeInitials}</Badge>
+                    </td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("arrears_2017_2024")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("advance_2024")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_annual")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_monthly")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_annual")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_monthly")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("extra_condo_2024_2025")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("extra_condo_2024_2025_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("extra_commerce_2024_2025")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("extra_commerce_2024_2025_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("stc")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("stc_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("sancion")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("sancion_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("comodato")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("comodato_outstanding")}</td>
+                    <td className="px-2 border-r-2 border-[#d0b898] bg-[#f0e0c8]/20">{f("total_outstanding")}</td>
+                    {monthLabels.map(m => (
+                      <td key={m.key} className="px-2 border-r border-[#e8ddd0] opacity-90 scale-95">{f(m.key)}</td>
+                    ))}
+                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.ownerInitialHistory)}</td>
+                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.ownerLegal)}</td>
+                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.domainCurrent)}</td>
+                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.domainFull)}</td>
+                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.tenantUsers)}</td>
+                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.rentalAdministrativeContacts)}</td>
+                    <td className="px-3">{renderPartyContacts(row.rentalOperationalContacts)}</td>
+                  </tr>
+                );
               })}
             </tbody>
           </table>
-        </StickyHorizontalTableFrame>
-      </div>
+        </div>
+      </section>
 
       {/* Paginator bottom */}
       <Paginator pagination={vm.pagination} buildHref={buildHref} />

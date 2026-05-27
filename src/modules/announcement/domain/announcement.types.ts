@@ -21,6 +21,7 @@ export interface AnnouncementDate {
   location: string | null;
   callType: string;
   status: string;
+  checkedPositions?: string | null;
 }
 
 export interface AnnouncementTopic {
@@ -28,13 +29,32 @@ export interface AnnouncementTopic {
   order: number;
   title: string;
   description: string | null;
+  presenterId?: string | null;
+  durationMinutes?: number | null;
+  actionType?: string | null;
+  conclusions?: string | null;
+  votesJson?: string | null;
+}
+
+export interface SpecialGuest {
+  id: string;
+  name: string;
+  email: string | null;
+}
+
+export interface AnnouncementInvitedPosition {
+  id: string;
+  positionId: string;
 }
 
 export interface Announcement {
   id: string;
   name: string;
+  typeId: string;
   type: AnnouncementType;
+  subtypeId: string;
   subtype: AnnouncementSubtype;
+  statusId: string;
   status: AnnouncementStatus;
   comments: string | null;
   guests: string | null;
@@ -42,9 +62,14 @@ export interface Announcement {
   expectedAttendance: number;
   actualAttendance: number;
   attendancePercentage: number;
+  conveningPersonId?: string | null;
   conveningPosition: string | null;
+  moderatorPersonId?: string | null;
   moderatorPosition: string | null;
   dates: AnnouncementDate[];
   topics: AnnouncementTopic[];
+  invitedPositions?: AnnouncementInvitedPosition[];
+  specialGuests?: SpecialGuest[];
   createdAt: Date;
 }
+

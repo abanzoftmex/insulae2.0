@@ -2,12 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 
-import {
-  toPrivateAreaStatus,
-  toPrivateAreaStatusFromLegacy,
-  type PrivateAreaStatus,
-} from "@/shared/domain/private-area-status";
+import { toPrivateAreaStatus, toPrivateAreaStatusFromLegacy, type PrivateAreaStatus } from "@/shared/domain/private-area-status";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { getCurrentUser } from "@/app/actions/auth";
 
 function toNumber(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string") {
@@ -180,6 +177,8 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
         ? { parentPrivateArea: { disconnect: true } }
         : { parentPrivateArea: { connect: { id: parentPrivateAreaId } } };
 
+  const userName = await getCurrentUser();
+
   await prisma.privateArea.update({
     where: { id: privateAreaId },
     data: {
@@ -199,6 +198,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
       ...(m2ConstructionChildren !== null ? { m2ConstructionChildren } : {}),
       ...(m2CommonAreaChildren !== null ? { m2CommonAreaChildren } : {}),
       ...(vccc !== null ? { vccc } : {}),
+      updatedBy: userName,
     },
   });
 
@@ -215,10 +215,13 @@ export async function togglePrivateAreaStatusAction(formData: FormData): Promise
     return;
   }
 
+  const userName = await getCurrentUser();
+
   await prisma.privateArea.update({
     where: { id: privateAreaId },
     data: {
       isActive: nextStatus === "ACTIVE",
+      updatedBy: userName,
     },
   });
 
@@ -553,3 +556,69 @@ export async function setPrivateAreaRentalTenantAction(formData: FormData): Prom
   revalidatePath(`/areas-privativas/listado-arrendamientos?id=${area.id}`);
   await revalidatePrivateAreaFormPath(privateAreaId);
 }
+
+export async function createPrivateAreaChargeAction(formData: FormData): Promise<void> {
+  const privateAreaId = toString(formData.get("privateAreaId"));
+  const chargeGroupId = toString(formData.get("chargeGroupId"));
+  const amount = toNumber(formData.get("amount"));
+  const concept = toString(formData.get("concept"));
+  const dueDate = toDate(formData.get("dueDate"));
+  const chargeDate = toDate(formData.get("chargeDate")) ?? new Date();
+  
+  const responsibilityValue = toString(formData.get("responsibility")); // "OWNER" | "COMMERCE"
+  const responsibility: "OWNER" | "COMMERCE" = responsibilityValue === "COMMERCE" ? "COMMERCE" : "OWNER";
+
+  const periodYear = chargeDate.getUTCFullYear();
+  const periodMonth = chargeDate.getUTCMonth() + 1;
+
+  if (!privateAreaId || !chargeGroupId || amount === null || amount <= 0) {
+    return;
+  }
+
+  const area = await prisma.privateArea.findUnique({
+    where: { id: privateAreaId },
+    select: {
+      id: true,
+      condominiumId: true,
+    },
+  });
+
+  if (!area) {
+    return;
+  }
+
+  let tenancyId: string | null = null;
+  if (responsibility === "COMMERCE") {
+    const latestRental = await prisma.rental.findFirst({
+      where: {
+        privateAreaId: area.id,
+        condominiumId: area.condominiumId,
+      },
+      orderBy: { startsAt: "desc" },
+      select: { id: true },
+    });
+    tenancyId = latestRental?.id ?? null;
+  }
+
+  await prisma.charge.create({
+    data: {
+      condominiumId: area.condominiumId,
+      privateAreaId: area.id,
+      chargeGroupId,
+      amount,
+      concept: concept.length > 0 ? concept : null,
+      responsibility,
+      periodYear,
+      periodMonth,
+      dueDate,
+      status: "OPEN",
+      tenancyId,
+    },
+  });
+
+  revalidatePath("/areas-privativas");
+  revalidatePath("/areas-privativas/listado-pagos");
+  revalidatePath("/reporte-cuotas");
+  revalidatePath("/reporte-cuotas-extraordinarias");
+}
+

@@ -1,5 +1,6 @@
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { getCurrentUser } from "@/app/actions/auth";
 
 import type { SaveZoneInput, ZoneCommandResult, ZoneFormSnapshot } from "../domain/zone-form";
 import type { ZoneFormRepository } from "../domain/zone-form.repository";
@@ -148,6 +149,16 @@ export class PrismaZoneFormRepository implements ZoneFormRepository {
         },
       });
 
+      const userName = await getCurrentUser();
+
+      await prisma.condominium.update({
+        where: { id: condominiumId },
+        data: { 
+          updatedAt: new Date(),
+          updatedBy: userName
+        },
+      });
+
       return {
         ok: true,
         message: "Barrio actualizado correctamente.",
@@ -183,6 +194,16 @@ export class PrismaZoneFormRepository implements ZoneFormRepository {
       },
       select: {
         id: true,
+      },
+    });
+
+    const userName = await getCurrentUser();
+
+    await prisma.condominium.update({
+      where: { id: condominiumId },
+      data: { 
+        updatedAt: new Date(),
+        updatedBy: userName
       },
     });
 

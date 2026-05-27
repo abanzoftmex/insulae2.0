@@ -17,9 +17,14 @@ export interface CondominiumReportVM {
   totalRegisteredPrivateAreas: string;
   activePrivateAreas: string;
   inactivePrivateAreas: string;
+  activeParents: string;
+  activeChildren: string;
+  inactiveParents: string;
+  inactiveChildren: string;
   areasWithUseType: string;
   areasWithoutUseType: string;
   totalPrivateAreaM2: string;
+  totalApoleAreaM2: string;
   totalBuiltAreaM2: string;
   totalIndiviso: string;
   availableAreas: string;
@@ -76,9 +81,14 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     totalRegisteredPrivateAreas: formatInteger(report.totalRegisteredPrivateAreas),
     activePrivateAreas: formatInteger(report.activePrivateAreas),
     inactivePrivateAreas: formatInteger(report.inactivePrivateAreas),
+    activeParents: formatInteger(report.activeParents),
+    activeChildren: formatInteger(report.activeChildren),
+    inactiveParents: formatInteger(report.inactiveParents),
+    inactiveChildren: formatInteger(report.inactiveChildren),
     areasWithUseType: formatInteger(report.areasWithUseType),
     areasWithoutUseType: formatInteger(report.areasWithoutUseType),
     totalPrivateAreaM2: formatNumber(report.totalPrivateAreaM2),
+    totalApoleAreaM2: formatNumber(report.totalApoleAreaM2),
     totalBuiltAreaM2: formatNumber(report.totalBuiltAreaM2),
     totalIndiviso: formatNumber(report.totalIndiviso),
     availableAreas: formatInteger(report.availableAreas),
@@ -102,10 +112,10 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     totalsByZone: report.zoneNames.map((zone) => formatInteger(report.totalsByZone[zone] ?? 0)),
     grandTotal: formatInteger(report.grandTotal),
     caveats: report.caveats,
-    updatedAtLabel: new Intl.DateTimeFormat("es-MX", {
+    updatedAtLabel: `${new Intl.DateTimeFormat("es-MX", {
       dateStyle: "medium",
       timeStyle: "short",
-    }).format(report.lastUpdatedAt),
+    }).format(report.lastUpdatedAt)}${report.lastUpdatedBy ? ` por ${report.lastUpdatedBy}` : ""}`,
     generatedAtLabel: new Intl.DateTimeFormat("es-MX", {
       dateStyle: "medium",
       timeStyle: "short",

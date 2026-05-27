@@ -98,6 +98,7 @@ model Condominium {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  updatedBy String?
 
   users                        User[]
   commerces                    Commerce[]
@@ -367,6 +368,7 @@ model PrivateArea {
   isActive               Boolean           @default(true)
   createdAt              DateTime          @default(now())
   updatedAt              DateTime          @updatedAt
+  updatedBy              String?
 
   condominium       Condominium          @relation(fields: [condominiumId], references: [id])
   parentPrivateArea PrivateArea?         @relation("PrivateAreaHierarchy", fields: [parentPrivateAreaId], references: [id], onDelete: SetNull)
@@ -1035,6 +1037,7 @@ model ProjectDocument {
   checksum      String?
   isActive      Boolean             @default(true)
   uploadedAt    DateTime            @default(now())
+  uploadedBy    String?
 
   project Project @relation(fields: [projectId], references: [id])
 
@@ -1245,6 +1248,7 @@ model AnnouncementDate {
   location              String?
   callType              String            @default("1ra Convocatoria")
   status                String            @default("Pendiente")
+  checkedPositions      String?           @db.Text
   
   isActive              Boolean           @default(true)
   createdAt             DateTime          @default(now())
@@ -1263,6 +1267,8 @@ model AnnouncementTopic {
   presenterId     String?
   durationMinutes Int?
   actionType      String?      @default("NONE") // VOTE, CONFIRMATION, NONE
+  conclusions     String?      @db.Text
+  votesJson       String?      @db.Text
   
   isActive        Boolean      @default(true)
   createdAt       DateTime     @default(now())

@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/shared/utils/cn";
-import { 
-  Users, 
-  Settings, 
-  Search, 
+import {
+  Users,
+  Settings,
+  Search,
   Layers,
   ShieldCheck,
   UserCheck,
@@ -59,9 +59,9 @@ export default async function EstructuraCondominalPage({ searchParams }: Estruct
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura Condominal</h1>
-            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Gobierno Interno</Badge>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Gobernanza</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
-              {snapshot.condominiumName} · Organigrama de responsables y toma de decisiones.
+              {snapshot.condominiumName} · Estructura del Condominio.
             </p>
           </div>
         </div>
@@ -91,58 +91,60 @@ export default async function EstructuraCondominalPage({ searchParams }: Estruct
         <OrganigramaEditorShell groups={snapshot.groups} userOptions={snapshot.userOptions} />
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {snapshot.groups.length === 0 ? (
+          {snapshot.groups.filter((g) => g.rows.length > 0).length === 0 ? (
             <div className="col-span-full py-20 text-center text-ink-soft/30 italic font-bold uppercase text-[11px] bg-card rounded-md border border-line">
               No hay grupos o cargos configurados
             </div>
           ) : (
-            snapshot.groups.map((group) => (
-              <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered h-fit">
-                <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-                  <CardTitle className="text-[12px] font-bold uppercase tracking-widest text-white">{group.groupName}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="h-8 bg-canvas/10 text-[9px] font-bold uppercase tracking-widest text-ink-soft/70 border-b border-line/30">
-                        <th className="px-4 py-2">Cargo / Responsabilidad</th>
-                        <th className="px-4 py-2">Titular</th>
-                        <th className="px-4 py-2">Suplente</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-line/30">
-                      {group.rows.map((row) => (
-                        <tr key={row.positionId} className="h-12 hover:bg-canvas/5 transition-colors group/row">
-                          <td className="px-4 py-2">
-                             <p className="text-[12px] font-bold text-ink leading-tight">{row.positionName}</p>
-                          </td>
-                          <td className="px-4 py-2">
-                             {row.responsible.length === 0 ? (
-                               <span className="text-[10px] text-ink-soft/50 uppercase font-bold">Pendiente</span>
-                             ) : (
-                               row.responsible.map((item) => (
-                                 <p key={item.userId} className="text-[11px] font-bold text-brand">{item.displayName}</p>
-                               ))
-                             )}
-                          </td>
-                          <td className="px-4 py-2">
-                             {!row.allowsAlternate ? (
-                               <span className="text-[9px] text-ink-soft/50 uppercase font-bold tracking-tighter">No aplica</span>
-                             ) : row.alternates.length === 0 ? (
-                               <span className="text-[10px] text-ink-soft/50 uppercase font-bold">Pendiente</span>
-                             ) : (
-                               row.alternates.map((item) => (
-                                 <p key={item.userId} className="text-[11px] font-medium text-ink-soft">{item.displayName}</p>
-                               ))
-                             )}
-                          </td>
+            snapshot.groups
+              .filter((group) => group.rows.length > 0)
+              .map((group) => (
+                <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered h-fit">
+                  <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+                    <CardTitle className="text-[12px] font-bold uppercase tracking-widest text-white">{group.groupName}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="h-8 bg-canvas/10 text-[9px] font-bold uppercase tracking-widest text-ink-soft/70 border-b border-line/30">
+                          <th className="px-4 py-2">Cargo / Responsabilidad</th>
+                          <th className="px-4 py-2">Titular</th>
+                          <th className="px-4 py-2">Suplente</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </CardContent>
-              </Card>
-            ))
+                      </thead>
+                      <tbody className="divide-y divide-line/30">
+                        {group.rows.map((row) => (
+                          <tr key={row.positionId} className="h-12 hover:bg-canvas/5 transition-colors group/row">
+                            <td className="px-4 py-2">
+                              <p className="text-[12px] font-bold text-ink leading-tight">{row.positionName}</p>
+                            </td>
+                            <td className="px-4 py-2">
+                              {row.responsible.length === 0 ? (
+                                <span className="text-[10px] text-ink-soft/50 uppercase font-bold">Pendiente</span>
+                              ) : (
+                                row.responsible.map((item) => (
+                                  <p key={item.userId} className="text-[11px] font-bold text-brand">{item.displayName}</p>
+                                ))
+                              )}
+                            </td>
+                            <td className="px-4 py-2">
+                              {!row.allowsAlternate ? (
+                                <span className="text-[9px] text-ink-soft/50 uppercase font-bold tracking-tighter">No aplica</span>
+                              ) : row.alternates.length === 0 ? (
+                                <span className="text-[10px] text-ink-soft/50 uppercase font-bold">Pendiente</span>
+                              ) : (
+                                row.alternates.map((item) => (
+                                  <p key={item.userId} className="text-[11px] font-medium text-ink-soft">{item.displayName}</p>
+                                ))
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </CardContent>
+                </Card>
+              ))
           )}
         </div>
       )}

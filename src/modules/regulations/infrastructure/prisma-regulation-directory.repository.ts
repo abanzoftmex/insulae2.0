@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
-
+import { Prisma } from "@prisma/client";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { getCurrentUser } from "@/app/actions/auth";
 
 import type {
   CreateRegulationDocumentInput,
@@ -19,6 +20,7 @@ function trimSafe(value: string): string {
 interface ProjectDocumentCapabilities {
   hasDocumentType: boolean;
   hasIsActive: boolean;
+  hasUploadedBy: boolean;
 }
 
 async function getProjectDocumentCapabilities(): Promise<ProjectDocumentCapabilities> {
@@ -27,7 +29,7 @@ async function getProjectDocumentCapabilities(): Promise<ProjectDocumentCapabili
     FROM information_schema.columns
     WHERE table_schema = 'public'
       AND lower(table_name) = lower('ProjectDocument')
-      AND lower(column_name) IN ('documenttype', 'isactive')
+      AND lower(column_name) IN ('documenttype', 'isactive', 'uploadedby')
   `;
 
   const set = new Set(rows.map((row) => row.column_name));
@@ -35,6 +37,7 @@ async function getProjectDocumentCapabilities(): Promise<ProjectDocumentCapabili
   return {
     hasDocumentType: set.has("documenttype"),
     hasIsActive: set.has("isactive"),
+    hasUploadedBy: set.has("uploadedby"),
   };
 }
 
@@ -129,6 +132,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
 
     const capabilities = await getProjectDocumentCapabilities();
 
+    const uploadedByCol = capabilities.hasUploadedBy ? Prisma.raw('"uploadedBy"') : Prisma.raw('NULL AS "uploadedBy"');
+
     const documents = capabilities.hasDocumentType && capabilities.hasIsActive
       ? await prisma.$queryRaw<
           Array<{
@@ -139,6 +144,7 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
             storageBucket: string;
             storagePath: string;
             uploadedAt: Date;
+            uploadedBy: string | null;
           }>
         >`
           SELECT
@@ -148,7 +154,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
             "documentType"::text AS "documentType",
             "storageBucket",
             "storagePath",
-            "uploadedAt"
+            "uploadedAt",
+            ${uploadedByCol}
           FROM "ProjectDocument"
           WHERE "projectId" = ${scope.projectId}
             AND "isActive" = true
@@ -163,6 +170,7 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
             storageBucket: string;
             storagePath: string;
             uploadedAt: Date;
+            uploadedBy: string | null;
           }>
         >`
           SELECT
@@ -172,7 +180,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
             'REGULATION'::text AS "documentType",
             "storageBucket",
             "storagePath",
-            "uploadedAt"
+            "uploadedAt",
+            ${uploadedByCol}
           FROM "ProjectDocument"
           WHERE "projectId" = ${scope.projectId}
           ORDER BY "uploadedAt" DESC, "fileName" ASC
@@ -191,6 +200,7 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
         documentType: document.documentType === "INTERNAL_DOCUMENT" ? "INTERNAL_DOCUMENT" : "REGULATION",
         publicUrl: resolvePublicUrl(document.storageBucket, document.storagePath),
         uploadedAt: new Date(document.uploadedAt),
+        uploadedBy: document.uploadedBy || null,
       })),
     };
   }
@@ -217,58 +227,120 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
     const capabilities = await getProjectDocumentCapabilities();
     const storageBucket = trimSafe(input.storageBucket) || "firebase";
 
+    const userName = await getCurrentUser();
+
     if (capabilities.hasDocumentType && capabilities.hasIsActive) {
-      await prisma.$executeRaw`
-        INSERT INTO "ProjectDocument" (
-          "id",
-          "projectId",
-          "fileName",
-          "documentType",
-          "mimeType",
-          "sizeBytes",
-          "storageBucket",
-          "storagePath",
-          "checksum",
-          "isActive",
-          "uploadedAt"
-        ) VALUES (
-          ${randomUUID()},
-          ${scope.projectId},
-          ${name},
-          ${toDocumentType(input.documentType)}::"ProjectDocumentType",
-          ${input.mimeType},
-          ${input.sizeBytes},
-          ${storageBucket},
-          ${fileUrl},
-          ${input.storageObjectPath},
-          true,
-          now()
-        )
-      `;
+      if (capabilities.hasUploadedBy) {
+        await prisma.$executeRaw`
+          INSERT INTO "ProjectDocument" (
+            "id",
+            "projectId",
+            "fileName",
+            "documentType",
+            "mimeType",
+            "sizeBytes",
+            "storageBucket",
+            "storagePath",
+            "checksum",
+            "isActive",
+            "uploadedAt",
+            "uploadedBy"
+          ) VALUES (
+            ${randomUUID()},
+            ${scope.projectId},
+            ${name},
+            ${toDocumentType(input.documentType)}::"ProjectDocumentType",
+            ${input.mimeType},
+            ${input.sizeBytes},
+            ${storageBucket},
+            ${fileUrl},
+            ${input.storageObjectPath},
+            true,
+            now(),
+            ${userName}
+          )
+        `;
+      } else {
+        await prisma.$executeRaw`
+          INSERT INTO "ProjectDocument" (
+            "id",
+            "projectId",
+            "fileName",
+            "documentType",
+            "mimeType",
+            "sizeBytes",
+            "storageBucket",
+            "storagePath",
+            "checksum",
+            "isActive",
+            "uploadedAt"
+          ) VALUES (
+            ${randomUUID()},
+            ${scope.projectId},
+            ${name},
+            ${toDocumentType(input.documentType)}::"ProjectDocumentType",
+            ${input.mimeType},
+            ${input.sizeBytes},
+            ${storageBucket},
+            ${fileUrl},
+            ${input.storageObjectPath},
+            true,
+            now()
+          )
+        `;
+      }
     } else {
-      await prisma.$executeRaw`
-        INSERT INTO "ProjectDocument" (
-          "id",
-          "projectId",
-          "fileName",
-          "mimeType",
-          "sizeBytes",
-          "storageBucket",
-          "storagePath",
-          "checksum",
-          "uploadedAt"
-        ) VALUES (
-          ${randomUUID()},
-          ${scope.projectId},
-          ${name},
-          ${input.mimeType},
-          ${input.sizeBytes},
-          ${storageBucket},
-          ${fileUrl},
-          ${input.storageObjectPath},
-          now()
-        )
-      `;
+      if (capabilities.hasUploadedBy) {
+        await prisma.$executeRaw`
+          INSERT INTO "ProjectDocument" (
+            "id",
+            "projectId",
+            "fileName",
+            "mimeType",
+            "sizeBytes",
+            "storageBucket",
+            "storagePath",
+            "checksum",
+            "uploadedAt",
+            "uploadedBy"
+          ) VALUES (
+            ${randomUUID()},
+            ${scope.projectId},
+            ${name},
+            ${input.mimeType},
+            ${input.sizeBytes},
+            ${storageBucket},
+            ${fileUrl},
+            ${input.storageObjectPath},
+            now(),
+            ${userName}
+          )
+        `;
+      } else {
+        await prisma.$executeRaw`
+          INSERT INTO "ProjectDocument" (
+            "id",
+            "projectId",
+            "fileName",
+            "mimeType",
+            "sizeBytes",
+            "storageBucket",
+            "storagePath",
+            "checksum",
+            "uploadedAt"
+          ) VALUES (
+            ${randomUUID()},
+            ${scope.projectId},
+            ${name},
+            ${input.mimeType},
+            ${input.sizeBytes},
+            ${storageBucket},
+            ${fileUrl},
+            ${input.storageObjectPath},
+            now()
+          )
+        `;
+      }
     }
 
     return {
