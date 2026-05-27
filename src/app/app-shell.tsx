@@ -50,7 +50,7 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Condominio",
         icon: Settings,
         items: [
-          { label: "Información", href: "/reporte-condominio" },
+          { label: "Estadística", href: "/reporte-condominio" },
           { label: "Configuración", href: "/condominio" },
           { label: "Estructura Condominal", href: "/estructura-condominal" },
         ],

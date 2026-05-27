@@ -46,7 +46,7 @@ export default async function ReporteCondominioPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estadístca del Condominio</h1>
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estadística del Condominio</h1>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Dashboard Operativo</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {vm.projectName} · {vm.condominiumName} · Última edición {vm.updatedAtLabel}
