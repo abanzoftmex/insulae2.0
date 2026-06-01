@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCondominiumOrganigramUseCase } from "@/modules/condominium-organigram";
 import { OrganigramaEditorShell } from "./organigrama-editor-shell";
+import { StructureManagerButton } from "./structure-manager-button";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,7 @@ export default async function EstructuraCondominalPage({ searchParams }: Estruct
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {!isEditMode && <StructureManagerButton />}
           {isEditMode ? (
             <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
               <Link href="/estructura-condominal"><Eye className="h-3.5 w-3.5 shrink-0" aria-hidden /> Modo Lectura</Link>

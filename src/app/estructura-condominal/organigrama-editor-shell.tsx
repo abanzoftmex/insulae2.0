@@ -9,7 +9,8 @@ import {
   ShieldCheck, 
   UserCheck, 
   Info,
-  Loader2
+  Loader2,
+  Trash2
 } from "lucide-react";
 
 import type {
@@ -17,7 +18,7 @@ import type {
   OrganigramUserOption,
 } from "@/modules/condominium-organigram/domain/condominium-organigram";
 
-import { saveCondominiumOrganigramAction } from "./actions";
+import { saveCondominiumOrganigramAction, deleteCondominiumStructureGroupAction } from "./actions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -108,13 +109,36 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
     });
   };
 
+  const handleDeleteGroup = (groupId: string) => {
+    if (!window.confirm("¿Estás seguro que deseas eliminar este grupo? Se perderán todos sus cargos y asignaciones.")) return;
+    
+    startTransition(async () => {
+      const result = await deleteCondominiumStructureGroupAction(groupId);
+      if (result.ok) {
+        setMessage("Grupo eliminado correctamente.");
+        router.refresh();
+      } else {
+        setMessage(result.message);
+      }
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {groups.map((group) => (
           <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered">
-            <CardHeader className="px-4 py-3 border-b border-line bg-brand-deep/[0.03]">
+            <CardHeader className="px-4 py-3 border-b border-line bg-brand-deep/[0.03] flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-[12px] font-bold uppercase tracking-widest text-brand">{group.groupName}</CardTitle>
+              <button 
+                type="button"
+                onClick={() => handleDeleteGroup(group.groupId)}
+                disabled={isPending}
+                className="text-ink-soft/40 hover:text-danger hover:bg-danger/10 p-1.5 rounded transition-colors disabled:opacity-50"
+                title="Eliminar grupo"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">

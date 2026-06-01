@@ -31,6 +31,10 @@ export interface CondominiumReport {
   totalIndiviso: number;
   availableAreas: number;
   builtAreas: number;
+  parentAreasCount: number;
+  parentAreasM2: number;
+  parentAreasCommonM2: number;
+  activeFusionsCount: number;
   classificationBaseTotal: number;
   classificationBaseLabel: string;
   classifiedAreas: number;

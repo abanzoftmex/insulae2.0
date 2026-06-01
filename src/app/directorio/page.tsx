@@ -12,6 +12,7 @@ import { cn } from "@/shared/utils/cn";
 import { 
   Users, 
   Search, 
+  Plus,
   ChevronLeft, 
   ChevronRight,
   Mail,
@@ -124,14 +125,21 @@ export default async function DirectorioPage(props: PageProps) {
         <StatCard accent="lime" label="Total Personas" value={vm.totalUsers} icon={<Users className="h-3.5 w-3.5" />} />
         <div className="md:col-span-3">
           <Card className="p-3 shadow-layered border-transparent">
-            <form method="get" className="flex gap-3">
-              <div className="flex-1">
-                <Input label="Buscador Universal" name="q" defaultValue={query} placeholder="Nombre, correo, teléfono, rol o unidad..." className="h-9" />
-              </div>
-              <Button type="submit" className="h-9 px-6 text-[10px] font-bold uppercase gap-2">
-                <Search className="h-4 w-4" /> Buscar
+            <div className="flex flex-col sm:flex-row gap-3">
+              <form method="get" className="flex-1 flex gap-3">
+                <div className="flex-1">
+                  <Input label="Buscador Universal" name="q" defaultValue={query} placeholder="Nombre, correo, teléfono, rol o unidad..." className="h-9" />
+                </div>
+                <Button type="submit" variant="outline" className="h-9 px-6 text-[10px] font-bold uppercase gap-2 border-line">
+                  <Search className="h-4 w-4" /> Buscar
+                </Button>
+              </form>
+              <Button asChild className="h-9 px-6 text-[10px] font-bold uppercase gap-2 bg-brand text-white hover:bg-brand-accent transition-colors shrink-0">
+                <Link href="/directorio/formulario/nuevo">
+                  <Plus className="h-4 w-4" /> Agregar Persona
+                </Link>
               </Button>
-            </form>
+            </div>
           </Card>
         </div>
       </div>

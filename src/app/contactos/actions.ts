@@ -100,7 +100,7 @@ export async function createContactAction(
     const value = trimSafe(input.value);
     const linkUrl = trimSafe(input.linkUrl);
 
-    if (!typeId || !name || !value || !linkUrl) {
+    if (!typeId || !name || !value) {
       return { ok: false, message: "Todos los campos son obligatorios." };
     }
 
@@ -170,7 +170,7 @@ export async function updateContactAction(
     const value = trimSafe(input.value);
     const linkUrl = trimSafe(input.linkUrl);
 
-    if (!typeId || !name || !value || !linkUrl) {
+    if (!typeId || !name || !value) {
       return { ok: false, message: "Todos los campos son obligatorios." };
     }
 

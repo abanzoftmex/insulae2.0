@@ -9,8 +9,11 @@ import {
   setPrivateAreaAdministratorAction,
   updateOrdinaryAreaChargeAction,
   updatePrivateAreaSnapshotAction,
+  togglePrivateAreaStatusAction,
+  deletePrivateAreaPermanentlyAction,
 } from "../actions";
 import { PrivateAreaActionShell } from "../_components/private-area-action-shell";
+import { DeletePermanentlyButton } from "./delete-permanently-button";
 import {
   type ActionPageSearchParams,
   resolvePrivateAreaReference,
@@ -574,6 +577,38 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 Guardar cuota
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card className="border-transparent shadow-layered">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Estatus y Eliminación</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-3">
+            <p className="text-[11px] text-ink-soft">
+              {area.isActive 
+                ? "El lote está actualmente Activo. Si decides desactivarlo, dejará de figurar en el panel principal y listados operativos."
+                : "El lote está actualmente Inactivo. Puedes reactivarlo para volver a habilitar los cobros y la gestión."}
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <form action={togglePrivateAreaStatusAction} className="flex-1">
+                <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
+                <input type="hidden" name="nextStatus" value={area.isActive ? "INACTIVE" : "ACTIVE"} />
+                <Button
+                  type="submit"
+                  variant={area.isActive ? "destructive" : "dark"}
+                  size="sm"
+                  className="w-full font-bold uppercase tracking-widest text-[10px]"
+                >
+                  {area.isActive ? "Desactivar lote" : "Reactivar lote"}
+                </Button>
+              </form>
+
+              <form action={deletePrivateAreaPermanentlyAction} className="flex-1">
+                <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
+                <DeletePermanentlyButton />
+              </form>
+            </div>
           </CardContent>
         </Card>
       </section>

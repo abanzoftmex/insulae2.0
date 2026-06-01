@@ -3,6 +3,8 @@ import { getTicketListingUseCase, toTicketListingVM } from "@/modules/tickets";
 import { TicketsWorkbench } from "./tickets-workbench";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Badge } from "@/components/ui/badge";
+import { prisma } from "@/shared/infrastructure/db/prisma";
+import { PROJECT_SCOPE } from "@/config/project-scope";
 
 export const metadata: Metadata = {
   title: "Tickets | Insulae 2.0",
@@ -25,6 +27,19 @@ export default async function TicketsPage() {
 
   const vm = toTicketListingVM(listing);
 
+  const [departments, privateAreas] = await Promise.all([
+    prisma.ticketDepartment.findMany({
+      where: { condominium: { slug: PROJECT_SCOPE.condominiumCode }, isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" }
+    }),
+    prisma.privateArea.findMany({
+      where: { condominium: { slug: PROJECT_SCOPE.condominiumCode }, isActive: true },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" }
+    })
+  ]);
+
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
@@ -40,7 +55,12 @@ export default async function TicketsPage() {
         </div>
       </div>
 
-      <TicketsWorkbench initialRows={vm.rows} condominiumSlug={vm.condominiumSlug} />
+      <TicketsWorkbench 
+        initialRows={vm.rows} 
+        condominiumSlug={vm.condominiumSlug} 
+        departments={departments}
+        privateAreas={privateAreas}
+      />
     </div>
   );
 }

@@ -12,14 +12,21 @@ import type { CondominiumReportRepository } from "../domain/condominium-report.r
 
 type PrivateAreaSnapshot = {
   id: string;
+  name: string;
   isActive: boolean;
   zone: string | null;
   useType: string | null;
+  status: string;
+  isFusion: boolean;
   m2Original: Prisma.Decimal | number | null;
   m2Apole: Prisma.Decimal | number | null;
   m2Construction: Prisma.Decimal | number | null;
+  m2CommonArea: Prisma.Decimal | number | null;
   indiviso: Prisma.Decimal | number | null;
   parentPrivateAreaId: string | null;
+  parentPrivateArea: {
+    isFusion: boolean;
+  } | null;
 };
 
 type LandUseCatalogSnapshot = {
@@ -128,14 +135,23 @@ export class PrismaCondominiumReportRepository
         where: { condominiumId: condominium.id },
         select: {
           id: true,
+          name: true,
           isActive: true,
           zone: true,
           useType: true,
+          status: true,
+          isFusion: true,
           m2Original: true,
           m2Apole: true,
           m2Construction: true,
+          m2CommonArea: true,
           indiviso: true,
           parentPrivateAreaId: true,
+          parentPrivateArea: {
+            select: {
+              isFusion: true,
+            },
+          },
         },
       }),
       prisma.zoneCatalog.findMany({
@@ -161,15 +177,68 @@ export class PrismaCondominiumReportRepository
     const totalRegisteredPrivateAreas = privateAreaSnapshots.length;
     const activePrivateAreas = privateAreaSnapshots.filter((area) => area.isActive).length;
     const inactivePrivateAreas = totalRegisteredPrivateAreas - activePrivateAreas;
-    const reportableAreas = privateAreaSnapshots.filter((area) => area.isActive);
+    
+    // In legacy, the main report active areas filter status in (1, 2, 4)
+    // 1: AVAILABLE, 2: SOLD, 4: RENTED
+    const reportableAreas = privateAreaSnapshots.filter(
+      (area) =>
+        area.isActive &&
+        (area.status === "AVAILABLE" || area.status === "SOLD" || area.status === "RENTED")
+    );
 
-    const activeParents = reportableAreas.filter((area) => area.parentPrivateAreaId === null).length;
-    const activeChildren = reportableAreas.filter((area) => area.parentPrivateAreaId !== null).length;
-    const inactiveParents = privateAreaSnapshots.filter((area) => !area.isActive && area.parentPrivateAreaId === null).length;
-    const inactiveChildren = privateAreaSnapshots.filter((area) => !area.isActive && area.parentPrivateAreaId !== null).length;
+    // Parent areas (where legacy id_areas_privativas_padre = 0 or null)
+    // and es_fusion = 0
+    const parentAreas = reportableAreas.filter(
+      (area) =>
+        !area.isFusion &&
+        (area.parentPrivateAreaId === null ||
+          (area.parentPrivateArea?.isFusion === true && !area.name.includes("-")))
+    );
 
-    const areasWithUseType = reportableAreas.filter((area) => area.useType && area.useType.trim().length > 0).length;
+    const activeParents = parentAreas.length;
+    const activeChildren = reportableAreas.filter(
+      (area) =>
+        !area.isFusion &&
+        area.parentPrivateAreaId !== null &&
+        (area.parentPrivateArea?.isFusion === false || area.name.includes("-"))
+    ).length;
+
+    // legacy variables mapping:
+    // 1. parentAreasCount
+    const parentAreasCount = parentAreas.length;
+    // 2. parentAreasM2
+    const parentAreasM2 = parentAreas.reduce(
+      (acc, area) => acc + decimalToNumber(area.m2Original),
+      0
+    );
+    // 3. parentAreasCommonM2
+    const parentAreasCommonM2 = parentAreas.reduce(
+      (acc, area) => acc + decimalToNumber(area.m2CommonArea),
+      0
+    );
+    // 4. activeFusionsCount
+    const activeFusionsCount = reportableAreas.filter((area) => area.isFusion).length;
+
+    // Fracciones: count of areas with active use type
+    const areasWithUseType = reportableAreas.filter(
+      (area) => area.useType && area.useType.trim().length > 0
+    ).length;
     const areasWithoutUseType = reportableAreas.length - areasWithUseType;
+
+    const inactiveParents = privateAreaSnapshots.filter(
+      (area) =>
+        !area.isActive &&
+        !area.isFusion &&
+        (area.parentPrivateAreaId === null ||
+          (area.parentPrivateArea?.isFusion === true && !area.name.includes("-")))
+    ).length;
+    const inactiveChildren = privateAreaSnapshots.filter(
+      (area) =>
+        !area.isActive &&
+        !area.isFusion &&
+        area.parentPrivateAreaId !== null &&
+        (area.parentPrivateArea?.isFusion === false || area.name.includes("-"))
+    ).length;
 
     const totalPrivateAreaM2 = reportableAreas.reduce(
       (acc, area) => acc + decimalToNumber(area.m2Original),
@@ -271,30 +340,21 @@ export class PrismaCondominiumReportRepository
     const classificationMode: LandUseClassificationMode = isSassiRule ? "SASSI_LT" : "DEFAULT";
 
     const defaultSoles = new Set(["LB", "LB2", "LC", "LC2", "CC"]);
-    const classificationBaseTotal = project?.totalApoles && project.totalApoles > 0
-      ? project.totalApoles
-      : reportableAreas.length;
-    const classificationBaseLabel =
-      project?.totalApoles && project.totalApoles > 0
-        ? "APoLes del proyecto"
-        : "areas operativas activas";
+    const classificationBaseTotal = parentAreas.length;
+    const classificationBaseLabel = "lotes padre activos";
 
     let availableAreas = 0;
-    let builtAreas = 0;
     let classifiedAreas = 0;
 
     for (const area of reportableAreas) {
+      if (area.isFusion) continue;
       const initials = resolveUseTypeInitials(area.useType);
+      
       if (classificationMode === "SASSI_LT") {
         if (initials === "LT") {
           availableAreas += 1;
           classifiedAreas += 1;
           continue;
-        }
-
-        if (initials === "LT-CR") {
-          builtAreas += 1;
-          classifiedAreas += 1;
         }
         continue;
       }
@@ -312,7 +372,14 @@ export class PrismaCondominiumReportRepository
 
     const unclassifiedAreas = Math.max(reportableAreas.length - classifiedAreas, 0);
 
-    if (classificationMode === "DEFAULT") {
+    let builtAreas = 0;
+    if (classificationMode === "SASSI_LT") {
+      builtAreas = reportableAreas.filter(area => {
+        if (area.isFusion) return false;
+        const initials = resolveUseTypeInitials(area.useType);
+        return initials === "LT-CR";
+      }).length;
+    } else {
       builtAreas = Math.max(classificationBaseTotal - availableAreas, 0);
     }
 
@@ -441,6 +508,10 @@ export class PrismaCondominiumReportRepository
       totalIndiviso,
       availableAreas,
       builtAreas,
+      parentAreasCount,
+      parentAreasM2,
+      parentAreasCommonM2,
+      activeFusionsCount,
       classificationBaseTotal,
       classificationBaseLabel,
       classifiedAreas,

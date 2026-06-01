@@ -117,45 +117,117 @@ export default async function ReporteCondominioPage() {
       </div>
 
       {/* Technical Data Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="shadow-layered border-transparent">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2 shadow-layered border-transparent">
           <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
             <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Datos Técnicos Generales</CardTitle>
           </CardHeader>
-          <CardContent className="p-4">
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "Áreas registradas", value: vm.totalRegisteredPrivateAreas },
-                { label: "Con uso de suelo", value: vm.areasWithUseType },
-                { label: "Sin uso de suelo", value: vm.areasWithoutUseType },
-                { label: "M2 privativos", value: vm.totalPrivateAreaM2 },
-                { label: "M2 construcción", value: vm.totalBuiltAreaM2 },
-                { label: "M2 base APoLe", value: vm.totalApoleAreaM2 },
-                { label: "M2 áreas comunes", value: vm.projectCommonAreasM2 },
-                { label: "Fracción indiviso", value: vm.totalIndiviso },
-                { label: "Actualización", value: vm.updatedAtLabel },
-              ].map((f) => (
-                <div key={f.label} className="p-3 rounded bg-canvas border border-line/50">
-                  <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-tight leading-none">{f.label}</p>
-                  <p className="text-sm font-bold text-ink mt-1.5 wrap-break-word">{f.value}</p>
+          <CardContent className="p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Sección 1: Totales de Proyecto */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
+                <h4 className="text-[9px] font-extrabold uppercase text-brand tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-brand" /> Totales de Proyecto
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Áreas privativas / lotes totales</span>
+                    <span className="font-bold text-ink">{vm.projectTotalApoles}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">M2 de áreas privativas totales</span>
+                    <span className="font-bold text-ink">{vm.projectTotalM2} m²</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-ink-soft font-medium">M2 de áreas comunes</span>
+                    <span className="font-bold text-ink">{vm.projectCommonAreasM2} m²</span>
+                  </div>
                 </div>
-              ))}
+              </div>
+
+              {/* Sección 2: Operativos Reales (Padres) */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
+                <h4 className="text-[9px] font-extrabold uppercase text-cyan-600 tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-cyan-500" /> Lotes Reales Operativos
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Áreas privativas / lotes</span>
+                    <span className="font-bold text-ink">{vm.parentAreasCount}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">M2 de áreas privativas / lotes</span>
+                    <span className="font-bold text-ink">{vm.parentAreasM2} m²</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-ink-soft font-medium">M2 de áreas comunes (lotes)</span>
+                    <span className="font-bold text-ink">{vm.parentAreasCommonM2} m²</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección 3: Clasificación Operativa */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
+                <h4 className="text-[9px] font-extrabold uppercase text-yellow-600 tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-yellow-500" /> Clasificación Operativa
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Lotes disponibles (Soles)</span>
+                    <span className="font-bold text-yellow-700">{vm.availableAreas}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Lotes construidos (Sombras)</span>
+                    <span className="font-bold text-blue-700">{vm.builtAreas}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-ink-soft font-medium">Porcentajes del condominio</span>
+                    <span className="font-extrabold text-[10px] text-ink-soft">{vm.availableRatio} soles / {vm.builtRatio} sombras</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección 4: Estructura & Sub-divisiones */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
+                <h4 className="text-[9px] font-extrabold uppercase text-lime-600 tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-lime-500" /> Estructura y Fusiones
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Fracciones de áreas privativas</span>
+                    <span className="font-bold text-ink">{vm.activeChildren}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Fusiones de Áreas / lotes</span>
+                    <span className="font-bold text-ink">{vm.activeFusionsCount}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-ink-soft font-medium">Fracción indiviso total</span>
+                    <span className="font-bold text-ink">{vm.totalIndiviso}%</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="shadow-layered border-transparent">
-          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Notas de Compatibilidad</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-2">
-            {vm.caveats.map((note, idx) => (
-              <div key={idx} className="flex gap-2 p-2.5 rounded bg-brand-deep/2 border border-line/50">
-                <Info className="h-4 w-4 text-brand-accent shrink-0 mt-0.5" />
-                <p className="text-xs font-medium text-ink-soft/80 leading-relaxed italic">{note}</p>
-              </div>
-            ))}
-          </CardContent>
+        <Card className="shadow-layered border-transparent flex flex-col justify-between">
+          <div>
+            <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Notas de Compatibilidad</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-2 overflow-y-auto no-scrollbar max-h-75">
+              {vm.caveats.map((note, idx) => (
+                <div key={idx} className="flex gap-2 p-2.5 rounded bg-brand-deep/2 border border-line/50">
+                  <Info className="h-4 w-4 text-brand-accent shrink-0 mt-0.5" />
+                  <p className="text-[11px] font-semibold text-ink-soft/80 leading-relaxed italic">{note}</p>
+                </div>
+              ))}
+            </CardContent>
+          </div>
+          <div className="p-4 border-t border-line/30 bg-canvas/30 text-[10px] text-ink-soft font-medium uppercase tracking-wider text-center rounded-b-card">
+            Última edición: <strong>{vm.updatedAtLabel}</strong>
+          </div>
         </Card>
       </div>
 

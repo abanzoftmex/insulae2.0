@@ -1,10 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { toPrivateAreaStatus, toPrivateAreaStatusFromLegacy, type PrivateAreaStatus } from "@/shared/domain/private-area-status";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getCurrentUser } from "@/app/actions/auth";
+import { PROJECT_SCOPE } from "@/config/project-scope";
 
 function toNumber(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string") {
@@ -622,3 +624,210 @@ export async function createPrivateAreaChargeAction(formData: FormData): Promise
   revalidatePath("/reporte-cuotas-extraordinarias");
 }
 
+export async function createPrivateAreaAction(formData: FormData): Promise<void> {
+  const name = toString(formData.get("name"));
+  if (!name) {
+    throw new Error("El nombre de la área privativa es obligatorio.");
+  }
+
+  // 1. Obtener el condominio activo
+  const condominium = await prisma.condominium.findFirst({
+    where: { slug: PROJECT_SCOPE.condominiumCode, isActive: true },
+    select: { id: true },
+  });
+
+  if (!condominium) {
+    throw new Error("No se encontró ningún condominio activo.");
+  }
+
+  const code = toString(formData.get("code"));
+  const sortOrder = toNumber(formData.get("sortOrder")) ?? 0;
+  const m2Updated = toNumber(formData.get("m2Updated"));
+  const m2Original = toNumber(formData.get("m2Original"));
+  const m2Construction = toNumber(formData.get("m2Construction"));
+  const m2CommonArea = toNumber(formData.get("m2CommonArea"));
+  const vccc = toNumber(formData.get("vccc"));
+  
+  const isFusionValue = toString(formData.get("isFusion")).toLowerCase();
+  const isFusion = isTruthyFusion(isFusionValue);
+
+  const zoneId = toString(formData.get("zoneId"));
+  const landUseId = toString(formData.get("landUseId"));
+  const administratorId = toString(formData.get("administratorId"));
+
+  // Resolver nombre de la zona
+  let resolvedZone: string | null = null;
+  if (zoneId.length > 0) {
+    const zone = await prisma.zoneCatalog.findFirst({
+      where: { condominiumId: condominium.id, id: zoneId, isActive: true },
+      select: { name: true },
+    });
+    resolvedZone = zone?.name ?? null;
+  }
+
+  // Resolver tipo de uso de suelo
+  let resolvedUseType: string | null = null;
+  if (landUseId.length > 0) {
+    const landUse = await prisma.landUseCatalog.findFirst({
+      where: { condominiumId: condominium.id, id: landUseId, isActive: true },
+      select: { name: true },
+    });
+    resolvedUseType = landUse?.name ?? null;
+  }
+
+  const userName = await getCurrentUser();
+
+  // Crear la área privativa en una transacción para poder asignar el administrador
+  const newArea = await prisma.$transaction(async (tx) => {
+    const area = await tx.privateArea.create({
+      data: {
+        condominiumId: condominium.id,
+        name,
+        code: code.length > 0 ? code : null,
+        sortOrder,
+        m2Apole: m2Updated,
+        m2Original: m2Original,
+        m2Construction,
+        m2CommonArea,
+        vccc,
+        isFusion,
+        zone: resolvedZone,
+        useType: resolvedUseType,
+        status: "UNASSIGNED",
+        isActive: true,
+        updatedBy: userName,
+      },
+    });
+
+    if (administratorId.length > 0) {
+      await tx.residentAssignment.create({
+        data: {
+          condominiumId: condominium.id,
+          privateAreaId: area.id,
+          userId: administratorId,
+          roleName: "Administrador del subcondominio",
+          startsAt: new Date(),
+          isActive: true,
+        },
+      });
+    }
+
+    return area;
+  });
+
+  revalidatePath("/areas-privativas");
+  revalidatePath("/reporte-condominio");
+
+  // Redirigir a la pantalla de edición con un parámetro de éxito
+  redirect(`/areas-privativas/formulario-apol?id=${newArea.id}&created=true`);
+}
+
+export async function deletePrivateAreaPermanentlyAction(formData: FormData): Promise<void> {
+  const privateAreaId = toString(formData.get("privateAreaId"));
+  if (!privateAreaId) return;
+
+  await prisma.$transaction(async (tx) => {
+    // Manually delete relations in case cascade isn't configured
+    await tx.residentAssignment.deleteMany({ where: { privateAreaId } });
+    await tx.rental.deleteMany({ where: { privateAreaId } });
+    await tx.areaCharge.deleteMany({ where: { privateAreaId } });
+    await tx.charge.deleteMany({ where: { privateAreaId } });
+    await tx.privateArea.delete({ where: { id: privateAreaId } });
+  });
+
+  revalidatePath("/areas-privativas");
+  revalidatePath("/reporte-condominio");
+  redirect("/areas-privativas");
+}
+
+export async function importPrivateAreasCSVAction(rows: any[]) {
+  try {
+    const condominium = await prisma.condominium.findFirst({
+      where: { slug: PROJECT_SCOPE.condominiumCode, isActive: true },
+      select: { id: true },
+    });
+    if (!condominium) return { success: false, error: "Condominio no encontrado" };
+
+    const parseDecimal = (val: string | null | undefined) => {
+      if (!val || typeof val !== "string") return null;
+      if (val.trim() === "") return null;
+      const num = Number(val.replace(/,/g, ""));
+      return isNaN(num) ? null : num;
+    };
+
+    const parseBool = (val: string | null | undefined) => {
+      if (!val) return false;
+      return val.trim().toUpperCase() === "SI" || val.trim() === "true" || val.trim() === "1";
+    };
+
+    const validStatuses = ["UNASSIGNED", "DELIVERED", "SOLD", "RECOVERED", "CONSTRUCTION", "UNUSABLE"];
+
+    for (const row of rows) {
+      if (!row["Nombre"] || String(row["Nombre"]).trim() === "") continue;
+
+      let parsedStatus = row["Estatus"]?.trim();
+      if (!validStatuses.includes(parsedStatus)) parsedStatus = "UNASSIGNED";
+
+      const baseData = {
+        condominiumId: condominium.id,
+        code: row["Código"]?.trim() || null,
+        name: row["Nombre"]?.trim() || "Sin Nombre",
+        zone: row["Zona"]?.trim() || null,
+        subzone: row["Subzona"]?.trim() || null,
+        street: row["Calle"]?.trim() || null,
+        useType: row["Tipo Uso"]?.trim() || null,
+        status: parsedStatus as any,
+        m2Original: parseDecimal(row["M2 Original"]),
+        m2Apole: parseDecimal(row["M2 Actual"]),
+        m2Construction: parseDecimal(row["M2 Construcción"]),
+        m2CommonArea: parseDecimal(row["M2 Comunes"]),
+        m2ConstructionChildren: parseDecimal(row["M2 Construcción Hijos"]),
+        m2CommonAreaChildren: parseDecimal(row["M2 Comunes Hijos"]),
+        indiviso: parseDecimal(row["Indiviso"]),
+        vccc: parseDecimal(row["VCCC"]),
+        isFusion: parseBool(row["Es Fusión"]),
+        isActive: row["Activo"] !== undefined ? parseBool(row["Activo"]) : true,
+      };
+
+      if (row["ID"]) {
+        const existing = await prisma.privateArea.findUnique({ where: { id: row["ID"] } });
+        if (existing) {
+          await prisma.privateArea.update({ where: { id: row["ID"] }, data: baseData });
+        } else {
+          await prisma.privateArea.create({ data: { id: row["ID"], ...baseData } });
+        }
+      } else if (row["Código"]) {
+        const existing = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code: row["Código"] } });
+        if (existing) {
+          await prisma.privateArea.update({ where: { id: existing.id }, data: baseData });
+        } else {
+          await prisma.privateArea.create({ data: baseData });
+        }
+      } else {
+        await prisma.privateArea.create({ data: baseData });
+      }
+    }
+
+    for (const row of rows) {
+      if (row["Código Padre"] && row["Código Padre"].trim() !== "") {
+        const parentCode = row["Código Padre"].trim();
+        const parent = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code: parentCode } });
+        if (parent) {
+          let child;
+          if (row["ID"]) child = await prisma.privateArea.findUnique({ where: { id: row["ID"] } });
+          else if (row["Código"]) child = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code: row["Código"] } });
+          
+          if (child) {
+            await prisma.privateArea.update({ where: { id: child.id }, data: { parentPrivateAreaId: parent.id } });
+          }
+        }
+      }
+    }
+    
+    revalidatePath("/areas-privativas");
+    return { success: true };
+  } catch (error: any) {
+    console.error("[Import CSV Error]", error);
+    return { success: false, error: error.message };
+  }
+}

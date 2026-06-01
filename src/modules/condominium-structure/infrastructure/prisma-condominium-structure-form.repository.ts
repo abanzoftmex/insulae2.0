@@ -296,28 +296,27 @@ export class PrismaCondominiumStructureFormRepository implements CondominiumStru
       };
     }
 
-    const activeConceptCount = await structurePrisma.condominiumStructurePosition.count({
-      where: {
-        condominiumId: condominium.id,
-        groupId,
-        isActive: true,
-      },
-    });
+    await prisma.$transaction(async (tx) => {
+      const structureTx = tx as unknown as StructurePrismaAccess;
 
-    if (activeConceptCount > 0) {
-      return {
-        ok: false,
-        message: "No se puede eliminar un grupo que tiene conceptos activos.",
-      };
-    }
+      await structureTx.condominiumStructurePosition.updateMany({
+        where: {
+          condominiumId: condominium.id,
+          groupId,
+        },
+        data: {
+          isActive: false,
+        },
+      });
 
-    await structurePrisma.condominiumStructureGroup.update({
-      where: {
-        id: groupId,
-      },
-      data: {
-        isActive: false,
-      },
+      await structureTx.condominiumStructureGroup.update({
+        where: {
+          id: groupId,
+        },
+        data: {
+          isActive: false,
+        },
+      });
     });
 
     return {

@@ -219,7 +219,10 @@ export class PrismaCondominiumOverviewRepository
         },
       }),
       prisma.privateArea.aggregate({
-        where: { condominiumId: condominium.id },
+        where: {
+          condominiumId: condominium.id,
+          isActive: true,
+        },
         _sum: { m2Original: true },
       }),
       prisma.user.count({

@@ -60,7 +60,7 @@ export function RoleList({ roles, condominiumId }: Props) {
       header: "Permisos",
       accessorKey: "permissions",
       cell: (row) => {
-        const count = row.permissions?.length ?? 0;
+        const count = row.permissions?.filter(p => p.canRead || p.canCreate || p.canUpdate || p.canDelete).length ?? 0;
         return count > 0 ? (
           <Badge variant="success" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
             {count} módulo{count !== 1 ? "s" : ""}

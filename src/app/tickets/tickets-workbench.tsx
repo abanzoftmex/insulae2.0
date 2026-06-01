@@ -13,17 +13,19 @@ import { DataTable, type DataTableColumn } from "@/components/data-table/data-ta
 import { Badge } from "@/components/ui/badge";
 import { Modal } from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/input";
-import { getTicketResponseFormDataAction, saveTicketResponseAction } from "./actions";
+import { Textarea, Input } from "@/components/ui/input";
+import { getTicketResponseFormDataAction, saveTicketResponseAction, createTicketAction } from "./actions";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
 import { cn } from "@/shared/utils/cn";
 
 interface TicketsWorkbenchProps {
   initialRows: TicketRowVM[];
   condominiumSlug: string;
+  departments: { id: string; name: string }[];
+  privateAreas: { id: string; name: string }[];
 }
 
-export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbenchProps) {
+export function TicketsWorkbench({ initialRows, condominiumSlug, departments, privateAreas }: TicketsWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   
@@ -38,6 +40,15 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
   const [responseImageUrl, setResponseImageUrl] = useState<string | null>(null);
   const [responsePdfUrl, setResponsePdfUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState<string | null>(null);
+
+  // Create Modal State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createData, setCreateData] = useState({
+    title: "",
+    description: "",
+    departmentId: "",
+    privateAreaId: "",
+  });
 
   const filteredRows = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -88,6 +99,22 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
       });
       if (res.ok) {
         setIsModalOpen(false);
+        window.location.reload();
+      } else {
+        alert(res.message);
+      }
+    });
+  };
+
+  const handleCreateSave = () => {
+    if (!createData.title) {
+      alert("El título es obligatorio");
+      return;
+    }
+    startTransition(async () => {
+      const res = await createTicketAction(createData);
+      if (res.ok) {
+        setIsCreateOpen(false);
         window.location.reload();
       } else {
         alert(res.message);
@@ -156,6 +183,8 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
         data={filteredRows}
         columns={columns}
         onSearch={setSearch}
+        onAdd={() => setIsCreateOpen(true)}
+        addLabel="Nuevo Ticket"
       />
 
       <Modal
@@ -287,6 +316,69 @@ export function TicketsWorkbench({ initialRows, condominiumSlug }: TicketsWorkbe
             </div>
           </div>
         )}
+      </Modal>
+
+      <Modal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        title="Nuevo Ticket de Soporte"
+        size="md"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setIsCreateOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
+            <Button 
+              disabled={isPending || !createData.title} 
+              onClick={handleCreateSave}
+              className="h-8 px-6 text-[10px] font-bold uppercase bg-brand text-white hover:bg-brand-accent transition-colors"
+            >
+              {isPending ? "Guardando..." : "Crear Ticket"}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input 
+            label="Asunto / Título *" 
+            value={createData.title}
+            onChange={(e) => setCreateData(prev => ({ ...prev, title: e.target.value }))}
+            placeholder="Ej: Fuga de agua, Problema de acceso..."
+          />
+          <Textarea 
+            label="Descripción" 
+            value={createData.description}
+            onChange={(e) => setCreateData(prev => ({ ...prev, description: e.target.value }))}
+            placeholder="Detalles adicionales del problema..."
+            className="min-h-24"
+          />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Departamento</label>
+              <select
+                value={createData.departmentId}
+                onChange={(e) => setCreateData(prev => ({ ...prev, departmentId: e.target.value }))}
+                className="w-full h-9 px-3 rounded-sm border border-line bg-white text-sm text-ink outline-none focus:ring-1 focus:ring-brand transition-colors"
+              >
+                <option value="">(Sin asignar)</option>
+                {departments.map(d => (
+                  <option key={d.id} value={d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Área Privativa</label>
+              <select
+                value={createData.privateAreaId}
+                onChange={(e) => setCreateData(prev => ({ ...prev, privateAreaId: e.target.value }))}
+                className="w-full h-9 px-3 rounded-sm border border-line bg-white text-sm text-ink outline-none focus:ring-1 focus:ring-brand transition-colors"
+              >
+                <option value="">(Ninguna)</option>
+                {privateAreas.map(a => (
+                  <option key={a.id} value={a.id}>{a.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
       </Modal>
     </>
   );

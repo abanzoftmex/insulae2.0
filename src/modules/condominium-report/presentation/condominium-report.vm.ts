@@ -29,6 +29,10 @@ export interface CondominiumReportVM {
   totalIndiviso: string;
   availableAreas: string;
   builtAreas: string;
+  parentAreasCount: string;
+  parentAreasM2: string;
+  parentAreasCommonM2: string;
+  activeFusionsCount: string;
   classificationBaseTotal: string;
   classificationBaseLabel: string;
   classifiedAreas: string;
@@ -58,10 +62,24 @@ function formatNumber(value: number): string {
   });
 }
 
+function formatNumber4(value: number): string {
+  return value.toLocaleString("es-MX", {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+  });
+}
+
 function formatPercent(value: number): string {
   return `${value.toLocaleString("es-MX", {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
+  })}%`;
+}
+
+function formatPercent2(value: number): string {
+  return `${value.toLocaleString("es-MX", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   })}%`;
 }
 
@@ -76,8 +94,8 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     condominiumSlug: report.condominiumSlug,
     projectName: report.projectName ?? "Proyecto principal",
     projectTotalApoles: formatInteger(report.projectTotalApoles),
-    projectTotalM2: formatNumber(report.projectTotalM2),
-    projectCommonAreasM2: formatNumber(report.projectCommonAreasM2),
+    projectTotalM2: formatNumber4(report.projectTotalM2),
+    projectCommonAreasM2: formatNumber4(report.projectCommonAreasM2),
     totalRegisteredPrivateAreas: formatInteger(report.totalRegisteredPrivateAreas),
     activePrivateAreas: formatInteger(report.activePrivateAreas),
     inactivePrivateAreas: formatInteger(report.inactivePrivateAreas),
@@ -87,18 +105,22 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     inactiveChildren: formatInteger(report.inactiveChildren),
     areasWithUseType: formatInteger(report.areasWithUseType),
     areasWithoutUseType: formatInteger(report.areasWithoutUseType),
-    totalPrivateAreaM2: formatNumber(report.totalPrivateAreaM2),
-    totalApoleAreaM2: formatNumber(report.totalApoleAreaM2),
-    totalBuiltAreaM2: formatNumber(report.totalBuiltAreaM2),
+    totalPrivateAreaM2: formatNumber4(report.totalPrivateAreaM2),
+    totalApoleAreaM2: formatNumber4(report.totalApoleAreaM2),
+    totalBuiltAreaM2: formatNumber4(report.totalBuiltAreaM2),
     totalIndiviso: formatNumber(report.totalIndiviso),
     availableAreas: formatInteger(report.availableAreas),
     builtAreas: formatInteger(report.builtAreas),
+    parentAreasCount: formatInteger(report.parentAreasCount),
+    parentAreasM2: formatNumber4(report.parentAreasM2),
+    parentAreasCommonM2: formatNumber4(report.parentAreasCommonM2),
+    activeFusionsCount: formatInteger(report.activeFusionsCount),
     classificationBaseTotal: formatInteger(report.classificationBaseTotal),
     classificationBaseLabel: report.classificationBaseLabel,
     classifiedAreas: formatInteger(report.classifiedAreas),
     unclassifiedAreas: formatInteger(report.unclassifiedAreas),
-    availableRatio: formatPercent(report.availableRatio),
-    builtRatio: formatPercent(report.builtRatio),
+    availableRatio: formatPercent2(report.availableRatio),
+    builtRatio: formatPercent2(report.builtRatio),
     availableRatioValue: report.availableRatio,
     builtRatioValue: report.builtRatio,
     classificationModeLabel,

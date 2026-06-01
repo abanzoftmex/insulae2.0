@@ -8,6 +8,7 @@ import {
 } from "@/modules/private-area-actions";
 import { getPrivateAreaListingUseCase } from "@/modules/private-areas";
 import { toPrivateAreaListingVM } from "@/modules/private-areas/presentation/private-area-listing.vm";
+import { CsvManager } from "./_components/csv-manager";
 
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
@@ -36,6 +37,7 @@ import {
   Store,
   Briefcase,
   Wallet,
+  Plus,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -338,6 +340,12 @@ export default async function AreasPrivativasPage(props: PageProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <CsvManager />
+          <Button variant="primary" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full bg-gold hover:bg-[#bca065] text-white shadow-md shadow-brand-deep/15 transition-all active-scale">
+            <Link href="/areas-privativas/nueva">
+              <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden /> Nueva AP
+            </Link>
+          </Button>
           <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
             <Link href="/listado-seguridad"><Shield className="h-3.5 w-3.5 shrink-0" aria-hidden /> Seguridad</Link>
           </Button>
