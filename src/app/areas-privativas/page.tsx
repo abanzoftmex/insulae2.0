@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
+import { Paginator } from "@/components/ui/paginator";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 import { 
@@ -190,41 +191,7 @@ function renderLegacyAction(action: PrivateAreaLegacyAction): ReactNode {
   );
 }
 
-type PaginatorProps = {
-  pagination: { page: number; totalPages: number; totalRows: number; hasPrev: boolean; hasNext: boolean };
-  buildHref: (p: number) => string;
-};
-
-function Paginator({ pagination, buildHref }: PaginatorProps) {
-  if (pagination.totalPages <= 1) return null;
-  return (
-    <div className="flex items-center justify-between px-1">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 tabular-nums">
-        {pagination.totalRows} unidades &middot; página {pagination.page} de {pagination.totalPages}
-      </p>
-      <div className="flex items-center gap-3">
-        <Link
-          href={buildHref(Math.max(1, pagination.page - 1))}
-          className={cn(
-            "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
-            !pagination.hasPrev && "opacity-30 pointer-events-none"
-          )}
-        >
-          <ChevronLeft className="h-3.5 w-3.5" /> Anterior
-        </Link>
-        <Link
-          href={buildHref(Math.min(pagination.totalPages, pagination.page + 1))}
-          className={cn(
-            "flex items-center gap-1.5 h-8 px-3 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-brand hover:text-white hover:border-brand",
-            !pagination.hasNext && "opacity-30 pointer-events-none"
-          )}
-        >
-          Siguiente <ChevronRight className="h-3.5 w-3.5" />
-        </Link>
-      </div>
-    </div>
-  );
-}
+// Using Paginator from @/components/ui/paginator
 
 export default async function AreasPrivativasPage(props: PageProps) {
   const searchParams = await props.searchParams;
@@ -405,7 +372,15 @@ export default async function AreasPrivativasPage(props: PageProps) {
       </div>
 
       {/* Paginator top */}
-      <Paginator pagination={vm.pagination} buildHref={buildHref} />
+      <Paginator 
+        page={vm.pagination.page}
+        totalPages={vm.pagination.totalPages}
+        totalRows={vm.pagination.totalRows}
+        hasPrev={vm.pagination.hasPrev}
+        hasNext={vm.pagination.hasNext}
+        prevHref={buildHref(Math.max(1, vm.pagination.page - 1))}
+        nextHref={buildHref(Math.min(vm.pagination.totalPages, vm.pagination.page + 1))}
+      />
 
       {/* Main Extensive Table */}
       <section className="overflow-hidden rounded-[1.6rem] border border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm">
@@ -554,7 +529,15 @@ export default async function AreasPrivativasPage(props: PageProps) {
       </section>
 
       {/* Paginator bottom */}
-      <Paginator pagination={vm.pagination} buildHref={buildHref} />
+      <Paginator 
+        page={vm.pagination.page}
+        totalPages={vm.pagination.totalPages}
+        totalRows={vm.pagination.totalRows}
+        hasPrev={vm.pagination.hasPrev}
+        hasNext={vm.pagination.hasNext}
+        prevHref={buildHref(Math.max(1, vm.pagination.page - 1))}
+        nextHref={buildHref(Math.min(vm.pagination.totalPages, vm.pagination.page + 1))}
+      />
     </div>
   );
 }

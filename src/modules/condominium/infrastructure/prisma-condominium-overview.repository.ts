@@ -194,37 +194,25 @@ export class PrismaCondominiumOverviewRepository
     const project = (condominium.projects[0] ?? null) as ProjectSnapshot | null;
 
     const [
-      activePrivateAreas,
-      inactivePrivateAreas,
-      privateAreasWithUseType,
-      privateAreaM2,
+      allPrivateAreas,
       activeUsers,
       projectDocumentCount,
     ] = await Promise.all([
-      prisma.privateArea.count({
-        where: {
-          condominiumId: condominium.id,
+      prisma.privateArea.findMany({
+        where: { condominiumId: condominium.id },
+        select: {
+          id: true,
+          name: true,
           isActive: true,
+          isFusion: true,
+          status: true,
+          useType: true,
+          m2Original: true,
+          parentPrivateAreaId: true,
+          parentPrivateArea: {
+            select: { isFusion: true },
+          },
         },
-      }),
-      prisma.privateArea.count({
-        where: {
-          condominiumId: condominium.id,
-          isActive: false,
-        },
-      }),
-      prisma.privateArea.count({
-        where: {
-          condominiumId: condominium.id,
-          useType: { not: null },
-        },
-      }),
-      prisma.privateArea.aggregate({
-        where: {
-          condominiumId: condominium.id,
-          isActive: true,
-        },
-        _sum: { m2Original: true },
       }),
       prisma.user.count({
         where: {
@@ -240,6 +228,39 @@ export class PrismaCondominiumOverviewRepository
         },
       }),
     ]);
+
+    const reportableAreas = allPrivateAreas.filter(
+      (area) =>
+        area.isActive &&
+        (area.status === "AVAILABLE" || area.status === "SOLD" || area.status === "RENTED")
+    );
+
+    const activeParentAreas = reportableAreas.filter(
+      (area) =>
+        !area.isFusion &&
+        (area.parentPrivateAreaId === null ||
+          (area.parentPrivateArea?.isFusion === true && !area.name.includes("-")))
+    );
+
+    const inactiveParentAreas = allPrivateAreas.filter(
+      (area) =>
+        !area.isActive &&
+        !area.isFusion &&
+        (area.parentPrivateAreaId === null ||
+          (area.parentPrivateArea?.isFusion === true && !area.name.includes("-")))
+    );
+
+    const privateAreasWithUseType = reportableAreas.filter(
+      (area) => area.useType && area.useType.trim().length > 0
+    );
+
+    const activePrivateAreas = activeParentAreas.length;
+    const inactivePrivateAreas = inactiveParentAreas.length;
+    const privateAreasWithUseTypeCount = privateAreasWithUseType.length;
+    const totalPrivateAreaM2 = activeParentAreas.reduce(
+      (acc, area) => acc + decimalToNumber(area.m2Original),
+      0
+    );
 
     return {
       condominiumId: condominium.id,
@@ -267,8 +288,8 @@ export class PrismaCondominiumOverviewRepository
       hasVccc: project?.hasVccc ?? false,
       activePrivateAreas,
       inactivePrivateAreas,
-      privateAreasWithUseType,
-      totalPrivateAreaM2: decimalToNumber(privateAreaM2._sum.m2Original),
+      privateAreasWithUseType: privateAreasWithUseTypeCount,
+      totalPrivateAreaM2: totalPrivateAreaM2,
       activeUsers,
       projectDocumentCount,
       lastUpdatedAt: condominium.updatedAt,
