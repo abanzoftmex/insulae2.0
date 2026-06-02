@@ -31,34 +31,7 @@ export async function loginAction(
   const cleanEmail = email.trim();
   const cleanPassword = password.trim();
 
-  // 1. Fallback Admin Authentication (Legacy and convenience fallback)
-  const isAdminUser = cleanEmail.toLowerCase() === "admin" || cleanEmail.toLowerCase() === "admin@insuale.com";
-  const isAdminPassword = cleanPassword === "admin" || cleanPassword === "In$uL!ae25!";
-
-  if (isAdminUser && isAdminPassword) {
-    const cookieStore = await cookies();
-    cookieStore.set(
-      "insulae_session",
-      JSON.stringify({
-        userId: "admin-id",
-        email: "admin@insuale.com",
-        name: "Administrador Valquirico",
-        role: "ADMIN",
-        authenticatedAt: new Date().toISOString(),
-      }),
-      {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-        path: "/",
-      }
-    );
-
-    return { success: true };
-  }
-
-  // 2. Database-based Authentication
+  // Database-based Authentication
   try {
     const user = await prisma.user.findFirst({
       where: {

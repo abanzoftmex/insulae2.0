@@ -14,6 +14,7 @@ export interface CondominiumOverviewVM {
   totalM2: string;
   totalApoles: string;
   commonAreasM2: string;
+  privateAreasM2: string;
   developedBy: string;
   usesLandUseFormula: string;
   hasVccc: string;
@@ -59,12 +60,16 @@ export function toCondominiumOverviewVM(overview: CondominiumOverview): Condomin
     condominiumFormatId: overview.condominiumFormatId ? overview.condominiumFormatId.toString() : "",
     totalM2: overview.totalM2.toLocaleString("es-MX", {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 6,
     }),
     totalApoles: overview.totalApoles.toLocaleString("es-MX"),
     commonAreasM2: overview.commonAreasM2.toLocaleString("es-MX", {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    }),
+    privateAreasM2: overview.privateAreasM2.toLocaleString("es-MX", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 6,
     }),
     developedBy: overview.developedBy ?? "Sin definir",
     usesLandUseFormula: overview.usesLandUseFormula ? "Si" : "No",
@@ -80,7 +85,7 @@ export function toCondominiumOverviewVM(overview: CondominiumOverview): Condomin
     privateAreasWithUseType: overview.privateAreasWithUseType.toLocaleString("es-MX"),
     totalPrivateAreaM2: overview.totalPrivateAreaM2.toLocaleString("es-MX", {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: 6,
     }),
     activeUsers: overview.activeUsers.toLocaleString("es-MX"),
     projectDocumentCount: overview.projectDocumentCount.toLocaleString("es-MX"),

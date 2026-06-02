@@ -17,6 +17,7 @@ type ProjectSnapshot = {
   totalM2?: Prisma.Decimal | number | null;
   totalApoles?: number | null;
   commonAreasM2?: Prisma.Decimal | number | null;
+  privateAreasM2?: Prisma.Decimal | number | null;
   condominiumLogoUrl?: string | null;
   condominiumImageUrl?: string | null;
   footerLogoUrl?: string | null;
@@ -254,13 +255,14 @@ export class PrismaCondominiumOverviewRepository
       totalM2: decimalToNumber(project?.totalM2),
       totalApoles: project?.totalApoles ?? 0,
       commonAreasM2: decimalToNumber(project?.commonAreasM2),
+      privateAreasM2: decimalToNumber(project?.privateAreasM2),
+      developedBy: project?.developedBy ?? null,
       condominiumLogoUrl: project?.condominiumLogoUrl ?? null,
       condominiumImageUrl: project?.condominiumImageUrl ?? null,
       footerLogoUrl: project?.footerLogoUrl ?? null,
       privacyNoticePdfUrl: project?.privacyNoticePdfUrl ?? null,
       footerLeft: project?.footerLeft ?? null,
       footerRight: project?.footerRight ?? null,
-      developedBy: project?.developedBy ?? null,
       usesLandUseFormula: project?.usesLandUseFormula ?? false,
       hasVccc: project?.hasVccc ?? false,
       activePrivateAreas,

@@ -22,6 +22,7 @@ export interface DirectoryPerson {
   requiresInvoice: boolean | null;
   email: string | null;
   phone: string | null;
+  initialRole: string | null;
   roles: string[];
   assignmentRoles: string[];
   assignedAreas: string[];

@@ -42,6 +42,7 @@ type OrganigramUserRecord = {
   firstName: string | null;
   lastName: string | null;
   businessName: string | null;
+  initialRole: string | null;
 };
 
 type PositionScopeRecord = {
@@ -162,6 +163,7 @@ export class PrismaCondominiumOrganigramRepository implements CondominiumOrganig
           firstName: true,
           lastName: true,
           businessName: true,
+          initialRole: true,
         },
       }),
     ]);
@@ -172,6 +174,7 @@ export class PrismaCondominiumOrganigramRepository implements CondominiumOrganig
       userOptions: users.map((user) => ({
         id: user.id,
         displayName: toDisplayName(user),
+        initialRole: user.initialRole,
       })),
       groups: groups.map((group) => ({
         groupId: group.id,
@@ -285,6 +288,8 @@ export class PrismaCondominiumOrganigramRepository implements CondominiumOrganig
         await this.syncAssignments(organigramTx, condominium.id, position.id, false, selectedResponsibles);
         await this.syncAssignments(organigramTx, condominium.id, position.id, true, selectedAlternates);
       }
+    }, {
+      timeout: 30000
     });
 
     return {

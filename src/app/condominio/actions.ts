@@ -17,6 +17,7 @@ export interface UpdateCondominioSettingsInput {
   totalM2: string;
   totalApoles: string;
   commonAreasM2: string;
+  privateAreasM2: string;
   developedBy: string;
   usesLandUseFormula: boolean;
   hasVccc: boolean;
@@ -101,6 +102,7 @@ export async function updateCondominioSettingsAction(
           totalM2: toNullableDecimal(input.totalM2),
           totalApoles: toNullableInt(input.totalApoles),
           commonAreasM2: toNullableDecimal(input.commonAreasM2),
+          privateAreasM2: toNullableDecimal(input.privateAreasM2),
           developedBy: toNullableString(input.developedBy),
           usesLandUseFormula: input.usesLandUseFormula,
           hasVccc: input.hasVccc,
@@ -126,6 +128,7 @@ export async function updateCondominioSettingsAction(
           totalM2: toNullableDecimal(input.totalM2),
           totalApoles: toNullableInt(input.totalApoles),
           commonAreasM2: toNullableDecimal(input.commonAreasM2),
+          privateAreasM2: toNullableDecimal(input.privateAreasM2),
           developedBy: toNullableString(input.developedBy),
           usesLandUseFormula: input.usesLandUseFormula,
           hasVccc: input.hasVccc,

@@ -1,6 +1,7 @@
 export interface OrganigramUserOption {
   id: string;
   displayName: string;
+  initialRole?: string | null;
 }
 
 export interface OrganigramPositionAssignee {

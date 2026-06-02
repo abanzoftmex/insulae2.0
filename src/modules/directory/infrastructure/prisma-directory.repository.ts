@@ -257,7 +257,12 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         firstName: true,
         lastName: true,
         email: true,
+        personalEmail: true,
+        businessEmail: true,
         phone: true,
+        personalPhone: true,
+        businessPhone: true,
+        initialRole: true,
         userRoles: {
           select: {
             role: {
@@ -306,8 +311,9 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           legalName: fullName || displayName,
           userType: user.userType,
           requiresInvoice: requiresInvoiceByUserId.get(user.id) ?? null,
-          email: user.email,
-          phone: user.phone,
+          email: user.email || user.personalEmail || user.businessEmail,
+          phone: user.phone || user.personalPhone || user.businessPhone,
+          initialRole: user.initialRole,
           roles,
           assignmentRoles,
           assignedAreas,

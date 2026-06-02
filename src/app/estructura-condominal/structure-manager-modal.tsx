@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { X, Plus, Trash2, Save, Loader2, GripVertical } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -12,9 +12,14 @@ import { saveCondominiumStructureAction } from "./actions";
 interface StructureManagerModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialData?: {
+    id: string;
+    name: string;
+    concepts: Array<{ id: string; name: string; quantity: number; isAlternate: boolean }>;
+  };
 }
 
-export function StructureManagerModal({ isOpen, onClose }: StructureManagerModalProps) {
+export function StructureManagerModal({ isOpen, onClose, initialData }: StructureManagerModalProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
@@ -23,6 +28,23 @@ export function StructureManagerModal({ isOpen, onClose }: StructureManagerModal
   const [concepts, setConcepts] = useState<Array<{ id: string; name: string; quantity: number; isAlternate: boolean }>>([
     { id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false }
   ]);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialData) {
+        setGroupName(initialData.name);
+        setConcepts(
+          initialData.concepts.length > 0 
+            ? initialData.concepts 
+            : [{ id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false }]
+        );
+      } else {
+        setGroupName("");
+        setConcepts([{ id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false }]);
+      }
+      setError("");
+    }
+  }, [isOpen, initialData]);
 
   if (!isOpen) return null;
 
@@ -54,8 +76,10 @@ export function StructureManagerModal({ isOpen, onClose }: StructureManagerModal
 
     startTransition(async () => {
       const payload = {
+        id: initialData?.id,
         name: groupName,
         concepts: validConcepts.map((c) => ({
+          id: c.id.startsWith("new-") ? undefined : c.id,
           name: c.name,
           quantity: c.quantity,
           isAlternate: c.isAlternate,
@@ -80,7 +104,9 @@ export function StructureManagerModal({ isOpen, onClose }: StructureManagerModal
       
       <div className="relative w-full max-w-2xl bg-card rounded-card overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
         <div className="flex items-center justify-between px-5 py-4 border-b border-line bg-canvas">
-          <h2 className="text-sm font-bold uppercase tracking-widest text-brand">Crear Grupo Directivo</h2>
+          <h2 className="text-sm font-bold uppercase tracking-widest text-brand">
+            {initialData ? "Editar Grupo Directivo" : "Crear Grupo Directivo"}
+          </h2>
           <button onClick={onClose} className="text-ink-soft hover:text-danger transition-colors">
             <X className="h-5 w-5" />
           </button>
@@ -178,7 +204,7 @@ export function StructureManagerModal({ isOpen, onClose }: StructureManagerModal
             className="h-9 px-6 text-[11px] font-bold uppercase gap-2"
           >
             {isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-            Guardar Grupo
+            {initialData ? "Guardar Cambios" : "Guardar Grupo"}
           </Button>
         </div>
       </div>

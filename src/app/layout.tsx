@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppShell } from "./app-shell";
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
+import { getUserPermissions } from "@/shared/application/auth/permissions";
+import { PermissionsProvider } from "@/components/providers/permissions-provider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -21,6 +23,7 @@ export default async function RootLayout({
 }>) {
   let navbarLogoUrl: string | null = null;
   let navbarLogoAlt = "Val'Quirico";
+  const permissions = await getUserPermissions();
 
   try {
     const overview = await getCondominiumOverviewUseCase.execute();
@@ -33,12 +36,13 @@ export default async function RootLayout({
   }
 
   return (
-    <html
-      lang="es"
-      className={`${inter.variable} h-full antialiased`}
-    >
+    <html lang="es" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full font-sans tracking-[-0.01em]" suppressHydrationWarning>
-        <AppShell navbarLogoUrl={navbarLogoUrl} navbarLogoAlt={navbarLogoAlt}>{children}</AppShell>
+        <PermissionsProvider permissions={permissions}>
+          <AppShell navbarLogoUrl={navbarLogoUrl} navbarLogoAlt={navbarLogoAlt}>
+            {children}
+          </AppShell>
+        </PermissionsProvider>
       </body>
     </html>
   );

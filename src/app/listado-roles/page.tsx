@@ -2,6 +2,8 @@ import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.repository";
 import { GetRolesUseCase } from "@/modules/role/application/role.use-cases";
 import { RoleList } from "./components/role-list";
+import { getUserPermissions } from "@/shared/application/auth/permissions";
+import { redirect } from "next/navigation";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Badge } from "@/components/ui/badge";
 import type { Metadata } from "next";
@@ -14,6 +16,11 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function RolesPage() {
+  const permissions = await getUserPermissions();
+  if (!permissions["Roles"]?.canRead) {
+    redirect("/");
+  }
+
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },
   });

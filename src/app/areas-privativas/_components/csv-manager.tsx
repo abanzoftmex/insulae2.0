@@ -2,6 +2,7 @@
 
 import { useRef, useTransition } from "react";
 import Papa from "papaparse";
+import * as XLSX from "xlsx";
 import { Download, Upload, Loader2, FileDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { importPrivateAreasCSVAction } from "../actions";
@@ -21,51 +22,72 @@ export function CsvManager() {
       "M2 Construcción Hijos", "M2 Comunes Hijos", "Indiviso", "VCCC", 
       "Código Padre", "Es Fusión", "Activo"
     ];
-    const csvContent = headers.join(",") + "\n" + 
-      ",APOL-001,Ejemplo APOL,NORTE,Sub A,Calle 1,COMERCIAL,DELIVERED,100,100,80,20,0,0,1.5,500,,NO,SI";
     
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "plantilla_areas_privativas.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const row = [
+      "", "APOL-001", "Ejemplo APOL", "NORTE", "Sub A", "Calle 1", "COMERCIAL", 
+      "DELIVERED", 100, 100, 80, 20, 0, 0, 1.5, 500, "", "NO", "SI"
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, row]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+    
+    XLSX.writeFile(wb, "plantilla_areas_privativas.xlsx");
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const rows = results.data;
-        if (rows.length === 0) {
-          alert("El archivo CSV está vacío.");
-          return;
-        }
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
 
-        startTransition(async () => {
-          const result = await importPrivateAreasCSVAction(rows);
-          if (result.success) {
-            alert(`Se importaron ${rows.length} registros exitosamente.`);
-            window.location.reload();
-          } else {
-            alert("Error al importar: " + result.error);
-          }
-        });
-      },
-      error: (error) => {
-        alert("Error leyendo el CSV: " + error.message);
+    if (fileExt === 'csv') {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rows = results.data;
+          processImportData(rows);
+        },
+        error: (error) => {
+          alert("Error leyendo el CSV: " + error.message);
+        }
+      });
+    } else if (fileExt === 'xlsx' || fileExt === 'xls') {
+      try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+        processImportData(rows);
+      } catch (error: any) {
+        alert("Error leyendo el Excel: " + error.message);
       }
-    });
+    } else {
+      alert("Formato de archivo no soportado. Por favor usa .csv o .xlsx");
+    }
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const processImportData = (rows: any[]) => {
+    if (rows.length === 0) {
+      alert("El archivo está vacío.");
+      return;
+    }
+
+    startTransition(async () => {
+      const result = await importPrivateAreasCSVAction(rows);
+      if (result.success) {
+        alert(`Se importaron ${rows.length} registros exitosamente.`);
+        window.location.reload();
+      } else {
+        alert("Error al importar: " + result.error);
+      }
+    });
   };
 
   return (
@@ -92,7 +114,7 @@ export function CsvManager() {
 
       <input
         type="file"
-        accept=".csv"
+        accept=".csv, .xlsx, .xls"
         className="hidden"
         ref={fileInputRef}
         onChange={handleImport}

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { saveLandUseUseCase, getLandUseFormUseCase } from "@/modules/land-uses";
+import { saveLandUseUseCase, getLandUseFormUseCase, deleteLandUseUseCase } from "@/modules/land-uses";
 import type { SaveLandUseChargeInput } from "@/modules/land-uses/domain/land-use-form";
 
 export interface SaveLandUseActionInput {
@@ -31,6 +31,16 @@ export async function saveLandUseAction(
     percentage: input.percentage,
     charges: input.charges,
   });
+
+  if (response.ok) {
+    revalidatePath("/listado-usos-suelo");
+  }
+
+  return response;
+}
+
+export async function deleteLandUseAction(id: string): Promise<{ ok: boolean; message: string }> {
+  const response = await deleteLandUseUseCase.execute(id);
 
   if (response.ok) {
     revalidatePath("/listado-usos-suelo");

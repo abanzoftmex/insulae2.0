@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { saveZoneUseCase, getZoneFormUseCase } from "@/modules/zones";
+import { saveZoneUseCase, getZoneFormUseCase, deleteZoneUseCase } from "@/modules/zones";
 
 export interface SaveZoneActionInput {
   id?: string;
@@ -28,4 +28,14 @@ export async function saveZoneAction(
   }
 
   return response;
+}
+
+export async function deleteZoneAction(id: string): Promise<{ ok: boolean; message: string }> {
+  const result = await deleteZoneUseCase.execute(id);
+
+  if (result.ok) {
+    revalidatePath("/listado-zonas");
+  }
+
+  return result;
 }

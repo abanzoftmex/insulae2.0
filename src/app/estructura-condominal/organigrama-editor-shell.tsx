@@ -10,7 +10,8 @@ import {
   UserCheck, 
   Info,
   Loader2,
-  Trash2
+  Trash2,
+  Settings2
 } from "lucide-react";
 
 import type {
@@ -23,6 +24,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/shared/utils/cn";
+import { StructureManagerModal } from "./structure-manager-modal";
 
 type PositionDraft = {
   responsibleUserIds: string[];
@@ -53,6 +55,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string>("");
+  const [editingGroup, setEditingGroup] = useState<{ id: string; name: string; concepts: any[] } | null>(null);
 
   const [draftByPositionId, setDraftByPositionId] = useState<Record<string, PositionDraft>>(() => {
     const entries: Array<[string, PositionDraft]> = [];
@@ -123,6 +126,21 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
     });
   };
 
+  const handleEditGroup = (group: OrganigramGroupSection) => {
+    if (window.confirm("Editar la estructura recargará la página. Cualquier cambio en las asignaciones que no hayas guardado se perderá. ¿Deseas continuar?")) {
+      setEditingGroup({
+        id: group.groupId,
+        name: group.groupName,
+        concepts: group.rows.map(row => ({
+          id: row.positionId,
+          name: row.positionName,
+          quantity: row.maxAssignments,
+          isAlternate: row.allowsAlternate,
+        }))
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -130,15 +148,26 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
           <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered">
             <CardHeader className="px-4 py-3 border-b border-line bg-brand-deep/[0.03] flex flex-row items-center justify-between space-y-0">
               <CardTitle className="text-[12px] font-bold uppercase tracking-widest text-brand">{group.groupName}</CardTitle>
-              <button 
-                type="button"
-                onClick={() => handleDeleteGroup(group.groupId)}
-                disabled={isPending}
-                className="text-ink-soft/40 hover:text-danger hover:bg-danger/10 p-1.5 rounded transition-colors disabled:opacity-50"
-                title="Eliminar grupo"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button 
+                  type="button"
+                  onClick={() => handleEditGroup(group)}
+                  disabled={isPending}
+                  className="text-ink-soft/40 hover:text-brand hover:bg-brand/10 p-1.5 rounded transition-colors disabled:opacity-50"
+                  title="Editar estructura del grupo"
+                >
+                  <Settings2 className="h-4 w-4" />
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => handleDeleteGroup(group.groupId)}
+                  disabled={isPending}
+                  className="text-ink-soft/40 hover:text-danger hover:bg-danger/10 p-1.5 rounded transition-colors disabled:opacity-50"
+                  title="Eliminar grupo"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -156,6 +185,20 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
                       const responsible = draft?.responsibleUserIds ?? [];
                       const alternates = draft?.alternateUserIds ?? [];
 
+                      const normalizeText = (t: string) => t ? t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim() : "";
+                      const groupNameLower = normalizeText(group.groupName);
+                      const filteredUsers = userOptions.filter(u => {
+                        // Always include currently selected users so they don't disappear from the UI
+                        if (responsible.includes(u.id) || alternates.includes(u.id)) return true;
+                        
+                        // If user has no initial role, exclude them from targeted groups
+                        if (!u.initialRole) return false;
+                        
+                        const roleLower = normalizeText(u.initialRole);
+                        // Either the role contains the group name, or the group name contains the role
+                        return roleLower.includes(groupNameLower) || groupNameLower.includes(roleLower);
+                      });
+
                       return (
                         <tr key={row.positionId} className="h-24 hover:bg-canvas/5 transition-colors">
                           <td className="px-4 py-2 align-top pt-3">
@@ -170,7 +213,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
                               onChange={(e) => updateDraft(row.positionId, "responsibleUserIds", Array.from(e.target.selectedOptions).map(o => o.value))}
                               className="h-20 w-full rounded border border-line bg-card px-1 py-1 text-[11px] font-medium outline-none focus:ring-2 focus:ring-brand-accent/20 appearance-none no-scrollbar"
                             >
-                              {userOptions.map((user) => (
+                              {filteredUsers.map((user) => (
                                 <option key={user.id} value={user.id} className="px-2 py-0.5 rounded cursor-pointer checked:bg-brand-mint/50 checked:text-brand">
                                   {user.displayName}
                                 </option>
@@ -186,7 +229,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
                                 onChange={(e) => updateDraft(row.positionId, "alternateUserIds", Array.from(e.target.selectedOptions).map(o => o.value))}
                                 className="h-20 w-full rounded border border-line bg-card px-1 py-1 text-[11px] font-medium outline-none focus:ring-2 focus:ring-brand-accent/20 appearance-none no-scrollbar"
                               >
-                                {userOptions.map((user) => (
+                                {filteredUsers.map((user) => (
                                   <option key={user.id} value={user.id} className="px-2 py-0.5 rounded cursor-pointer checked:bg-brand-mint/50 checked:text-brand">
                                     {user.displayName}
                                   </option>
@@ -239,6 +282,12 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
           </div>
         )}
       </div>
+
+      <StructureManagerModal 
+        isOpen={!!editingGroup} 
+        onClose={() => setEditingGroup(null)}
+        initialData={editingGroup ?? undefined}
+      />
     </div>
   );
 }

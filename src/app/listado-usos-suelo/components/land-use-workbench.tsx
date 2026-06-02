@@ -10,7 +10,7 @@ import {
   DollarSign
 } from "lucide-react";
 import type { LandUseListingVM } from "@/modules/land-uses/presentation/land-use-listing.vm";
-import { getLandUseFormDataAction, saveLandUseAction } from "../actions";
+import { getLandUseFormDataAction, saveLandUseAction, deleteLandUseAction } from "../actions";
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -106,6 +106,19 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
     });
   };
 
+  const handleDelete = (id: string) => {
+    if (window.confirm("¿Estás seguro de que deseas eliminar este uso de suelo? Ten en cuenta que si tiene unidades asignadas o se está utilizando en alguna fórmula, podría afectar cálculos posteriores. ¿Deseas continuar?")) {
+      startTransition(async () => {
+        const res = await deleteLandUseAction(id);
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+  };
+
   const updateChargeAmount = (chargeGroupId: string, amount: string) => {
     setFormCharges(prev => prev.map(c => c.chargeGroupId === chargeGroupId ? { ...c, amount } : c));
   };
@@ -141,22 +154,22 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
             <table className="w-full text-left border-separate border-spacing-0 min-w-480">
               <thead>
                 <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/80">
-                  <th className="sticky left-0 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-20">Orden</th>
-                  <th className="sticky left-20 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-60">Nombre</th>
-                  <th className="px-4">Iniciales</th>
-                  <th className="px-4 text-right">Unidades</th>
-                  <th className="px-4 text-right">M2 Totales</th>
+                  <th className="sticky left-0 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-16">Orden</th>
+                  <th className="sticky left-16 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] min-w-[200px]">Nombre</th>
+                  <th className="px-4 w-24">Iniciales</th>
+                  <th className="px-4 text-right w-24">Unidades</th>
+                  <th className="px-4 text-right w-28">M2 Totales</th>
                   {initialVm.columns.map(col => (
-                    <th key={col.key} className="px-4 text-center border-l border-black/10 bg-brand-mint/5 text-brand">{col.label}</th>
+                    <th key={col.key} className="px-4 text-center border-l border-black/10 bg-brand-mint/5 text-brand min-w-[140px] max-w-[180px]">{col.label}</th>
                   ))}
-                  <th className="px-4 text-right border-l border-black/10">Acción</th>
+                  <th className="px-4 text-right border-l border-black/10 w-28">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-black/5">
                 {filteredRows.map((row, index) => (
                   <tr key={row.id} className={cn("hover:bg-brand-mint/20 transition-colors group", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
                     <td className="sticky left-0 px-4 text-xs font-bold text-ink-soft border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)]">{row.order}</td>
-                    <td className="sticky left-20 px-4 text-base font-bold text-brand border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)] py-3">{row.name}</td>
+                    <td className="sticky left-16 px-4 text-base font-bold text-brand border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)] py-3">{row.name}</td>
                     <td className="px-4 py-3"><Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.initials}</Badge></td>
                     <td className="px-4 py-3 text-right text-sm font-bold">{row.totalAreas}</td>
                     <td className="px-4 py-3 text-right text-xs font-mono text-ink-soft">{row.totalM2}</td>
@@ -172,7 +185,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                       );
                     })}
                     <td className="px-4 py-3 text-right border-l border-black/10">
-                       <RowActions onEdit={() => openEditModal(row.id)} onDelete={() => alert("Eliminación no disponible para usos de suelo activos")} />
+                       <RowActions onEdit={() => openEditModal(row.id)} onDelete={() => handleDelete(row.id)} />
                     </td>
                   </tr>
                 ))}

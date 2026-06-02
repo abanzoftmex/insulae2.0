@@ -213,4 +213,46 @@ export class PrismaZoneFormRepository implements ZoneFormRepository {
       zoneId: created.id,
     };
   }
+
+  async delete(id: string): Promise<ZoneCommandResult> {
+    const zoneId = trimSafe(id);
+    if (!zoneId) {
+      return { ok: false, message: "ID inválido." };
+    }
+
+    const condominiumId = await resolveCondominiumId();
+    if (!condominiumId) {
+      return { ok: false, message: "No se encontro un condominio activo." };
+    }
+
+    const existing = await prisma.zoneCatalog.findFirst({
+      where: { id: zoneId, condominiumId, isActive: true },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return { ok: false, message: "El barrio no existe o ya fue eliminado." };
+    }
+
+    const subzonesCount = await prisma.subzoneCatalog.count({
+      where: { zoneId, isActive: true },
+    });
+
+    if (subzonesCount > 0) {
+      return { ok: false, message: "No se puede eliminar porque tiene subzonas activas." };
+    }
+
+    await prisma.zoneCatalog.update({
+      where: { id: zoneId },
+      data: { isActive: false },
+    });
+
+    const userName = await getCurrentUser();
+    await prisma.condominium.update({
+      where: { id: condominiumId },
+      data: { updatedAt: new Date(), updatedBy: userName },
+    });
+
+    return { ok: true, message: "Barrio eliminado correctamente." };
+  }
 }

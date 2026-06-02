@@ -28,12 +28,14 @@ import {
 import { useHydratedSidebar } from "@/stores/ui-sidebar.store";
 import { cn } from "@/shared/utils/cn";
 import { SearchModal } from "@/components/ui/search-modal";
+import { usePermissions } from "@/components/providers/permissions-provider";
 
 type NavItem = {
   label: string;
   href?: string;
   icon: LucideIcon | ElementType;
-  items?: { label: string; href: string }[];
+  requiredModule?: string;
+  items?: { label: string; href: string; requiredModule?: string }[];
 };
 
 type NavSection = {
@@ -50,14 +52,14 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Condominio",
         icon: Settings,
         items: [
-          { label: "Estadística", href: "/reporte-condominio" },
-          { label: "Configuración", href: "/condominio" },
-          { label: "Estructura Condominal", href: "/estructura-condominal" },
+          { label: "Estadística", href: "/reporte-condominio", requiredModule: "Reporte condominio" },
+          { label: "Configuración", href: "/condominio", requiredModule: "Condominio" },
+          { label: "Estructura Condominal", href: "/estructura-condominal", requiredModule: "Estructura condominal" },
         ],
       },
-      { label: "Directorio de Personas", href: "/directorio", icon: BookOpen },
-      { label: "Directorio de sitios", href: "/contactos", icon: Users },
-      { label: "Reglamentos y Documentos", href: "/reglamentos", icon: FileText },
+      { label: "Directorio de Personas", href: "/directorio", icon: BookOpen, requiredModule: "Directorio" },
+      { label: "Directorio de sitios", href: "/contactos", icon: Users, requiredModule: "Contactos" },
+      { label: "Reglamentos y Documentos", href: "/reglamentos", icon: FileText, requiredModule: "Reglamentos" },
     ],
   },
   {
@@ -67,20 +69,20 @@ const NAV_SECTIONS: NavSection[] = [
         label: "Áreas Privativas",
         icon: MapPin,
         items: [
-          { label: "Listado", href: "/areas-privativas" },
+          { label: "Listado", href: "/areas-privativas", requiredModule: "Areas privativas" },
           { label: "Seguridad", href: "/listado-seguridad" },
-          { label: "Barrios", href: "/listado-zonas" },
-          { label: "Usos de Suelo", href: "/listado-usos-suelo" },
+          { label: "Barrios", href: "/listado-zonas", requiredModule: "Barrios" },
+          { label: "Usos de Suelo", href: "/listado-usos-suelo", requiredModule: "Usos de suelo" },
         ],
       },
       {
         label: "Atención",
         icon: Ticket,
         items: [
-          { label: "Tickets", href: "/tickets" },
-          { label: "Departamentos", href: "/departamentos-tickets" },
-          { label: "Notificaciones", href: "/notificaciones" },
-          { label: "Categorías", href: "/categorias-notificacion" },
+          { label: "Tickets", href: "/tickets", requiredModule: "Tickets" },
+          { label: "Departamentos", href: "/departamentos-tickets", requiredModule: "Departamentos tickets" },
+          { label: "Notificaciones", href: "/notificaciones", requiredModule: "Notificaciones" },
+          { label: "Categorías", href: "/categorias-notificacion", requiredModule: "Categorías notificaciones" },
         ],
       },
     ],
@@ -88,41 +90,41 @@ const NAV_SECTIONS: NavSection[] = [
   {
     title: "Gobernanza",
     items: [
-      { label: "Convocatorias", href: "/gobernanza/convocatorias", icon: ClipboardList },
+      { label: "Convocatorias", href: "/gobernanza/convocatorias", icon: ClipboardList, requiredModule: "Convocatorias" },
     ],
   },
   {
     title: "Condómino",
     items: [
-      { label: "Mis convocatorias", href: "/condomino/mis-convocatorias", icon: FileText },
+      { label: "Mis convocatorias", href: "/condomino/mis-convocatorias", icon: FileText, requiredModule: "Convocatorias condómino" },
     ],
   },
   {
     title: "Financiero",
     items: [
-      { label: "Resumen", href: "/resumen-financiero", icon: PieChart },
+      { label: "Resumen", href: "/resumen-financiero", icon: PieChart, requiredModule: "Resumen financiero" },
       {
         label: "Ingresos",
         icon: TrendingUp,
         items: [
-          { label: "Listado", href: "/listado-ingresos" },
-          { label: "Estructura", href: "/listado-estructura-otros-ingresos" },
-          { label: "Cobros Masivos", href: "/cobros-masivos" },
+          { label: "Listado", href: "/listado-ingresos", requiredModule: "Cobros" },
+          { label: "Estructura", href: "/listado-estructura-otros-ingresos", requiredModule: "Otros ingresos" },
+          { label: "Cobros Masivos", href: "/cobros-masivos", requiredModule: "Cobros masivos" },
         ],
       },
       {
         label: "Egresos",
         icon: TrendingDown,
         items: [
-          { label: "Gastos", href: "/listado-gastos" },
-          { label: "Presupuestos", href: "/presupuestos" },
-          { label: "Estructura Pres.", href: "/listado-estructura-presupuesto" },
+          { label: "Gastos", href: "/listado-gastos", requiredModule: "Gastos" },
+          { label: "Presupuestos", href: "/presupuestos", requiredModule: "Presupuesto" },
+          { label: "Estructura Pres.", href: "/listado-estructura-presupuesto", requiredModule: "Estructura Presupuesto" },
         ],
       },
       { label: "Cuotas", href: "/reporte-cuotas", icon: ClipboardList },
       { label: "Cuotas Extra.", href: "/reporte-cuotas-extraordinarias", icon: ClipboardList },
-      { label: "Sanciones", href: "/sanciones", icon: AlertCircle },
-      { label: "Roles", href: "/listado-roles", icon: Users },
+      { label: "Sanciones", href: "/sanciones", icon: AlertCircle, requiredModule: "Catálogo de sanciones" },
+      { label: "Roles", href: "/listado-roles", icon: Users, requiredModule: "Roles" },
     ],
   },
   {
@@ -151,6 +153,7 @@ export function AppShell({
   const currentPath = normalizePath(pathname || "/");
   const { isCollapsed, isMobileOpen, toggleCollapsed, openMobile, closeMobile } =
     useHydratedSidebar();
+  const permissions = usePermissions();
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -237,6 +240,7 @@ export function AppShell({
           {isOpen && (
             <div className="ml-4 pl-3 border-l border-line mt-0.5 mb-1 space-y-0.5">
               {item.items?.map((sub) => {
+                if (sub.requiredModule && !permissions[sub.requiredModule]?.canRead) return null;
                 const isSubActive = currentPath === normalizePath(sub.href);
                 return (
                   <Link
@@ -381,7 +385,21 @@ export function AppShell({
 
       {/* Nav */}
       <nav className="flex-1 overflow-x-hidden overflow-y-auto py-3 px-2 space-y-4">
-        {NAV_SECTIONS.map((section) => (
+        {NAV_SECTIONS.map((section) => {
+          // Filtrar items basado en permisos
+          const visibleItems = section.items.filter(item => {
+            if (item.requiredModule && !permissions[item.requiredModule]?.canRead) return false;
+            // Si tiene submenus, revisar si tiene al menos un submenu visible, o si el padre tiene permiso
+            if (item.items && item.items.length > 0) {
+                const visibleSubitems = item.items.filter(sub => !sub.requiredModule || permissions[sub.requiredModule]?.canRead);
+                if (visibleSubitems.length === 0) return false; // si no hay subitems visibles, ocultar padre
+            }
+            return true;
+          });
+
+          if (visibleItems.length === 0) return null;
+
+          return (
           <div key={section.title}>
             {!isCollapsed && (
               <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
@@ -390,10 +408,11 @@ export function AppShell({
             )}
             {isCollapsed && <div className="mx-auto w-4 border-t border-line/50 mb-1.5" />}
             <div className="space-y-0.5">
-              {section.items.map((item) => renderNavItem(item))}
+              {visibleItems.map((item) => renderNavItem(item))}
             </div>
           </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Search button */}
@@ -527,16 +546,30 @@ export function AppShell({
             </button>
           </div>
           <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-            {NAV_SECTIONS.map((s) => (
-              <div key={s.title}>
-                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
-                  {s.title}
-                </p>
-                <div className="space-y-0.5">
-                  {s.items.map((item) => renderNavItem(item))}
+            {NAV_SECTIONS.map((s) => {
+               // Filtrar items basado en permisos
+               const visibleItems = s.items.filter(item => {
+                 if (item.requiredModule && !permissions[item.requiredModule]?.canRead) return false;
+                 if (item.items && item.items.length > 0) {
+                     const visibleSubitems = item.items.filter(sub => !sub.requiredModule || permissions[sub.requiredModule]?.canRead);
+                     if (visibleSubitems.length === 0) return false;
+                 }
+                 return true;
+               });
+
+               if (visibleItems.length === 0) return null;
+
+               return (
+                <div key={s.title}>
+                  <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
+                    {s.title}
+                  </p>
+                  <div className="space-y-0.5">
+                    {visibleItems.map((item) => renderNavItem(item))}
+                  </div>
                 </div>
-              </div>
-            ))}
+               );
+            })}
           </nav>
         </aside>
       </div>

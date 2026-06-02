@@ -43,11 +43,11 @@ function toNumericString(value: string): string {
   return value.replaceAll(",", "").replaceAll(" m2", "").trim();
 }
 
-function toTwoDecimalsString(value: string): string {
+function toMaxSixDecimalsString(value: string): string {
   const numeric = toNumericString(value);
-  if (!numeric) return "0.00";
+  if (!numeric) return "0";
   const num = parseFloat(numeric);
-  return isNaN(num) ? "0.00" : num.toFixed(2);
+  return isNaN(num) ? "0" : Number(num.toFixed(6)).toString();
 }
 
 function normalizeAssetLabel(field: AssetFieldKey): string {
@@ -67,9 +67,10 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
     ...initialValues,
     startYear: toNumericString(initialValues.startYear),
     condominiumFormatId: toNumericString(initialValues.condominiumFormatId),
-    totalM2: toTwoDecimalsString(initialValues.totalM2),
+    totalM2: toMaxSixDecimalsString(initialValues.totalM2),
     totalApoles: toNumericString(initialValues.totalApoles),
-    commonAreasM2: toTwoDecimalsString(initialValues.commonAreasM2),
+    commonAreasM2: toMaxSixDecimalsString(initialValues.commonAreasM2),
+    privateAreasM2: toMaxSixDecimalsString(initialValues.privateAreasM2),
   });
   const [message, setMessage] = useState<string>("");
   const [uploadingField, setUploadingField] = useState<AssetFieldKey | null>(null);
@@ -157,9 +158,10 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
               <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Métricas de Inventario</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Input label="Total M2 Terreno" type="number" step="0.01" value={form.totalM2} onChange={(e) => onInput("totalM2", e.target.value)} onBlur={(e) => onInput("totalM2", toTwoDecimalsString(e.target.value))} />
+              <Input label="Total M2 Terreno" type="number" step="any" value={form.totalM2} onChange={(e) => onInput("totalM2", e.target.value)} onBlur={(e) => onInput("totalM2", toMaxSixDecimalsString(e.target.value))} />
               <Input label="Total lotes" type="number" value={form.totalApoles} onChange={(e) => onInput("totalApoles", e.target.value)} />
-              <Input label="M2 Áreas Comunes" type="number" step="0.01" value={form.commonAreasM2} onChange={(e) => onInput("commonAreasM2", e.target.value)} onBlur={(e) => onInput("commonAreasM2", toTwoDecimalsString(e.target.value))} />
+              <Input label="M2 Áreas Comunes" type="number" step="any" value={form.commonAreasM2} onChange={(e) => onInput("commonAreasM2", e.target.value)} onBlur={(e) => onInput("commonAreasM2", toMaxSixDecimalsString(e.target.value))} />
+              <Input label="M2 Áreas Privativas" type="number" step="any" value={form.privateAreasM2} onChange={(e) => onInput("privateAreasM2", e.target.value)} onBlur={(e) => onInput("privateAreasM2", toMaxSixDecimalsString(e.target.value))} />
               <Input label="Desarrollador" value={form.developedBy} onChange={(e) => onInput("developedBy", e.target.value)} />
             </div>
             <div className="flex items-center gap-6 pt-2">

@@ -662,4 +662,39 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
       landUseId,
     };
   }
+
+  async delete(id: string): Promise<LandUseCommandResult> {
+    const landUseId = trimSafe(id);
+    if (!landUseId) {
+      return { ok: false, message: "ID inválido." };
+    }
+
+    const condominium = await resolveCondominiumContext();
+    if (!condominium) {
+      return { ok: false, message: "No se encontro un condominio activo." };
+    }
+    const condominiumId = condominium.id;
+
+    const existing = await prisma.landUseCatalog.findFirst({
+      where: { id: landUseId, condominiumId, isActive: true },
+      select: { id: true },
+    });
+
+    if (!existing) {
+      return { ok: false, message: "El uso de suelo no existe o ya fue eliminado." };
+    }
+
+    await prisma.landUseCatalog.update({
+      where: { id: landUseId },
+      data: { isActive: false },
+    });
+
+    const userName = await getCurrentUser();
+    await prisma.condominium.update({
+      where: { id: condominiumId },
+      data: { updatedAt: new Date(), updatedBy: userName },
+    });
+
+    return { ok: true, message: "Uso de suelo eliminado correctamente." };
+  }
 }

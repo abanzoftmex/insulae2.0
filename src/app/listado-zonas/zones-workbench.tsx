@@ -14,7 +14,7 @@ import { Modal } from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { RowActions } from "@/components/ui/row-actions";
-import { getZoneFormDataAction, saveZoneAction } from "./actions";
+import { getZoneFormDataAction, saveZoneAction, deleteZoneAction } from "./actions";
 
 interface ZonesWorkbenchProps {
   initialRows: ZoneRowVM[];
@@ -73,6 +73,24 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
     });
   };
 
+  const handleDelete = (id: string, canDelete: boolean) => {
+    if (!canDelete) {
+      alert("No se puede eliminar porque tiene subzonas activas.");
+      return;
+    }
+
+    if (window.confirm("¿Estás seguro de que deseas eliminar este barrio?")) {
+      startTransition(async () => {
+        const res = await deleteZoneAction(id);
+        if (res.ok) {
+          window.location.reload();
+        } else {
+          alert(res.message);
+        }
+      });
+    }
+  };
+
   const columns: DataTableColumn<ZoneRowVM>[] = [
     {
       header: "Barrio",
@@ -110,7 +128,7 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
       cell: (row) => (
         <RowActions
           onEdit={() => openEditModal(row.id)}
-          onDelete={() => alert("Eliminación disponible en la siguiente versión")}
+          onDelete={() => handleDelete(row.id, row.canDelete)}
         />
       )
     }

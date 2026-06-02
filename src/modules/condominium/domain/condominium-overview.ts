@@ -12,6 +12,7 @@ export interface CondominiumOverview {
   totalM2: number;
   totalApoles: number;
   commonAreasM2: number;
+  privateAreasM2: number;
   condominiumLogoUrl: string | null;
   condominiumImageUrl: string | null;
   footerLogoUrl: string | null;

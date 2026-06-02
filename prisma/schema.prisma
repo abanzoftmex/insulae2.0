@@ -1004,6 +1004,7 @@ model Project {
   totalM2             Decimal?  @db.Decimal(14, 4)
   totalApoles         Int?
   commonAreasM2       Decimal?  @db.Decimal(14, 4)
+  privateAreasM2      Decimal?  @db.Decimal(14, 4)
   condominiumLogoUrl  String?
   condominiumImageUrl String?
   footerLogoUrl       String?
