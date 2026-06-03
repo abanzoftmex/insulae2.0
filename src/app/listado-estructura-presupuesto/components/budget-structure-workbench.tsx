@@ -30,14 +30,7 @@ interface WorkbenchProps {
   year: number;
 }
 
-const CATEGORY_LABELS: Record<string, string> = {
-  ADMINISTRATION: "Administración",
-  MAINTENANCE: "Mantenimiento",
-  SECURITY: "Seguridad",
-  INFRASTRUCTURE: "Infraestructura",
-  EXTRAORDINARY: "Extraordinario",
-  OTHER: "Otros"
-};
+
 
 export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps) {
   const [isPending, startTransition] = useTransition();
@@ -49,8 +42,18 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
   
   // Form State
   const [formName, setFormName] = useState("");
-  const [formCategory, setFormCategory] = useState("MAINTENANCE");
+  const [formCategory, setFormCategory] = useState("Gastos de mantenimiento");
   const [formConcepts, setFormConcepts] = useState<{ id: string; name: string }[]>([]);
+  
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+
+  const availableCategories = useMemo(() => {
+    const defaultCats = ["Gastos administración", "Gastos de mantenimiento", "Gastos de seguridad", "Gastos de infraestructura", "Gastos extraordinarios", "Otros gastos"];
+    const existingCats = initialGroups.map(g => g.category).filter(c => !!c);
+    const all = new Set([...defaultCats, ...existingCats]);
+    return Array.from(all).sort();
+  }, [initialGroups]);
 
   const filteredGroups = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -60,8 +63,10 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
   const openAddModal = () => {
     setEditingId(null);
     setFormName("");
-    setFormCategory("MAINTENANCE");
+    setFormCategory("Gastos de mantenimiento");
     setFormConcepts([]);
+    setIsCreatingCategory(false);
+    setNewCategoryName("");
     setIsModalOpen(true);
   };
 
@@ -70,6 +75,8 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
     setFormName(group.name);
     setFormCategory(group.category);
     setFormConcepts(group.concepts.map(c => ({ id: c.id, name: c.name })));
+    setIsCreatingCategory(false);
+    setNewCategoryName("");
     setIsModalOpen(true);
   };
 
@@ -99,11 +106,12 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
 
   const handleSave = () => {
     startTransition(async () => {
+      const finalCategory = isCreatingCategory && newCategoryName.trim() ? newCategoryName.trim() : formCategory;
       const res = await saveBudgetGroupAction({
         id: editingId || undefined,
         year,
         name: formName,
-        category: formCategory,
+        category: finalCategory,
         concepts: formConcepts.map(c => ({ id: c.id || undefined, name: c.name }))
       });
 
@@ -132,7 +140,7 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
       cell: (row) => (
         <div className="flex flex-col">
           <span className="font-bold text-brand">{row.name}</span>
-          <span className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">{CATEGORY_LABELS[row.category] || row.category}</span>
+          <span className="text-[9px] font-bold uppercase text-ink-soft/40 tracking-widest">{row.category}</span>
         </div>
       )
     },
@@ -214,14 +222,34 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input label="Nombre del Grupo" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Ej. Gastos de Limpieza" />
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Categoría Contable</label>
-              <select
-                value={formCategory}
-                onChange={(e) => setFormCategory(e.target.value)}
-                className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
-              >
-                {Object.entries(CATEGORY_LABELS).map(([val, label]) => <option key={val} value={val}>{label}</option>)}
-              </select>
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Categoría Contable</label>
+                <button 
+                  onClick={() => setIsCreatingCategory(!isCreatingCategory)} 
+                  className="text-[9px] font-bold text-brand-accent uppercase hover:underline"
+                >
+                  {isCreatingCategory ? "Seleccionar Existente" : "+ Nueva Categoría"}
+                </button>
+              </div>
+              {isCreatingCategory ? (
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder="Escribe la nueva categoría..."
+                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                />
+              ) : (
+                <select
+                  value={formCategory}
+                  onChange={(e) => setFormCategory(e.target.value)}
+                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
+                >
+                  {availableCategories.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 

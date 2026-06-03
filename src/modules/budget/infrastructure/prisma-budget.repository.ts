@@ -1,4 +1,4 @@
-import { PrismaClient, BudgetStatus, ExpenseBudgetGroup } from "@prisma/client";
+import { PrismaClient, BudgetStatus } from "@prisma/client";
 import { BudgetRepository } from "../domain/budget.repository";
 import { BudgetVM, BudgetGroupVM as BudgetOverviewGroupVM, BudgetConceptRowVM, BudgetMonthVM } from "../domain/budget.types";
 import { BudgetStructureVM, BudgetGroupVM } from "../domain/budget-structure.types";
@@ -61,10 +61,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
     const lineMapByConcept = new Map(budget?.lines.map(l => [l.budgetConceptId, l]));
 
     // Agrupacion
-    const groupsMap = new Map<ExpenseBudgetGroup, BudgetConceptRowVM[]>();
-    for (const group of Object.keys(ExpenseBudgetGroup) as ExpenseBudgetGroup[]) {
-      groupsMap.set(group, []);
-    }
+    const groupsMap = new Map<string, BudgetConceptRowVM[]>();
 
     let globalBudgeted = 0;
     let globalGenerated = 0;
@@ -94,7 +91,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
         });
       }
 
-      if (concept.budgetGroup !== ExpenseBudgetGroup.EXTRAORDINARY) {
+      if (concept.budgetGroup !== "EXTRAORDINARY") {
         globalBudgeted += conceptBudgeted;
         globalGenerated += conceptGenerated;
       } else {
@@ -113,7 +110,11 @@ export class PrismaBudgetRepository implements BudgetRepository {
         months
       };
 
-      groupsMap.get(concept.budgetGroup)?.push(row);
+      const groupKey = concept.budgetGroup || "OTHER";
+      if (!groupsMap.has(groupKey)) {
+        groupsMap.set(groupKey, []);
+      }
+      groupsMap.get(groupKey)?.push(row);
     }
 
     const groups: BudgetOverviewGroupVM[] = [];
@@ -297,10 +298,18 @@ export class PrismaBudgetRepository implements BudgetRepository {
       // Create
       const newGroup = await prisma.budgetGroup.create({
         data: {
-          ...rest,
+          name: rest.name,
+          category: rest.category,
+          order: rest.order || 0,
+          isActive: rest.isActive ?? true,
+          condominium: { connect: { id: rest.condominiumId } },
+          budget: { connect: { condominiumId_year: { condominiumId: rest.condominiumId, year: rest.year } } },
           concepts: {
             create: concepts.map((c: any) => ({
-              ...c,
+              name: c.name,
+              order: c.order || 0,
+              type: c.type || "N/A",
+              isActive: c.isActive ?? true,
               condominiumId: rest.condominiumId,
               year: rest.year
             }))

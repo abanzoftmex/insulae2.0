@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
-import { saveDirectoryContactAction } from "./actions";
+import { saveDirectoryContactAction, updatePasswordAction } from "./actions";
 import type { DirectoryContactParticipation } from "@/modules/directory/domain/directory";
 
 interface DirectoryFormProps {
@@ -34,8 +34,12 @@ export function DirectoryForm({
   backHref,
 }: DirectoryFormProps) {
   const [isPending, startTransition] = useTransition();
+  const [isPasswordPending, startPasswordTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const [formData, setFormData] = useState({
     userType: initialData.userType,
@@ -101,6 +105,28 @@ export function DirectoryForm({
 
       if (result.ok) {
         setMessage({ type: "success", text: result.message });
+      } else {
+        setMessage({ type: "error", text: result.message });
+      }
+    });
+  };
+
+  const handleUpdatePassword = () => {
+    if (!password) {
+      setMessage({ type: "error", text: "La contraseña no puede estar vacía." });
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMessage({ type: "error", text: "Las contraseñas no coinciden." });
+      return;
+    }
+    setMessage(null);
+    startPasswordTransition(async () => {
+      const result = await updatePasswordAction(reference, password);
+      if (result.ok) {
+        setMessage({ type: "success", text: result.message });
+        setPassword("");
+        setConfirmPassword("");
       } else {
         setMessage({ type: "error", text: result.message });
       }
@@ -321,15 +347,15 @@ export function DirectoryForm({
               <div className="space-y-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 leading-none">Nueva Contraseña</label>
-                  <input type="password" className="h-9 w-full rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" />
+                  <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="h-9 w-full rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" />
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 leading-none">Confirmar Contraseña</label>
-                  <input type="password" className="h-9 w-full rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" />
+                  <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="h-9 w-full rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" />
                 </div>
               </div>
-              <button className="text-[10px] font-bold uppercase tracking-widest text-brand-mint hover:text-white transition-colors">
-                Generar contraseña
+              <button type="button" onClick={handleUpdatePassword} disabled={isPasswordPending} className="text-[10px] font-bold uppercase tracking-widest text-brand-mint hover:text-white transition-colors disabled:opacity-50">
+                {isPasswordPending ? "Actualizando..." : "Actualizar contraseña"}
               </button>
             </div>
           </div>

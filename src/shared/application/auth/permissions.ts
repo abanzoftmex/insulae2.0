@@ -28,8 +28,9 @@ export async function getUserPermissions(): Promise<UserPermissions> {
 
     if (!userId) return {};
 
-
-
+    if (roleType === "ADMIN" || roleType === "SuperAdmin" || roleType === "Administrador") {
+      return await getFullSuperAdminPermissions();
+    }
     const userRoles = await prisma.userRole.findMany({
       where: { userId },
       include: {
@@ -44,12 +45,35 @@ export async function getUserPermissions(): Promise<UserPermissions> {
       },
     });
 
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { initialRole: true },
+    });
+
+    let additionalRole = null;
+    if (user?.initialRole) {
+      additionalRole = await prisma.role.findFirst({
+        where: { name: user.initialRole, isActive: true },
+        include: {
+          permissions: {
+            where: { isActive: true },
+            include: { module: true },
+          },
+        },
+      });
+    }
+
     const permissionsMap: UserPermissions = {};
 
-    for (const ur of userRoles) {
-      if (!ur.role.isActive) continue;
+    const allRolesToProcess = userRoles.map((ur) => ur.role);
+    if (additionalRole && !allRolesToProcess.some((r) => r.id === additionalRole.id)) {
+      allRolesToProcess.push(additionalRole);
+    }
+
+    for (const role of allRolesToProcess) {
+      if (!role.isActive) continue;
       
-      for (const perm of ur.role.permissions) {
+      for (const perm of role.permissions) {
         const modName = perm.module.name;
         if (!permissionsMap[modName]) {
           permissionsMap[modName] = {

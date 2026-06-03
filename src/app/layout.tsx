@@ -23,7 +23,7 @@ export default async function RootLayout({
 }>) {
   let navbarLogoUrl: string | null = null;
   let navbarLogoAlt = "Val'Quirico";
-  const permissions = await getUserPermissions();
+  const permissions = await getUserPermissions(); // Trigger recompile
 
   try {
     const overview = await getCondominiumOverviewUseCase.execute();

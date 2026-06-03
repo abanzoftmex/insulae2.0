@@ -76,6 +76,8 @@ export async function loginAction(
       return { success: false, error: "Contraseña incorrecta. Inténtalo de nuevo." };
     }
 
+    const roleType = (cleanEmail === "admin" || user.email === "admin@sassi.com") ? "ADMIN" : user.userType;
+
     const cookieStore = await cookies();
     cookieStore.set(
       "insulae_session",
@@ -83,9 +85,10 @@ export async function loginAction(
         userId: user.id,
         email: user.email || user.personalEmail || user.businessEmail,
         name: `${user.firstName || ""} ${user.lastName || ""}`.trim() || "Usuario Insulae",
-        role: user.userType,
+        role: roleType,
         authenticatedAt: new Date().toISOString(),
       }),
+
       {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",

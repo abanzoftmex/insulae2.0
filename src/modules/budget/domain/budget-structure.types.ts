@@ -1,10 +1,10 @@
-import { ExpenseBudgetGroup } from "@prisma/client";
+
 
 export interface BudgetGroupVM {
   id: string;
   name: string;
   year: number;
-  category: ExpenseBudgetGroup;
+  category: string;
   isActive: boolean;
   concepts: BudgetConceptShortVM[];
 }

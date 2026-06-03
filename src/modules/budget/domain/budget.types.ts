@@ -1,4 +1,4 @@
-import { BudgetStatus, ExpenseBudgetGroup } from "@prisma/client";
+import { BudgetStatus } from "@prisma/client";
 
 export interface BudgetMonthVM {
   month: number;          // 1-12
@@ -21,7 +21,7 @@ export interface BudgetConceptRowVM {
 }
 
 export interface BudgetGroupVM {
-  groupData: ExpenseBudgetGroup;
+  groupData: string;
   budgeted: number;
   generated: number;
   balance: number;

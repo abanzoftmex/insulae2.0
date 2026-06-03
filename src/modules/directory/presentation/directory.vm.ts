@@ -62,7 +62,7 @@ function joinOrFallback(values: string[], fallback: string): string {
 
 function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
   const primaryRole =
-    person.roles[0] ?? person.assignmentRoles[0] ?? person.initialRole ?? "Sin rol";
+    person.initialRole || person.roles[0] || person.assignmentRoles[0] || "Sin rol";
 
   return {
     id: person.id,

@@ -20,14 +20,7 @@ enum PaymentMethod {
   OTHER
 }
 
-enum ExpenseBudgetGroup {
-  ADMINISTRATION
-  MAINTENANCE
-  SECURITY
-  INFRASTRUCTURE
-  EXTRAORDINARY
-  OTHER
-}
+
 
 enum LedgerStatus {
   OPEN
@@ -747,7 +740,7 @@ model BudgetGroup {
   name          String
   isActive      Boolean            @default(true) @map("is_active")
   legacyId      Int?               @map("legacy_id")
-  category      ExpenseBudgetGroup @default(OTHER)
+  category      String             @default("OTHER")
   order         Int                @default(0)
   parentId      String?            @map("parent_id")
 
@@ -767,7 +760,7 @@ model BudgetExpenseConcept {
   condominiumId         String             @map("condominium_id")
   year                  Int
   name                  String
-  budgetGroup           ExpenseBudgetGroup @map("group")
+  budgetGroup           String             @default("OTHER") @map("group")
   budgetGroupId         String?            @map("budget_group_id")
   isActive              Boolean            @default(true) @map("is_active")
   legacyBudgetConceptId Int?               @map("legacy_budget_concept_id")

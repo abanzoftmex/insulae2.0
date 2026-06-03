@@ -1,7 +1,7 @@
 import React from "react";
 import { getBudgetByYearUseCase } from "@/modules/budget";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { ExpenseBudgetGroup } from "@prisma/client";
+
 
 export default async function BudgetPrintPage(props: { searchParams: Promise<{ anio?: string }> }) {
   const searchParams = await props.searchParams;
@@ -13,14 +13,7 @@ export default async function BudgetPrintPage(props: { searchParams: Promise<{ a
 
   const vm = await getBudgetByYearUseCase.execute(condo.id, year);
 
-  const groupNames: Record<ExpenseBudgetGroup, string> = {
-    [ExpenseBudgetGroup.ADMINISTRATION]: "Gastos administración",
-    [ExpenseBudgetGroup.MAINTENANCE]: "Gastos de mantenimiento",
-    [ExpenseBudgetGroup.SECURITY]: "Gastos de seguridad",
-    [ExpenseBudgetGroup.INFRASTRUCTURE]: "Gastos de infraestructura",
-    [ExpenseBudgetGroup.EXTRAORDINARY]: "Gastos extraordinarios",
-    [ExpenseBudgetGroup.OTHER]: "Otros gastos"
-  };
+
 
   return (
     <div className="bg-white p-8 max-w-[1000px] mx-auto text-gray-900 print:p-0">
@@ -63,9 +56,9 @@ export default async function BudgetPrintPage(props: { searchParams: Promise<{ a
       <div className="space-y-12">
         {vm.groups.map((group) => (
           <div key={group.groupData} className="break-inside-avoid">
-            <h3 className="text-xl font-bold mb-4 border-l-4 border-amber-500 pl-3 py-1 bg-gray-50 uppercase tracking-tight">
-              {groupNames[group.groupData]}
-            </h3>
+              <h3 className="text-xs font-bold text-brand uppercase tracking-wider mb-3 pb-1 border-b border-brand/20">
+                {group.groupData}
+              </h3>
             
             <table className="w-full border-collapse">
               <thead>
@@ -94,7 +87,7 @@ export default async function BudgetPrintPage(props: { searchParams: Promise<{ a
               </tbody>
               <tfoot>
                 <tr className="bg-gray-50 font-bold border-t-2 border-gray-200">
-                  <td className="py-3 px-4 text-sm uppercase">Total {groupNames[group.groupData]}</td>
+                  <td className="py-3 px-4 text-sm uppercase">Total {group.groupData}</td>
                   <td className="py-3 px-4 text-right text-sm">
                     {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(group.budgeted)}
                   </td>

@@ -105,6 +105,8 @@ export async function deleteBudgetConceptAction(conceptId: string) {
 
 export async function saveBudgetGroupAction(data: any) {
   try {
+    const condoId = await getFirstCondo();
+    data.condominiumId = condoId;
     await inlineRepo.saveBudgetGroup(data);
     revalidatePath("/listado-estructura-presupuesto");
     return { success: true };

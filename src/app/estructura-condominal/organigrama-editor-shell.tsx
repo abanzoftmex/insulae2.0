@@ -185,19 +185,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
                       const responsible = draft?.responsibleUserIds ?? [];
                       const alternates = draft?.alternateUserIds ?? [];
 
-                      const normalizeText = (t: string) => t ? t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim() : "";
-                      const groupNameLower = normalizeText(group.groupName);
-                      const filteredUsers = userOptions.filter(u => {
-                        // Always include currently selected users so they don't disappear from the UI
-                        if (responsible.includes(u.id) || alternates.includes(u.id)) return true;
-                        
-                        // If user has no initial role, exclude them from targeted groups
-                        if (!u.initialRole) return false;
-                        
-                        const roleLower = normalizeText(u.initialRole);
-                        // Either the role contains the group name, or the group name contains the role
-                        return roleLower.includes(groupNameLower) || groupNameLower.includes(roleLower);
-                      });
+                      const filteredUsers = userOptions;
 
                       return (
                         <tr key={row.positionId} className="h-24 hover:bg-canvas/5 transition-colors">
