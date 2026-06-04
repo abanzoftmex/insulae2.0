@@ -623,6 +623,58 @@ export async function createPrivateAreaChargeAction(formData: FormData): Promise
   revalidatePath("/reporte-cuotas");
   revalidatePath("/reporte-cuotas-extraordinarias");
 }
+export async function updatePrivateAreaChargeAction(formData: FormData): Promise<void> {
+  const chargeId = toString(formData.get("chargeId"));
+  const chargeGroupId = toString(formData.get("chargeGroupId"));
+  const amount = toNumber(formData.get("amount"));
+  const concept = toString(formData.get("concept"));
+  const dueDate = toDate(formData.get("dueDate"));
+  const chargeDate = toDate(formData.get("chargeDate"));
+  
+  const periodYear = chargeDate?.getUTCFullYear();
+  const periodMonth = chargeDate ? chargeDate.getUTCMonth() + 1 : undefined;
+
+  if (!chargeId || !chargeGroupId || amount === null || amount <= 0) {
+    return;
+  }
+
+  await prisma.charge.update({
+    where: { id: chargeId },
+    data: {
+      chargeGroupId,
+      amount,
+      concept: concept.length > 0 ? concept : null,
+      dueDate,
+      ...(periodYear ? { periodYear } : {}),
+      ...(periodMonth ? { periodMonth } : {}),
+    },
+  });
+
+  revalidatePath("/areas-privativas");
+  revalidatePath("/areas-privativas/listado-pagos");
+  revalidatePath("/reporte-cuotas");
+  revalidatePath("/reporte-cuotas-extraordinarias");
+}
+
+export async function deletePrivateAreaChargeAction(chargeId: string): Promise<void> {
+  if (!chargeId) return;
+  
+  await prisma.charge.delete({
+    where: { id: chargeId }
+  });
+
+  revalidatePath("/areas-privativas");
+  revalidatePath("/areas-privativas/listado-pagos");
+  revalidatePath("/reporte-cuotas");
+  revalidatePath("/reporte-cuotas-extraordinarias");
+}
+
+export async function sendPrivateAreaStatementEmailAction(privateAreaId: string, opc: string): Promise<void> {
+  // TODO: Implement actual email sending logic via Resend / NodeMailer / Sendgrid.
+  // For now, this is a placeholder that simulates a successful email send.
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  console.log(`Email sent for private area ${privateAreaId} with opc ${opc}`);
+}
 
 export async function createPrivateAreaAction(formData: FormData): Promise<void> {
   const name = toString(formData.get("name"));
@@ -748,25 +800,31 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
     });
     if (!condominium) return { success: false, error: "Condominio no encontrado" };
 
-    const parseDecimal = (val: string | null | undefined) => {
-      if (!val || typeof val !== "string") return null;
-      if (val.trim() === "") return null;
-      const num = Number(val.replace(/,/g, ""));
-      return isNaN(num) ? null : num;
+    const parseDecimal = (val: any) => {
+      if (val === null || val === undefined || val === "") return null;
+      if (typeof val === "number") return val;
+      if (typeof val === "string") {
+        const num = Number(val.replace(/,/g, ""));
+        return isNaN(num) ? null : num;
+      }
+      return null;
     };
 
-    const parseBool = (val: string | null | undefined) => {
-      if (!val) return false;
-      return val.trim().toUpperCase() === "SI" || val.trim() === "true" || val.trim() === "1";
+    const parseBool = (val: any) => {
+      if (val === null || val === undefined || val === "") return false;
+      if (typeof val === "boolean") return val;
+      if (typeof val === "string") {
+        const str = val.trim().toUpperCase();
+        return str === "SI" || str === "TRUE" || str === "1";
+      }
+      if (typeof val === "number") return val === 1;
+      return false;
     };
-
-    const validStatuses = ["UNASSIGNED", "DELIVERED", "SOLD", "RECOVERED", "CONSTRUCTION", "UNUSABLE"];
 
     for (const row of rows) {
       if (!row["Nombre"] || String(row["Nombre"]).trim() === "") continue;
 
-      let parsedStatus = row["Estatus"]?.trim();
-      if (!validStatuses.includes(parsedStatus)) parsedStatus = "UNASSIGNED";
+      const parsedStatus = toPrivateAreaStatus(row["Estatus"]?.trim());
 
       const baseData = {
         condominiumId: condominium.id,

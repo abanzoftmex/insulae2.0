@@ -42,7 +42,7 @@ function toVisibleChargeLines(
       charge.chargeGroupType,
     );
 
-    if (opc === "1") {
+    if (opc === "2") {
       return belongsToCommerce;
     }
 

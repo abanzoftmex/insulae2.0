@@ -271,6 +271,8 @@ export class PrismaPrivateAreaActionPageDataRepository
             amount: true,
             dueDate: true,
             status: true,
+            concept: true,
+            chargeGroupId: true,
             chargeGroup: {
               select: {
                 name: true,
@@ -422,6 +424,8 @@ export class PrismaPrivateAreaActionPageDataRepository
         amount: chargedAmount,
         dueDate: charge.dueDate,
         status: charge.status,
+        chargeGroupId: charge.chargeGroupId,
+        concept: charge.concept,
         chargeGroupName: charge.chargeGroup.name,
         chargeGroupType: charge.chargeGroup.chargeType,
         paidAmount,

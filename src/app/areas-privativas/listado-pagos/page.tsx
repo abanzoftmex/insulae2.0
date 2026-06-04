@@ -9,6 +9,9 @@ import { StatCard } from "@/components/ui/stat-card";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 import { CapturarCuotaDialog } from "./_components/capturar-cuota-dialog";
+import { EditarCuotaDialog } from "./_components/editar-cuota-dialog";
+import { BorrarCuotaDialog } from "./_components/borrar-cuota-dialog";
+import { ActionBarButtons } from "./_components/action-bar-buttons";
 import { PrivateAreaActionShell } from "../_components/private-area-action-shell";
 import {
   type ActionPageSearchParams,
@@ -105,7 +108,24 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
     0,
   );
 
-  const isComercio = opc === "1";
+  const contactAssignment = area.assignments.find((assignment) =>
+    (assignment.roleName || "").toLowerCase().includes("administrador"),
+  ) ?? area.assignments.find((assignment) => assignment.roleBucket === "ACTUAL");
+  const contactUser = contactAssignment?.user;
+
+  // Group charges by chargeGroupName for the breakdown tables
+  const chargeSummaryByGroup = new Map<string, { charged: number; balance: number }>();
+  for (const charge of visibleChargeLines) {
+    const existing = chargeSummaryByGroup.get(charge.chargeGroupName) || { charged: 0, balance: 0 };
+    existing.charged += charge.amount;
+    existing.balance += charge.balanceAmount;
+    chargeSummaryByGroup.set(charge.chargeGroupName, existing);
+  }
+  const summaryRows = Array.from(chargeSummaryByGroup.entries())
+    .map(([name, totals]) => ({ name, ...totals }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+
+  const isComercio = opc === "2";
 
   return (
     <PrivateAreaActionShell
@@ -122,7 +142,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           </CardTitle>
           <div className="flex gap-2">
             <Link
-              href={buildActionHref("listado-pagos", area.privateAreaId, "2")}
+              href={buildActionHref("listado-pagos", area.privateAreaId, "1")}
               className={
                 !isComercio
                   ? "rounded-full bg-white/20 border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white"
@@ -132,7 +152,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
               Propietario
             </Link>
             <Link
-              href={buildActionHref("listado-pagos", area.privateAreaId, "1")}
+              href={buildActionHref("listado-pagos", area.privateAreaId, "2")}
               className={
                 isComercio
                   ? "rounded-full bg-white/20 border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white"
@@ -155,107 +175,211 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
         )}
       </Card>
 
-      {/* Financial Actions Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 bg-white/60 border border-line p-3 rounded-card">
-        <p className="text-[11px] font-bold text-[#5a4838] uppercase tracking-wider">Acciones Financieras</p>
-        <div className="flex gap-2">
-          <CapturarCuotaDialog privateAreaId={area.privateAreaId} opc={opc} chargeGroups={chargeGroups} />
+      <div className="space-y-6 mt-6">
+        {/* Contacto Simple */}
+        <div className="border-b border-[#ddd0be] pb-2">
+          <h2 className="text-xl font-bold text-[#3a2a18]">Contacto</h2>
+          {contactUser ? (
+            <div className="mt-3 text-[13px] text-[#3a2a18] space-y-1">
+              <p>Nombre: <span className="font-bold">{contactUser.name}</span></p>
+              <p>Email: <span className="font-bold">{contactUser.email || "—"}</span></p>
+              <p>Teléfono: <span className="font-bold">{contactUser.phone || "—"}</span></p>
+            </div>
+          ) : (
+            <p className="mt-3 text-[13px] text-[#3a2a18] italic">No hay contacto registrado.</p>
+          )}
         </div>
-      </div>
 
-      {/* Summary KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <StatCard accent="brand" label="Total cargado" value={formatCurrency(totalCharged)} icon={<Receipt className="h-3.5 w-3.5" />} />
-        <StatCard accent="lime" label="Total pagado" value={formatCurrency(totalPaid)} icon={<Wallet className="h-3.5 w-3.5" />} />
-        <StatCard
-          accent={totalBalance > 0 ? "gold" : "cyan"}
-          label="Saldo"
-          value={formatCurrency(totalBalance)}
-          icon={<Receipt className="h-3.5 w-3.5" />}
-        />
-      </div>
-
-      {/* Tables */}
-      <section className="grid gap-4 xl:grid-cols-[1.2fr_1fr]">
-        <Card className="border-transparent shadow-layered">
-          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Cargos</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="min-w-full border-separate border-spacing-0 text-[12px]">
-                <thead>
-                  <tr className="bg-canvas text-left text-[10px] font-bold uppercase tracking-widest text-brand">
-                    <th className="border-b border-line px-3 py-2.5">Periodo</th>
-                    <th className="border-b border-line px-3 py-2.5">Grupo</th>
-                    <th className="border-b border-line px-3 py-2.5">Cargo</th>
-                    <th className="border-b border-line px-3 py-2.5">Pagado</th>
-                    <th className="border-b border-line px-3 py-2.5">Saldo</th>
-                    <th className="border-b border-line px-3 py-2.5">Vence</th>
-                  </tr>
-                </thead>
+        {/* Resúmenes */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          {/* DEBE AL DÍA / SALDO A FAVOR */}
+          <div>
+            <div className="flex bg-white border border-[#d6c7b3] rounded-t-md">
+              <div className="flex-1 text-center py-4 border-r border-[#d6c7b3]">
+                <div className="flex items-center justify-center gap-2 mb-1 text-[#b58b4f]">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-[12px] font-bold uppercase">Debe al día</span>
+                </div>
+                <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(totalBalance)}</p>
+              </div>
+              <div className="flex-1 text-center py-4">
+                <div className="flex items-center justify-center gap-2 mb-1 text-[#b58b4f]">
+                  <span className="text-[16px]">👍</span>
+                  <span className="text-[12px] font-bold uppercase">Saldo a favor</span>
+                </div>
+                <p className="text-[15px] font-bold text-[#3a2a18]">$0.00</p>
+              </div>
+            </div>
+            <div className="bg-[#fbf9f4] border-x border-b border-[#d6c7b3] rounded-b-md p-0">
+              <table className="w-full text-[11px] text-[#3a2a18]">
                 <tbody>
-                  {visibleChargeLines.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-3 py-8 text-center text-[11px] text-ink-soft">
-                        No hay cargos registrados para esta área.
-                      </td>
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Saldo inicial:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
+                  </tr>
+                  {summaryRows.map((row) => (
+                    <tr key={row.name} className={`border-b border-[#e5d5b5] ${row.balance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                      <td className="px-3 py-1.5">{row.name}:</td>
+                      <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(row.balance)}</td>
                     </tr>
-                  ) : (
-                    visibleChargeLines.map((charge) => (
-                      <tr key={charge.id} className="hover:bg-canvas/60 transition-colors">
-                        <td className="border-b border-line/40 px-3 py-2 font-bold tabular-nums text-ink">
-                          {periodLabel(charge.periodYear, charge.periodMonth)}
-                        </td>
-                        <td className="border-b border-line/40 px-3 py-2 text-ink-soft">{charge.chargeGroupName}</td>
-                        <td className="border-b border-line/40 px-3 py-2 font-bold tabular-nums text-ink">{formatCurrency(charge.amount)}</td>
-                        <td className="border-b border-line/40 px-3 py-2 tabular-nums text-ink-soft">{formatCurrency(charge.paidAmount)}</td>
-                        <td className="border-b border-line/40 px-3 py-2 font-bold tabular-nums text-ink">{formatCurrency(charge.balanceAmount)}</td>
-                        <td className="border-b border-line/40 px-3 py-2 text-ink-soft">{formatDate(charge.dueDate)}</td>
-                      </tr>
-                    ))
-                  )}
+                  ))}
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Intereses moratorios:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        <Card className="border-transparent shadow-layered">
-          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Pagos aplicados</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-2">
-            {visiblePaymentMovements.length === 0 ? (
-              <p className="rounded border border-dashed border-line bg-canvas px-3 py-4 text-center text-[11px] text-ink-soft">
-                No hay pagos asociados a los cargos visibles.
-              </p>
-            ) : (
-              visiblePaymentMovements.map((payment) => (
-                <div
-                  key={payment.paymentId}
-                  className="rounded bg-canvas border border-line/50 p-3 space-y-1.5"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-[12px] font-bold text-ink">{formatDate(payment.paidAt)}</p>
-                    <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
-                      {payment.method}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-x-3 text-[10px] text-ink-soft">
-                    <p><span className="font-bold uppercase tracking-wider">Ref.</span> {payment.reference ?? "—"}</p>
-                    <p><span className="font-bold uppercase tracking-wider">Notas</span> {payment.notes ?? "—"}</p>
-                  </div>
-                  <div className="flex items-center justify-between pt-1 border-t border-line/40">
-                    <p className="text-[10px] text-ink-soft">Monto pago: <span className="font-bold text-ink">{formatCurrency(payment.paymentTotalAmount)}</span></p>
-                    <p className="text-[10px] text-ink-soft">Aplicado: <span className="font-bold text-brand">{formatCurrency(payment.allocatedAmount)}</span></p>
-                  </div>
+          {/* CARGOS TOTALES */}
+          <div>
+            <div className="flex bg-white border border-[#d6c7b3] rounded-t-md">
+              <div className="flex-1 text-center py-4">
+                <div className="flex items-center justify-center gap-2 mb-1 text-[#b58b4f]">
+                  <AlertCircle className="h-5 w-5" />
+                  <span className="text-[12px] font-bold uppercase">Cargos Totales</span>
                 </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
-      </section>
+                <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(totalCharged)}</p>
+              </div>
+            </div>
+            <div className="bg-[#fbf9f4] border-x border-b border-[#d6c7b3] rounded-b-md p-0">
+              <table className="w-full text-[11px] text-[#3a2a18]">
+                <tbody>
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Saldo inicial:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
+                  </tr>
+                  {summaryRows.map((row) => (
+                    <tr key={row.name} className="border-b border-[#e5d5b5]">
+                      <td className="px-3 py-1.5">{row.name}:</td>
+                      <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(row.charged)}</td>
+                    </tr>
+                  ))}
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Intereses moratorios:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
+                  </tr>
+                  <tr>
+                    <td className="px-3 py-1.5">Descuentos:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* ÚLTIMOS PAGOS REALIZADOS */}
+        <div className="border border-[#e1ebf6] rounded-md overflow-hidden bg-white">
+          <div className="bg-white text-center py-3 border-b border-[#e1ebf6] text-[#3a2a18] text-[12px] uppercase flex items-center justify-center gap-2">
+            <AlertCircle className="h-4 w-4 text-[#3a2a18]" /> Últimos pagos realizados
+          </div>
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr className="bg-[#e9f0f9] text-[#2c3e50] font-bold">
+                <th className="py-2 px-3 text-left">Folio</th>
+                <th className="py-2 px-3 text-left">Forma de pago</th>
+                <th className="py-2 px-3 text-left">Fecha real de cobro</th>
+                <th className="py-2 px-3 text-right">Abono realizado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visiblePaymentMovements.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-4 px-3 text-center text-gray-500 italic">No hay pagos registrados</td>
+                </tr>
+              ) : (
+                visiblePaymentMovements.map(payment => (
+                  <tr key={payment.paymentId} className="border-b border-[#e1ebf6] last:border-0">
+                    <td className="py-2 px-3 font-bold">{payment.reference || payment.paymentId.substring(0, 8)}</td>
+                    <td className="py-2 px-3 capitalize">{payment.method.toLowerCase()}</td>
+                    <td className="py-2 px-3">{formatDate(payment.paidAt)}</td>
+                    <td className="py-2 px-3 text-right font-bold text-[#3a2a18]">{formatCurrency(payment.paymentTotalAmount)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Action Bar (Dark Blue) */}
+        <div className="bg-white border border-[#ddd0be] rounded-md p-3 flex flex-wrap items-center gap-2">
+          {/* Capturar Cuota is actually a trigger, but for now we render its default appearance */}
+          <div className="[&>button]:bg-[#2c3e50] [&>button]:hover:bg-[#1a252f] [&>button]:text-white [&>button]:border-transparent [&>button]:shadow-sm">
+            <CapturarCuotaDialog privateAreaId={area.privateAreaId} opc={opc} chargeGroups={chargeGroups} />
+          </div>
+          
+          <button className="bg-[#2c3e50] text-white text-[11px] font-bold px-4 py-2 rounded shadow-sm hover:bg-[#1a252f] transition-colors flex items-center gap-2">
+            <AlertCircle className="h-3.5 w-3.5" /> Histórico de pagos
+          </button>
+            {/* Client Buttons: Export, Send, Print */}
+            <ActionBarButtons 
+              privateAreaId={area.privateAreaId} 
+              opc={opc} 
+              areaName={area.name} 
+              charges={visibleChargeLines} 
+            />
+        </div>
+
+        {/* Main Charges Table */}
+        <div className="border border-[#e1ebf6] rounded-md overflow-hidden bg-white mb-20">
+          <div className="overflow-x-auto">
+            <table className="w-full text-[11px] whitespace-nowrap">
+              <thead>
+                <tr className="bg-[#e9f0f9] text-[#2c3e50] font-bold">
+                  <th className="py-2 px-3 text-center border-b border-[#e1ebf6]">Acciones</th>
+                  <th className="py-2 px-3 text-left border-b border-[#e1ebf6]">Tipo de cuota</th>
+                  <th className="py-2 px-3 text-left border-b border-[#e1ebf6]">Concepto</th>
+                  <th className="py-2 px-3 text-left border-b border-[#e1ebf6]">Fecha de cobro</th>
+                  <th className="py-2 px-3 text-left border-b border-[#e1ebf6]">Fecha límite de pago</th>
+                  <th className="py-2 px-3 text-left border-b border-[#e1ebf6]">Pagado el</th>
+                  <th className="py-2 px-3 text-right border-b border-[#e1ebf6]">Cargo</th>
+                  <th className="py-2 px-3 text-right border-b border-[#e1ebf6]">Abono</th>
+                  <th className="py-2 px-3 text-right border-b border-[#e1ebf6]">Intereses moratorios</th>
+                  <th className="py-2 px-3 text-right border-b border-[#e1ebf6]">Descuento</th>
+                  <th className="py-2 px-3 text-right border-b border-[#e1ebf6]">Saldo</th>
+                  <th className="py-2 px-3 text-center border-b border-[#e1ebf6]">Comentarios</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleChargeLines.length === 0 ? (
+                  <tr>
+                    <td colSpan={12} className="py-8 px-3 text-center text-gray-500 italic">No hay cargos registrados</td>
+                  </tr>
+                ) : (
+                  visibleChargeLines.map((charge, i) => {
+                    const rowBg = charge.balanceAmount > 0 ? "bg-[#ffecd6]" : (i % 2 === 0 ? "bg-white" : "bg-[#fbfbfb]");
+                    return (
+                      <tr key={charge.id} className={`border-b border-[#e1ebf6] ${rowBg}`}>
+                        <td className="py-2 px-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <EditarCuotaDialog charge={charge} chargeGroups={chargeGroups} />
+                            <BorrarCuotaDialog chargeId={charge.id} />
+                          </div>
+                        </td>
+                        <td className="py-2 px-3">{charge.chargeGroupName}</td>
+                        <td className="py-2 px-3">{charge.chargeGroupName} {charge.periodYear}</td>
+                        <td className="py-2 px-3">01 {charge.periodMonth.toString().padStart(2, '0')} {charge.periodYear.toString().slice(-2)}</td>
+                        <td className="py-2 px-3">{formatDate(charge.dueDate)}</td>
+                        <td className="py-2 px-3 text-[#3a2a18]/60">-</td>
+                        <td className="py-2 px-3 text-right font-bold text-[#3a2a18]">{formatCurrency(charge.amount)}</td>
+                        <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.paidAmount)}</td>
+                        <td className="py-2 px-3 text-right text-[#3a2a18]">$0.00</td>
+                        <td className="py-2 px-3 text-right text-[#3a2a18]">$0.00</td>
+                        <td className="py-2 px-3 text-right font-bold text-[#b58b4f]">{formatCurrency(charge.balanceAmount)}</td>
+                        <td className="py-2 px-3 text-center">
+                           <input type="text" className="border border-[#ddd0be] rounded px-2 py-0.5 w-32 text-[10px]" />
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </PrivateAreaActionShell>
   );
 }

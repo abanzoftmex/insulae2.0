@@ -38,6 +38,8 @@ export interface PrivateAreaChargeLine {
   amount: number;
   dueDate: Date | null;
   status: string;
+  chargeGroupId: string;
+  concept: string | null;
   chargeGroupName: string;
   chargeGroupType: string | null;
   paidAmount: number;

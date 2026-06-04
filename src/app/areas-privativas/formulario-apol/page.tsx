@@ -258,8 +258,11 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
 
         <section className="grid gap-4 lg:grid-cols-2">
           <Card className="border-transparent shadow-layered lg:col-span-2">
-            <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand flex flex-row items-center justify-between rounded-t-card">
               <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Información general</CardTitle>
+              <Button type="submit" variant="outline" size="sm" className="h-7 px-4 text-[10px] border-white/20 bg-white/10 text-white hover:bg-white hover:text-brand font-bold uppercase tracking-widest transition-colors">
+                Guardar Cambios
+              </Button>
             </CardHeader>
             <CardContent className="p-4">
             <div className="mt-0 grid gap-4 md:grid-cols-2">
@@ -418,14 +421,6 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
             </CardContent>
           </Card>
         </section>
-
-        <Card className="border-transparent shadow-layered">
-          <CardContent className="p-4">
-            <Button type="submit" variant="dark" size="md" className="w-full font-bold uppercase tracking-widest text-[11px]">
-              Guardar información
-            </Button>
-          </CardContent>
-        </Card>
       </form>
 
       <section className="grid gap-4 lg:grid-cols-2">

@@ -35,8 +35,16 @@ interface PrivateAreaActionShellProps {
 const NAV_TABS = [
   { key: "formulario-apol" as const, label: "Formulario AP" },
   { key: "formulario-apol-imagenes" as const, label: "Imágenes AP" },
-  { key: "listado-pagos-propietario" as const, label: "Pagos Propietario", opc: "2" },
-  { key: "listado-pagos-comercio" as const, label: "Pagos Comercio", opc: "1" },
+  {
+    key: "listado-pagos-propietario" as const,
+    label: "Pagos Propietario",
+    opc: "1",
+  },
+  {
+    key: "listado-pagos-comercio" as const,
+    label: "Pagos Comercio",
+    opc: "2",
+  },
   { key: "listado-arrendamientos" as const, label: "Arrendamientos" },
 ] as const;
 
