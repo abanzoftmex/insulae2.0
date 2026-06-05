@@ -115,7 +115,11 @@ export class PrismaBudgetRepository implements BudgetRepository {
         months
       };
 
-      const groupKey = concept.group?.name || concept.budgetGroup || "OTHER";
+      // Agrupamos por el "subnombre" del grupo (category), no por el nombre
+      // del grupo principal (name). En la estructura presupuestal el name es
+      // genérico (p.ej. "Presupuesto ordinario") y el category contiene el
+      // nombre real del grupo (p.ej. "GASTOS DE JARDINERÍA").
+      const groupKey = concept.group?.category || concept.budgetGroup || "OTHER";
       if (!groupsMap.has(groupKey)) {
         groupsMap.set(groupKey, []);
       }
