@@ -35,7 +35,7 @@ export interface CondominiumOverviewVM {
 }
 
 export function toCondominiumOverviewVM(overview: CondominiumOverview): CondominiumOverviewVM {
-  const totalPrivateAreas = overview.activePrivateAreas + overview.inactivePrivateAreas;
+  const totalPrivateAreas = overview.activePrivateAreas;
   const activeRatio = totalPrivateAreas > 0 ? (overview.activePrivateAreas / totalPrivateAreas) * 100 : 0;
   const condominiumFormatById: Record<number, string> = {
     1: "Vertical",

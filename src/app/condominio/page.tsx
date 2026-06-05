@@ -91,8 +91,7 @@ export default async function CondominioPage() {
   }
 
   const activeCount = overview ? parseInt(overview.activePrivateAreas.replace(/,/g, "")) : 0;
-  const inactiveCount = overview ? parseInt(overview.inactivePrivateAreas.replace(/,/g, "")) : 0;
-  const totalRegistered = activeCount + inactiveCount;
+  const totalRegistered = activeCount;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
@@ -178,7 +177,7 @@ export default async function CondominioPage() {
             <CardContent className="p-4 space-y-4">
               <div className="flex flex-col gap-1">
                 <div className="flex items-end justify-between gap-3">
-                  <p className="text-[9px] font-bold uppercase text-white/50 tracking-widest">Lotes Activos vs Inactivos</p>
+                  <p className="text-[9px] font-bold uppercase text-white/50 tracking-widest">Estado de Lotes</p>
                   <p className="text-2xl font-bold text-white">{overview ? `${overview.activeRatio.toFixed(1)}%` : "0%"}</p>
                 </div>
                 {overview && (

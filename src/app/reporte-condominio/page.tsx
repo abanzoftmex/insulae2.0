@@ -112,7 +112,7 @@ export default async function ReporteCondominioPage() {
 
         <div className="grid grid-cols-1 gap-3">
           <StatCard accent="cyan" label="APoLes (Padres)" value={vm.activeParents} trend={{ value: `Inactivas: ${vm.builtAreas}`, isUp: true }} icon={<Activity className="h-3.5 w-3.5" />} />
-          <StatCard accent="lime" label="FAPs (Hijos)" value={vm.activeChildren} trend={{ value: `Inactivas: ${vm.inactiveChildren}`, isUp: true }} icon={<Layers className="h-3.5 w-3.5" />} />
+          <StatCard accent="lime" label="FAPs (Hijos)" value={vm.activeChildren} icon={<Layers className="h-3.5 w-3.5" />} />
         </div>
       </div>
 
