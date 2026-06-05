@@ -138,11 +138,11 @@ export class PrismaBudgetRepository implements BudgetRepository {
       const gGenerated = g.concepts.reduce((acc, c) => acc + c.generated, 0);
       const gBalance = gBudgeted - gGenerated;
 
-      // El subnombre solo se muestra cuando aporta información: en insulae el
-      // category suele ser "OTHER" y no debe ensuciar el título del bloque.
-      const subname = g.subname && g.subname !== "OTHER" && g.subname !== g.name
-        ? g.subname
-        : undefined;
+      // Mostramos siempre el subnombre (category), igual que en Sassi, aunque
+      // sea "OTHER" (caso de insulae). Ambos sistemas se comportan idéntico:
+      // nombre principal (name) + subnombre (category). Solo se omite si el
+      // subnombre viene vacío o es idéntico al principal (evita duplicarlo).
+      const subname = g.subname && g.subname !== g.name ? g.subname : undefined;
 
       groups.push({
         groupId,
