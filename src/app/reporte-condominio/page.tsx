@@ -127,7 +127,7 @@ export default async function ReporteCondominioPage() {
               {/* Sección 1: Totales de Proyecto */}
               <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
                 <h4 className="text-[9px] font-extrabold uppercase text-brand tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
-                  <span className="h-2 w-2 rounded-full bg-brand" /> Totales de Proyecto
+                  <span className="h-2 w-2 rounded-full bg-brand" /> Total de m2 legales del condominio
                 </h4>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between py-0.5 border-b border-line/30">
@@ -148,7 +148,7 @@ export default async function ReporteCondominioPage() {
               {/* Sección 2: Operativos Reales (Padres) */}
               <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
                 <h4 className="text-[9px] font-extrabold uppercase text-cyan-600 tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
-                  <span className="h-2 w-2 rounded-full bg-cyan-500" /> Lotes Reales Operativos
+                  <span className="h-2 w-2 rounded-full bg-cyan-500" /> Total de m2 reales
                 </h4>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between py-0.5 border-b border-line/30">

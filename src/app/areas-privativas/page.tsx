@@ -9,9 +9,12 @@ import {
 import { getPrivateAreaListingUseCase } from "@/modules/private-areas";
 import { toPrivateAreaListingVM } from "@/modules/private-areas/presentation/private-area-listing.vm";
 import { CsvManager } from "./_components/csv-manager";
+import { getCondominiumReportUseCase } from "@/modules/condominium-report";
+import { toCondominiumReportVM } from "@/modules/condominium-report/presentation/condominium-report.vm";
 
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Paginator } from "@/components/ui/paginator";
@@ -228,6 +231,9 @@ export default async function AreasPrivativasPage(props: PageProps) {
   );
 
   const vm = toPrivateAreaListingVM(listing);
+
+  const report = await getCondominiumReportUseCase.execute();
+  const reportVm = report ? toCondominiumReportVM(report) : null;
   
   const shortMonths = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   
@@ -338,6 +344,101 @@ export default async function AreasPrivativasPage(props: PageProps) {
         <StatCard accent="cyan" label="M2 Privativos" value={vm.summary.projectTotalM2} icon={<MapPin className="h-3.5 w-3.5" />} />
         <StatCard accent="lime" label="Lotes Construidos" value={vm.summary.legacyBuiltLots} icon={<Home className="h-3.5 w-3.5" />} />
       </div>
+
+      {reportVm && (
+        <Card className="shadow-layered border-transparent">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Datos Técnicos Generales</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Sección 1: Totales de Proyecto */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
+                <h4 className="text-[9px] font-extrabold uppercase text-brand tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-brand" /> Total de m2 legales del condominio
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Áreas privativas / lotes totales</span>
+                    <span className="font-bold text-ink">{reportVm.projectTotalApoles}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">M2 de áreas privativas totales</span>
+                    <span className="font-bold text-ink">{reportVm.projectTotalM2} m²</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-ink-soft font-medium">M2 de áreas comunes</span>
+                    <span className="font-bold text-ink">{reportVm.projectCommonAreasM2} m²</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección 2: Operativos Reales (Padres) */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
+                <h4 className="text-[9px] font-extrabold uppercase text-cyan-600 tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-cyan-500" /> Total de m2 reales
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Áreas privativas / lotes</span>
+                    <span className="font-bold text-ink">{reportVm.parentAreasCount}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">M2 de áreas privativas / lotes</span>
+                    <span className="font-bold text-ink">{reportVm.parentAreasM2} m²</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-ink-soft font-medium">M2 de áreas comunes (lotes)</span>
+                    <span className="font-bold text-ink">{reportVm.parentAreasCommonM2} m²</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección 3: Clasificación Operativa */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
+                <h4 className="text-[9px] font-extrabold uppercase text-yellow-600 tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-yellow-500" /> Clasificación Operativa
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Lotes disponibles (Soles)</span>
+                    <span className="font-bold text-yellow-700">{reportVm.availableAreas}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Lotes construidos (Sombras)</span>
+                    <span className="font-bold text-blue-700">{reportVm.builtAreas}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-ink-soft font-medium">Porcentajes del condominio</span>
+                    <span className="font-extrabold text-[10px] text-ink-soft">{reportVm.availableRatio} soles / {reportVm.builtRatio} sombras</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sección 4: Estructura & Sub-divisiones */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-canvas border border-line/50 hover:shadow-sm transition-all duration-300">
+                <h4 className="text-[9px] font-extrabold uppercase text-lime-600 tracking-widest flex items-center gap-1.5 border-b border-line pb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-lime-500" /> Estructura y Fusiones
+                </h4>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Fracciones de áreas privativas</span>
+                    <span className="font-bold text-ink">{reportVm.activeChildren}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">Fusiones de Áreas / lotes</span>
+                    <span className="font-bold text-ink">{reportVm.activeFusionsCount}</span>
+                  </div>
+                  <div className="flex justify-between py-0.5">
+                    <span className="text-ink-soft font-medium">Fracción indiviso total</span>
+                    <span className="font-bold text-ink">{reportVm.totalIndiviso}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Advanced Filter */}
       <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
