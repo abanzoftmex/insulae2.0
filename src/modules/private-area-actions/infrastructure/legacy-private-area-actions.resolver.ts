@@ -51,6 +51,13 @@ export class LegacyPrivateAreaActionsResolver
         })
       : null;
 
+    const canAddFap = canNavigate && context.isActive && context.hierarchyRole !== "FUSION";
+    const addFapUrl = canAddFap
+      ? buildInternalUrl("nueva", {
+          parentId: privateAreaId,
+        })
+      : null;
+
     return [
       {
         id: "EDIT_BASE",
@@ -86,6 +93,13 @@ export class LegacyPrivateAreaActionsResolver
         kind: "icon",
         href: rentalsUrl,
         isEnabled: rentalsAreEnabled,
+      },
+      {
+        id: "ADD_FAP",
+        label: "Agregar AP",
+        kind: "icon",
+        href: addFapUrl,
+        isEnabled: canAddFap,
       },
     ];
   }

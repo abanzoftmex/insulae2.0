@@ -18,7 +18,12 @@ export class PrismaBudgetRepository implements BudgetRepository {
 
     const activeConcepts = await prisma.budgetExpenseConcept.findMany({
       where: { condominiumId, year, isActive: true },
-      orderBy: { name: 'asc' }
+      include: { group: true },
+      orderBy: [
+        { group: { order: 'asc' } },
+        { order: 'asc' },
+        { name: 'asc' }
+      ]
     });
 
     const expenses = await prisma.expense.groupBy({
@@ -110,7 +115,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
         months
       };
 
-      const groupKey = concept.budgetGroup || "OTHER";
+      const groupKey = concept.group?.name || concept.budgetGroup || "OTHER";
       if (!groupsMap.has(groupKey)) {
         groupsMap.set(groupKey, []);
       }
@@ -119,17 +124,31 @@ export class PrismaBudgetRepository implements BudgetRepository {
 
     const groups: BudgetOverviewGroupVM[] = [];
     for (const [groupKey, concepts] of groupsMap.entries()) {
-      if (concepts.length === 0) continue;
-      const budgeted = concepts.reduce((s, c) => s + c.budgeted, 0);
-      const generated = concepts.reduce((s, c) => s + c.generated, 0);
+      const gBudgeted = concepts.reduce((acc, c) => acc + c.budgeted, 0);
+      const gGenerated = concepts.reduce((acc, c) => acc + c.generated, 0);
+      const gBalance = gBudgeted - gGenerated;
+
       groups.push({
         groupData: groupKey,
-        budgeted,
-        generated,
-        balance: budgeted - generated,
+        budgeted: gBudgeted,
+        generated: gGenerated,
+        balance: gBalance,
         concepts
       });
     }
+
+    const getGroupOrder = (name: string) => {
+      const lower = name.toLowerCase();
+      if (lower.includes("administraci")) return 1;
+      if (lower.includes("mantenimiento")) return 2;
+      if (lower.includes("seguridad")) return 3;
+      if (lower.includes("infraestructura")) return 4;
+      if (lower.includes("extraordinari")) return 5;
+      if (lower.includes("proyecto")) return 6;
+      return 99;
+    };
+
+    groups.sort((a, b) => getGroupOrder(a.groupData) - getGroupOrder(b.groupData));
 
     return {
       id: budget?.id,
@@ -202,6 +221,112 @@ export class PrismaBudgetRepository implements BudgetRepository {
       await prisma.budgetMonth.create({
         data: { budgetLineId: line.id, month, amount }
       });
+    }
+  }
+
+  async upsertBudgetLineMonths(budgetId: string, budgetConceptId: string, monthsData: {month: number, amount: number}[]): Promise<void> {
+    let line = await prisma.budgetLine.findFirst({
+      where: { budgetId, budgetConceptId }
+    });
+    
+    if (!line) {
+      const concept = await prisma.budgetExpenseConcept.findUnique({ where: { id: budgetConceptId }});
+      line = await prisma.budgetLine.create({
+        data: {
+          budgetId,
+          budgetConceptId,
+          concept: concept?.name ?? "Unknown Concept",
+          groupName: concept?.budgetGroup ?? "OTHER"
+        }
+      });
+    }
+
+    const existingMonths = await prisma.budgetMonth.findMany({
+      where: { budgetLineId: line.id }
+    });
+    const existingMap = new Map(existingMonths.map(m => [m.month, m]));
+
+    const ops = [];
+    for (const { month, amount } of monthsData) {
+      const existing = existingMap.get(month);
+      if (existing) {
+        ops.push(prisma.budgetMonth.update({
+          where: { id: existing.id },
+          data: { amount }
+        }));
+      } else {
+        ops.push(prisma.budgetMonth.create({
+          data: { budgetLineId: line.id, month, amount }
+        }));
+      }
+    }
+    await prisma.$transaction(ops);
+  }
+
+  async bulkImportBudgetMonths(budgetId: string, rows: {budgetConceptId: string, conceptName: string, budgetGroup: string, monthsData: {month: number, amount: number}[]}[]): Promise<void> {
+    if (rows.length === 0) return;
+
+    // 1. Fetch all existing budget lines for this budget
+    const existingLines = await prisma.budgetLine.findMany({ where: { budgetId } });
+    const lineMapByConcept = new Map(existingLines.map(l => [l.budgetConceptId, l]));
+
+    // 2. Identify missing lines and create them in bulk
+    const missingLinesData = rows
+      .filter(r => !lineMapByConcept.has(r.budgetConceptId))
+      .map(r => ({
+        budgetId,
+        budgetConceptId: r.budgetConceptId,
+        concept: r.conceptName,
+        groupName: r.budgetGroup
+      }));
+
+    if (missingLinesData.length > 0) {
+      await prisma.budgetLine.createMany({ data: missingLinesData });
+    }
+
+    // 3. Refetch lines to get all IDs
+    const allLines = await prisma.budgetLine.findMany({ where: { budgetId } });
+    const fullLineMapByConcept = new Map(allLines.map(l => [l.budgetConceptId, l]));
+
+    // 4. Fetch all existing budget months for this budget
+    const lineIds = allLines.map(l => l.id);
+    const existingMonths = await prisma.budgetMonth.findMany({ where: { budgetLineId: { in: lineIds } } });
+    const monthMap = new Map();
+    for (const m of existingMonths) {
+      monthMap.set(`${m.budgetLineId}_${m.month}`, m);
+    }
+
+    // 5. Prepare operations
+    const creates: any[] = [];
+    const updates: any[] = [];
+
+    for (const r of rows) {
+      const line = fullLineMapByConcept.get(r.budgetConceptId);
+      if (!line) continue;
+      for (const m of r.monthsData) {
+        const existing = monthMap.get(`${line.id}_${m.month}`);
+        if (existing) {
+          updates.push({ id: existing.id, amount: m.amount });
+        } else {
+          creates.push({ budgetLineId: line.id, month: m.month, amount: m.amount });
+        }
+      }
+    }
+
+    // 6. Execute operations
+    if (creates.length > 0) {
+      await prisma.budgetMonth.createMany({ data: creates });
+    }
+
+    // Para los updates, Prisma envia las peticiones de 1 en 1 dentro de una transaccion
+    // Si hay 700 celdas, 700 queries en 1 conexion toman más de 5000ms y arrojan timeout.
+    // Usamos concurrencia dividiendo en pedazos para aprovechar todo el pool de Neon sin transaccion.
+    const CHUNK_SIZE = 50;
+    for(let i=0; i<updates.length; i+=CHUNK_SIZE) {
+      const chunk = updates.slice(i, i+CHUNK_SIZE);
+      await Promise.all(
+        chunk.map(u => prisma.budgetMonth.update({ where: { id: u.id }, data: { amount: u.amount } }))
+      );
     }
   }
 

@@ -17,7 +17,14 @@ export const metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default async function NuevaAreaPrivativaPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function NuevaAreaPrivativaPage({ searchParams }: PageProps) {
+  const resolvedSearchParams = (await searchParams) ?? {};
+  const parentIdParam = resolvedSearchParams.parentId;
+  const parentId = typeof parentIdParam === "string" ? parentIdParam : null;
   // 1. Obtener el condominio activo
   const condominium = await prisma.condominium.findFirst({
     where: { slug: PROJECT_SCOPE.condominiumCode, isActive: true },
@@ -60,6 +67,14 @@ export default async function NuevaAreaPrivativaPage() {
     );
   }
 
+  let parentArea = null;
+  if (parentId) {
+    parentArea = await prisma.privateArea.findUnique({
+      where: { id: parentId },
+      select: { name: true, isFusion: true },
+    });
+  }
+
   const zones = condominium.zoneCatalogs;
   const landUses = condominium.landUseCatalogs;
   const users = condominium.users.map((u) => ({
@@ -80,9 +95,16 @@ export default async function NuevaAreaPrivativaPage() {
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
             <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Crear Nueva AP</h1>
-            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">
-              Alta Lote
-            </Badge>
+            <div className="flex gap-2">
+              <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">
+                Alta Lote
+              </Badge>
+              {parentArea && (
+                <Badge variant="outline" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest bg-lime-100 border-lime-200 text-lime-800">
+                  Fracción de: {parentArea.name}
+                </Badge>
+              )}
+            </div>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               Ingresa los datos generales, superficies y configuración para dar de alta una nueva área privativa.
             </p>
@@ -100,6 +122,7 @@ export default async function NuevaAreaPrivativaPage() {
 
       {/* Form */}
       <form action={createPrivateAreaAction} className="space-y-5">
+        {parentId && <input type="hidden" name="parentPrivateAreaId" value={parentId} />}
         
         {/* Sección 1: Información General */}
         <Card className="border-transparent shadow-layered">

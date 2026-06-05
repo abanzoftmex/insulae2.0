@@ -437,6 +437,7 @@ function withMonthlyKey(year: number, month: number): PrivateAreaFinancialCellKe
 function buildFinancialCells(
   charges: PrivateAreaSnapshot["charges"],
   currentOrdinaryYear: number,
+  ordinaryCatalog: { quotaPeriodStart: Date | null, quotaPeriodEnd: Date | null } | null
 ): Partial<Record<PrivateAreaFinancialCellKey, PrivateAreaFinancialSplit>> {
   const nextOrdinaryYear = currentOrdinaryYear + 1;
   const previousOrdinaryYear = currentOrdinaryYear - 1;
@@ -580,7 +581,16 @@ function buildFinancialCells(
     total_outstanding: totalOutstanding,
   };
 
-  for (const year of [currentOrdinaryYear, nextOrdinaryYear]) {
+  const yearsToCompute = new Set<number>([currentOrdinaryYear, nextOrdinaryYear]);
+  if (ordinaryCatalog?.quotaPeriodStart && ordinaryCatalog?.quotaPeriodEnd) {
+    const startY = ordinaryCatalog.quotaPeriodStart.getUTCFullYear();
+    const endY = ordinaryCatalog.quotaPeriodEnd.getUTCFullYear();
+    for (let y = startY; y <= endY; y++) {
+      yearsToCompute.add(y);
+    }
+  }
+
+  for (const year of yearsToCompute) {
     for (let month = 1; month <= 12; month += 1) {
       cells[withMonthlyKey(year, month)] = splitCharges(
         charges,
@@ -748,6 +758,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       privateAreas,
       landUseCatalogs,
       maxPrivateAreaUpdate,
+      ordinaryCatalog,
     ] = await Promise.all([
       prisma.privateArea.findMany({
         where: { condominiumId: condominium.id },
@@ -892,6 +903,17 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         where: { condominiumId: condominium.id },
         _max: { updatedAt: true },
       }),
+      prisma.miscIncomeCatalog.findFirst({
+        where: {
+          condominiumId: condominium.id,
+          chargeGroup: { kind: "ORDINARY" },
+          isActive: true,
+          quotaPeriodStart: { not: null },
+          quotaPeriodEnd: { not: null }
+        },
+        orderBy: { order: "asc" },
+        select: { quotaPeriodStart: true, quotaPeriodEnd: true }
+      }),
     ]);
 
     const project = (condominium.projects[0] ?? null) as ProjectSnapshot | null;
@@ -920,7 +942,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           ? (indiviso / 100) * projectCommonAreasM2
           : m2CommonAreaRaw;
 
-      const financialCells = buildFinancialCells(area.charges, currentOrdinaryYear);
+      const financialCells = buildFinancialCells(area.charges, currentOrdinaryYear, ordinaryCatalog as { quotaPeriodStart: Date | null, quotaPeriodEnd: Date | null } | null);
       const ordinaryAnnualCell = financialCells.ordinary_2025_annual ?? emptyFinancialSplit();
       const ordinaryMonthlyCell = financialCells.ordinary_2025_monthly ?? emptyFinancialSplit();
       const outstandingCell = financialCells.total_outstanding ?? emptyFinancialSplit();
@@ -1292,6 +1314,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       condominiumSlug: condominium.slug,
       projectName: project?.name ?? "Proyecto sin nombre",
       updatedAt: latestUpdatedAt,
+      quotaPeriod: ordinaryCatalog && (ordinaryCatalog as any).quotaPeriodStart && (ordinaryCatalog as any).quotaPeriodEnd ? { start: (ordinaryCatalog as any).quotaPeriodStart, end: (ordinaryCatalog as any).quotaPeriodEnd } : null,
       filters: {
         ...filters,
         page,

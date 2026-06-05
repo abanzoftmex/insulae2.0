@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
+import * as XLSX from "xlsx";
+
+import { PrismaPrivateAreaListingRepository } from "@/modules/private-areas/infrastructure/prisma-private-area-listing.repository";
 
 export const dynamic = "force-dynamic";
 
@@ -15,15 +18,22 @@ export async function GET() {
       return new NextResponse("Condominio inactivo o no encontrado", { status: 400 });
     }
 
-    const areas = await prisma.privateArea.findMany({
-      where: { condominiumId: condominium.id },
-      include: {
-        parentPrivateArea: {
-          select: { code: true }
-        }
-      },
-      orderBy: { sortOrder: "asc" }
+    const repository = new PrismaPrivateAreaListingRepository();
+    const listing = await repository.getListing({
+      query: "",
+      useType: "",
+      status: "ALL",
+      m2Min: null,
+      m2Max: null,
+      page: 1,
+      pageSize: 100000,
     });
+
+    if (!listing) {
+      return new NextResponse("No se encontraron áreas", { status: 404 });
+    }
+
+    const areas = listing.rows;
 
     // Generate CSV Header
     const headers = [
@@ -48,46 +58,39 @@ export async function GET() {
       "Activo"
     ];
 
-    const escapeCsv = (str: string | null | undefined) => {
-      if (str === null || str === undefined) return "";
-      const text = String(str);
-      if (text.includes(",") || text.includes("\\\"") || text.includes("\\n") || text.includes('"')) {
-        return `"${text.replace(/"/g, '""')}"`;
-      }
-      return text;
-    };
-
     const rows = areas.map(area => [
       area.id,
       area.code || "",
       area.name,
       area.zone || "",
-      area.subzone || "",
-      area.street || "",
+      "", // Subzone is not in row
+      "", // Street is not in row
       area.useType || "",
-      area.status,
-      area.m2Original?.toString() || "",
-      area.m2Apole?.toString() || "",
-      area.m2Construction?.toString() || "",
-      area.m2CommonArea?.toString() || "",
-      area.m2ConstructionChildren?.toString() || "",
-      area.m2CommonAreaChildren?.toString() || "",
-      area.indiviso?.toString() || "",
-      area.vccc?.toString() || "",
-      area.parentPrivateArea?.code || "",
-      area.isFusion ? "SI" : "NO",
+      area.businessStatus,
+      area.m2Original ? Number(area.m2Original) : "",
+      area.m2Updated ? Number(area.m2Updated) : "",
+      area.m2Construction ? Number(area.m2Construction) : "",
+      area.m2CommonArea ? Number(area.m2CommonArea) : "",
+      area.m2ConstructionChildren ? Number(area.m2ConstructionChildren) : "",
+      area.m2CommonAreaChildren ? Number(area.m2CommonAreaChildren) : "",
+      area.indiviso ? Number(area.indiviso) : "",
+      area.vccc ? Number(area.vccc) : "",
+      area.parentName || "", // Re-using parentName as parentCode approximation
+      area.isFusionLegacy ? "SI" : "NO",
       area.isActive ? "SI" : "NO"
     ]);
 
-    const csvContent = [
-      headers.map(escapeCsv).join(","),
-      ...rows.map(row => row.map(escapeCsv).join(","))
-    ].join("\\n");
+    const worksheetData = [headers, ...rows];
+    const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Areas Privativas");
 
-    return new NextResponse(csvContent, {
+    const excelBuffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
+
+    return new NextResponse(excelBuffer, {
       headers: {
-        "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": 'attachment; filename="areas-privativas.csv"',
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": 'attachment; filename="areas-privativas.xlsx"',
       },
     });
   } catch (error) {

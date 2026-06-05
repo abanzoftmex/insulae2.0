@@ -162,6 +162,11 @@ const ACTION_META: Record<
     activeClass:
       "bg-lime-50 border-lime-200 text-lime-700 hover:bg-lime-600 hover:text-white hover:border-lime-600",
   },
+  ADD_FAP: {
+    icon: <Plus className="h-3 w-3" />,
+    activeClass:
+      "bg-green-600 border-green-700 text-white hover:bg-green-700 hover:border-green-800",
+  },
 };
 
 function renderLegacyAction(action: PrivateAreaLegacyAction): ReactNode {
@@ -223,15 +228,23 @@ export default async function AreasPrivativasPage(props: PageProps) {
   );
 
   const vm = toPrivateAreaListingVM(listing);
-  const currentYear = new Date().getUTCFullYear();
-  const legacyOrdinaryYear = currentYear - 1;
-  const nextLegacyOrdinaryYear = currentYear;
   
   const shortMonths = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  const monthLabels = [
-    ...shortMonths.map((l, i) => ({ label: `${l} ${legacyOrdinaryYear}`, key: `month_${legacyOrdinaryYear}_${i + 1}` })),
-    ...shortMonths.map((l, i) => ({ label: `${l} ${nextLegacyOrdinaryYear}`, key: `month_${nextLegacyOrdinaryYear}_${i + 1}` })),
-  ];
+  
+  let monthLabels: { label: string; key: string }[] = [];
+  if (listing.quotaPeriod?.start && listing.quotaPeriod?.end) {
+    const startDate = new Date(listing.quotaPeriod.start);
+    const endDate = new Date(listing.quotaPeriod.end);
+    let curr = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1));
+    const end = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 1));
+    
+    while (curr <= end) {
+      const m = curr.getUTCMonth();
+      const y = curr.getUTCFullYear();
+      monthLabels.push({ label: `${shortMonths[m]} ${y}`, key: `month_${y}_${m + 1}` });
+      curr.setUTCMonth(curr.getUTCMonth() + 1);
+    }
+  }
 
   const colWidths = [
     160, // Acciones
@@ -251,12 +264,6 @@ export default async function AreasPrivativasPage(props: PageProps) {
     110, // Uso Suelo
     160, // Cartera Vencida
     160, // Anticipado
-    160, // 2025 Anual
-    160, // 2025 Mensual
-    160, // 2025 Saldo
-    160, // 2026 Anual
-    160, // 2026 Mensual
-    160, // 2026 Saldo
     180, // Extra Condo
     180, // Extra Condo Saldo
     180, // Extra Com
@@ -408,12 +415,6 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Uso Suelo</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Cartera Vencida</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Anticipado</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/20">Anual {legacyOrdinaryYear}</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/20">Mensual {legacyOrdinaryYear}</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/20">Saldo {legacyOrdinaryYear}</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/40">Anual {nextLegacyOrdinaryYear}</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/40">Mensual {nextLegacyOrdinaryYear}</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-mint/40">Saldo {nextLegacyOrdinaryYear}</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Condo</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Condo Saldo</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Com</th>
@@ -493,12 +494,6 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     </td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("arrears_2017_2024")}</td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("advance_2024")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_annual")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_monthly")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_outstanding")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_annual")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_monthly")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_outstanding")}</td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("extra_condo_2024_2025")}</td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("extra_condo_2024_2025_outstanding")}</td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("extra_commerce_2024_2025")}</td>

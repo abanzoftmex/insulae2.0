@@ -130,6 +130,7 @@ export interface PrivateAreaListing {
   condominiumSlug: string;
   projectName: string;
   updatedAt: Date;
+  quotaPeriod: { start: Date; end: Date } | null;
   filters: PrivateAreaListingFilters;
   facets: {
     useTypes: PrivateAreaFacetOption[];

@@ -706,6 +706,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
   const zoneId = toString(formData.get("zoneId"));
   const landUseId = toString(formData.get("landUseId"));
   const administratorId = toString(formData.get("administratorId"));
+  const parentPrivateAreaIdInput = toString(formData.get("parentPrivateAreaId"));
 
   // Resolver nombre de la zona
   let resolvedZone: string | null = null;
@@ -748,6 +749,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
         status: "UNASSIGNED",
         isActive: true,
         updatedBy: userName,
+        parentPrivateAreaId: parentPrivateAreaIdInput.length > 0 ? parentPrivateAreaIdInput : null,
       },
     });
 

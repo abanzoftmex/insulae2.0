@@ -638,6 +638,8 @@ model MiscIncomeCatalog {
   chargeGroupId       String?
   name                String
   legacyChargeGroupId Int?
+  quotaPeriodStart    DateTime?
+  quotaPeriodEnd      DateTime?
   isActive            Boolean @default(true)
   order               Int     @default(0)
 

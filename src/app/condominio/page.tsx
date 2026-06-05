@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { CondominiumOverviewVM } from "@/modules/condominium/presentation/condominium-overview.vm";
 import { CondominioEditor } from "./condominio-editor";
 import { Badge } from "@/components/ui/badge";
+import { PROJECT_SCOPE } from "@/config/project-scope";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -169,10 +170,10 @@ export default async function CondominioPage() {
         </div>
 
         <div className="space-y-5">
-          {/* Estado del Catastro */}
+          {/* Estado del Condominio */}
           <Card className="shadow-layered border-transparent bg-brand-deep text-white">
             <CardHeader className="px-4 py-3 border-b border-white/10">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand-mint">Estado del Catastro</CardTitle>
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand-mint">Estado del Condominio</CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
               <div className="flex flex-col gap-1">
@@ -207,7 +208,7 @@ export default async function CondominioPage() {
       {/* Editor Section */}
       <div className="pt-4 animate-in slide-in-from-bottom-4 duration-700 delay-300">
         <CondominioEditor
-          condominiumSlug={overview?.condominiumSlug ?? "valquirico"}
+          condominiumSlug={overview?.condominiumSlug ?? PROJECT_SCOPE.condominiumCode}
           initialValues={editorInitialValues}
         />
       </div>

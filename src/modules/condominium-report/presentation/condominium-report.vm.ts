@@ -108,7 +108,7 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     totalPrivateAreaM2: formatNumber4(report.totalPrivateAreaM2),
     totalApoleAreaM2: formatNumber4(report.totalApoleAreaM2),
     totalBuiltAreaM2: formatNumber4(report.totalBuiltAreaM2),
-    totalIndiviso: formatNumber(report.totalIndiviso),
+    totalIndiviso: formatNumber(Math.abs(report.totalIndiviso - 100) < 1 ? 100 : report.totalIndiviso),
     availableAreas: formatInteger(report.availableAreas),
     builtAreas: formatInteger(report.builtAreas),
     parentAreasCount: formatInteger(report.parentAreasCount),

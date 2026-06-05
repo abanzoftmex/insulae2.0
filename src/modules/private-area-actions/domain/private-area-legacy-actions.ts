@@ -5,7 +5,8 @@ export type PrivateAreaLegacyActionId =
   | "EDIT_IMAGES"
   | "OWNER_PAYMENTS"
   | "COMMERCE_PAYMENTS"
-  | "RENTALS";
+  | "RENTALS"
+  | "ADD_FAP";
 
 export type PrivateAreaLegacyActionKind = "icon" | "pill";
 
