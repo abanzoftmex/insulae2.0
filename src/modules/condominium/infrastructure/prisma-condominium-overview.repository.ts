@@ -231,11 +231,14 @@ export class PrismaCondominiumOverviewRepository
       }),
     ]);
 
-    const reportableAreas = allPrivateAreas.filter(
-      (area) =>
-        area.isActive &&
-        (area.status === "AVAILABLE" || area.status === "SOLD" || area.status === "RENTED")
-    );
+    // Un "área reportable" es simplemente un área activa (mismo criterio que
+    // /reporte-cuotas: isActive = true). Antes se exigía además
+    // status ∈ {AVAILABLE, SOLD, RENTED}, pero ese estatus comercial nunca se
+    // puebla desde la app (se crea fijo en UNASSIGNED y no hay UI para
+    // cambiarlo), por lo que el conteo quedaba en 0 pese a haber áreas activas.
+    // El filtro de jerarquía (no-fusión / raíz) de abajo es el que distingue
+    // APoLes (áreas padre) de FAPs (fracciones).
+    const reportableAreas = allPrivateAreas.filter((area) => area.isActive);
 
     const activeParentAreas = reportableAreas.filter(
       (area) =>
