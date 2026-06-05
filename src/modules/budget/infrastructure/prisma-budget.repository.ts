@@ -158,15 +158,13 @@ export class PrismaBudgetRepository implements BudgetRepository {
       totalBudgeted: globalBudgeted,
       totalGenerated: globalGenerated,
       totalBalance: globalBudgeted - globalGenerated,
-      summaryCards: [
-        { title: "Saldo inicial", budgeted: 0, generated: 0 },
-        { title: "Cuotas ordinarias", budgeted: globalBudgeted, generated: globalGenerated },
-        { title: "Cuotas extraordinarias - Condóminos", budgeted: extraBudgeted, generated: extraGenerated },
-        { title: "Cuotas STC", budgeted: 0, generated: 0 },
-        { title: "Sanción", budgeted: 0, generated: 0 },
-        { title: "Cuota extraordinaria - Comercios", budgeted: 0, generated: 0 },
-        { title: "Comodato", budgeted: 0, generated: 0 }
-      ],
+      // Un card por cada grupo presupuestal real (BudgetGroup) creado en
+      // /listado-estructura-presupuesto, en el mismo orden que la tabla.
+      summaryCards: groups.map(g => ({
+        title: g.groupData,
+        budgeted: g.budgeted,
+        generated: g.generated
+      })),
       groups
     };
   }
