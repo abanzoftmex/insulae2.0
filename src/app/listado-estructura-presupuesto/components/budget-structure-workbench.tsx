@@ -19,11 +19,8 @@ import {
 
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
-import { Modal } from "@/components/modal/modal";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/ui/stat-card";
-import { cn } from "@/shared/utils/cn";
+import { useRouter } from "next/navigation";
 
 interface WorkbenchProps {
   initialGroups: BudgetGroupVM[];
@@ -33,27 +30,9 @@ interface WorkbenchProps {
 
 
 export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
-  
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  
-  // Form State
-  const [formName, setFormName] = useState("");
-  const [formCategory, setFormCategory] = useState("Gastos de mantenimiento");
-  const [formConcepts, setFormConcepts] = useState<{ id: string; name: string }[]>([]);
-  
-  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
-
-  const availableCategories = useMemo(() => {
-    const defaultCats = ["Gastos administración", "Gastos de mantenimiento", "Gastos de seguridad", "Gastos de infraestructura", "Gastos extraordinarios", "Otros gastos"];
-    const existingCats = initialGroups.map(g => g.category).filter(c => !!c);
-    const all = new Set([...defaultCats, ...existingCats]);
-    return Array.from(all).sort();
-  }, [initialGroups]);
 
   const filteredGroups = useMemo(() => {
     const term = search.toLowerCase().trim();
@@ -61,67 +40,11 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
   }, [initialGroups, search]);
 
   const openAddModal = () => {
-    setEditingId(null);
-    setFormName("");
-    setFormCategory("Gastos de mantenimiento");
-    setFormConcepts([]);
-    setIsCreatingCategory(false);
-    setNewCategoryName("");
-    setIsModalOpen(true);
+    router.push("/listado-estructura-presupuesto/grupo/nuevo");
   };
 
   const openEditModal = (group: BudgetGroupVM) => {
-    setEditingId(group.id);
-    setFormName(group.name);
-    setFormCategory(group.category);
-    setFormConcepts(group.concepts.map(c => ({ id: c.id, name: c.name })));
-    setIsCreatingCategory(false);
-    setNewCategoryName("");
-    setIsModalOpen(true);
-  };
-
-  const handleAddConcept = () => {
-    setFormConcepts([...formConcepts, { id: "", name: "" }]);
-  };
-
-  const handleRemoveConcept = (index: number) => {
-    const concept = formConcepts[index];
-    if (concept.id) {
-       if(!confirm("¿Eliminar concepto permanentemente?")) return;
-       startTransition(async () => {
-         const res = await deleteBudgetConceptAction(concept.id);
-         if(res.success) setFormConcepts(prev => prev.filter((_, i) => i !== index));
-         else alert(res.error);
-       });
-    } else {
-      setFormConcepts(prev => prev.filter((_, i) => i !== index));
-    }
-  };
-
-  const handleConceptChange = (index: number, name: string) => {
-    const next = [...formConcepts];
-    next[index].name = name;
-    setFormConcepts(next);
-  };
-
-  const handleSave = () => {
-    startTransition(async () => {
-      const finalCategory = isCreatingCategory && newCategoryName.trim() ? newCategoryName.trim() : formCategory;
-      const res = await saveBudgetGroupAction({
-        id: editingId || undefined,
-        year,
-        name: formName,
-        category: finalCategory,
-        concepts: formConcepts.map(c => ({ id: c.id || undefined, name: c.name }))
-      });
-
-      if (res.success) {
-        setIsModalOpen(false);
-        window.location.reload();
-      } else {
-        alert(res.error);
-      }
-    });
+    router.push(`/listado-estructura-presupuesto/grupo/${group.id}`);
   };
 
   const handleDeleteGroup = (id: string) => {
@@ -199,106 +122,6 @@ export function BudgetStructureWorkbench({ initialGroups, year }: WorkbenchProps
         onAdd={openAddModal}
         addLabel="Nuevo Grupo"
       />
-
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title={editingId ? "Configurar Grupo" : "Nuevo Grupo"}
-        size="lg"
-        footer={
-          <>
-            <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
-            <Button 
-              disabled={isPending || !formName} 
-              onClick={handleSave}
-              className="h-8 px-6 text-[10px] font-bold uppercase"
-            >
-              {isPending ? "Guardando..." : "Guardar Estructura"}
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-6 pt-2">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input label="Nombre del Grupo" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Ej. Gastos de Limpieza" />
-            <div className="flex flex-col gap-1.5">
-              <div className="flex items-center justify-between">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Categoría Contable</label>
-                <button 
-                  onClick={() => setIsCreatingCategory(!isCreatingCategory)} 
-                  className="text-[9px] font-bold text-brand-accent uppercase hover:underline"
-                >
-                  {isCreatingCategory ? "Seleccionar Existente" : "+ Nueva Categoría"}
-                </button>
-              </div>
-              {isCreatingCategory ? (
-                <input
-                  type="text"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  placeholder="Escribe la nueva categoría..."
-                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
-                />
-              ) : (
-                <select
-                  value={formCategory}
-                  onChange={(e) => setFormCategory(e.target.value)}
-                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
-                >
-                  {availableCategories.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              )}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-line pb-1">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">Conceptos / Partidas</p>
-              <button onClick={handleAddConcept} className="text-[9px] font-bold text-brand-accent flex items-center gap-1 uppercase hover:underline">
-                <Plus className="h-3 w-3" /> Agregar Partida
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-75 overflow-y-auto pr-1 no-scrollbar">
-              {formConcepts.map((concept, idx) => (
-                <div key={idx} className="flex items-center gap-2 group/row">
-                  <div className="h-9 w-8 flex items-center justify-center bg-canvas/30 rounded border border-dashed border-line text-ink-soft/20">
-                    <GripVertical className="h-3.5 w-3.5" />
-                  </div>
-                  <div className="flex-1">
-                    <input 
-                      type="text" 
-                      value={concept.name}
-                      onChange={(e) => handleConceptChange(idx, e.target.value)}
-                      placeholder="Nombre del concepto..."
-                      className="h-9 w-full bg-card border border-line rounded px-3 text-[13px] font-medium focus:border-brand-accent outline-none transition-colors"
-                    />
-                  </div>
-                  <button onClick={() => handleRemoveConcept(idx)} className="h-9 w-9 flex items-center justify-center rounded hover:bg-danger/10 text-ink-soft/30 hover:text-danger transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
-              {formConcepts.length === 0 && (
-                <div className="py-8 flex flex-col items-center justify-center bg-canvas/20 rounded-lg border border-dashed border-line/50">
-                  <Plus className="h-6 w-6 text-ink-soft/20 mb-1" />
-                  <p className="text-[10px] font-bold text-ink-soft/40 uppercase">Sin partidas asignadas</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="p-3 bg-brand-mint/20 rounded border border-brand-mint/30 flex gap-2">
-            <Info className="h-4 w-4 text-brand shrink-0 mt-0.5" />
-            <p className="text-[10px] font-bold text-brand/70 leading-tight uppercase tracking-tight">
-              Los cambios en los nombres de los conceptos se reflejarán en todos los meses del presupuesto {year}. 
-              Eliminar conceptos con datos previos puede afectar el histórico.
-            </p>
-          </div>
-        </div>
-      </Modal>
     </>
   );
 }

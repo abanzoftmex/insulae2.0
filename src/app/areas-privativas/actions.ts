@@ -885,7 +885,7 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
         indiviso: parseDecimal(row["Indiviso"]),
         vccc: parseDecimal(row["VCCC"]),
         isFusion: parseBool(row["Es Fusión"]),
-        isActive: row["Activo"] !== undefined ? parseBool(row["Activo"]) : true,
+        isActive: (row["Activo"] !== undefined && row["Activo"] !== "") ? parseBool(row["Activo"]) : true,
       };
 
       if (row["ID"]) {
@@ -903,7 +903,12 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
           await prisma.privateArea.create({ data: baseData });
         }
       } else {
-        await prisma.privateArea.create({ data: baseData });
+        const existing = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, name: row["Nombre"] } });
+        if (existing) {
+          await prisma.privateArea.update({ where: { id: existing.id }, data: baseData });
+        } else {
+          await prisma.privateArea.create({ data: baseData });
+        }
       }
     }
 

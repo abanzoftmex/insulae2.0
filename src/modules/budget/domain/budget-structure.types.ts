@@ -12,6 +12,8 @@ export interface BudgetGroupVM {
 export interface BudgetConceptShortVM {
   id: string;
   name: string;
+  order: number;
+  type: string;
   isActive: boolean;
 }
 

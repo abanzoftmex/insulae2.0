@@ -80,12 +80,17 @@ export function CsvManager() {
     }
 
     startTransition(async () => {
-      const result = await importPrivateAreasCSVAction(rows);
-      if (result.success) {
-        alert(`Se importaron ${rows.length} registros exitosamente.`);
-        window.location.reload();
-      } else {
-        alert("Error al importar: " + result.error);
+      try {
+        const plainRows = JSON.parse(JSON.stringify(rows));
+        const result = await importPrivateAreasCSVAction(plainRows);
+        if (result.success) {
+          alert(`Se importaron ${rows.length} registros exitosamente.`);
+          window.location.reload();
+        } else {
+          alert("Error al importar: " + result.error);
+        }
+      } catch (err: any) {
+        alert("Error de procesamiento: " + err.message);
       }
     });
   };

@@ -344,7 +344,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
       include: {
         concepts: {
           where: { isActive: true },
-          orderBy: { name: 'asc' }
+          orderBy: { order: 'asc' }
         }
       },
       orderBy: { name: 'asc' }
@@ -361,6 +361,8 @@ export class PrismaBudgetRepository implements BudgetRepository {
         concepts: g.concepts.map(c => ({
           id: c.id,
           name: c.name,
+          order: c.order,
+          type: c.type,
           isActive: c.isActive
         }))
       }))
