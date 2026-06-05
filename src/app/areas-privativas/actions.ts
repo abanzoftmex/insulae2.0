@@ -95,6 +95,8 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
       id: true,
       condominiumId: true,
       name: true,
+      m2Apole: true,
+      parentPrivateAreaId: true,
     },
   });
 
@@ -112,7 +114,6 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
   const status = parsePrivateAreaStatus(formData);
   const parentPrivateAreaIdInput = toString(formData.get("parentPrivateAreaId"));
   const m2Construction = toNumber(formData.get("m2Construction"));
-  const m2CommonArea = toNumber(formData.get("m2CommonArea"));
   const m2ConstructionChildren = toNumber(formData.get("m2ConstructionChildren"));
   const m2CommonAreaChildren = toNumber(formData.get("m2CommonAreaChildren"));
   const vccc = toNumber(formData.get("vccc"));
@@ -181,6 +182,26 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
 
   const userName = await getCurrentUser();
 
+  const project = await prisma.project.findFirst({
+    where: { condominiumId: privateArea.condominiumId },
+    select: { totalM2: true, commonAreasM2: true },
+  });
+
+  const finalParentId = parentPrivateAreaId === undefined ? privateArea.parentPrivateAreaId : parentPrivateAreaId;
+  let parentM2ConstructionChildren: number | null = null;
+  if (finalParentId) {
+    const parentArea = await prisma.privateArea.findUnique({
+      where: { id: finalParentId },
+      select: { m2ConstructionChildren: true }
+    });
+    parentM2ConstructionChildren = parentArea?.m2ConstructionChildren ? Number(parentArea.m2ConstructionChildren) : null;
+  }
+
+  const areaM2 = m2Updated !== null ? m2Updated : Number(privateArea.m2Apole);
+  const denominator = finalParentId ? (parentM2ConstructionChildren || 0) : Number(project?.totalM2 || 0);
+  const computedIndiviso = denominator > 0 ? areaM2 / denominator : 0;
+  const calculatedM2CommonArea = computedIndiviso * Number(project?.commonAreasM2 || 0);
+
   await prisma.privateArea.update({
     where: { id: privateAreaId },
     data: {
@@ -196,7 +217,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
       ...parentPrivateAreaUpdate,
       ...(formData.has("isFusion") ? { isFusion } : {}),
       ...(m2Construction !== null ? { m2Construction } : {}),
-      ...(m2CommonArea !== null ? { m2CommonArea } : {}),
+      m2CommonArea: calculatedM2CommonArea,
       ...(m2ConstructionChildren !== null ? { m2ConstructionChildren } : {}),
       ...(m2CommonAreaChildren !== null ? { m2CommonAreaChildren } : {}),
       ...(vccc !== null ? { vccc } : {}),
@@ -697,7 +718,6 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
   const m2Updated = toNumber(formData.get("m2Updated"));
   const m2Original = toNumber(formData.get("m2Original"));
   const m2Construction = toNumber(formData.get("m2Construction"));
-  const m2CommonArea = toNumber(formData.get("m2CommonArea"));
   const vccc = toNumber(formData.get("vccc"));
   
   const isFusionValue = toString(formData.get("isFusion")).toLowerCase();
@@ -730,6 +750,25 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
 
   const userName = await getCurrentUser();
 
+  const project = await prisma.project.findFirst({
+    where: { condominiumId: condominium.id },
+    select: { totalM2: true, commonAreasM2: true },
+  });
+
+  let parentM2ConstructionChildren: number | null = null;
+  if (parentPrivateAreaIdInput.length > 0) {
+    const parentArea = await prisma.privateArea.findUnique({
+      where: { id: parentPrivateAreaIdInput },
+      select: { m2ConstructionChildren: true }
+    });
+    parentM2ConstructionChildren = parentArea?.m2ConstructionChildren ? Number(parentArea.m2ConstructionChildren) : null;
+  }
+
+  const areaM2 = m2Updated !== null ? m2Updated : 0;
+  const denominator = parentPrivateAreaIdInput.length > 0 ? (parentM2ConstructionChildren || 0) : Number(project?.totalM2 || 0);
+  const computedIndiviso = denominator > 0 ? areaM2 / denominator : 0;
+  const calculatedM2CommonArea = computedIndiviso * Number(project?.commonAreasM2 || 0);
+
   // Crear la área privativa en una transacción para poder asignar el administrador
   const newArea = await prisma.$transaction(async (tx) => {
     const area = await tx.privateArea.create({
@@ -741,7 +780,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
         m2Apole: m2Updated,
         m2Original: m2Original,
         m2Construction,
-        m2CommonArea,
+        m2CommonArea: calculatedM2CommonArea,
         vccc,
         isFusion,
         zone: resolvedZone,

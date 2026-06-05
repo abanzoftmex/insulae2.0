@@ -325,10 +325,12 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
               />
 
               <Input
-                label="M2 del área común"
+                label="M2 del área común (Automático)"
                 type="number"
                 step="0.0001"
                 name="m2CommonArea"
+                disabled
+                readOnly
                 defaultValue={toInputValue(area.m2CommonArea)}
               />
 

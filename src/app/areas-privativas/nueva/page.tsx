@@ -236,10 +236,12 @@ export default async function NuevaAreaPrivativaPage({ searchParams }: PageProps
               />
 
               <Input
-                label="M2 del área común"
+                label="M2 del área común (Automático)"
                 type="number"
                 step="0.0001"
                 name="m2CommonArea"
+                disabled
+                readOnly
                 placeholder="0.0000"
               />
 
