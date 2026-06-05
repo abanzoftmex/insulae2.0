@@ -208,6 +208,9 @@ export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateArea
     rows: listing.rows.map((row) => {
       const isFapRow = row.hierarchyRole === "CHILD";
 
+      const isParent = row.hierarchyRole === "PARENT";
+      const displayActive = isParent ? false : row.isActive;
+
       return {
       id: row.id,
       name: toDisplayName(row.name, row.hierarchyRole),
@@ -218,8 +221,8 @@ export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateArea
       useType: row.useType,
       useTypeInitials: row.useTypeInitials,
       businessStatusLabel: row.businessStatusLabel,
-      statusLabel: row.isActive ? "Activo" : "Inactivo",
-      statusTone: row.isActive ? "active" : "inactive",
+      statusLabel: displayActive ? "Activo" : "Inactivo",
+      statusTone: displayActive ? "active" : "inactive",
       hasRentalLabel: row.hasRental ? "Si" : "No",
       m2Updated: isFapRow ? "" : formatNumber(row.m2Updated, 4),
       m2Original: isFapRow ? "" : formatNumber(row.m2Original, 4),
