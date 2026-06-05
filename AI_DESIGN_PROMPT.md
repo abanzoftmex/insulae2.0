@@ -1,7 +1,7 @@
 # AI Design Prompt — Insulae 2.0 (Valquirico) Condominium Admin
 ## Implementation Reference (Proven Working)
 
-This document is the **working contract** for implementing and extending the UI of this Next.js 16 App Router condominium administration platform. It reflects what was actually built and verified — not aspirational targets. Read end-to-end before touching any file. The visual token source is `DESIGN.md`; this document adds the implementation layer on top.
+This document is the **working contract** for implementing and extending the UI of this Next.js 16 App Router condominium administraation platform. It reflects what was actually built and verified — not aspirational targets. Read end-to-end before touching any file. The visual token source is `DESIGN.md`; this document adds the implementation layer on top.
 
 ---
 
