@@ -5,6 +5,7 @@ import { AppShell } from "./app-shell";
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
 import { getUserPermissions } from "@/shared/application/auth/permissions";
 import { PermissionsProvider } from "@/components/providers/permissions-provider";
+import { GlobalLoader } from "@/components/global-loader";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -12,8 +13,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Insulae 2.0 | Valquirico",
-  description: "Plataforma condominal para Valquirico con arquitectura hexagonal.",
+  title: "Insulae 2.0 | Sassi",
+  description: "Plataforma condominal para Sassi con arquitectura hexagonal.",
 };
 
 export default async function RootLayout({
@@ -22,7 +23,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   let navbarLogoUrl: string | null = null;
-  let navbarLogoAlt = "Val'Quirico";
+  let navbarLogoAlt = "Sassi";
   const permissions = await getUserPermissions(); // Trigger recompile
 
   try {
@@ -39,6 +40,7 @@ export default async function RootLayout({
     <html lang="es" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full font-sans tracking-[-0.01em]" suppressHydrationWarning>
         <PermissionsProvider permissions={permissions}>
+          <GlobalLoader />
           <AppShell navbarLogoUrl={navbarLogoUrl} navbarLogoAlt={navbarLogoAlt}>
             {children}
           </AppShell>

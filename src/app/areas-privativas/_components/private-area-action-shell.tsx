@@ -109,12 +109,9 @@ export function PrivateAreaActionShell({
       <div className="flex flex-wrap gap-1.5">
         {NAV_TABS.map((tab) => {
           const isActive = activePage === tab.key;
-          const href =
-            tab.key === "listado-pagos-propietario"
-              ? buildActionHref("listado-pagos", privateAreaId, "2")
-              : tab.key === "listado-pagos-comercio"
-                ? buildActionHref("listado-pagos", privateAreaId, "1")
-                : buildActionHref(tab.key, privateAreaId);
+          const href = "opc" in tab && tab.opc
+            ? buildActionHref("listado-pagos", privateAreaId, tab.opc)
+            : buildActionHref(tab.key, privateAreaId);
 
           return (
             <Link

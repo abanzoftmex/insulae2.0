@@ -255,6 +255,28 @@ export class PrismaPrivateAreaActionPageDataRepository
             },
           },
         },
+        incomes: {
+          where: {
+            isActive: true,
+          },
+          orderBy: {
+            date: "desc",
+          },
+          select: {
+            id: true,
+            date: true,
+            paymentMethod: true,
+            concept: true,
+            notes: true,
+            amount: true,
+            chargeGroup: {
+              select: {
+                name: true,
+                chargeType: true,
+              },
+            },
+          },
+        },
         charges: {
           orderBy: [
             {
@@ -454,6 +476,21 @@ export class PrismaPrivateAreaActionPageDataRepository
           notes: payment.notes,
           allocatedAmount,
           paymentTotalAmount: decimalToNumber(payment.amount),
+        });
+      }
+    }
+
+    // Include Incomes that are not tied to charges
+    for (const income of area.incomes) {
+      if (!paymentMovementsById.has(income.id)) {
+        paymentMovementsById.set(income.id, {
+          paymentId: income.id,
+          paidAt: income.date,
+          method: toPaymentMethod(income.paymentMethod || "OTHER"),
+          reference: income.concept,
+          notes: income.notes,
+          allocatedAmount: decimalToNumber(income.amount), // Count the whole income as allocated to the area
+          paymentTotalAmount: decimalToNumber(income.amount),
         });
       }
     }

@@ -386,6 +386,7 @@ export function IncomeWorkbench({
               value={areaSearch}
               onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); if(!e.target.value) setFormAreaId(""); }}
               onFocus={() => setShowAreaDropdown(true)}
+              onBlur={() => setTimeout(() => setShowAreaDropdown(false), 200)}
               placeholder="Buscar propiedad..."
               className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
             />
