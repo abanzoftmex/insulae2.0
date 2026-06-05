@@ -27,9 +27,16 @@ export function SummaryCards({ cards }: SummaryCardsProps) {
           const over = card.generated > card.budgeted;
           return (
             <div key={idx} className="p-4 flex flex-col gap-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 leading-none">
-                {card.title}
-              </p>
+              <div className="flex flex-col gap-1">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60 leading-none">
+                  {card.title}
+                </p>
+                {card.subtitle && (
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/40 leading-none">
+                    {card.subtitle}
+                  </p>
+                )}
+              </div>
               <div className="space-y-1.5">
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="text-[10px] font-bold uppercase text-ink-soft/40">Presupuesto</span>

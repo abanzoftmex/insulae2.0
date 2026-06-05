@@ -21,7 +21,9 @@ export interface BudgetConceptRowVM {
 }
 
 export interface BudgetGroupVM {
-  groupData: string;
+  groupId: string;        // clave única (id del BudgetGroup o fallback legacy)
+  groupData: string;      // nombre principal del grupo (name)
+  groupSubname?: string;  // subnombre (category) cuando aporta información
   budgeted: number;
   generated: number;
   balance: number;
@@ -30,6 +32,7 @@ export interface BudgetGroupVM {
 
 export interface BudgetSummaryCardVM {
   title: string;
+  subtitle?: string;      // subnombre (category) cuando aporta información
   budgeted: number;
   generated: number;
 }

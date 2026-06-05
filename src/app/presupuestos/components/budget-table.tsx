@@ -63,11 +63,18 @@ export default function BudgetTable({ vm }: { vm: BudgetVM }) {
         const groupName = groupTitles[group.groupData] || group.groupData;
         
         return (
-          <Card key={group.groupData} className="overflow-hidden border-transparent shadow-layered">
+          <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered">
             <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand-deep/5 flex flex-row items-center justify-between">
-              <CardTitle className="text-[13px] font-bold uppercase text-brand">
-                {groupName}
-              </CardTitle>
+              <div className="flex flex-col gap-0.5">
+                <CardTitle className="text-[13px] font-bold uppercase text-brand">
+                  {groupName}
+                </CardTitle>
+                {group.groupSubname && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/50 leading-none">
+                    {group.groupSubname}
+                  </span>
+                )}
+              </div>
               {isClosed && <Badge variant="danger" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">Lectura Protegida</Badge>}
             </CardHeader>
             <CardContent className="p-0">

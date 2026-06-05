@@ -65,8 +65,10 @@ export class PrismaBudgetRepository implements BudgetRepository {
 
     const lineMapByConcept = new Map(budget?.lines.map(l => [l.budgetConceptId, l]));
 
-    // Agrupacion
-    const groupsMap = new Map<string, BudgetConceptRowVM[]>();
+    // Agrupacion: un bloque por cada BudgetGroup real. Guardamos el nombre
+    // principal (name) y el subnombre (category) por separado para mostrarlos
+    // como en la pantalla de estructura presupuestal.
+    const groupsMap = new Map<string, { name: string; subname: string; concepts: BudgetConceptRowVM[] }>();
 
     let globalBudgeted = 0;
     let globalGenerated = 0;
@@ -115,29 +117,41 @@ export class PrismaBudgetRepository implements BudgetRepository {
         months
       };
 
-      // Agrupamos por el "subnombre" del grupo (category), no por el nombre
-      // del grupo principal (name). En la estructura presupuestal el name es
-      // genérico (p.ej. "Presupuesto ordinario") y el category contiene el
-      // nombre real del grupo (p.ej. "GASTOS DE JARDINERÍA").
-      const groupKey = concept.group?.category || concept.budgetGroup || "OTHER";
+      // Clave por identidad del grupo (id) para que cada BudgetGroup sea su
+      // propio bloque, sin importar que distintos grupos compartan el mismo
+      // name (p.ej. "Presupuesto ordinario" en Sassi) o el mismo category
+      // (p.ej. "OTHER" en insulae). Mostramos name como principal y category
+      // como subnombre.
+      const grp = concept.group;
+      const groupKey = grp?.id || concept.budgetGroup || "OTHER";
+      const groupName = grp?.name || concept.budgetGroup || "OTHER";
+      const groupSubname = grp?.category ?? "";
       if (!groupsMap.has(groupKey)) {
-        groupsMap.set(groupKey, []);
+        groupsMap.set(groupKey, { name: groupName, subname: groupSubname, concepts: [] });
       }
-      groupsMap.get(groupKey)?.push(row);
+      groupsMap.get(groupKey)?.concepts.push(row);
     }
 
     const groups: BudgetOverviewGroupVM[] = [];
-    for (const [groupKey, concepts] of groupsMap.entries()) {
-      const gBudgeted = concepts.reduce((acc, c) => acc + c.budgeted, 0);
-      const gGenerated = concepts.reduce((acc, c) => acc + c.generated, 0);
+    for (const [groupId, g] of groupsMap.entries()) {
+      const gBudgeted = g.concepts.reduce((acc, c) => acc + c.budgeted, 0);
+      const gGenerated = g.concepts.reduce((acc, c) => acc + c.generated, 0);
       const gBalance = gBudgeted - gGenerated;
 
+      // El subnombre solo se muestra cuando aporta información: en insulae el
+      // category suele ser "OTHER" y no debe ensuciar el título del bloque.
+      const subname = g.subname && g.subname !== "OTHER" && g.subname !== g.name
+        ? g.subname
+        : undefined;
+
       groups.push({
-        groupData: groupKey,
+        groupId,
+        groupData: g.name,
+        groupSubname: subname,
         budgeted: gBudgeted,
         generated: gGenerated,
         balance: gBalance,
-        concepts
+        concepts: g.concepts
       });
     }
 
@@ -166,6 +180,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
       // /listado-estructura-presupuesto, en el mismo orden que la tabla.
       summaryCards: groups.map(g => ({
         title: g.groupData,
+        subtitle: g.groupSubname,
         budgeted: g.budgeted,
         generated: g.generated
       })),
