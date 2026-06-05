@@ -6,6 +6,7 @@ import { getCondominiumOverviewUseCase } from "@/modules/condominium";
 import { getUserPermissions } from "@/shared/application/auth/permissions";
 import { PermissionsProvider } from "@/components/providers/permissions-provider";
 import { GlobalLoader } from "@/components/global-loader";
+import { Suspense } from "react";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -40,7 +41,9 @@ export default async function RootLayout({
     <html lang="es" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full font-sans tracking-[-0.01em]" suppressHydrationWarning>
         <PermissionsProvider permissions={permissions}>
-          <GlobalLoader />
+          <Suspense fallback={null}>
+            <GlobalLoader />
+          </Suspense>
           <AppShell navbarLogoUrl={navbarLogoUrl} navbarLogoAlt={navbarLogoAlt}>
             {children}
           </AppShell>
