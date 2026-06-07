@@ -186,18 +186,47 @@ export function IncomeWorkbench({
       const wb = read(buffer);
       const ws = wb.Sheets[wb.SheetNames[0]];
       const raw: unknown[][] = utils.sheet_to_json(ws, { header: 1 });
-      const rows = raw.slice(1).filter(r => Array.isArray(r) && r.some(c => c != null && c !== "")).map(r => {
-        const row = r as any[];
-        return {
-          miscCatalogId: String(row[0] ?? "").trim() || undefined,
-          chargeGroupId: String(row[1] ?? "").trim() || undefined,
-          date: String(row[2] ?? ""),
-          amount: parseFloat(String(row[3] ?? "0")),
-          paymentMethod: String(row[4] ?? "CASH"),
-          concept: String(row[5] ?? ""),
-          notes: String(row[6] ?? "") || undefined,
-        };
-      });
+      const rows = raw
+        .slice(1)
+        .filter((r) => Array.isArray(r) && r.some((c) => c != null && c !== ""))
+        .map((r) => {
+          const row = r as any[];
+          // Mapper to match legacy order and names
+          // Headers: fecha, monto, id_categoria, id_tipo_cuota, id_forma_pago, comentarios
+          const date = String(row[0] ?? "");
+          const amount = parseFloat(String(row[1] ?? "0"));
+          const miscCatalogId = String(row[2] ?? "").trim() || undefined;
+          const chargeGroupId = String(row[3] ?? "").trim() || undefined;
+          const methodInput = String(row[4] ?? "1");
+          const concept = String(row[5] ?? "");
+
+          // Map legacy numeric payment methods or string ones based on screenshot/legacy
+          const methodMap: Record<string, string> = {
+            "1": "OTHER",    // N/A
+            "2": "CASH",     // Efectivo
+            "3": "TRANSFER", // Transferencia
+            "4": "CARD",     // Tarjeta
+            "5": "CHECK",    // Cheque
+            "6": "OTHER",    // Otro
+            "EFECTIVO": "CASH",
+            "TRANSFERENCIA": "TRANSFER",
+            "TARJETA": "CARD",
+            "CHEQUE": "CHECK",
+            "OTRO": "OTHER",
+          };
+
+          const paymentMethod = methodMap[methodInput.toUpperCase()] || "OTHER";
+
+          return {
+            date,
+            amount,
+            miscCatalogId,
+            chargeGroupId,
+            paymentMethod,
+            concept: concept || "Importación masiva",
+            notes: `Importado de Excel - ${new Date().toLocaleDateString()}`,
+          };
+        });
       const res = await importIncomesAction(rows);
       if (res.success) {
         alert(`Éxito: ${res.imported} ingresos importados.`);
@@ -313,11 +342,9 @@ export function IncomeWorkbench({
           <Link href="/listado-ingresos/plantilla" className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard">
             <FileDown className="h-3 w-3 mr-1" /> Plantilla
           </Link>
-          <label className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard">
-            <Upload className="h-3 w-3 mr-1" />
-            {importing ? "..." : "Importar"}
-            <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
-          </label>
+          <Link href="/listado-ingresos/importar" className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard">
+            <Upload className="h-3 w-3 mr-1" /> Importar
+          </Link>
         </div>
       </div>
 

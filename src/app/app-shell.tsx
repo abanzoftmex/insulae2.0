@@ -63,7 +63,7 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Operación",
+    title: "Administración",
     items: [
       {
         label: "Áreas Privativas",
@@ -88,18 +88,6 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    title: "Gobernanza",
-    items: [
-      { label: "Convocatorias", href: "/gobernanza/convocatorias", icon: ClipboardList, requiredModule: "Convocatorias" },
-    ],
-  },
-  {
-    title: "Condómino",
-    items: [
-      { label: "Mis convocatorias", href: "/condomino/mis-convocatorias", icon: FileText, requiredModule: "Convocatorias condómino" },
-    ],
-  },
-  {
     title: "Financiero",
     items: [
       { label: "Resumen", href: "/resumen-financiero", icon: PieChart, requiredModule: "Resumen financiero" },
@@ -118,19 +106,31 @@ const NAV_SECTIONS: NavSection[] = [
         items: [
           { label: "Gastos", href: "/listado-gastos", requiredModule: "Gastos" },
           { label: "Presupuestos", href: "/presupuestos", requiredModule: "Presupuesto" },
-          { label: "Estructura Pres.", href: "/listado-estructura-presupuesto", requiredModule: "Estructura Presupuesto" },
+          { label: "Estructura Presupuestal", href: "/listado-estructura-presupuesto", requiredModule: "Estructura Presupuesto" },
         ],
       },
-      { label: "Cuotas", href: "/reporte-cuotas", icon: ClipboardList },
-      { label: "Cuotas Extra.", href: "/reporte-cuotas-extraordinarias", icon: ClipboardList },
+      { label: "Cuotas Ordinarias", href: "/reporte-cuotas", icon: ClipboardList },
+      { label: "Cuotas Extraordinarias", href: "/reporte-cuotas-extraordinarias", icon: ClipboardList },
       { label: "Sanciones", href: "/sanciones", icon: AlertCircle, requiredModule: "Catálogo de sanciones" },
-      { label: "Roles", href: "/listado-roles", icon: Users, requiredModule: "Roles" },
+    ],
+  },
+  {
+    title: "Gobernanza",
+    items: [
+      { label: "Convocatorias", href: "/gobernanza/convocatorias", icon: ClipboardList, requiredModule: "Convocatorias" },
+    ],
+  },
+  {
+    title: "Condómino",
+    items: [
+      { label: "Mis convocatorias", href: "/condomino/mis-convocatorias", icon: FileText, requiredModule: "Convocatorias condómino" },
     ],
   },
   {
     title: "Seguridad",
     items: [
       { label: "Cambiar contraseña", href: "/cambio-contrasena", icon: Settings },
+      { label: "Roles", href: "/listado-roles", icon: Users, requiredModule: "Roles" },
       { label: "Cerrar sesión", href: "/logout", icon: LogOut },
     ],
   },
@@ -391,8 +391,8 @@ export function AppShell({
             if (item.requiredModule && !permissions[item.requiredModule]?.canRead) return false;
             // Si tiene submenus, revisar si tiene al menos un submenu visible, o si el padre tiene permiso
             if (item.items && item.items.length > 0) {
-                const visibleSubitems = item.items.filter(sub => !sub.requiredModule || permissions[sub.requiredModule]?.canRead);
-                if (visibleSubitems.length === 0) return false; // si no hay subitems visibles, ocultar padre
+              const visibleSubitems = item.items.filter(sub => !sub.requiredModule || permissions[sub.requiredModule]?.canRead);
+              if (visibleSubitems.length === 0) return false; // si no hay subitems visibles, ocultar padre
             }
             return true;
           });
@@ -400,17 +400,17 @@ export function AppShell({
           if (visibleItems.length === 0) return null;
 
           return (
-          <div key={section.title}>
-            {!isCollapsed && (
-              <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
-                {section.title}
-              </p>
-            )}
-            {isCollapsed && <div className="mx-auto w-4 border-t border-line/50 mb-1.5" />}
-            <div className="space-y-0.5">
-              {visibleItems.map((item) => renderNavItem(item))}
+            <div key={section.title}>
+              {!isCollapsed && (
+                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
+                  {section.title}
+                </p>
+              )}
+              {isCollapsed && <div className="mx-auto w-4 border-t border-line/50 mb-1.5" />}
+              <div className="space-y-0.5">
+                {visibleItems.map((item) => renderNavItem(item))}
+              </div>
             </div>
-          </div>
           );
         })}
       </nav>
@@ -458,8 +458,9 @@ export function AppShell({
   // ─── Shell ───────────────────────────────────────────────────────────────────
 
   const isLoginPage = currentPath === "/login";
+  const isPrintPage = currentPath.endsWith("/imprimir");
 
-  if (isLoginPage) {
+  if (isLoginPage || isPrintPage) {
     return <>{children}</>;
   }
 
@@ -547,19 +548,19 @@ export function AppShell({
           </div>
           <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
             {NAV_SECTIONS.map((s) => {
-               // Filtrar items basado en permisos
-               const visibleItems = s.items.filter(item => {
-                 if (item.requiredModule && !permissions[item.requiredModule]?.canRead) return false;
-                 if (item.items && item.items.length > 0) {
-                     const visibleSubitems = item.items.filter(sub => !sub.requiredModule || permissions[sub.requiredModule]?.canRead);
-                     if (visibleSubitems.length === 0) return false;
-                 }
-                 return true;
-               });
+              // Filtrar items basado en permisos
+              const visibleItems = s.items.filter(item => {
+                if (item.requiredModule && !permissions[item.requiredModule]?.canRead) return false;
+                if (item.items && item.items.length > 0) {
+                  const visibleSubitems = item.items.filter(sub => !sub.requiredModule || permissions[sub.requiredModule]?.canRead);
+                  if (visibleSubitems.length === 0) return false;
+                }
+                return true;
+              });
 
-               if (visibleItems.length === 0) return null;
+              if (visibleItems.length === 0) return null;
 
-               return (
+              return (
                 <div key={s.title}>
                   <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
                     {s.title}
@@ -568,7 +569,7 @@ export function AppShell({
                     {visibleItems.map((item) => renderNavItem(item))}
                   </div>
                 </div>
-               );
+              );
             })}
           </nav>
         </aside>

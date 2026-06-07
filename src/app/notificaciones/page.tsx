@@ -132,13 +132,25 @@ export default async function NotificacionesPage() {
 
                     <td className="px-4 py-3 border-l border-black/5">
                       <div className="flex items-center gap-1.5">
-                        <Badge
-                          variant={row.hasImageAttachment ? "success" : "outline"}
-                          className="rounded-full px-2 py-1 text-[9px] font-bold tracking-widest gap-1 inline-flex items-center"
-                        >
-                          <Image className="h-3 w-3" />
-                          {row.hasImageAttachment ? "Imagen" : "Sin imagen"}
-                        </Badge>
+                        {row.hasImageAttachment && row.imageUrl ? (
+                          <a
+                            href={row.imageUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 rounded-full border border-brand/25 bg-brand-mint px-2 py-1 text-[9px] font-bold tracking-widest text-brand hover:bg-brand-mint/80 shadow-sm transition-colors uppercase"
+                          >
+                            <Image className="h-3 w-3" />
+                            Imagen
+                          </a>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="rounded-full px-2 py-1 text-[9px] font-bold tracking-widest gap-1 inline-flex items-center"
+                          >
+                            <Image className="h-3 w-3" />
+                            Sin imagen
+                          </Badge>
+                        )}
                         {row.hasPdfAttachment && row.pdfUrl ? (
                           <a
                             href={row.pdfUrl}

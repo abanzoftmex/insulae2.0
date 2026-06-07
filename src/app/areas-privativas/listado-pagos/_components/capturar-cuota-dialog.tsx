@@ -34,7 +34,7 @@ export function CapturarCuotaDialog({
 
     const formData = new FormData(e.currentTarget);
     formData.append("privateAreaId", privateAreaId);
-    // responsibility context based on opc
+    // responsibility context based on opc: 1=OWNER, 2=COMMERCE (matches legacy)
     formData.append("responsibility", opc === "2" ? "COMMERCE" : "OWNER");
 
     const amount = Number(formData.get("amount"));

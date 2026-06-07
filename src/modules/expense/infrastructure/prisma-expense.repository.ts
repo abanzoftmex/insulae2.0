@@ -27,7 +27,7 @@ function mapToRecord(row: PrismaExpenseWithIncludes): ExpenseRecord {
     amount: Number(row.amount),
     paymentMethod: row.paymentMethod,
     notes: row.notes,
-    receiptUrl: row.receiptUrl ?? row.legacyReceipt, // Fallback to legacy if no new receipt
+    receiptUrl: row.receiptUrl ?? null,
     projectName: row.projectName ?? row.legacyProjectName, // Fallback to legacy project
     isActive: row.isActive,
     budgetConceptId: row.budgetConceptId,

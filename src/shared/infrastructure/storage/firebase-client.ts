@@ -16,7 +16,8 @@ type CondoAssetKind =
   | "ticket-response-pdf"
   | "income-receipt"
   | "expense-receipt"
-  | "announcement-pdf";
+  | "announcement-pdf"
+  | "private-area-document";
 
 function getRequiredClientEnv(value: string | undefined, name: string): string {
   const normalized = value?.trim();

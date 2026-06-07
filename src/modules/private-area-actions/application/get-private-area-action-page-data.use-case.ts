@@ -15,39 +15,16 @@ export interface PrivateAreaActionPageViewData {
   didFallbackToAllCharges: boolean;
 }
 
-const COMMERCE_GROUP_KEYWORDS = [
-  "comercio",
-  "comercial",
-  "local",
-  "arrend",
-  "renta",
-];
-
-function isCommerceGroup(name: string, chargeType: string | null): boolean {
-  const normalizedName = name.toLowerCase();
-  const normalizedType = (chargeType ?? "").toLowerCase();
-
-  return COMMERCE_GROUP_KEYWORDS.some(
-    (keyword) => normalizedName.includes(keyword) || normalizedType.includes(keyword),
-  );
-}
-
+// opc=1 → Propietario (OWNER), opc=2 → Comercio (COMMERCE) — matches legacy id_opcion_estado_cuenta
 function toVisibleChargeLines(
   charges: PrivateAreaActionPageData["charges"],
   opc: "1" | "2",
 ): { visible: PrivateAreaActionPageData["charges"]; fallback: boolean } {
-  const filtered = charges.filter((charge) => {
-    const belongsToCommerce = isCommerceGroup(
-      charge.chargeGroupName,
-      charge.chargeGroupType,
-    );
+  const targetResponsibility = opc === "2" ? "COMMERCE" : "OWNER";
 
-    if (opc === "2") {
-      return belongsToCommerce;
-    }
-
-    return !belongsToCommerce;
-  });
+  const filtered = charges.filter(
+    (charge) => charge.responsibility === targetResponsibility,
+  );
 
   if (filtered.length > 0) {
     return { visible: filtered, fallback: false };

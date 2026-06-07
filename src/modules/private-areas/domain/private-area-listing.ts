@@ -89,6 +89,7 @@ export interface PrivateAreaListRow {
   tenantUsers: PrivateAreaPartyContact[];
   rentalAdministrativeContacts: PrivateAreaPartyContact[];
   rentalOperationalContacts: PrivateAreaPartyContact[];
+  paymentStatusColor: "green" | "red" | "yellow";
   updatedAt: Date;
 }
 

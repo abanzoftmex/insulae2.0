@@ -44,6 +44,9 @@ export interface PrivateAreaChargeLine {
   chargeGroupType: string | null;
   paidAmount: number;
   balanceAmount: number;
+  interestAmount: number;
+  discountAmount: number;
+  responsibility: "OWNER" | "COMMERCE";
 }
 
 export interface PrivateAreaPaymentMovement {
@@ -63,6 +66,18 @@ export interface PrivateAreaRentalLine {
   startsAt: Date | null;
   endsAt: Date | null;
   notes: string | null;
+  administrativeContactUser?: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+  } | null;
+  operativeContactUser?: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+  } | null;
 }
 
 export interface PrivateAreaGeneralMetrics {
@@ -105,4 +120,6 @@ export interface PrivateAreaActionPageData {
   charges: PrivateAreaChargeLine[];
   payments: PrivateAreaPaymentMovement[];
   rentals: PrivateAreaRentalLine[];
+  paymentStatusColor: "green" | "red" | "yellow";
+  condominiumId: string;
 }

@@ -84,9 +84,6 @@ export function ExpenseWorkbench({
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
-  // Import State
-  const [importing, setImporting] = useState(false);
-
   const filteredExpenses = useMemo(() => {
     const term = search.toLowerCase().trim();
     return initialExpenses.filter(e => {
@@ -161,38 +158,6 @@ export function ExpenseWorkbench({
       if (res.success) window.location.reload();
       else alert(res.error);
     });
-  };
-
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImporting(true);
-    try {
-      const buffer = await file.arrayBuffer();
-      const wb = read(buffer);
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const raw: any[][] = utils.sheet_to_json(ws, { header: 1 });
-      const rows = raw.slice(1).filter(r => r.some(c => c != null && c !== "")).map(r => ({
-        budgetConceptId: String(r[0] ?? "").trim() || undefined,
-        date: String(r[1] ?? ""),
-        amount: parseFloat(String(r[2] ?? "0")),
-        paymentMethod: String(r[3] ?? "CASH"),
-        concept: String(r[4] ?? ""),
-        projectName: String(r[5] ?? "") || undefined,
-        notes: String(r[6] ?? "") || undefined,
-      }));
-      const res = await importExpensesAction(rows);
-      if (res.success) {
-        alert(`Éxito: ${res.imported} egresos importados.`);
-        window.location.reload();
-      } else {
-        alert("Error: " + res.error);
-      }
-    } catch {
-      alert("Error al procesar archivo");
-    } finally {
-      setImporting(false);
-    }
   };
 
   const columns: DataTableColumn<ExpenseRecord>[] = [
@@ -295,14 +260,19 @@ export function ExpenseWorkbench({
           <Badge variant="brand">{initialExpenses.length} Total</Badge>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/listado-gastos/plantilla" className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard">
+          <a 
+            href="/listado-gastos/plantilla" 
+            download
+            className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard"
+          >
             <FileDown className="h-3 w-3 mr-1" /> Plantilla
+          </a>
+          <Link 
+            href="/listado-gastos/importar" 
+            className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard"
+          >
+            <Upload className="h-3 w-3 mr-1" /> Importar
           </Link>
-          <label className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard">
-            <Upload className="h-3 w-3 mr-1" />
-            {importing ? "..." : "Importar"}
-            <input type="file" accept=".xlsx,.xls" className="hidden" onChange={handleImport} />
-          </label>
         </div>
       </div>
 

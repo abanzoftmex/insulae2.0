@@ -29,6 +29,7 @@ export interface NotificationRowVM {
   hasImageAttachment: boolean;
   hasPdfAttachment: boolean;
   pdfUrl: string | null;
+  imageUrl: string | null;
 }
 
 export interface NotificationListingVM {
@@ -54,6 +55,7 @@ export function toNotificationListingVM(listing: NotificationListing): Notificat
       hasImageAttachment: Boolean(row.imageUrl),
       hasPdfAttachment: Boolean(row.pdfUrl),
       pdfUrl: row.pdfUrl,
+      imageUrl: row.imageUrl,
     })),
   };
 }

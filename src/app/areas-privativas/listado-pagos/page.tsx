@@ -95,37 +95,71 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
       })
     : [];
 
-  const totalCharged = visibleChargeLines.reduce(
-    (total, charge) => total + charge.amount,
-    0,
-  );
-  const totalPaid = visibleChargeLines.reduce(
-    (total, charge) => total + charge.paidAmount,
-    0,
-  );
-  const totalBalance = visibleChargeLines.reduce(
-    (total, charge) => total + charge.balanceAmount,
-    0,
-  );
+  const totalCharged = visibleChargeLines.reduce((total, charge) => total + charge.amount, 0);
+  const totalPaid = visibleChargeLines.reduce((total, charge) => total + charge.paidAmount, 0);
+  const totalBalance = visibleChargeLines.reduce((total, charge) => total + charge.balanceAmount, 0);
 
-  const contactAssignment = area.assignments.find((assignment) =>
-    (assignment.roleName || "").toLowerCase().includes("administrador"),
-  ) ?? area.assignments.find((assignment) => assignment.roleBucket === "ACTUAL");
-  const contactUser = contactAssignment?.user;
+  const totalInterests = visibleChargeLines.reduce((total, charge) => total + charge.interestAmount, 0);
+  const totalDiscounts = visibleChargeLines.reduce((total, charge) => total + charge.discountAmount, 0);
+
+  // DEBE AL DÍA: only charges whose dueDate is in the past or today
+  const today = new Date();
+  const visibleChargesDueToday = visibleChargeLines.filter((charge) => {
+    if (!charge.dueDate) return true;
+    return new Date(charge.dueDate) <= today;
+  });
+
+  const totalBalanceDueToday = visibleChargesDueToday.reduce((total, charge) => total + charge.balanceAmount, 0);
+  const totalInterestsDueToday = visibleChargesDueToday.reduce((total, charge) => total + charge.interestAmount, 0);
+
+  // opc=1 → Propietario (busca en asignaciones), opc=2 → Comercio (busca en arrendamientos)
+  const isComercio = opc === "2";
+
+  const saldoAFavorValue = isComercio
+    ? Number((area as any).payload?.saldoAFavorComercio || 0)
+    : Number((area as any).payload?.saldoAFavor || 0);
+
+  const finalBalanceDueToday = totalBalanceDueToday - saldoAFavorValue;
+
+  // Resolve contact: for Comercio (opc=1), use the most recent active rental's admin contact.
+  // For Propietario (opc=2), use the owner/administrador assignment.
+  let contactUser: { name: string; email: string | null; phone: string | null } | undefined;
+
+  if (isComercio) {
+    // Find the most recent rental that has an administrativeContactUser
+    const activeRental = area.rentals.find((r) => r.administrativeContactUser != null);
+    const rentalContact = activeRental?.administrativeContactUser;
+    if (rentalContact) {
+      contactUser = { name: rentalContact.name, email: rentalContact.email, phone: rentalContact.phone };
+    }
+  } else {
+    const ownerAssignment =
+      area.assignments.find((a) =>
+        (a.roleName || "").toLowerCase().includes("propietario") ||
+        (a.roleName || "").toLowerCase().includes("dueño")
+      ) ??
+      area.assignments.find((a) =>
+        (a.roleName || "").toLowerCase().includes("administrador")
+      ) ??
+      area.assignments.find((a) => a.roleBucket === "ACTUAL");
+    contactUser = ownerAssignment?.user;
+  }
 
   // Group charges by chargeGroupName for the breakdown tables
-  const chargeSummaryByGroup = new Map<string, { charged: number; balance: number }>();
+  const chargeSummaryByGroup = new Map<string, { charged: number; balance: number; balanceDueToday: number }>();
   for (const charge of visibleChargeLines) {
-    const existing = chargeSummaryByGroup.get(charge.chargeGroupName) || { charged: 0, balance: 0 };
+    const groupName = charge.chargeGroupName;
+    const existing = chargeSummaryByGroup.get(groupName) || { charged: 0, balance: 0, balanceDueToday: 0 };
     existing.charged += charge.amount;
     existing.balance += charge.balanceAmount;
-    chargeSummaryByGroup.set(charge.chargeGroupName, existing);
+    if (!charge.dueDate || new Date(charge.dueDate) <= today) {
+      existing.balanceDueToday += charge.balanceAmount;
+    }
+    chargeSummaryByGroup.set(groupName, existing);
   }
   const summaryRows = Array.from(chargeSummaryByGroup.entries())
     .map(([name, totals]) => ({ name, ...totals }))
     .sort((a, b) => a.name.localeCompare(b.name));
-
-  const isComercio = opc === "2";
 
   return (
     <PrivateAreaActionShell
@@ -200,14 +234,14 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                   <AlertCircle className="h-5 w-5" />
                   <span className="text-[12px] font-bold uppercase">Debe al día</span>
                 </div>
-                <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(totalBalance)}</p>
+                <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(finalBalanceDueToday)}</p>
               </div>
               <div className="flex-1 text-center py-4">
                 <div className="flex items-center justify-center gap-2 mb-1 text-[#b58b4f]">
                   <span className="text-[16px]">👍</span>
                   <span className="text-[12px] font-bold uppercase">Saldo a favor</span>
                 </div>
-                <p className="text-[15px] font-bold text-[#3a2a18]">$0.00</p>
+                <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(saldoAFavorValue)}</p>
               </div>
             </div>
             <div className="bg-[#fbf9f4] border-x border-b border-[#d6c7b3] rounded-b-md p-0">
@@ -217,15 +251,15 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                     <td className="px-3 py-1.5">Saldo inicial:</td>
                     <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
                   </tr>
-                  {summaryRows.map((row) => (
-                    <tr key={row.name} className={`border-b border-[#e5d5b5] ${row.balance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                  {summaryRows.filter(r => r.balanceDueToday > 0).map((row) => (
+                    <tr key={row.name} className={`border-b border-[#e5d5b5] bg-[#ffecd6]`}>
                       <td className="px-3 py-1.5">{row.name}:</td>
-                      <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(row.balance)}</td>
+                      <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(row.balanceDueToday)}</td>
                     </tr>
                   ))}
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Intereses moratorios:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(totalInterestsDueToday)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -258,11 +292,11 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                   ))}
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Intereses moratorios:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(totalInterests)}</td>
                   </tr>
                   <tr>
                     <td className="px-3 py-1.5">Descuentos:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(totalDiscounts)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -310,9 +344,12 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
             <CapturarCuotaDialog privateAreaId={area.privateAreaId} opc={opc} chargeGroups={chargeGroups} />
           </div>
           
-          <button className="bg-[#2c3e50] text-white text-[11px] font-bold px-4 py-2 rounded shadow-sm hover:bg-[#1a252f] transition-colors flex items-center gap-2">
+          <Link
+            href={buildActionHref("historico-pagos", area.privateAreaId, opc)}
+            className="bg-[#2c3e50] text-white text-[11px] font-bold px-4 py-2 rounded shadow-sm hover:bg-[#1a252f] transition-colors flex items-center gap-2"
+          >
             <AlertCircle className="h-3.5 w-3.5" /> Histórico de pagos
-          </button>
+          </Link>
             {/* Client Buttons: Export, Send, Print */}
             <ActionBarButtons 
               privateAreaId={area.privateAreaId} 

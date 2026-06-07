@@ -54,7 +54,7 @@ export default async function MiscIncomeCatalogPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura de Otros Ingresos</h1>
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura de Ingresos</h1>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Catálogo Financiero</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {condominium.name} · Definición de conceptos y categorías financieras.
@@ -63,8 +63,8 @@ export default async function MiscIncomeCatalogPage() {
         </div>
       </div>
 
-      <MiscIncomeWorkbench 
-        initialConcepts={concepts} 
+      <MiscIncomeWorkbench
+        initialConcepts={concepts}
         ordinaryGroup={{ id: ordinaryGroup.id, name: ordinaryGroup.name }}
         extraordinaryGroup={{ id: extraordinaryGroup.id, name: extraordinaryGroup.name }}
       />

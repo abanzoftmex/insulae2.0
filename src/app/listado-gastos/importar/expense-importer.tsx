@@ -76,7 +76,7 @@ export function ExpenseImporter({ budgetConcepts = [] }: Props) {
       } else {
         setImportResult({
           success: false,
-          error: res.error,
+          error: res.errors?.join(", ") || "Error desconocido",
         });
       }
     } catch (err: any) {

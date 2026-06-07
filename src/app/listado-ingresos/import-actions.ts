@@ -23,37 +23,29 @@ export async function importIncomesAction(rows: ImportRow[]) {
     });
     if (!condo) return { success: false, error: "No condominium found" };
 
-    // Validate catalog IDs exist
-    const catalogIds = new Set(
-      rows.map((r) => r.miscCatalogId).filter(Boolean) as string[],
-    );
-    const chargeGroupIds = new Set(
-      rows.map((r) => r.chargeGroupId).filter(Boolean) as string[],
-    );
+    // Fetch all active catalogs and groups to resolve IDs or Legacy IDs
+    const [dbCatalogs, dbGroups] = await Promise.all([
+      prisma.miscIncomeCatalog.findMany({
+        where: { condominiumId: condo.id, isActive: true },
+        select: { id: true, legacyId: true },
+      }),
+      prisma.chargeGroup.findMany({
+        where: { condominiumId: condo.id, isActive: true },
+        select: { id: true, legacyId: true },
+      }),
+    ]);
 
-    const validCatalogs =
-      catalogIds.size > 0
-        ? new Set(
-            (
-              await prisma.miscIncomeCatalog.findMany({
-                where: { id: { in: [...catalogIds] }, condominiumId: condo.id, isActive: true },
-                select: { id: true },
-              })
-            ).map((c) => c.id),
-          )
-        : new Set<string>();
+    const catalogMap = new Map<string, string>(); // input -> uuid
+    dbCatalogs.forEach((c) => {
+      catalogMap.set(c.id, c.id);
+      if (c.legacyId != null) catalogMap.set(String(c.legacyId), c.id);
+    });
 
-    const validGroups =
-      chargeGroupIds.size > 0
-        ? new Set(
-            (
-              await prisma.chargeGroup.findMany({
-                where: { id: { in: [...chargeGroupIds] }, condominiumId: condo.id, isActive: true },
-                select: { id: true },
-              })
-            ).map((g) => g.id),
-          )
-        : new Set<string>();
+    const groupMap = new Map<string, string>(); // input -> uuid
+    dbGroups.forEach((g) => {
+      groupMap.set(g.id, g.id);
+      if (g.legacyId != null) groupMap.set(String(g.legacyId), g.id);
+    });
 
     const errors: string[] = [];
     const validRows: Array<{
@@ -96,20 +88,17 @@ export async function importIncomesAction(rows: ImportRow[]) {
         continue;
       }
 
-      if (!row.miscCatalogId && !row.chargeGroupId) {
+      const resolvedCatalogId = row.miscCatalogId
+        ? catalogMap.get(String(row.miscCatalogId).trim())
+        : null;
+      const resolvedGroupId = row.chargeGroupId
+        ? groupMap.get(String(row.chargeGroupId).trim())
+        : null;
+
+      if (!resolvedCatalogId && !resolvedGroupId) {
         errors.push(
-          `Fila ${lineNum}: Debe tener al menos una Categoría o Tipo de cuota`,
+          `Fila ${lineNum}: ID Categoría o Tipo de cuota no encontrado o no especificado`,
         );
-        continue;
-      }
-
-      if (row.miscCatalogId && !validCatalogs.has(row.miscCatalogId)) {
-        errors.push(`Fila ${lineNum}: ID Categoría no encontrado`);
-        continue;
-      }
-
-      if (row.chargeGroupId && !validGroups.has(row.chargeGroupId)) {
-        errors.push(`Fila ${lineNum}: ID Tipo de cuota no encontrado`);
         continue;
       }
 
@@ -120,8 +109,8 @@ export async function importIncomesAction(rows: ImportRow[]) {
         concept: row.concept.trim(),
         paymentMethod: method as any,
         notes: row.notes?.trim() || null,
-        miscCatalogId: row.miscCatalogId || null,
-        chargeGroupId: row.chargeGroupId || null,
+        miscCatalogId: resolvedCatalogId || null,
+        chargeGroupId: resolvedGroupId || null,
         isActive: true,
         isConfirmed: false,
       });

@@ -126,6 +126,7 @@ model Condominium {
   sanctions                    SanctionCatalog[]
   roles                        Role[]
   announcements                Announcement[]
+  privateAreaImages            PrivateAreaImage[]
 }
 
 model User {
@@ -372,6 +373,7 @@ model PrivateArea {
   attendances       Attendance[]
   tickets           Ticket[]
   incomes           Income[]
+  images            PrivateAreaImage[]
 
   @@unique([condominiumId, legacyId])
   @@index([condominiumId])
@@ -379,6 +381,26 @@ model PrivateArea {
   @@index([condominiumId, parentPrivateAreaId, sortOrder])
   @@index([status])
   @@index([isFusion])
+}
+
+model PrivateAreaImage {
+  id            String   @id @default(uuid())
+  condominiumId String
+  privateAreaId String
+  url           String
+  fileName      String
+  fileSize      Int?
+  mimeType      String?
+  slotIndex     Int      // 0, 1, 2, 3
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  privateArea   PrivateArea @relation(fields: [privateAreaId], references: [id], onDelete: Cascade)
+  condominium   Condominium @relation(fields: [condominiumId], references: [id], onDelete: Cascade)
+
+  @@unique([privateAreaId, slotIndex])
+  @@index([privateAreaId])
+  @@index([condominiumId])
 }
 
 model ResidentAssignment {

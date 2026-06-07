@@ -13,6 +13,7 @@ import {
   Ruler,
 } from "lucide-react";
 
+import { cn } from "@/shared/utils/cn";
 import {
   buildActionHref,
   formatNumber,
@@ -38,14 +39,14 @@ const NAV_TABS = [
   {
     key: "listado-pagos-propietario" as const,
     label: "Pagos Propietario",
-    opc: "1",
+    opc: "1", // opc=1 → Propietario (OWNER) — matches legacy
   },
   {
     key: "listado-pagos-comercio" as const,
     label: "Pagos Comercio",
-    opc: "2",
+    opc: "2", // opc=2 → Comercio (COMMERCE) — matches legacy
   },
-  { key: "listado-arrendamientos" as const, label: "Arrendamientos" },
+  { key: "listado-arrendamientos" as const, label: "Arrendatarios o Usuarios" },
 ] as const;
 
 export function PrivateAreaActionShell({
@@ -87,7 +88,12 @@ export function PrivateAreaActionShell({
       {/* Area KPI strip */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: "Área", value: area.name, sub: `ID: ${privateAreaId}`, icon: <Layers className="h-3.5 w-3.5" /> },
+          {
+            label: "Área",
+            value: area.name,
+            sub: `ID: ${privateAreaId}`,
+            icon: <Layers className="h-3.5 w-3.5" />,
+          },
           { label: "Zona", value: area.zone ?? "Sin zona", sub: `Uso: ${area.useType ?? "—"}`, icon: <MapPin className="h-3.5 w-3.5" /> },
           { label: "Estatus", value: statusLabel(area.isActive), sub: area.businessStatusLabel, icon: <Activity className="h-3.5 w-3.5" /> },
           { label: "M2 actualizado", value: `${formatNumber(area.m2Apole, 4)} m²`, sub: `Código: ${area.code ?? "—"}`, icon: <Ruler className="h-3.5 w-3.5" /> },
@@ -98,7 +104,7 @@ export function PrivateAreaActionShell({
                 <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/70">{item.label}</p>
                 <span className="text-brand/60">{item.icon}</span>
               </div>
-              <p className="text-[13px] font-bold text-ink truncate">{item.value}</p>
+              <p className={cn("text-[13px] font-bold truncate", (item as any).colorClass || "text-ink")}>{item.value}</p>
               <p className="text-[10px] text-ink-soft/70 mt-0.5 truncate">{item.sub}</p>
             </CardContent>
           </Card>

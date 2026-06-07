@@ -33,14 +33,14 @@ export class LegacyPrivateAreaActionsResolver
     const ownerPaymentsUrl = canNavigate
       ? buildInternalUrl("listado-pagos", {
           id: privateAreaId,
-          opc: "2",
+          opc: "1",
         })
       : null;
 
     const commercePaymentsUrl = canNavigate
       ? buildInternalUrl("listado-pagos", {
           id: privateAreaId,
-          opc: "1",
+          opc: "2",
         })
       : null;
 
@@ -89,7 +89,7 @@ export class LegacyPrivateAreaActionsResolver
       },
       {
         id: "RENTALS",
-        label: "Arrendamiento",
+        label: "Arrendatario o Usuario",
         kind: "icon",
         href: rentalsUrl,
         isEnabled: rentalsAreEnabled,

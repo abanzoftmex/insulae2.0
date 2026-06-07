@@ -6,6 +6,7 @@ import type {
   PrivateAreaChargeLine,
   PrivateAreaPaymentMethod,
   PrivateAreaPaymentMovement,
+  PrivateAreaRentalLine,
 } from "../domain/private-area-action-page-data";
 
 import {
@@ -295,6 +296,10 @@ export class PrismaPrivateAreaActionPageDataRepository
             status: true,
             concept: true,
             chargeGroupId: true,
+            interestAmount: true,
+            discountAmount: true,
+            responsibility: true,
+            isCollectible: true,
             chargeGroup: {
               select: {
                 name: true,
@@ -329,6 +334,26 @@ export class PrismaPrivateAreaActionPageDataRepository
             startsAt: true,
             endsAt: true,
             notes: true,
+            administrativeContactUser: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                businessName: true,
+                email: true,
+                phone: true,
+              },
+            },
+            operativeContactUser: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                businessName: true,
+                email: true,
+                phone: true,
+              },
+            },
           },
         },
         childPrivateAreas: {
@@ -438,6 +463,8 @@ export class PrismaPrivateAreaActionPageDataRepository
       const paidAmount = charge.allocations.reduce((total, allocation) => {
         return total + decimalToNumber(allocation.amount);
       }, 0);
+      const interestAmount = decimalToNumber(charge.interestAmount);
+      const discountAmount = decimalToNumber(charge.discountAmount);
 
       return {
         id: charge.id,
@@ -451,7 +478,10 @@ export class PrismaPrivateAreaActionPageDataRepository
         chargeGroupName: charge.chargeGroup.name,
         chargeGroupType: charge.chargeGroup.chargeType,
         paidAmount,
-        balanceAmount: chargedAmount - paidAmount,
+        balanceAmount: chargedAmount - paidAmount + interestAmount - discountAmount,
+        interestAmount,
+        discountAmount,
+        responsibility: charge.responsibility,
       };
     });
 
@@ -583,8 +613,59 @@ export class PrismaPrivateAreaActionPageDataRepository
 
     const businessStatus = toPrivateAreaStatus(area.status);
 
+    const rentals: PrivateAreaRentalLine[] = area.rentals.map((rental) => ({
+      id: rental.id,
+      tenantName: rental.tenantName,
+      status: rental.status,
+      startsAt: rental.startsAt,
+      endsAt: rental.endsAt,
+      notes: rental.notes,
+      administrativeContactUser: rental.administrativeContactUser
+        ? {
+            id: rental.administrativeContactUser.id,
+            name: toUserDisplayName(rental.administrativeContactUser),
+            email: rental.administrativeContactUser.email,
+            phone: rental.administrativeContactUser.phone,
+          }
+        : null,
+      operativeContactUser: rental.operativeContactUser
+        ? {
+            id: rental.operativeContactUser.id,
+            name: toUserDisplayName(rental.operativeContactUser),
+            email: rental.operativeContactUser.email,
+            phone: rental.operativeContactUser.phone,
+          }
+        : null,
+    }));
+
+    const collectibleCharges = area.charges.filter((c) => c.isCollectible);
+    let totalPending = 0;
+    let hasOlderThanOneMonth = false;
+
+    for (const charge of collectibleCharges) {
+      const amount = decimalToNumber(charge.amount);
+      const paid = charge.allocations.reduce((total, allocation) => {
+        return total + decimalToNumber(allocation.amount);
+      }, 0);
+      const interest = decimalToNumber(charge.interestAmount);
+      const discount = decimalToNumber(charge.discountAmount);
+      const pending = amount - paid - discount + interest;
+
+      if (pending > 0.01) {
+        totalPending += pending;
+        if (charge.periodYear < 2026 || (charge.periodYear === 2026 && charge.periodMonth < 6)) {
+          hasOlderThanOneMonth = true;
+        }
+      }
+    }
+
+    const paymentStatusColor = totalPending > 0.01
+      ? (hasOlderThanOneMonth ? "yellow" : "red")
+      : "green";
+
     return {
       privateAreaId: area.id,
+      condominiumId: area.condominiumId,
       name: area.name,
       code: area.code,
       zone: area.zone,
@@ -620,7 +701,9 @@ export class PrismaPrivateAreaActionPageDataRepository
       annualOrdinaryFee: resolveAnnualOrdinaryFee(area.areaCharges),
       charges,
       payments,
-      rentals: area.rentals,
+      rentals,
+      paymentStatusColor,
     };
   }
 }
+

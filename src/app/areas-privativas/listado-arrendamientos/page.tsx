@@ -45,7 +45,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
       <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-6 py-20">
         <Card className="w-full max-w-sm text-center border-transparent shadow-layered p-8">
           <Badge variant="brand" className="w-fit mx-auto rounded-full px-4 py-2 text-[10px] tracking-widest mb-4">
-            Arrendamientos
+            Arrendatarios o Usuarios
           </Badge>
           <h1 className="text-2xl font-bold text-ink tracking-tighter uppercase">ID inválido</h1>
           <p className="mt-3 text-[12px] text-ink-soft">
@@ -69,7 +69,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
       <main className="mx-auto flex min-h-[70vh] w-full max-w-3xl items-center justify-center px-6 py-20">
         <Card className="w-full max-w-sm text-center border-transparent shadow-layered p-8">
           <Badge variant="brand" className="w-fit mx-auto rounded-full px-4 py-2 text-[10px] tracking-widest mb-4">
-            Arrendamientos
+            Arrendatarios o Usuarios
           </Badge>
           <h1 className="text-2xl font-bold text-ink tracking-tighter uppercase">Área no encontrada</h1>
           <p className="mt-3 text-[12px] text-ink-soft">
@@ -94,8 +94,8 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
   return (
     <PrivateAreaActionShell
       area={area}
-      title="Arrendamientos"
-      subtitle="Módulo operativo de arrendamientos para AP/FAP. Contratos y contactos preparados para evolución."
+      title="Arrendatarios o Usuarios"
+      subtitle="Módulo operativo de arrendatarios o usuarios para AP/FAP. Contratos y contactos preparados para evolución."
       activePage="listado-arrendamientos"
     >
       {/* KPI strip */}
@@ -110,7 +110,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
         <Card className="border-transparent shadow-layered">
           <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
             <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
-              Arrendamientos registrados
+              Arrendatarios o Usuarios registrados
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
@@ -118,7 +118,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
               <table className="min-w-full border-separate border-spacing-0 text-[12px]">
                 <thead>
                   <tr className="bg-canvas text-left text-[10px] font-bold uppercase tracking-widest text-brand">
-                    <th className="border-b border-line px-3 py-2.5">Arrendatario</th>
+                    <th className="border-b border-line px-3 py-2.5">Arrendatario o Usuario</th>
                     <th className="border-b border-line px-3 py-2.5">Estatus</th>
                     <th className="border-b border-line px-3 py-2.5">Inicio</th>
                     <th className="border-b border-line px-3 py-2.5">Fin</th>
@@ -129,7 +129,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
                   {area.rentals.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-3 py-8 text-center text-[11px] text-ink-soft">
-                        No hay arrendamientos cargados para esta área.
+                        No hay arrendatarios o usuarios cargados para esta área.
                       </td>
                     </tr>
                   ) : (
@@ -138,12 +138,12 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
                       return (
                         <tr key={rental.id} className="hover:bg-canvas/60 transition-colors">
                           <td className="border-b border-line/40 px-3 py-2 font-bold text-ink">
-                            {rental.tenantName ?? "Sin arrendatario"}
+                            {rental.tenantName ?? "Sin arrendatario o usuario"}
                           </td>
                           <td className="border-b border-line/40 px-3 py-2">
                             <Badge
-                              variant={active ? "success" : "outline"}
-                              className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest"
+                               variant={active ? "success" : "outline"}
+                               className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest"
                             >
                               {rental.status ?? "—"}
                             </Badge>
@@ -171,7 +171,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
         <Card className="border-transparent shadow-layered">
           <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
             <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
-              Nuevo arrendamiento
+              Nuevo Arrendatario o Usuario
             </CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
@@ -182,7 +182,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
             <form action={createPrivateAreaRentalAction} className="space-y-3">
               <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
 
-              <Input label="Arrendatario" type="text" name="tenantName" required />
+              <Input label="Arrendatario o Usuario" type="text" name="tenantName" required />
 
               <Input label="Estatus" type="text" name="status" placeholder="Activo" />
 
@@ -203,7 +203,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
               </div>
 
               <Button type="submit" variant="dark" size="md" className="w-full font-bold uppercase tracking-widest text-[11px]">
-                Guardar arrendamiento
+                Guardar Arrendatario o Usuario
               </Button>
             </form>
           </CardContent>

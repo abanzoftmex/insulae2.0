@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ImageOff, Info } from "lucide-react";
+import { Info } from "lucide-react";
 
 import { getPrivateAreaActionPageDataUseCase } from "@/modules/private-area-actions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -11,6 +11,9 @@ import {
   type ActionPageSearchParams,
   resolvePrivateAreaReference,
 } from "../_lib/private-area-action-routing";
+import { PROJECT_SCOPE } from "@/config/project-scope";
+import { prisma } from "@/shared/infrastructure/db/prisma";
+import { ImageSlots } from "./_components/image-slots";
 
 type PageProps = {
   searchParams?: Promise<ActionPageSearchParams>;
@@ -65,6 +68,15 @@ export default async function FormularioApolImagenesPage({ searchParams }: PageP
 
   const { area } = pageData;
 
+  const images = await prisma.privateAreaImage.findMany({
+    where: {
+      privateAreaId: resolvedReference.privateAreaId,
+    },
+    orderBy: {
+      slotIndex: "asc",
+    },
+  });
+
   return (
     <PrivateAreaActionShell
       area={area}
@@ -81,37 +93,15 @@ export default async function FormularioApolImagenesPage({ searchParams }: PageP
           </CardHeader>
           <CardContent className="p-4 space-y-4">
             <p className="text-[11px] text-ink-soft">
-              En legacy este módulo dependía de la tabla{" "}
-              <code className="text-[10px] bg-canvas border border-line rounded px-1">
-                AREAS_PRIVATIVAS_IMAGENES
-              </code>{" "}
-              y endpoints AJAX dedicados. En Insulae 2.0 queda preparado para conectarlo
-              a almacenamiento unificado por entidad.
+              Sube y gestiona imágenes o documentos PDF directamente en los 4 slots unificados.
             </p>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="overflow-hidden rounded border border-dashed border-line bg-canvas"
-                >
-                  <div className="flex h-36 flex-col items-center justify-center gap-2 bg-card/50">
-                    <ImageOff className="h-6 w-6 text-ink-soft/30" aria-hidden />
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/40">
-                      Sin imagen
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 border-t border-line/50 px-3 py-2">
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">
-                      Slot {index + 1}
-                    </p>
-                    <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
-                      Pendiente
-                    </Badge>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <ImageSlots
+              privateAreaId={area.privateAreaId}
+              condominiumId={area.condominiumId}
+              condominiumSlug={PROJECT_SCOPE.condominiumCode}
+              initialImages={images}
+            />
           </CardContent>
         </Card>
 
@@ -141,7 +131,7 @@ export default async function FormularioApolImagenesPage({ searchParams }: PageP
               <Info className="h-3.5 w-3.5 shrink-0 text-brand-mint mt-0.5" aria-hidden />
               <p className="text-[10px] text-white/50 leading-relaxed">
                 Esta ruta ya reemplaza al legacy en URL y navegación. La persistencia de
-                imágenes queda desacoplada para no bloquear formulario, pagos y arrendamientos.
+                imágenes queda desacoplada para no bloquear formulario, pagos y arrendatarios o usuarios.
               </p>
             </div>
           </CardContent>

@@ -54,7 +54,8 @@ export function buildActionHref(
     | "formulario-apol"
     | "formulario-apol-imagenes"
     | "listado-pagos"
-    | "listado-arrendamientos",
+    | "listado-arrendamientos"
+    | "historico-pagos",
   privateAreaId: string,
   opc?: "1" | "2",
 ): string {

@@ -935,3 +935,116 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
     return { success: false, error: error.message };
   }
 }
+
+export async function cancelPaymentAction(paymentId: string): Promise<void> {
+  if (!paymentId) return;
+
+  await prisma.$transaction(async (tx) => {
+    const payment = await tx.payment.findUnique({
+      where: { id: paymentId },
+      include: {
+        allocations: true,
+      },
+    });
+
+    if (!payment) return;
+
+    // 1. Cancel payment status
+    await tx.payment.update({
+      where: { id: paymentId },
+      data: {
+        legacyStatusCode: 2,
+        isLegacyActive: false,
+        isVisibleInFinancialSummary: false,
+      },
+    });
+
+    // 2. Deactivate details
+    await tx.paymentDetail.updateMany({
+      where: { paymentId },
+      data: { isActive: false },
+    });
+
+    // 3. Revert charge allocations and status
+    for (const alloc of payment.allocations) {
+      const charge = await tx.charge.findUnique({
+        where: { id: alloc.chargeId },
+      });
+      if (charge) {
+        const newPaidAmount = Math.max(0, Number(charge.paidAmount) - Number(alloc.amount));
+        const newStatus = newPaidAmount === 0 ? "OPEN" : "PARTIAL";
+        await tx.charge.update({
+          where: { id: alloc.chargeId },
+          data: {
+            paidAmount: newPaidAmount,
+            status: newStatus,
+          },
+        });
+      }
+    }
+
+    // 4. Delete allocations
+    await tx.paymentAllocation.deleteMany({
+      where: { paymentId },
+    });
+  });
+
+  revalidatePath("/areas-privativas");
+  revalidatePath("/areas-privativas/listado-pagos");
+  revalidatePath("/areas-privativas/historico-pagos");
+  revalidatePath("/reporte-cuotas");
+  revalidatePath("/reporte-cuotas-extraordinarias");
+}
+
+export async function savePrivateAreaImageAction(input: {
+  privateAreaId: string;
+  condominiumId: string;
+  url: string;
+  fileName: string;
+  fileSize?: number;
+  mimeType?: string;
+  slotIndex: number;
+}): Promise<void> {
+  await prisma.privateAreaImage.upsert({
+    where: {
+      privateAreaId_slotIndex: {
+        privateAreaId: input.privateAreaId,
+        slotIndex: input.slotIndex,
+      },
+    },
+    update: {
+      url: input.url,
+      fileName: input.fileName,
+      fileSize: input.fileSize,
+      mimeType: input.mimeType,
+    },
+    create: {
+      condominiumId: input.condominiumId,
+      privateAreaId: input.privateAreaId,
+      url: input.url,
+      fileName: input.fileName,
+      fileSize: input.fileSize,
+      mimeType: input.mimeType,
+      slotIndex: input.slotIndex,
+    },
+  });
+
+  revalidatePath("/areas-privativas/formulario-apol-imagenes");
+}
+
+export async function deletePrivateAreaImageAction(input: {
+  privateAreaId: string;
+  slotIndex: number;
+}): Promise<void> {
+  await prisma.privateAreaImage.delete({
+    where: {
+      privateAreaId_slotIndex: {
+        privateAreaId: input.privateAreaId,
+        slotIndex: input.slotIndex,
+      },
+    },
+  });
+
+  revalidatePath("/areas-privativas/formulario-apol-imagenes");
+}
+

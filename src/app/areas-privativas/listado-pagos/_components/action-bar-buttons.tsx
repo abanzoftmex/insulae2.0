@@ -61,7 +61,7 @@ export function ActionBarButtons({ privateAreaId, opc, areaName, charges }: Acti
   };
 
   const handlePrint = () => {
-    window.print();
+    window.open(`/areas-privativas/listado-pagos/imprimir?id=${privateAreaId}&opc=${opc}`, "_blank");
   };
 
   return (

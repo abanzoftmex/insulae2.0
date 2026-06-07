@@ -951,6 +951,29 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       const outstandingBalance = outstandingCell.owner + outstandingCell.commerce;
       const m2ConstructionRaw = decimalToNumber(area.m2Construction);
 
+      const collectibleCharges = area.charges.filter((c) => c.isCollectible);
+      let totalPending = 0;
+      let hasOlderThanOneMonth = false;
+
+      for (const charge of collectibleCharges) {
+        const amount = decimalToNumber(charge.amount);
+        const paid = decimalToNumber(charge.paidAmount);
+        const interest = decimalToNumber(charge.interestAmount);
+        const discount = decimalToNumber(charge.discountAmount);
+        const pending = amount - paid - discount + interest;
+
+        if (pending > 0.01) {
+          totalPending += pending;
+          if (charge.periodYear < 2026 || (charge.periodYear === 2026 && charge.periodMonth < 6)) {
+            hasOlderThanOneMonth = true;
+          }
+        }
+      }
+
+      const paymentStatusColor = totalPending > 0.01
+        ? (hasOlderThanOneMonth ? "yellow" : "red")
+        : "green";
+
       const inferredFusionMembers = extractFusionAggregateMemberIdentifiers(area.name);
       const hierarchyRole: PrivateAreaListRow["hierarchyRole"] =
         area.isFusion || inferredFusionMembers.length > 1
@@ -1060,6 +1083,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         tenantUsers: tenantUsers.map(toPublicPartyContact),
         rentalAdministrativeContacts: rentalAdministrativeContacts.map(toPublicPartyContact),
         rentalOperationalContacts: rentalOperationalContacts.map(toPublicPartyContact),
+        paymentStatusColor,
         updatedAt: area.updatedAt,
       } satisfies PrivateAreaListRow;
     });
@@ -1213,23 +1237,17 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       estimatedOutstandingBalance: orderedRows.reduce((acc, row) => acc + row.outstandingBalance, 0),
     };
 
-    const prefilteredRows =
-      filters.status === "INACTIVE"
-        ? orderedRows
-        : orderedRows.filter((row) => shouldRenderInLegacyTable(row));
+    const prefilteredRows = orderedRows.filter((row) => {
+      if (filters.status === "ACTIVE" && !row.isActive) return false;
+      if (filters.status === "INACTIVE" && row.isActive) return false;
+
+      if (row.isActive) {
+        return shouldRenderInLegacyTable(row);
+      }
+      return true;
+    });
 
     const filteredRows = prefilteredRows
-      .filter((row) => {
-        if (filters.status === "ACTIVE" && !row.isActive) {
-          return false;
-        }
-
-        if (filters.status === "INACTIVE" && row.isActive) {
-          return false;
-        }
-
-        return true;
-      })
       .filter((row) => {
         if (!filters.useType) {
           return true;
@@ -1251,11 +1269,13 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       });
 
     const paginateByTopLevel = filters.paginateByTopLevel === true;
+    const shouldPaginate = filters.pageSize < 1000;
 
     let totalRows = filteredRows.length;
-    let totalPages = Math.max(1, Math.ceil(totalRows / filters.pageSize));
+    const computedPageSize = shouldPaginate ? Math.max(1, Math.ceil(totalRows / 25)) : filters.pageSize;
+    let totalPages = Math.max(1, Math.ceil(totalRows / computedPageSize));
     let page = Math.min(filters.page, totalPages);
-    let pagedRows = filteredRows.slice((page - 1) * filters.pageSize, page * filters.pageSize);
+    let pagedRows = filteredRows.slice((page - 1) * computedPageSize, page * computedPageSize);
 
     if (paginateByTopLevel) {
       const rowsByParentId = new Map<string, PrivateAreaListRow[]>();
@@ -1274,11 +1294,12 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         .sort(sortRowsLegacyOrder);
 
       totalRows = topLevelRows.length;
-      totalPages = Math.max(1, Math.ceil(totalRows / filters.pageSize));
+      const computedPageSizeTop = shouldPaginate ? Math.max(1, Math.ceil(totalRows / 25)) : filters.pageSize;
+      totalPages = Math.max(1, Math.ceil(totalRows / computedPageSizeTop));
       page = Math.min(filters.page, totalPages);
 
-      const start = (page - 1) * filters.pageSize;
-      const pagedTopLevelRows = topLevelRows.slice(start, start + filters.pageSize);
+      const start = (page - 1) * computedPageSizeTop;
+      const pagedTopLevelRows = topLevelRows.slice(start, start + computedPageSizeTop);
 
       const visited = new Set<string>();
       const rowsForCurrentPage: PrivateAreaListRow[] = [];
@@ -1320,12 +1341,12 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         page,
       },
       facets: {
-        useTypes: toFacetOptions(orderedRows),
+        useTypes: toFacetOptions(prefilteredRows),
       },
       summary,
       pagination: {
         page,
-        pageSize: filters.pageSize,
+        pageSize: paginateByTopLevel ? Math.max(1, Math.ceil(summary.registeredAreas / 25)) : computedPageSize,
         totalRows,
         totalPages,
       },

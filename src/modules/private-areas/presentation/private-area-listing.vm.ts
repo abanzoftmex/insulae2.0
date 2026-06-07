@@ -39,6 +39,7 @@ export interface PrivateAreaRowVM {
   tenantUsers: Array<{ name: string; email: string | null; phone: string | null }>;
   rentalAdministrativeContacts: Array<{ name: string; email: string | null; phone: string | null }>;
   rentalOperationalContacts: Array<{ name: string; email: string | null; phone: string | null }>;
+  paymentStatusColor: "green" | "red" | "yellow";
   updatedAtLabel: string;
 }
 
@@ -253,6 +254,7 @@ export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateArea
       tenantUsers: row.tenantUsers,
       rentalAdministrativeContacts: row.rentalAdministrativeContacts,
       rentalOperationalContacts: row.rentalOperationalContacts,
+      paymentStatusColor: row.paymentStatusColor,
       updatedAtLabel: formatDate(row.updatedAt),
     };
     }),

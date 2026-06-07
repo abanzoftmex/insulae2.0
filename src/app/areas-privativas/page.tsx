@@ -42,6 +42,7 @@ import {
   Briefcase,
   Wallet,
   Plus,
+  X,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -119,17 +120,80 @@ function renderPartyContacts(contacts: Array<{ name: string; email: string | nul
   );
 }
 
-function renderFinancialCards(ownerAmount: string, commerceAmount: string, showCommerce: boolean): ReactNode {
+function renderFinancialCards(
+  ownerAmount: string,
+  commerceAmount: string,
+  showCommerce: boolean,
+  paymentStatusColor?: "green" | "red" | "yellow"
+): ReactNode {
+  const isZeroOrMuted = (amount: string) => {
+    const clean = amount.trim();
+    if (clean.startsWith("-")) {
+      return true;
+    }
+    const hasNonZeroDigits = /[1-9]/.test(clean);
+    return !hasNonZeroDigits;
+  };
+
+  const getCardStyle = (amount: string, isOwner: boolean) => {
+    if (isZeroOrMuted(amount)) {
+      return {
+        bgClass: "bg-emerald-50 border-emerald-100",
+        labelClass: "text-emerald-600/60",
+        valueClass: "text-[#16a34a] font-bold"
+      };
+    }
+
+    if (paymentStatusColor === "red") {
+      return {
+        bgClass: "bg-rose-50 border-rose-100",
+        labelClass: "text-rose-600/60",
+        valueClass: "text-[#dc2626] font-bold"
+      };
+    }
+    if (paymentStatusColor === "yellow") {
+      return {
+        bgClass: "bg-amber-50 border-amber-100",
+        labelClass: "text-amber-600/60",
+        valueClass: "text-[#d97706] font-bold"
+      };
+    }
+    if (paymentStatusColor === "green") {
+      return {
+        bgClass: "bg-emerald-50 border-emerald-100",
+        labelClass: "text-emerald-600/60",
+        valueClass: "text-[#16a34a] font-bold"
+      };
+    }
+
+    if (isOwner) {
+      return {
+        bgClass: "bg-brand-deep/3 border-brand-deep/5",
+        labelClass: "text-brand-deep/60",
+        valueClass: "text-brand-deep font-bold"
+      };
+    } else {
+      return {
+        bgClass: "bg-danger/5 border-danger/5",
+        labelClass: "text-danger/60",
+        valueClass: "text-danger/80 font-bold"
+      };
+    }
+  };
+
+  const ownerStyle = getCardStyle(ownerAmount, true);
+  const commerceStyle = getCardStyle(commerceAmount, false);
+
   return (
     <div className="space-y-0.5">
-      <div className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded bg-brand-deep/3 border border-brand-deep/5">
-        <span className="text-[8px] font-bold text-brand-deep/60">P</span>
-        <span className="text-xs font-bold text-brand-deep">{ownerAmount}</span>
+      <div className={cn("flex items-center justify-between gap-2 px-1.5 py-0.5 rounded border transition-colors", ownerStyle.bgClass)}>
+        <span className={cn("text-[8px] font-bold", ownerStyle.labelClass)}>P</span>
+        <span className={cn("text-xs", ownerStyle.valueClass)}>{ownerAmount}</span>
       </div>
       {showCommerce && (
-        <div className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded bg-danger/5 border border-danger/5">
-          <span className="text-[8px] font-bold text-danger/60">C</span>
-          <span className="text-xs font-bold text-danger/80">{commerceAmount}</span>
+        <div className={cn("flex items-center justify-between gap-2 px-1.5 py-0.5 rounded border transition-colors", commerceStyle.bgClass)}>
+          <span className={cn("text-[8px] font-bold", commerceStyle.labelClass)}>C</span>
+          <span className={cn("text-xs", commerceStyle.valueClass)}>{commerceAmount}</span>
         </div>
       )}
     </div>
@@ -207,7 +271,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
 
   const query = pickParam(params.q) ?? "";
   const useType = pickParam(params.useType) ?? "";
-  const status = pickParam(params.status) ?? "ALL";
+  const status = pickParam(params.status) ?? "ACTIVE";
   const m2Min = parseNumber(pickParam(params.m2Min));
   const m2Max = parseNumber(pickParam(params.m2Max));
   const page = parsePositiveInteger(pickParam(params.page), 1);
@@ -238,18 +302,16 @@ export default async function AreasPrivativasPage(props: PageProps) {
   const shortMonths = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   
   let monthLabels: { label: string; key: string }[] = [];
-  if (listing.quotaPeriod?.start && listing.quotaPeriod?.end) {
-    const startDate = new Date(listing.quotaPeriod.start);
-    const endDate = new Date(listing.quotaPeriod.end);
-    let curr = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1));
-    const end = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 1));
-    
-    while (curr <= end) {
-      const m = curr.getUTCMonth();
-      const y = curr.getUTCFullYear();
-      monthLabels.push({ label: `${shortMonths[m]} ${y}`, key: `month_${y}_${m + 1}` });
-      curr.setUTCMonth(curr.getUTCMonth() + 1);
-    }
+  const startDate = new Date(Date.UTC(2025, 0, 1));
+  const endDate = new Date(Date.UTC(2026, 11, 1));
+  let curr = new Date(Date.UTC(startDate.getUTCFullYear(), startDate.getUTCMonth(), 1));
+  const end = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), 1));
+  
+  while (curr <= end) {
+    const m = curr.getUTCMonth();
+    const y = curr.getUTCFullYear();
+    monthLabels.push({ label: `${shortMonths[m]} ${y}`, key: `month_${y}_${m + 1}` });
+    curr.setUTCMonth(curr.getUTCMonth() + 1);
   }
 
   const colWidths = [
@@ -270,6 +332,12 @@ export default async function AreasPrivativasPage(props: PageProps) {
     110, // Uso Suelo
     160, // Cartera Vencida
     160, // Anticipado
+    180, // Ordinary 2025 Annual
+    180, // Ordinary 2025 Monthly
+    180, // Ordinary 2025 Outstanding
+    180, // Ordinary 2026 Annual
+    180, // Ordinary 2026 Monthly
+    180, // Ordinary 2026 Outstanding
     180, // Extra Condo
     180, // Extra Condo Saldo
     180, // Extra Com
@@ -473,9 +541,16 @@ export default async function AreasPrivativasPage(props: PageProps) {
               <option value="80">80</option>
             </select>
           </div>
-          <Button type="submit" className="h-8 text-[10px] font-bold uppercase gap-1.5">
-            <Filter className="h-3 w-3" /> Filtrar
-          </Button>
+          <div className="flex gap-2">
+            <Button type="submit" className="h-8 text-[10px] font-bold uppercase gap-1.5 flex-1">
+              <Filter className="h-3 w-3" /> Filtrar
+            </Button>
+            <Button variant="outline" size="sm" asChild className="h-8 text-[10px] font-bold uppercase px-3 border border-line hover:bg-canvas transition-colors">
+              <Link href="/areas-privativas" title="Eliminar filtros">
+                <X className="h-3.5 w-3.5 text-ink-soft" />
+              </Link>
+            </Button>
+          </div>
         </form>
       </div>
 
@@ -516,6 +591,12 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Uso Suelo</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Cartera Vencida</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Anticipado</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (anual)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (mensual)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (anual)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (mensual)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (saldo actual)</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Condo</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Condo Saldo</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Com</th>
@@ -548,7 +629,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 const empty = "$0.00";
                 const f = (k: string) => {
                   const s = row.financialCells[k as keyof typeof row.financialCells];
-                  return renderFinancialCards(s?.owner ?? empty, s?.commerce ?? empty, hasCom);
+                  return renderFinancialCards(s?.owner ?? empty, s?.commerce ?? empty, hasCom, row.paymentStatusColor);
                 };
 
                 const isChild = row.hierarchyLabel === "Hijo";
@@ -595,6 +676,12 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     </td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("arrears_2017_2024")}</td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("advance_2024")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_annual")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_monthly")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_annual")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_monthly")}</td>
+                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_outstanding")}</td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("extra_condo_2024_2025")}</td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("extra_condo_2024_2025_outstanding")}</td>
                     <td className="px-2 border-r border-[#e8ddd0]">{f("extra_commerce_2024_2025")}</td>

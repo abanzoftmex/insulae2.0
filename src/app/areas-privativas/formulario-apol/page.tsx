@@ -473,11 +473,11 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
 
         <Card className="border-transparent shadow-layered">
           <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Arrendatario / Usuario</CardTitle>
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Arrendatario o Usuario</CardTitle>
           </CardHeader>
           <CardContent className="p-4 space-y-3">
             <p className="text-[11px] text-ink-soft">
-              Selector equivalente al legacy para asociar el nombre visible del arrendatario.
+              Selector equivalente al legacy para asociar el nombre visible del arrendatario o usuario.
             </p>
 
             <form action={setPrivateAreaRentalTenantAction} className="space-y-3">
@@ -485,7 +485,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
 
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">
-                  Arrendatario / Usuario
+                  Arrendatario o Usuario
                 </label>
                 <select
                   name="tenantName"
@@ -502,7 +502,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
               </div>
 
               <Button type="submit" variant="dark" size="sm" className="w-full font-bold uppercase tracking-widest text-[10px]">
-                Guardar arrendatario
+                Guardar arrendatario o usuario
               </Button>
             </form>
 
@@ -519,7 +519,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
 
             <Button variant="outline" size="sm" asChild className="w-full text-[10px] font-bold uppercase tracking-widest">
               <Link href={`/areas-privativas/listado-arrendamientos?id=${area.privateAreaId}`}>
-                Ir a listado de arrendamientos
+                Ir a listado de arrendatarios o usuarios
               </Link>
             </Button>
           </CardContent>

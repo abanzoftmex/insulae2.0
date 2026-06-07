@@ -8,7 +8,8 @@ interface ImportRow {
   date: string;
   amount: number;
   paymentMethod: string;
-  concept: string;
+  concept: string; // Map to comments or details
+  receipt?: string;
   projectName?: string;
   notes?: string;
 }
@@ -21,7 +22,7 @@ export async function importExpensesAction(rows: ImportRow[]) {
       where: { isActive: true },
       select: { id: true },
     });
-    if (!condo) return { success: false, error: "No condominium found" };
+    if (!condo) return { success: false, errors: ["No condominium found"] };
 
     const allConcepts = await prisma.budgetExpenseConcept.findMany({
       where: { condominiumId: condo.id, isActive: true },
@@ -45,6 +46,7 @@ export async function importExpensesAction(rows: ImportRow[]) {
       paymentMethod: any;
       notes: string | null;
       projectName: string | null;
+      legacyReceipt: string | null;
       budgetConceptId: string | null;
       isActive: boolean;
     }> = [];
@@ -53,65 +55,81 @@ export async function importExpensesAction(rows: ImportRow[]) {
       const row = rows[i];
       const lineNum = i + 2; // header is line 1
 
-      if (!row.date || isNaN(Date.parse(row.date))) {
-        errors.push(`Fila ${lineNum}: Fecha inválida`);
+      // Handle Excel dates or string dates
+      let finalDate: Date;
+      if (!row.date) {
+        errors.push("Fila " + lineNum + ": Fecha vacía");
         continue;
       }
+      
+      const parsedDate = new Date(row.date);
+      if (isNaN(parsedDate.getTime())) {
+        errors.push("Fila " + lineNum + ": Fecha inválida " + row.date);
+        continue;
+      }
+      finalDate = parsedDate;
 
-      if (!row.amount || row.amount <= 0 || isNaN(row.amount)) {
-        errors.push(`Fila ${lineNum}: Monto inválido`);
+      if (row.amount === undefined || isNaN(row.amount)) {
+        errors.push("Fila " + lineNum + ": Monto inválido");
         continue;
       }
 
       const method = (row.paymentMethod || "").toUpperCase().trim();
       if (!VALID_METHODS.has(method)) {
         errors.push(
-          `Fila ${lineNum}: Forma de pago inválida "${row.paymentMethod}"`,
+          "Fila " + lineNum + ": Forma de pago inválida " + row.paymentMethod
         );
         continue;
       }
 
       if (!row.concept || String(row.concept).trim().length === 0) {
-        errors.push(`Fila ${lineNum}: Detalles del gasto (Concepto) vacío`);
+        errors.push("Fila " + lineNum + ": Comentarios/Concepto vacío");
         continue;
       }
 
       if (!row.budgetConceptId) {
-        errors.push(`Fila ${lineNum}: Debe tener un ID Concepto`);
+        errors.push("Fila " + lineNum + ": El campo id_concepto es obligatorio");
         continue;
       }
 
       const resolvedId = conceptMap.get(String(row.budgetConceptId).trim());
       if (!resolvedId) {
-        errors.push(`Fila ${lineNum}: ID Concepto no encontrado o inactivo`);
+        errors.push("Fila " + lineNum + ": El ID Concepto " + row.budgetConceptId + " no existe en el catálogo.");
         continue;
       }
 
       validRows.push({
         condominiumId: condo.id,
-        date: new Date(row.date),
+        date: finalDate,
         amount: Number(row.amount),
         concept: String(row.concept).trim(),
         paymentMethod: method as any,
         notes: row.notes?.trim() || null,
         projectName: row.projectName?.trim() || null,
+        legacyReceipt: row.receipt?.trim() || null,
         budgetConceptId: resolvedId,
         isActive: true,
       });
     }
 
+    if (errors.length > 0) {
+      return { success: false, errors };
+    }
+
     if (validRows.length > 0) {
-      await prisma.expense.createMany({ data: validRows });
+      await prisma.expense.createMany({
+        data: validRows,
+      });
     }
 
     revalidatePath("/listado-gastos");
 
-    return {
-      success: true,
-      imported: validRows.length,
-      errors,
+    return { 
+      success: true, 
+      imported: validRows.length 
     };
-  } catch (err: any) {
-    return { success: false, error: err.message };
+  } catch (error: any) {
+    console.error("Error importing expenses:", error);
+    return { success: false, errors: [error.message] };
   }
 }
