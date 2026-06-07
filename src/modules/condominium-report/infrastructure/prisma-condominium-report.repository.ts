@@ -99,6 +99,7 @@ export class PrismaCondominiumReportRepository
               totalApoles: true,
               totalM2: true,
               commonAreasM2: true,
+              privateAreasM2: true,
             },
           },
         },
@@ -121,6 +122,7 @@ export class PrismaCondominiumReportRepository
               totalApoles: true,
               totalM2: true,
               commonAreasM2: true,
+              privateAreasM2: true,
             },
           },
         },
@@ -178,13 +180,10 @@ export class PrismaCondominiumReportRepository
     const activePrivateAreas = privateAreaSnapshots.filter((area) => area.isActive).length;
     const inactivePrivateAreas = totalRegisteredPrivateAreas - activePrivateAreas;
     
-    // In legacy, the main report active areas filter status in (1, 2, 4)
-    // 1: AVAILABLE, 2: SOLD, 4: RENTED
-    const reportableAreas = privateAreaSnapshots.filter(
-      (area) =>
-        area.isActive &&
-        (area.status === "AVAILABLE" || area.status === "SOLD" || area.status === "RENTED")
-    );
+    // En el reporte general usamos todas las áreas activas (isActive === true)
+    // ya que al subir áreas nuevas inicialmente tienen estatus UNASSIGNED,
+    // y si filtramos por status, no se reflejan en soles/sombras ni en el total.
+    const reportableAreas = privateAreaSnapshots.filter((area) => area.isActive);
 
     // Parent areas (where legacy id_areas_privativas_padre = 0 or null)
     // and es_fusion = 0
@@ -484,13 +483,19 @@ export class PrismaCondominiumReportRepository
         ? lastPrivateAreaUpdatedBy
         : condominium.updatedBy;
 
+    // Para el total de áreas privativas (lotes totales) usamos el conteo real
+    // de áreas padre activas en lugar del campo estático Project.totalApoles,
+    // que nunca se actualiza automáticamente cuando se agregan nuevas áreas.
+    const realTotalApoles = parentAreas.length;
+
     return {
       condominiumId: condominium.id,
       condominiumName: condominium.name,
       condominiumSlug: condominium.slug,
       projectId: project?.id ?? null,
       projectName: project?.name ?? null,
-      projectTotalApoles: project?.totalApoles ?? 0,
+      projectTotalApoles: realTotalApoles,
+      projectPrivateAreasM2: decimalToNumber(project?.privateAreasM2),
       projectTotalM2: decimalToNumber(project?.totalM2),
       projectCommonAreasM2: decimalToNumber(project?.commonAreasM2),
       totalRegisteredPrivateAreas,

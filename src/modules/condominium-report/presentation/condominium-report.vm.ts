@@ -14,6 +14,7 @@ export interface CondominiumReportVM {
   projectTotalApoles: string;
   projectTotalM2: string;
   projectCommonAreasM2: string;
+  projectPrivateAreasM2: string;
   totalRegisteredPrivateAreas: string;
   activePrivateAreas: string;
   inactivePrivateAreas: string;
@@ -96,6 +97,7 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     projectTotalApoles: formatInteger(report.projectTotalApoles),
     projectTotalM2: formatNumber4(report.projectTotalM2),
     projectCommonAreasM2: formatNumber4(report.projectCommonAreasM2),
+    projectPrivateAreasM2: formatNumber4(report.projectPrivateAreasM2),
     totalRegisteredPrivateAreas: formatInteger(report.totalRegisteredPrivateAreas),
     activePrivateAreas: formatInteger(report.activePrivateAreas),
     inactivePrivateAreas: formatInteger(report.inactivePrivateAreas),

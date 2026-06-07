@@ -16,6 +16,7 @@ export interface CondominiumReport {
   projectTotalApoles: number;
   projectTotalM2: number;
   projectCommonAreasM2: number;
+  projectPrivateAreasM2: number;
   totalRegisteredPrivateAreas: number;
   activePrivateAreas: number;
   inactivePrivateAreas: number;
