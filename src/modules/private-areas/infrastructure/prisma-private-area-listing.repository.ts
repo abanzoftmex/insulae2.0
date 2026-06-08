@@ -31,6 +31,7 @@ type ProjectSnapshot = {
   totalApoles: number | null;
   totalM2: Prisma.Decimal | number | null;
   commonAreasM2: Prisma.Decimal | number | null;
+  privateAreasM2: Prisma.Decimal | number | null;
 };
 
 type LandUseCatalogSnapshot = {
@@ -697,8 +698,10 @@ function shouldRenderInLegacyTable(row: PrivateAreaListRow): boolean {
   return isVisibleChildPrivateAreaStatus(row.businessStatus);
 }
 
-function isSassiCondominium(slug: string): boolean {
-  return normalizeKey(slug).includes("sassi");
+function isSassiCondominium(slug: string, projectName?: string): boolean {
+  const lowerSlug = normalizeKey(slug);
+  const lowerProject = projectName ? normalizeKey(projectName) : "";
+  return lowerSlug.includes("sassi") || lowerProject.includes("sassi");
 }
 
 export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRepository {
@@ -724,6 +727,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               totalApoles: true,
               totalM2: true,
               commonAreasM2: true,
+              privateAreasM2: true,
             },
           },
         },
@@ -745,6 +749,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               totalApoles: true,
               totalM2: true,
               commonAreasM2: true,
+              privateAreasM2: true,
             },
           },
         },
@@ -917,7 +922,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
     ]);
 
     const project = (condominium.projects[0] ?? null) as ProjectSnapshot | null;
-    const isSassi = isSassiCondominium(condominium.slug);
+    const isSassi = isSassiCondominium(condominium.slug, project?.name);
     const projectTotalM2 = decimalToNumber(project?.totalM2);
     const projectCommonAreasM2 = decimalToNumber(project?.commonAreasM2);
 
@@ -931,10 +936,14 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       const m2Updated = m2UpdatedSource > 0 ? m2UpdatedSource : m2Original;
       const m2CommonAreaRaw = decimalToNumber(area.m2CommonArea);
       const indivisoRaw = decimalToNumber(area.indiviso);
+      
+      const projectPrivateAreasM2 = decimalToNumber(project?.privateAreasM2);
       const indivisoCalculated =
-        projectTotalM2 > 0
-          ? (m2Original / projectTotalM2) * 100
-          : 0;
+        isSassi && projectPrivateAreasM2 > 0
+          ? (m2Updated / projectPrivateAreasM2) * 100
+          : projectTotalM2 > 0
+            ? (m2Original / projectTotalM2) * 100
+            : 0;
       const indiviso = indivisoCalculated > 0 ? indivisoCalculated : indivisoRaw;
 
       const commonAreaM2 =

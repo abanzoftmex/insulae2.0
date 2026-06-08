@@ -115,14 +115,17 @@ export default function BudgetTable({ vm }: { vm: BudgetVM }) {
                                   {formatMXN(m.budgeted)}
                                 </div>
                               ) : (
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  defaultValue={m.budgeted || ""}
-                                  data-original={m.budgeted}
-                                  onBlur={(e) => handleBlur(e, concept.conceptId, m.month, m.budgetMonthId)}
-                                  className="w-full h-7 bg-canvas/30 border border-transparent rounded px-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
-                                />
+                                <div className="relative flex items-center">
+                                  <span className="absolute left-2 text-[10px] font-bold text-ink-soft/50">$</span>
+                                  <input
+                                    type="number"
+                                    step="0.01"
+                                    defaultValue={m.budgeted || ""}
+                                    data-original={m.budgeted}
+                                    onBlur={(e) => handleBlur(e, concept.conceptId, m.month, m.budgetMonthId)}
+                                    className="w-full h-7 bg-canvas/30 border border-transparent rounded pl-5 pr-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
+                                  />
+                                </div>
                               )}
                             </td>
                             <td className="px-3 text-right text-[11px] font-mono text-ink-soft/60 border-r border-line bg-canvas/10 italic">

@@ -91,6 +91,14 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
 
   const vm = await getBudgetByYearUseCase.execute(condo.id, year);
   const isClosed = vm.status === "CLOSED";
+  const ordinaryCards = vm.summaryCards.filter(c => c.title.toUpperCase().includes("ORDINARIO") && !c.title.toUpperCase().includes("EXTRA"));
+  const extraordinaryCards = vm.summaryCards.filter(c => c.title.toUpperCase().includes("EXTRA"));
+
+  const sumOrdinaryBudget = ordinaryCards.reduce((acc, c) => acc + c.budgeted, 0);
+  const sumOrdinaryGenerated = ordinaryCards.reduce((acc, c) => acc + c.generated, 0);
+
+  const sumExtraBudget = extraordinaryCards.reduce((acc, c) => acc + c.budgeted, 0);
+  const sumExtraGenerated = extraordinaryCards.reduce((acc, c) => acc + c.generated, 0);
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
@@ -127,21 +135,33 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <StatCard 
           accent="brand"
-          label={`Prespuesto ${year}`} 
-          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalBudgeted)} 
+          label={`Ordinario ${year}`} 
+          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(sumOrdinaryBudget)} 
+          trend={{
+            value: `Ejercido: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(sumOrdinaryGenerated)}`,
+            isUp: true
+          }}
           icon={<Calculator className="h-3.5 w-3.5" />} 
         />
         <StatCard 
-          accent="lime"
-          label={`Ejercido ${year}`} 
-          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalGenerated)} 
+          accent="cyan"
+          label={`Extraordinario ${year}`} 
+          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(sumExtraBudget)} 
+          trend={{
+            value: `Ejercido: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(sumExtraGenerated)}`,
+            isUp: true
+          }}
           icon={<TrendingUp className="h-3.5 w-3.5" />} 
         />
         <StatCard 
-          label="Saldo de Proyecto" 
-          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalBalance)} 
+          accent="lime"
+          label={`Total Consolidado`} 
+          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalBudgeted)} 
+          trend={{
+            value: `Disponible: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalBalance)}`,
+            isUp: vm.totalBalance >= 0
+          }}
           icon={<DollarSign className="h-3.5 w-3.5" />} 
-          className={cn(vm.totalBalance >= 0 ? "bg-brand-mint/40 border-brand-accent/20" : "bg-danger/10 border-danger/20")}
         />
       </div>
 
