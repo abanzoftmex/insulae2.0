@@ -21,8 +21,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
       include: { group: true },
       orderBy: [
         { group: { order: 'asc' } },
-        { order: 'asc' },
-        { name: 'asc' }
+        { order: 'asc' }
       ]
     });
 
@@ -134,6 +133,10 @@ export class PrismaBudgetRepository implements BudgetRepository {
 
     const groups: BudgetOverviewGroupVM[] = [];
     for (const [groupId, g] of groupsMap.entries()) {
+      if (g.name.toLowerCase().includes("extraordinari")) {
+        g.concepts.sort((a, b) => a.conceptName.localeCompare(b.conceptName, "es"));
+      }
+
       const gBudgeted = g.concepts.reduce((acc, c) => acc + c.budgeted, 0);
       const gGenerated = g.concepts.reduce((acc, c) => acc + c.generated, 0);
       const gBalance = gBudgeted - gGenerated;
