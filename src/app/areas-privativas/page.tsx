@@ -431,11 +431,21 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     <span className="font-bold text-ink">{reportVm.projectTotalApoles}</span>
                   </div>
                   <div className="flex justify-between py-0.5 border-b border-line/30">
-                    <span className="text-ink-soft font-medium">M2 de áreas privativas totales</span>
+                    <span className="text-ink-soft font-medium">Superficie total
+                      <span className="ml-1 text-[9px] text-brand/50 font-normal">(configurado en /condominio)</span>
+                    </span>
                     <span className="font-bold text-ink">{reportVm.projectTotalM2} m²</span>
                   </div>
+                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                    <span className="text-ink-soft font-medium">M2 de áreas privativas totales
+                      <span className="ml-1 text-[9px] text-brand/50 font-normal">(configurado en /condominio)</span>
+                    </span>
+                    <span className="font-bold text-ink">{reportVm.projectPrivateAreasM2} m²</span>
+                  </div>
                   <div className="flex justify-between py-0.5">
-                    <span className="text-ink-soft font-medium">M2 de áreas comunes</span>
+                    <span className="text-ink-soft font-medium">M2 de áreas comunes
+                      <span className="ml-1 text-[9px] text-brand/50 font-normal">(configurado en /condominio)</span>
+                    </span>
                     <span className="font-bold text-ink">{reportVm.projectCommonAreasM2} m²</span>
                   </div>
                 </div>
