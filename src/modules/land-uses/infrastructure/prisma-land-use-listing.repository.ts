@@ -116,7 +116,6 @@ export class PrismaLandUseListingRepository implements LandUseListingRepository 
         where: {
           condominiumId: condominium.id,
           isActive: true,
-          status: { in: [PRIVATE_AREA_STATUS.AVAILABLE, PRIVATE_AREA_STATUS.RENTED] },
         },
         select: {
           id: true,
@@ -134,7 +133,6 @@ export class PrismaLandUseListingRepository implements LandUseListingRepository 
           isActive: true,
           privateArea: {
             isActive: true,
-            status: { in: [PRIVATE_AREA_STATUS.AVAILABLE, PRIVATE_AREA_STATUS.RENTED] },
           },
           chargeGroup: {
             isActive: true,
@@ -157,7 +155,6 @@ export class PrismaLandUseListingRepository implements LandUseListingRepository 
           condominiumId: condominium.id,
           privateArea: {
             isActive: true,
-            status: { in: [PRIVATE_AREA_STATUS.AVAILABLE, PRIVATE_AREA_STATUS.RENTED] },
           },
           chargeGroup: {
             isActive: true,

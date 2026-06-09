@@ -2,13 +2,13 @@
 
 import React, { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { 
-  Plus, 
-  FileDown, 
-  Upload, 
-  Edit2, 
-  Trash2, 
-  DollarSign, 
+import {
+  Plus,
+  FileDown,
+  Upload,
+  Edit2,
+  Trash2,
+  DollarSign,
   Layers,
   ArrowRight,
   Loader2,
@@ -60,19 +60,19 @@ const BUDGET_GROUP_LABELS: Record<string, string> = {
   MAINTENANCE: "Mantenimiento",
 };
 
-export function ExpenseWorkbench({ 
-  initialExpenses, 
-  budgetConcepts, 
-  condominiumSlug, 
-  projectId 
+export function ExpenseWorkbench({
+  initialExpenses,
+  budgetConcepts,
+  condominiumSlug,
+  projectId
 }: ExpenseWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
-  
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
   // Form State
   const [formDate, setFormDate] = useState("");
   const [formConcept, setFormConcept] = useState("");
@@ -88,9 +88,9 @@ export function ExpenseWorkbench({
     const term = search.toLowerCase().trim();
     return initialExpenses.filter(e => {
       const bySearch = !term || [
-        e.concept, 
-        e.budgetConceptName || "", 
-        e.projectName || "", 
+        e.concept,
+        e.budgetConceptName || "",
+        e.projectName || "",
         e.notes || ""
       ].some(f => f.toLowerCase().includes(term));
       return bySearch;
@@ -138,7 +138,7 @@ export function ExpenseWorkbench({
         receiptUrl: receiptUrl || undefined
       };
 
-      const res = editingId 
+      const res = editingId
         ? await updateExpenseAction(editingId, payload)
         : await createExpenseAction(payload);
 
@@ -181,7 +181,7 @@ export function ExpenseWorkbench({
         : <span className="text-[11px] text-ink-soft/40 font-bold uppercase">—</span>
     },
     {
-      header: "Método",
+      header: "Forma de pago",
       accessorKey: "paymentMethod",
       cell: (row) => (
         <Badge
@@ -260,15 +260,15 @@ export function ExpenseWorkbench({
           <Badge variant="brand">{initialExpenses.length} Total</Badge>
         </div>
         <div className="flex items-center gap-2">
-          <a 
-            href="/listado-gastos/plantilla" 
+          <a
+            href="/listado-gastos/plantilla"
             download
             className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard"
           >
             <FileDown className="h-3 w-3 mr-1" /> Plantilla
           </a>
-          <Link 
-            href="/listado-gastos/importar" 
+          <Link
+            href="/listado-gastos/importar"
             className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard"
           >
             <Upload className="h-3 w-3 mr-1" /> Importar
@@ -294,8 +294,8 @@ export function ExpenseWorkbench({
         footer={
           <>
             <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
-            <Button 
-              disabled={isPending || !formConcept || !formAmount} 
+            <Button
+              disabled={isPending || !formConcept || !formAmount}
               onClick={handleSave}
               className="h-8 px-6 text-[10px] font-bold uppercase"
             >
@@ -355,7 +355,7 @@ export function ExpenseWorkbench({
                 {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 Subir Factura o Recibo
                 <input type="file" className="hidden" accept="image/*,application/pdf" onChange={async (e) => {
-                  if(!e.target.files?.[0]) return;
+                  if (!e.target.files?.[0]) return;
                   const file = e.target.files[0];
                   setUploading(true);
                   try {

@@ -37,6 +37,7 @@ function formatUploadedAt(date: Date): string {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
+    timeZone: "America/Mexico_City",
   }).format(date);
 }
 

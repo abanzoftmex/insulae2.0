@@ -2,12 +2,12 @@
 
 import React, { useState, useMemo, useTransition } from "react";
 import Link from "next/link";
-import { 
-  FileDown, 
-  Upload, 
-  Edit2, 
-  Trash2, 
-  DollarSign, 
+import {
+  FileDown,
+  Upload,
+  Edit2,
+  Trash2,
+  DollarSign,
   Layers,
   ArrowRight,
   Loader2,
@@ -57,22 +57,22 @@ const PAYMENT_METHOD_VARIANT: Record<string, "success" | "brand" | "warning" | "
 
 const PAYMENT_METHODS = ["CASH", "TRANSFER", "CARD", "CHECK", "OTHER"];
 
-export function IncomeWorkbench({ 
-  initialIncomes, 
-  catalogs, 
-  chargeGroups, 
-  areas, 
-  condominiumSlug, 
-  projectId 
+export function IncomeWorkbench({
+  initialIncomes,
+  catalogs,
+  chargeGroups,
+  areas,
+  condominiumSlug,
+  projectId
 }: IncomeWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   const [filterCatalog, setFilterCatalog] = useState("all");
-  
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
   // Form State
   const [formDate, setFormDate] = useState("");
   const [formConcept, setFormConcept] = useState("");
@@ -95,9 +95,9 @@ export function IncomeWorkbench({
     return initialIncomes.filter(i => {
       const byCatalog = filterCatalog === "all" || i.miscCatalogId === filterCatalog;
       const bySearch = !term || [
-        i.concept, 
-        i.miscCatalogName || "", 
-        i.privateAreaName || "", 
+        i.concept,
+        i.miscCatalogName || "",
+        i.privateAreaName || "",
         i.notes || ""
       ].some(f => f.toLowerCase().includes(term));
       return byCatalog && bySearch;
@@ -155,7 +155,7 @@ export function IncomeWorkbench({
         receiptUrl: receiptUrl || undefined
       };
 
-      const res = editingId 
+      const res = editingId
         ? await updateIncomeAction(editingId, payload)
         : await createIncomeAction(payload);
 
@@ -262,7 +262,7 @@ export function IncomeWorkbench({
         : <span className="text-[11px] text-ink-soft/40 font-bold uppercase">—</span>
     },
     {
-      header: "Método",
+      header: "Forma de pago",
       accessorKey: "paymentMethod",
       cell: (row) => (
         <Badge
@@ -328,8 +328,8 @@ export function IncomeWorkbench({
 
       <div className="flex items-center justify-between gap-4 mt-2">
         <div className="flex items-center gap-2">
-          <select 
-            value={filterCatalog} 
+          <select
+            value={filterCatalog}
             onChange={(e) => setFilterCatalog(e.target.value)}
             className="h-7 px-2 rounded bg-card border border-line text-[10px] font-bold uppercase outline-none focus:ring-1 focus:ring-brand-accent/30"
           >
@@ -366,8 +366,8 @@ export function IncomeWorkbench({
         footer={
           <>
             <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
-            <Button 
-              disabled={isPending || !formConcept || !formAmount} 
+            <Button
+              disabled={isPending || !formConcept || !formAmount}
               onClick={handleSave}
               className="h-8 px-6 text-[10px] font-bold uppercase"
             >
@@ -411,7 +411,7 @@ export function IncomeWorkbench({
             <input
               type="text"
               value={areaSearch}
-              onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); if(!e.target.value) setFormAreaId(""); }}
+              onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); if (!e.target.value) setFormAreaId(""); }}
               onFocus={() => setShowAreaDropdown(true)}
               onBlur={() => setTimeout(() => setShowAreaDropdown(false), 200)}
               placeholder="Buscar propiedad..."
@@ -460,7 +460,7 @@ export function IncomeWorkbench({
                 {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 Subir PDF o Imagen
                 <input type="file" className="hidden" accept="image/*,application/pdf" onChange={async (e) => {
-                  if(!e.target.files?.[0]) return;
+                  if (!e.target.files?.[0]) return;
                   const file = e.target.files[0];
                   setUploading(true);
                   try {

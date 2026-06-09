@@ -1306,7 +1306,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         .sort(sortRowsLegacyOrder);
 
       totalRows = topLevelRows.length;
-      const computedPageSizeTop = shouldPaginate ? Math.max(1, Math.ceil(totalRows / 25)) : filters.pageSize;
+      const computedPageSizeTop = shouldPaginate ? 25 : filters.pageSize;
       totalPages = Math.max(1, Math.ceil(totalRows / computedPageSizeTop));
       page = Math.min(filters.page, totalPages);
 
@@ -1358,7 +1358,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       summary,
       pagination: {
         page,
-        pageSize: paginateByTopLevel ? Math.max(1, Math.ceil(summary.registeredAreas / 25)) : computedPageSize,
+        pageSize: paginateByTopLevel ? 25 : computedPageSize,
         totalRows,
         totalPages,
       },

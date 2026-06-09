@@ -22,7 +22,7 @@ import { StatCard } from "@/components/ui/stat-card";
 import { FinancialChart } from "@/components/ui/financial-chart";
 
 export const metadata: Metadata = {
-  title: "Inicio | Insulae 2.0",
+  title: "Inicio | Val'Quirico",
   description: "Inicio operativo del condominio con accesos rápidos a módulos principales.",
 };
 

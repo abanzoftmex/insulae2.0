@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useTransition, useMemo, Fragment } from "react";
-import { 
-  Plus, 
+import {
+  Plus,
   Layers,
   MapPin,
   Loader2,
@@ -24,12 +24,12 @@ import { cn } from "@/shared/utils/cn";
 export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM }) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
-  
+
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoadingForm, setIsLoadingForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  
+
   // Form State
   const [formName, setFormName] = useState("");
   const [formInitials, setFormInitials] = useState("");
@@ -157,7 +157,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                   <th className="sticky left-0 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-16">Orden</th>
                   <th className="sticky left-16 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] min-w-[200px]">Nombre</th>
                   <th className="px-4 w-24">Iniciales</th>
-                  <th className="px-4 text-right w-24">Unidades</th>
+                  <th className="px-4 text-right w-24">Apoles</th>
                   <th className="px-4 text-right w-28">M2 Totales</th>
                   {initialVm.columns.map(col => (
                     <th key={col.key} className="px-4 text-center border-l border-black/10 bg-brand-mint/5 text-brand min-w-[140px] max-w-[180px]">{col.label}</th>
@@ -185,7 +185,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                       );
                     })}
                     <td className="px-4 py-3 text-right border-l border-black/10">
-                       <RowActions onEdit={() => openEditModal(row.id)} onDelete={() => handleDelete(row.id)} />
+                      <RowActions onEdit={() => openEditModal(row.id)} onDelete={() => handleDelete(row.id)} />
                     </td>
                   </tr>
                 ))}
@@ -204,8 +204,8 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
           !isLoadingForm && (
             <>
               <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
-              <Button 
-                disabled={isPending || !formName} 
+              <Button
+                disabled={isPending || !formName}
                 onClick={handleSave}
                 className="h-8 px-6 text-[10px] font-bold uppercase"
               >
@@ -228,9 +228,9 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
             </div>
 
             <div className="grid grid-cols-3 gap-4">
-               <Input label="Orden" type="number" value={formOrder} onChange={(e) => setFormOrder(e.target.value)} />
-               <Input label="Peso (Weight)" type="number" step="0.001" value={formWeight} onChange={(e) => setFormWeight(e.target.value)} />
-               <Input label="Porcentaje" type="number" step="0.01" value={formPercentage} onChange={(e) => setFormPercentage(e.target.value)} />
+              <Input label="Orden" type="number" value={formOrder} onChange={(e) => setFormOrder(e.target.value)} />
+              <Input label="Peso (Weight)" type="number" step="0.001" value={formWeight} onChange={(e) => setFormWeight(e.target.value)} />
+              <Input label="Porcentaje" type="number" step="0.01" value={formPercentage} onChange={(e) => setFormPercentage(e.target.value)} />
             </div>
 
             <div className="space-y-4">
@@ -238,7 +238,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                 <DollarSign className="h-3.5 w-3.5 text-brand" />
                 <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">Configuración de Cargos por Grupo</p>
               </div>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 {initialVm.columns.map(col => {
                   const charge = formCharges.find(c => c.key === col.key);
@@ -247,18 +247,18 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                       <p className="text-[11px] font-bold text-brand uppercase truncate">{col.label}</p>
                       <div className="flex gap-2">
                         <div className="flex-1">
-                          <Input 
-                            label="Monto" 
-                            type="number" 
-                            step="0.01" 
-                            value={charge?.amount || 0} 
-                            onChange={(e) => updateChargeAmount(col.key, e.target.value)} 
+                          <Input
+                            label="Monto"
+                            type="number"
+                            step="0.01"
+                            value={charge?.amount || 0}
+                            onChange={(e) => updateChargeAmount(col.key, e.target.value)}
                             className="h-8"
                           />
                         </div>
                         <div className="flex-1 relative">
-                          <select 
-                            value={charge?.applicationMode || "PER_M2"} 
+                          <select
+                            value={charge?.applicationMode || "PER_M2"}
                             onChange={(e) => updateChargeMode(col.key, e.target.value)}
                             className="peer h-8 w-full rounded border border-line bg-card px-2 text-[12px] font-medium outline-none appearance-none"
                           >

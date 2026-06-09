@@ -206,7 +206,6 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
         where: {
           condominiumId: condominium.id,
           isActive: true,
-          status: { in: [PRIVATE_AREA_STATUS.AVAILABLE, PRIVATE_AREA_STATUS.RENTED] },
         },
         select: {
           id: true,
@@ -224,7 +223,6 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
           isActive: true,
           privateArea: {
             isActive: true,
-            status: { in: [PRIVATE_AREA_STATUS.AVAILABLE, PRIVATE_AREA_STATUS.RENTED] },
           },
           chargeGroup: {
             isActive: true,
@@ -247,7 +245,6 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
           condominiumId: condominium.id,
           privateArea: {
             isActive: true,
-            status: { in: [PRIVATE_AREA_STATUS.AVAILABLE, PRIVATE_AREA_STATUS.RENTED] },
           },
           chargeGroup: {
             isActive: true,
@@ -545,7 +542,6 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
         where: {
           condominiumId: condominium.id,
           isActive: true,
-          status: { in: [PRIVATE_AREA_STATUS.AVAILABLE, PRIVATE_AREA_STATUS.RENTED] },
         },
         select: {
           id: true,
@@ -565,6 +561,11 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
     const targetAreaIds: string[] = [];
     const privateAreaById = new Map<string, PrivateAreaSnapshot>();
 
+    console.log("=== DEBUG SAVE LAND USE ===");
+    console.log("Saving for LandUseId:", landUseId, "Name:", name);
+    console.log("Catalog Snapshot mapping keys:", Array.from(catalogByKey.keys()));
+    console.log("Input charges received:", JSON.stringify(input.charges, null, 2));
+
     for (const area of privateAreas) {
       privateAreaById.set(area.id, area);
 
@@ -573,6 +574,12 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
         targetAreaIds.push(area.id);
       }
     }
+
+    console.log("Matched targetAreaIds count:", targetAreaIds.length);
+    if (targetAreaIds.length > 0) {
+      console.log("First 5 matched areas useTypes:", targetAreaIds.slice(0, 5).map(id => privateAreaById.get(id)?.useType));
+    }
+    console.log("===========================");
 
     if (targetAreaIds.length > 0 && input.charges.length > 0) {
       const chargeGroupIds = new Set(
