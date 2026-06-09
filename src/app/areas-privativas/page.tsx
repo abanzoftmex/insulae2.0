@@ -278,7 +278,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
   const pageSize = Math.max(30, parsePositiveInteger(pickParam(params.pageSize), 30));
 
   const listing = await getPrivateAreaListingUseCase.execute({
-    query, useType, status, m2Min, m2Max, page, pageSize,
+    query, useType, status, m2Min, m2Max, page, pageSize, paginateByTopLevel: true,
   });
 
   if (!listing) {

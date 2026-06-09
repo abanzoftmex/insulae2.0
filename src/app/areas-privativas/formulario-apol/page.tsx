@@ -295,6 +295,13 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 defaultValue={area.name}
                 required
               />
+
+              <Input
+                label="Número de ordenamiento"
+                type="number"
+                name="sortOrder"
+                defaultValue={toInputValue(area.sortOrder)}
+              />
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

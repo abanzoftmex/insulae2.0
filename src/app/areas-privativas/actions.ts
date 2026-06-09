@@ -108,6 +108,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
   const m2Original = toNumber(formData.get("m2Original"));
   const name = toString(formData.get("name"));
   const indiviso = toNumber(formData.get("indiviso"));
+  const sortOrder = toNumber(formData.get("sortOrder"));
   const useType = toString(formData.get("useType"));
   const zoneId = toString(formData.get("zoneId"));
   const landUseId = toString(formData.get("landUseId"));
@@ -209,6 +210,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
       ...(m2Updated !== null ? { m2Apole: m2Updated } : {}),
       ...(formData.has("m2Original") && m2Original !== null ? { m2Original } : {}),
       ...(indiviso !== null ? { indiviso } : {}),
+      ...(formData.has("sortOrder") && sortOrder !== null ? { sortOrder } : {}),
       ...(resolvedZone !== undefined ? { zone: resolvedZone } : {}),
       ...(resolvedUseType !== undefined
         ? { useType: resolvedUseType }

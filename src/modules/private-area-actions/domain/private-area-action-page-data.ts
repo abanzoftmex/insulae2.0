@@ -90,6 +90,7 @@ export interface PrivateAreaActionPageData {
   privateAreaId: string;
   name: string;
   code: string | null;
+  sortOrder: number;
   zone: string | null;
   useType: string | null;
   businessStatus: PrivateAreaStatus;
