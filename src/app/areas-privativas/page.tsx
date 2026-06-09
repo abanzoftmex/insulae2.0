@@ -319,6 +319,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
     130, // Ubicacion
     200, // Apoles
     140, // Tipo de Apol
+    110, // Nivel
     140, // Superficie
     140, // Superficie Orig
     110, // Indiviso
@@ -586,48 +587,49 @@ export default async function AreasPrivativasPage(props: PageProps) {
               <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
                 <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Acciones</th>
                 <th className="sticky left-[160px] top-0 z-50 px-3 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Ubicación</th>
-                <th className="sticky left-[290px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8]">Apoles</th>
+                <th className="sticky left-[290px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8]">Área privativa/ Fracción de área privativa</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Tipo de Apol</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Actual</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Orig</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Comunes</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Totales</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">M2 Const</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Subcomunes</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Totales FAP</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">% Indiviso</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Ind. Cond</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Uso Suelo</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Cartera Vencida</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Anticipado</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Nivel</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Superficie m2 área privativa actualizado</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Superficie m2 área privativa original</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso del área privativa</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Áreas comunes del condominio</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales área privativa</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 de construcción AP/FAP</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Áreas comunes subcondominio</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales FAP</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">% Indiviso FAP</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso FAP/Condominio</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Uso de suelo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Cartera vencida 2017-2024</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Pago Anticipado 2024</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (anual)</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (mensual)</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (saldo actual)</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (anual)</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (mensual)</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (saldo actual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Condo</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Condo Saldo</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Com</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Extra Com Saldo</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">STC</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">STC Saldo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas extraordinarias - Condóminos 2024 - 2025</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas extraordinarias - Condóminos 2024 - 2025 (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuota extraordinaria - Comercios 2024 - 2025</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuota extraordinaria - Comercios 2024 - 2025 (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas STC</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas STC (saldo actual)</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Sanción</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Sanción Saldo</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Sanción (saldo actual)</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Comodato</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Comodato Saldo</th>
-                <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold">Saldo Total</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Comodato (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold">Saldo actual</th>
                 {monthLabels.map(m => (
                   <th key={m.key} className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] leading-snug">{m.label}</th>
                 ))}
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Propietario Hist.</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Prop. Legal</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Dominio Actual</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Dominio Pleno</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Arrendatario</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Contacto Admin</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Contacto Oper</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Propietario inicial<br />(BLOCKCHAIN) Historia</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Propietario legal<br />(Esta columna es para el INIDIVISO)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Dominio actual<br />(Esta columna es para el ESTADO DE CUENTA)</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Dominio pleno</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Arrendatario / Usuario</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Contacto administrativo del arrendamiento</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Contacto operativo del arrendamiento</th>
               </tr>
             </thead>
 
@@ -671,6 +673,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
                       {renderHierarchyBadge(row.hierarchyLabel)}
                       <p className="text-xs text-[#7a5e44]/60 italic mt-0.5">P: {row.parentName}</p>
                     </td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0]">{row.level}</td>
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Updated}</td>
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Original}</td>
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indiviso}</td>

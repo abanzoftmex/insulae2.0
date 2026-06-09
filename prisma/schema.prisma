@@ -349,6 +349,7 @@ model PrivateArea {
   useType                String?
   status                 PrivateAreaStatus @default(UNASSIGNED)
   isFusion               Boolean           @default(false)
+  level                  String?
   m2Original             Decimal?          @db.Decimal(16, 6)
   m2Apole                Decimal?          @db.Decimal(16, 6)
   m2Construction         Decimal?          @db.Decimal(16, 6)

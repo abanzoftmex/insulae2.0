@@ -60,6 +60,7 @@ export interface PrivateAreaListRow {
   hierarchyRole: "FUSION" | "PARENT" | "CHILD" | "SINGLE";
   name: string;
   code: string | null;
+  level: string | null;
   zone: string;
   useType: string;
   useTypeInitials: string;

@@ -47,6 +47,7 @@ type PrivateAreaSnapshot = {
   sortOrder: number;
   name: string;
   code: string | null;
+  level: string | null;
   zone: string | null;
   useType: string | null;
   status: PrivateAreaStatus;
@@ -774,6 +775,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           sortOrder: true,
           name: true,
           code: true,
+          level: true,
           zone: true,
           useType: true,
           status: true,
@@ -1063,6 +1065,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         hierarchyRole,
         name: normalizeLabel(area.name, "Sin nombre"),
         code: area.code,
+        level: area.level,
         zone: normalizeLabel(area.zone, "Sin zona"),
         useType: resolvedUseType.label,
         useTypeInitials: resolvedUseType.initials,

@@ -119,12 +119,12 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
     }
   };
 
-  const updateChargeAmount = (chargeGroupId: string, amount: string) => {
-    setFormCharges(prev => prev.map(c => c.chargeGroupId === chargeGroupId ? { ...c, amount } : c));
+  const updateChargeAmount = (key: string, amount: string) => {
+    setFormCharges(prev => prev.map(c => c.key === key ? { ...c, amount } : c));
   };
 
-  const updateChargeMode = (chargeGroupId: string, mode: string) => {
-    setFormCharges(prev => prev.map(c => c.chargeGroupId === chargeGroupId ? { ...c, applicationMode: mode } : c));
+  const updateChargeMode = (key: string, mode: string) => {
+    setFormCharges(prev => prev.map(c => c.key === key ? { ...c, applicationMode: mode } : c));
   };
 
   return (
@@ -241,7 +241,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
                 {initialVm.columns.map(col => {
-                  const charge = formCharges.find(c => c.chargeGroupId === col.key);
+                  const charge = formCharges.find(c => c.key === col.key);
                   return (
                     <div key={col.key} className="p-3 bg-canvas/30 rounded border border-line/50 flex flex-col gap-3">
                       <p className="text-[11px] font-bold text-brand uppercase truncate">{col.label}</p>

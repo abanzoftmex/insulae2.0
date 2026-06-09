@@ -184,6 +184,13 @@ export default async function NuevaAreaPrivativaPage({ searchParams }: PageProps
                 defaultValue="0"
               />
 
+              <Input
+                label="Nivel"
+                type="text"
+                name="level"
+                placeholder="Ej. Planta Baja"
+              />
+
               <div className="flex flex-col gap-1.5 w-full">
                 <label className={labelCls}>Zona / Barrio</label>
                 <select

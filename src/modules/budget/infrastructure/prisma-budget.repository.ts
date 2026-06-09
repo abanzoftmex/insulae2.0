@@ -67,7 +67,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
     // Agrupacion: un bloque por cada BudgetGroup real. Guardamos el nombre
     // principal (name) y el subnombre (category) por separado para mostrarlos
     // como en la pantalla de estructura presupuestal.
-    const groupsMap = new Map<string, { name: string; subname: string; concepts: BudgetConceptRowVM[] }>();
+    const groupsMap = new Map<string, { name: string; subname: string; order: number; concepts: BudgetConceptRowVM[] }>();
 
     let globalBudgeted = 0;
     let globalGenerated = 0;
@@ -126,17 +126,13 @@ export class PrismaBudgetRepository implements BudgetRepository {
       const groupName = grp?.name || concept.budgetGroup || "OTHER";
       const groupSubname = grp?.category ?? "";
       if (!groupsMap.has(groupKey)) {
-        groupsMap.set(groupKey, { name: groupName, subname: groupSubname, concepts: [] });
+        groupsMap.set(groupKey, { name: groupName, subname: groupSubname, order: grp?.order ?? 0, concepts: [] });
       }
       groupsMap.get(groupKey)?.concepts.push(row);
     }
 
     const groups: BudgetOverviewGroupVM[] = [];
     for (const [groupId, g] of groupsMap.entries()) {
-      if (g.name.toLowerCase().includes("extraordinari")) {
-        g.concepts.sort((a, b) => a.conceptName.localeCompare(b.conceptName, "es"));
-      }
-
       const gBudgeted = g.concepts.reduce((acc, c) => acc + c.budgeted, 0);
       const gGenerated = g.concepts.reduce((acc, c) => acc + c.generated, 0);
       const gBalance = gBudgeted - gGenerated;
@@ -158,18 +154,11 @@ export class PrismaBudgetRepository implements BudgetRepository {
       });
     }
 
-    const getGroupOrder = (name: string) => {
-      const lower = name.toLowerCase();
-      if (lower.includes("administraci")) return 1;
-      if (lower.includes("mantenimiento")) return 2;
-      if (lower.includes("seguridad")) return 3;
-      if (lower.includes("infraestructura")) return 4;
-      if (lower.includes("extraordinari")) return 5;
-      if (lower.includes("proyecto")) return 6;
-      return 99;
-    };
-
-    groups.sort((a, b) => getGroupOrder(a.groupData) - getGroupOrder(b.groupData));
+    groups.sort((a, b) => {
+      const orderA = groupsMap.get(a.groupId)?.order ?? 0;
+      const orderB = groupsMap.get(b.groupId)?.order ?? 0;
+      return orderA - orderB;
+    });
 
     return {
       id: budget?.id,
@@ -404,7 +393,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
   async getCondominiumBudgetGroups(condominiumId: string, year: number): Promise<any[]> {
     return prisma.budgetGroup.findMany({
       where: { condominiumId, year, isActive: true },
-      orderBy: { name: 'asc' }
+      orderBy: { order: 'asc' }
     });
   }
 

@@ -107,6 +107,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
   const m2Updated = toNumber(formData.get("m2Updated"));
   const m2Original = toNumber(formData.get("m2Original"));
   const name = toString(formData.get("name"));
+  const level = toString(formData.get("level"));
   const indiviso = toNumber(formData.get("indiviso"));
   const sortOrder = toNumber(formData.get("sortOrder"));
   const useType = toString(formData.get("useType"));
@@ -207,6 +208,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
     where: { id: privateAreaId },
     data: {
       ...(formData.has("name") ? { name: name.length > 0 ? name : privateArea.name } : {}),
+      ...(formData.has("level") ? { level: level.length > 0 ? level : null } : {}),
       ...(m2Updated !== null ? { m2Apole: m2Updated } : {}),
       ...(formData.has("m2Original") && m2Original !== null ? { m2Original } : {}),
       ...(indiviso !== null ? { indiviso } : {}),
@@ -716,6 +718,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
   }
 
   const code = toString(formData.get("code"));
+  const level = toString(formData.get("level"));
   const sortOrder = toNumber(formData.get("sortOrder")) ?? 0;
   const m2Updated = toNumber(formData.get("m2Updated"));
   const m2Original = toNumber(formData.get("m2Original"));
@@ -778,6 +781,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
         condominiumId: condominium.id,
         name,
         code: code.length > 0 ? code : null,
+        level: level.length > 0 ? level : null,
         sortOrder,
         m2Apole: m2Updated,
         m2Original: m2Original,

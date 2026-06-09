@@ -9,6 +9,7 @@ export interface PrivateAreaRowVM {
   id: string;
   name: string;
   code: string;
+  level: string;
   hierarchyLabel: string;
   parentName: string;
   zone: string;
@@ -216,6 +217,7 @@ export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateArea
       id: row.id,
       name: toDisplayName(row.name, row.hierarchyRole),
       code: row.code ?? "-",
+      level: row.level ?? "-",
       hierarchyLabel: toHierarchyLabel(row.hierarchyRole),
       parentName: row.parentName ?? "-",
       zone: row.zone,

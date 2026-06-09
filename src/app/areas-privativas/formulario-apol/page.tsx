@@ -302,6 +302,13 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 name="sortOrder"
                 defaultValue={toInputValue(area.sortOrder)}
               />
+
+              <Input
+                label="Nivel"
+                type="text"
+                name="level"
+                defaultValue={area.level ?? ""}
+              />
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

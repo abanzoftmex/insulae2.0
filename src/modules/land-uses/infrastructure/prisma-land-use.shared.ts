@@ -180,12 +180,31 @@ export function resolveLandUseIdByArea(
   area: Pick<PrivateAreaSnapshot, "useType">,
   catalogByKey: Map<string, string>,
 ): string | null {
-  const normalized = normalizeKey(normalizeLabel(area.useType, ""));
-  if (!normalized) {
+  const label = normalizeLabel(area.useType, "");
+  if (!label) {
     return null;
   }
 
-  return catalogByKey.get(normalized) ?? null;
+  const normalized = normalizeKey(label);
+  const directMatch = catalogByKey.get(normalized);
+  if (directMatch) {
+    return directMatch;
+  }
+
+  // If useType is like "Habitaciones 2 hab-H2" and catalog initials is "H2", or vice versa,
+  // let's do a substring check. Let's find if any catalog key is contained within the normalized useType,
+  // or vice versa. To be precise, let's check for word boundaries or exact hyphen matches.
+  // Many useTypes in Valquirico have formats like "Habitaciones 2 hab-H2" where "H2" is the initials.
+  // We can split by common delimiters like "-" or space to see if any token matches.
+  const tokens = label.split(/[\s\-]+/g).map(normalizeKey).filter(Boolean);
+  for (const token of tokens) {
+    const match = catalogByKey.get(token);
+    if (match) {
+      return match;
+    }
+  }
+
+  return null;
 }
 
 export function resolveAreaM2(area: PrivateAreaSnapshot): number {
