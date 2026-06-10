@@ -325,6 +325,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
     110, // Indiviso
     140, // Areas Comunes
     140, // Totales
+    140, // m2 construcción áreas comunes
     140, // Construccion
     140, // Comunes Sub
     140, // Totales FAP
@@ -595,6 +596,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso del área privativa</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Áreas comunes del condominio</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales área privativa</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 construcción áreas comunes</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 de construcción AP/FAP</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Áreas comunes subcondominio</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales FAP</th>
@@ -679,11 +681,12 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indiviso}</td>
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2CommonArea}</td>
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums font-bold">{row.totalAreaM2}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2ConstructionCommonArea}</td>
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Construction}</td>
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2CommonAreaChildren}</td>
                     <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2ConstructionChildren}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indiviso}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.vccc}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indivisoFap}</td>
+                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indivisoCondominio}</td>
                     <td className="px-3 border-r border-[#e8ddd0]">
                       <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.useTypeInitials}</Badge>
                     </td>

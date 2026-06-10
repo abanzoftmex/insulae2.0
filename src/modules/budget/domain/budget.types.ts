@@ -5,6 +5,7 @@ export interface BudgetMonthVM {
   budgetMonthId?: string; // Si ya existe en DB, id del registro
   budgeted: number;       // monto de budgetMonth
   generated: number;      // sum(Expense) de ese mes
+  units: number | null;   // unidades para ese mes
 }
 
 export interface BudgetConceptRowVM {
@@ -12,6 +13,9 @@ export interface BudgetConceptRowVM {
   conceptName: string;
   legacyConceptId: number | null;
   budgetLineId?: string; // id de BudgetLine si existe
+
+  unitCost: number | null; // costo unitario
+  supplierUrl: string | null; // url del proveedor/documento
 
   budgeted: number;  // suma de meses
   generated: number; // suma de expenses

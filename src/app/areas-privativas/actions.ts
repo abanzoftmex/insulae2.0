@@ -116,6 +116,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
   const status = parsePrivateAreaStatus(formData);
   const parentPrivateAreaIdInput = toString(formData.get("parentPrivateAreaId"));
   const m2Construction = toNumber(formData.get("m2Construction"));
+  const m2ConstructionCommonArea = toNumber(formData.get("m2ConstructionCommonArea"));
   const m2ConstructionChildren = toNumber(formData.get("m2ConstructionChildren"));
   const m2CommonAreaChildren = toNumber(formData.get("m2CommonAreaChildren"));
   const vccc = toNumber(formData.get("vccc"));
@@ -221,6 +222,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
       ...parentPrivateAreaUpdate,
       ...(formData.has("isFusion") ? { isFusion } : {}),
       ...(m2Construction !== null ? { m2Construction } : {}),
+      ...(formData.has("m2ConstructionCommonArea") ? { m2ConstructionCommonArea } : {}),
       m2CommonArea: calculatedM2CommonArea,
       ...(m2ConstructionChildren !== null ? { m2ConstructionChildren } : {}),
       ...(m2CommonAreaChildren !== null ? { m2CommonAreaChildren } : {}),

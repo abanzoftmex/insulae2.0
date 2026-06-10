@@ -93,7 +93,8 @@ export class PrismaBudgetRepository implements BudgetRepository {
           month: m,
           budgetMonthId: matchingMonth?.id,
           budgeted: budgetedVal,
-          generated: generatedVal
+          generated: generatedVal,
+          units: matchingMonth?.units ? matchingMonth.units.toNumber() : null
         });
       }
 
@@ -110,6 +111,8 @@ export class PrismaBudgetRepository implements BudgetRepository {
         conceptName: concept.name,
         legacyConceptId: concept.legacyBudgetConceptId,
         budgetLineId: line?.id,
+        unitCost: line?.unitCost ? line.unitCost.toNumber() : null,
+        supplierUrl: line?.supplierUrl ?? null,
         budgeted: conceptBudgeted,
         generated: conceptGenerated,
         balance: conceptBudgeted - conceptGenerated,
@@ -196,6 +199,87 @@ export class PrismaBudgetRepository implements BudgetRepository {
       where: { id: budgetMonthId },
       data: { amount }
     });
+  }
+
+  async updateUnitCost(budgetId: string, budgetConceptId: string, unitCost: number): Promise<void> {
+    let line = await prisma.budgetLine.findFirst({
+      where: { budgetId, budgetConceptId }
+    });
+
+    if (!line) {
+      const concept = await prisma.budgetExpenseConcept.findUnique({ where: { id: budgetConceptId } });
+      line = await prisma.budgetLine.create({
+        data: {
+          budgetId,
+          budgetConceptId,
+          concept: concept?.name ?? "Unknown Concept",
+          groupName: concept?.budgetGroup ?? "OTHER",
+          unitCost
+        }
+      });
+    } else {
+      await prisma.budgetLine.update({
+        where: { id: line.id },
+        data: { unitCost }
+      });
+    }
+  }
+
+  async updateSupplierUrl(budgetId: string, budgetConceptId: string, supplierUrl: string | null): Promise<void> {
+    let line = await prisma.budgetLine.findFirst({
+      where: { budgetId, budgetConceptId }
+    });
+
+    if (!line) {
+      const concept = await prisma.budgetExpenseConcept.findUnique({ where: { id: budgetConceptId } });
+      line = await prisma.budgetLine.create({
+        data: {
+          budgetId,
+          budgetConceptId,
+          concept: concept?.name ?? "Unknown Concept",
+          groupName: concept?.budgetGroup ?? "OTHER",
+          supplierUrl
+        }
+      });
+    } else {
+      await prisma.budgetLine.update({
+        where: { id: line.id },
+        data: { supplierUrl }
+      });
+    }
+  }
+
+  async updateMonthUnits(budgetId: string, budgetConceptId: string, month: number, units: number): Promise<void> {
+    let line = await prisma.budgetLine.findFirst({
+      where: { budgetId, budgetConceptId }
+    });
+
+    if (!line) {
+      const concept = await prisma.budgetExpenseConcept.findUnique({ where: { id: budgetConceptId } });
+      line = await prisma.budgetLine.create({
+        data: {
+          budgetId,
+          budgetConceptId,
+          concept: concept?.name ?? "Unknown Concept",
+          groupName: concept?.budgetGroup ?? "OTHER"
+        }
+      });
+    }
+
+    const existingMonth = await prisma.budgetMonth.findUnique({
+      where: { budgetLineId_month: { budgetLineId: line.id, month } }
+    });
+
+    if (existingMonth) {
+      await prisma.budgetMonth.update({
+        where: { id: existingMonth.id },
+        data: { units }
+      });
+    } else {
+      await prisma.budgetMonth.create({
+        data: { budgetLineId: line.id, month, amount: 0, units }
+      });
+    }
   }
 
   async createMonthAmount(budgetId: string, budgetConceptId: string, month: number, amount: number): Promise<void> {

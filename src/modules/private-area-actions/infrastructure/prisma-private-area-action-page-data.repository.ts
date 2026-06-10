@@ -230,6 +230,7 @@ export class PrismaPrivateAreaActionPageDataRepository
         m2CommonAreaChildren: true,
         indiviso: true,
         vccc: true,
+        m2ConstructionCommonArea: true,
         condominium: {
           select: {
             name: true,
@@ -685,6 +686,7 @@ export class PrismaPrivateAreaActionPageDataRepository
       m2CommonArea: resolvedM2CommonArea,
       m2ConstructionChildren: decimalToNullableNumber(area.m2ConstructionChildren),
       m2CommonAreaChildren: decimalToNullableNumber(area.m2CommonAreaChildren),
+      m2ConstructionCommonArea: decimalToNullableNumber(area.m2ConstructionCommonArea),
       indiviso,
       vccc: decimalToNullableNumber(area.vccc),
       isFusion: area.isFusion,

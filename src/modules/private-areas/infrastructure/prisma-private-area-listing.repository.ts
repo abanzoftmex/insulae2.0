@@ -59,6 +59,7 @@ type PrivateAreaSnapshot = {
   m2CommonArea: Prisma.Decimal | number | null;
   m2ConstructionChildren: Prisma.Decimal | number | null;
   m2CommonAreaChildren: Prisma.Decimal | number | null;
+  m2ConstructionCommonArea: Prisma.Decimal | number | null;
   indiviso: Prisma.Decimal | number | null;
   vccc: Prisma.Decimal | number | null;
   updatedAt: Date;
@@ -787,6 +788,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           m2CommonArea: true,
           m2ConstructionChildren: true,
           m2CommonAreaChildren: true,
+          m2ConstructionCommonArea: true,
           indiviso: true,
           vccc: true,
           updatedAt: true,
@@ -960,7 +962,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       const annualOrdinaryFee = ordinaryAnnualCell.owner + ordinaryAnnualCell.commerce;
       const monthlyOrdinaryFee = ordinaryMonthlyCell.owner + ordinaryMonthlyCell.commerce;
       const outstandingBalance = outstandingCell.owner + outstandingCell.commerce;
-      const m2ConstructionRaw = decimalToNumber(area.m2Construction);
+      const m2ConstructionRaw = area.m2Construction !== null ? decimalToNumber(area.m2Construction) : null;
 
       const collectibleCharges = area.charges.filter((c) => c.isCollectible);
       let totalPending = 0;
@@ -1076,14 +1078,17 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         hasRental: hasActiveRental(area.rentals),
         m2Updated,
         m2Original,
-        m2Construction: m2ConstructionRaw > 0 ? m2ConstructionRaw : m2Updated,
+        m2Construction: m2ConstructionRaw !== null ? m2ConstructionRaw : m2Updated,
         m2CommonArea: commonAreaM2 > 0 ? commonAreaM2 : m2CommonAreaRaw,
         m2ConstructionChildren: decimalToNumber(area.m2ConstructionChildren),
         m2CommonAreaChildren: decimalToNumber(area.m2CommonAreaChildren),
+        m2ConstructionCommonArea: decimalToNumber(area.m2ConstructionCommonArea),
         indiviso,
+        indivisoFap: null as number | null,
+        indivisoCondominio: null as number | null,
         vccc: decimalToNumber(area.vccc),
         commonAreaM2,
-        totalAreaM2: (m2ConstructionRaw > 0 ? m2ConstructionRaw : m2Updated) + (commonAreaM2 > 0 ? commonAreaM2 : m2CommonAreaRaw),
+        totalAreaM2: (m2ConstructionRaw !== null ? m2ConstructionRaw : m2Updated) + (commonAreaM2 > 0 ? commonAreaM2 : m2CommonAreaRaw),
         annualOrdinaryFee,
         monthlyOrdinaryFee,
         outstandingBalance,
@@ -1117,14 +1122,56 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
     for (const row of allRows) {
       const children = childRowsByParentId.get(row.id) ?? [];
       const childrenConstructionM2 = children.reduce((acc, child) => acc + child.m2Construction, 0);
-      const childrenCommonAreaM2 = children.reduce((acc, child) => acc + child.m2CommonArea, 0);
+      const childrenConstructionCommonAreaM2 = children.reduce((acc, child) => acc + child.m2ConstructionCommonArea, 0);
 
-      if (row.m2ConstructionChildren <= 0 && childrenConstructionM2 > 0) {
-        row.m2ConstructionChildren = childrenConstructionM2;
+      if (children.length > 0) {
+        row.m2Construction = childrenConstructionM2;
+        row.totalAreaM2 = row.m2Construction + row.m2CommonArea;
+        row.m2CommonAreaChildren = childrenConstructionCommonAreaM2;
       }
+    }
 
-      if (row.m2CommonAreaChildren <= 0 && childrenCommonAreaM2 > 0) {
-        row.m2CommonAreaChildren = childrenCommonAreaM2;
+    const rowsById = new Map<string, PrivateAreaListRow>();
+    for (const row of allRows) {
+      rowsById.set(row.id, row);
+    }
+
+    for (const row of allRows) {
+      if (row.parentPrivateAreaId) {
+        const parentRow = rowsById.get(row.parentPrivateAreaId);
+        if (parentRow && parentRow.m2Construction > 0) {
+          row.indivisoFap = (row.m2Construction / parentRow.m2Construction) * 100;
+        } else {
+          row.indivisoFap = 0;
+        }
+
+        if (parentRow && parentRow.indiviso > 0 && row.indivisoFap !== null) {
+          row.indivisoCondominio = (row.indivisoFap * parentRow.indiviso) / 100;
+        } else {
+          row.indivisoCondominio = 0;
+        }
+
+        // Child's m2CommonAreaChildren = (% Indiviso FAP * parent.m2CommonAreaChildren) / 100
+        if (parentRow && row.indivisoFap !== null) {
+          row.m2CommonAreaChildren = (row.indivisoFap * parentRow.m2CommonAreaChildren) / 100;
+        } else {
+          row.m2CommonAreaChildren = 0;
+        }
+
+        // Child's m2ConstructionChildren (m2 Totales FAP) = child.m2Construction + child.m2CommonAreaChildren
+        row.m2ConstructionChildren = row.m2Construction + row.m2CommonAreaChildren;
+      } else {
+        row.indivisoFap = null;
+        row.indivisoCondominio = row.vccc;
+      }
+    }
+
+    for (const row of allRows) {
+      const children = childRowsByParentId.get(row.id) ?? [];
+      if (children.length > 0) {
+        row.indivisoFap = children.reduce((acc, child) => acc + (child.indivisoFap ?? 0), 0);
+        row.m2ConstructionChildren = children.reduce((acc, child) => acc + child.m2ConstructionChildren, 0);
+        row.indivisoCondominio = children.reduce((acc, child) => acc + (child.indivisoCondominio ?? 0), 0);
       }
     }
 

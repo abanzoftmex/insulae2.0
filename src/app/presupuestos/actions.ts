@@ -55,6 +55,72 @@ export async function createBudgetAmountAction(
   }
 }
 
+export async function updateUnitCostAction(
+  year: number,
+  budgetConceptId: string,
+  unitCost: number
+) {
+  try {
+    const condoId = await getFirstCondo();
+    const b = await inlineRepo.getBudget(condoId, year);
+    if (b.status !== "OPEN") throw new Error("Presupuesto cerrado");
+    if (!b.id) throw new Error("No existe presupuesto para este año");
+
+    await inlineRepo.updateUnitCost(b.id, budgetConceptId, unitCost);
+    revalidatePath("/presupuestos");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateSupplierUrlAction(
+  year: number,
+  budgetConceptId: string,
+  supplierUrl: string | null
+) {
+  try {
+    const condoId = await getFirstCondo();
+    const b = await inlineRepo.getBudget(condoId, year);
+    if (b.status !== "OPEN") throw new Error("Presupuesto cerrado");
+    if (!b.id) throw new Error("No existe presupuesto para este año");
+
+    await inlineRepo.updateSupplierUrl(b.id, budgetConceptId, supplierUrl);
+    revalidatePath("/presupuestos");
+    return { success: true };
+  } catch (err: any) {
+    try {
+      const fs = require("fs");
+      const path = require("path");
+      const logPath = path.join(process.cwd(), "scratch", "error-log.txt");
+      fs.appendFileSync(logPath, `\n[${new Date().toISOString()}] Error:\n${err.stack || err.message || err}\n`);
+    } catch (logErr) {
+      console.error("Failed to write error log file:", logErr);
+    }
+    return { success: false, error: err.message };
+  }
+}
+
+export async function updateMonthUnitsAction(
+  year: number,
+  budgetConceptId: string,
+  month: number,
+  units: number
+) {
+  try {
+    const condoId = await getFirstCondo();
+    const b = await inlineRepo.getBudget(condoId, year);
+    if (b.status !== "OPEN") throw new Error("Presupuesto cerrado");
+    if (!b.id) throw new Error("No existe presupuesto para este año");
+
+    await inlineRepo.updateMonthUnits(b.id, budgetConceptId, month, units);
+    revalidatePath("/presupuestos");
+    return { success: true };
+  } catch (err: any) {
+    return { success: false, error: err.message };
+  }
+}
+
 export async function toggleBudgetStatusAction(budgetId: string) {
   try {
     await toggleBudgetStatusUseCase.execute(budgetId);

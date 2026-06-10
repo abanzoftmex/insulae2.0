@@ -86,7 +86,7 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
   const currentYear = new Date().getUTCFullYear();
   const year = parseInt(searchParams.anio ?? "", 10) || currentYear;
   
-  const condo = await prisma.condominium.findFirst({ where: { isActive: true }, select: { id: true, name: true } });
+  const condo = await prisma.condominium.findFirst({ where: { isActive: true }, select: { id: true, name: true, slug: true } });
   if (!condo) return <div className="flex items-center justify-center py-20 text-ink-soft">Sin condominio activo.</div>;
 
   const vm = await getBudgetByYearUseCase.execute(condo.id, year);
@@ -172,7 +172,7 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
 
       {/* Main Budget Table */}
       <div className="animate-in slide-in-from-bottom-4 duration-700 delay-300">
-        <BudgetTable vm={vm} />
+        <BudgetTable vm={vm} condominiumSlug={condo.slug} projectId={condo.id} />
       </div>
     </div>
   );

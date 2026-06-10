@@ -25,7 +25,10 @@ export interface PrivateAreaRowVM {
   m2CommonArea: string;
   m2ConstructionChildren: string;
   m2CommonAreaChildren: string;
+  m2ConstructionCommonArea: string;
   indiviso: string;
+  indivisoFap: string;
+  indivisoCondominio: string;
   vccc: string;
   commonAreaM2: string;
   totalAreaM2: string;
@@ -233,7 +236,10 @@ export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateArea
       m2CommonArea: isFapRow ? "" : formatNumber(row.m2CommonArea, 4),
       m2ConstructionChildren: formatNumber(row.m2ConstructionChildren, 4),
       m2CommonAreaChildren: formatNumber(row.m2CommonAreaChildren, 4),
+      m2ConstructionCommonArea: formatNumber(row.m2ConstructionCommonArea, 4),
       indiviso: isFapRow ? "" : `${formatNumber(row.indiviso, 4)}%`,
+      indivisoFap: row.indivisoFap !== null ? `${formatNumber(row.indivisoFap, 4)}%` : "",
+      indivisoCondominio: row.indivisoCondominio !== null ? `${formatNumber(row.indivisoCondominio, 6)}%` : "",
       vccc: formatNumber(row.vccc, 6),
       commonAreaM2: isFapRow ? "" : formatNumber(row.commonAreaM2, 4),
       totalAreaM2: isFapRow ? "" : formatNumber(row.totalAreaM2, 4),

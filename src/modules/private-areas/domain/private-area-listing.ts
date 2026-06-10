@@ -75,7 +75,10 @@ export interface PrivateAreaListRow {
   m2CommonArea: number;
   m2ConstructionChildren: number;
   m2CommonAreaChildren: number;
+  m2ConstructionCommonArea: number;
   indiviso: number;
+  indivisoFap: number | null;
+  indivisoCondominio: number | null;
   vccc: number;
   commonAreaM2: number;
   totalAreaM2: number;

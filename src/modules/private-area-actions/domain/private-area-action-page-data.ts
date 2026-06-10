@@ -105,6 +105,7 @@ export interface PrivateAreaActionPageData {
   m2CommonArea: number | null;
   m2ConstructionChildren: number | null;
   m2CommonAreaChildren: number | null;
+  m2ConstructionCommonArea: number | null;
   indiviso: number | null;
   vccc: number | null;
   isFusion: boolean;
