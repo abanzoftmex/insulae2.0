@@ -1088,7 +1088,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         indivisoCondominio: null as number | null,
         vccc: decimalToNumber(area.vccc),
         commonAreaM2,
-        totalAreaM2: (m2ConstructionRaw !== null ? m2ConstructionRaw : m2Updated) + (commonAreaM2 > 0 ? commonAreaM2 : m2CommonAreaRaw),
+        totalAreaM2: m2Updated + (commonAreaM2 > 0 ? commonAreaM2 : m2CommonAreaRaw),
         annualOrdinaryFee,
         monthlyOrdinaryFee,
         outstandingBalance,
@@ -1126,7 +1126,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
 
       if (children.length > 0) {
         row.m2Construction = childrenConstructionM2;
-        row.totalAreaM2 = row.m2Construction + row.m2CommonArea;
+        row.totalAreaM2 = row.m2Updated + row.m2CommonArea;
         row.m2CommonAreaChildren = childrenConstructionCommonAreaM2;
       }
     }

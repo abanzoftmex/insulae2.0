@@ -42,18 +42,18 @@ const groupTitles: Record<string, string> = {
 };
 
 // Sticky column widths
-const COL_CONCEPTO = 180;
-const COL_COSTO_UNIT = 90;
+const COL_CONCEPTO = 200;
+const COL_COSTO_UNIT = 110;
 const COL_ANNUAL = 110;
-const COL_PROVEEDOR = 120;
+const COL_PROVEEDOR = 110;
 
 // Sticky left offsets
 const LEFT_CONCEPTO = 0;
-const LEFT_COSTO = COL_CONCEPTO; // 180
-const LEFT_PPTO = LEFT_COSTO + COL_COSTO_UNIT; // 270
-const LEFT_EJERC = LEFT_PPTO + COL_ANNUAL; // 380
-const LEFT_SALDO = LEFT_EJERC + COL_ANNUAL; // 490
-const LEFT_PROVEEDOR = LEFT_SALDO + COL_ANNUAL; // 600
+const LEFT_COSTO = COL_CONCEPTO; // 200
+const LEFT_PPTO = LEFT_COSTO + COL_COSTO_UNIT; // 310
+const LEFT_EJERC = LEFT_PPTO + COL_ANNUAL; // 420
+const LEFT_SALDO = LEFT_EJERC + COL_ANNUAL; // 530
+const LEFT_PROVEEDOR = LEFT_SALDO + COL_ANNUAL; // 640
 
 export default function BudgetTable({ 
   vm, 
@@ -205,7 +205,7 @@ export default function BudgetTable({
                       {/* Sticky: Concepto */}
                       <th className={cn("sticky", stickyHeaderBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Concepto</th>
                       {/* Sticky: Costo Unitario */}
-                      <th className={cn("sticky text-right", stickyHeaderBase, "text-brand")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>Costo Unitario</th>
+                      <th className={cn("sticky text-right", stickyHeaderBase, "px-2 text-brand")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>Costo Unitario</th>
                       {/* Sticky: Anual Presupuesto */}
                       <th className={cn("sticky text-right", stickyHeaderBase, "text-brand")} style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>Anual Presupuesto</th>
                       {/* Sticky: Anual Ejercido */}
@@ -233,7 +233,7 @@ export default function BudgetTable({
                           {concept.conceptName}
                         </td>
                         {/* Sticky: Costo Unitario (editable) */}
-                        <td className={cn("sticky", stickyCellBase)} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>
+                        <td className={cn("sticky", stickyCellBase, "px-2")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>
                           {isClosed ? (
                             <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                               {concept.unitCost != null ? formatMXN(concept.unitCost) : "—"}
@@ -425,7 +425,7 @@ export default function BudgetTable({
                         Total {groupName}
                       </td>
                       {/* Sticky: Costo Unitario (empty for total) */}
-                      <td className={cn("sticky", stickyFootBase)} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
+                      <td className={cn("sticky", stickyFootBase, "px-2")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
                       {/* Sticky: Anual Presupuesto */}
                       <td className={cn("sticky text-right font-bold text-[13px] text-brand", stickyFootBase)} style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(group.budgeted)}</td>
                       {/* Sticky: Anual Ejercido */}
@@ -466,7 +466,7 @@ export default function BudgetTable({
             <tfoot>
               <tr className="h-12 bg-brand-deep text-white">
                 <td className="sticky px-4 font-bold uppercase text-[13px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Total General</td>
-                <td className="sticky px-4 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
+                <td className="sticky px-2 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
                 <td className="sticky px-4 text-right font-bold text-[14px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBudgeted)}</td>
                 <td className="sticky px-4 text-right font-bold text-[14px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalGenerated)}</td>
                 <td className="sticky px-4 text-right font-bold text-[14px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBalance)}</td>

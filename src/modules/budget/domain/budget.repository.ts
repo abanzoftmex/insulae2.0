@@ -5,6 +5,17 @@ export interface BudgetRepository {
   getBudget(condominiumId: string, year: number): Promise<BudgetVM>;
   updateMonthAmount(budgetMonthId: string, amount: number): Promise<void>;
   createMonthAmount(budgetId: string, budgetConceptId: string, month: number, amount: number): Promise<void>;
+  bulkImportBudgetMonths(
+    budgetId: string,
+    rows: {
+      budgetConceptId: string;
+      conceptName: string;
+      budgetGroup: string;
+      unitCost: number | null;
+      supplierUrl: string | null;
+      monthsData: { month: number; amount: number; units: number | null }[];
+    }[]
+  ): Promise<void>;
   toggleBudgetStatus(budgetId: string): Promise<void>;
   createBudgetIfNotExists(condominiumId: string, year: number): Promise<string>;
   getBudgetStructure(condominiumId: string, year: number): Promise<BudgetStructureVM>;

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { getBudgetByYearUseCase } from "@/modules/budget";
 import { utils, write } from "xlsx";
 
 export async function GET(request: Request) {
@@ -10,58 +11,47 @@ export async function GET(request: Request) {
   const condo = await prisma.condominium.findFirst({ where: { isActive: true } });
   if (!condo) return new Response("No active condominium found", { status: 400 });
 
-  const activeConcepts = await prisma.budgetExpenseConcept.findMany({
-    where: { condominiumId: condo.id, year, isActive: true },
-    include: { group: true },
-    orderBy: [
-      { group: { order: 'asc' } },
-      { order: 'asc' },
-      { name: 'asc' }
-    ]
-  });
+  // Usamos exactamente el mismo caso de uso que la página /presupuestos.
+  const vm = await getBudgetByYearUseCase.execute(condo.id, year);
 
   const headers = [
-    "ID Concepto", "Concepto",
-    "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-    "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
+    "ID Concepto", "Concepto", "Costo Unitario", "Proveedor",
+    "Ene Presupuesto", "Ene Unidades",
+    "Feb Presupuesto", "Feb Unidades",
+    "Mar Presupuesto", "Mar Unidades",
+    "Abr Presupuesto", "Abr Unidades",
+    "May Presupuesto", "May Unidades",
+    "Jun Presupuesto", "Jun Unidades",
+    "Jul Presupuesto", "Jul Unidades",
+    "Ago Presupuesto", "Ago Unidades",
+    "Sep Presupuesto", "Sep Unidades",
+    "Oct Presupuesto", "Oct Unidades",
+    "Nov Presupuesto", "Nov Unidades",
+    "Dic Presupuesto", "Dic Unidades"
   ];
 
-  // Agrupamos los conceptos por identidad de grupo (igual que /presupuestos).
-  // Usamos un Map en vez de confiar en el orden de la consulta, porque varios
-  // grupos pueden compartir el mismo "order" (0 por defecto) y la BD podría
-  // intercalar sus conceptos.
-  const groupKeys: string[] = [];
-  const groupsMap = new Map<string, { label: string; order: number; concepts: typeof activeConcepts }>();
-  for (const c of activeConcepts) {
-    const groupKey = c.group?.id || c.budgetGroup || "OTHER";
-    if (!groupsMap.has(groupKey)) {
-      const name = c.group?.name || c.budgetGroup || "OTHER";
-      const subname = c.group?.category && c.group.category !== name ? c.group.category : "";
-      const label = subname ? `${name} — ${subname}` : name;
-      groupsMap.set(groupKey, { label, order: c.group?.order ?? 0, concepts: [] });
-      groupKeys.push(groupKey);
-    }
-    groupsMap.get(groupKey)!.concepts.push(c);
-  }
-
-  // Ordenamos los grupos por su "order"; los empates conservan el orden de
-  // aparición (Array.sort es estable). Antes de cada grupo insertamos una fila
-  // separadora (columna ID vacía + nombre del grupo en la columna "Concepto")
-  // para facilitar el llenado por el personal administrativo. El importador
-  // ignora cualquier fila cuya primera columna no sea un ID válido, por lo que
-  // esta agrupación NO afecta la importación.
-  groupKeys.sort((a, b) => groupsMap.get(a)!.order - groupsMap.get(b)!.order);
-
   const rows: any[][] = [headers];
-  for (const key of groupKeys) {
-    const g = groupsMap.get(key)!;
-    rows.push(["", `▼ ${g.label}`]);
-    for (const c of g.concepts) {
-      rows.push([
-        c.legacyBudgetConceptId,
-        c.name,
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 // 12 meses
-      ]);
+
+  for (const group of vm.groups) {
+    // Fila separadora con el nombre completo del grupo (nombre + subnombre si existe)
+    const groupLabel = group.groupSubname
+      ? `${group.groupData} — ${group.groupSubname}`
+      : group.groupData;
+    rows.push(["", `▼ ${groupLabel}`]);
+
+    for (const concept of group.concepts) {
+      const row: any[] = [
+        concept.conceptId,
+        concept.conceptName,
+        concept.unitCost ?? 0,
+        concept.supplierUrl ?? ""
+      ];
+      for (let m = 1; m <= 12; m++) {
+        const mVM = concept.months.find(x => x.month === m);
+        row.push(mVM?.budgeted ?? 0);
+        row.push(mVM?.units ?? 0);
+      }
+      rows.push(row);
     }
   }
 

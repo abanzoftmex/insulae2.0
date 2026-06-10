@@ -356,7 +356,17 @@ export class PrismaBudgetRepository implements BudgetRepository {
     await prisma.$transaction(ops);
   }
 
-  async bulkImportBudgetMonths(budgetId: string, rows: {budgetConceptId: string, conceptName: string, budgetGroup: string, monthsData: {month: number, amount: number}[]}[]): Promise<void> {
+  async bulkImportBudgetMonths(
+    budgetId: string,
+    rows: {
+      budgetConceptId: string;
+      conceptName: string;
+      budgetGroup: string;
+      unitCost: number | null;
+      supplierUrl: string | null;
+      monthsData: { month: number; amount: number; units: number | null }[];
+    }[]
+  ): Promise<void> {
     if (rows.length === 0) return;
 
     // 1. Fetch all existing budget lines for this budget
@@ -370,11 +380,30 @@ export class PrismaBudgetRepository implements BudgetRepository {
         budgetId,
         budgetConceptId: r.budgetConceptId,
         concept: r.conceptName,
-        groupName: r.budgetGroup
+        groupName: r.budgetGroup,
+        unitCost: r.unitCost,
+        supplierUrl: r.supplierUrl
       }));
 
     if (missingLinesData.length > 0) {
       await prisma.budgetLine.createMany({ data: missingLinesData });
+    }
+
+    // Update existing lines if unitCost or supplierUrl has changed
+    const lineUpdates = [];
+    for (const r of rows) {
+      const existing = lineMapByConcept.get(r.budgetConceptId);
+      if (existing) {
+        if (existing.unitCost !== r.unitCost || existing.supplierUrl !== r.supplierUrl) {
+          lineUpdates.push(prisma.budgetLine.update({
+            where: { id: existing.id },
+            data: { unitCost: r.unitCost, supplierUrl: r.supplierUrl }
+          }));
+        }
+      }
+    }
+    if (lineUpdates.length > 0) {
+      await Promise.all(lineUpdates);
     }
 
     // 3. Refetch lines to get all IDs
@@ -399,9 +428,11 @@ export class PrismaBudgetRepository implements BudgetRepository {
       for (const m of r.monthsData) {
         const existing = monthMap.get(`${line.id}_${m.month}`);
         if (existing) {
-          updates.push({ id: existing.id, amount: m.amount });
+          if (existing.amount !== m.amount || existing.units !== m.units) {
+            updates.push({ id: existing.id, amount: m.amount, units: m.units });
+          }
         } else {
-          creates.push({ budgetLineId: line.id, month: m.month, amount: m.amount });
+          creates.push({ budgetLineId: line.id, month: m.month, amount: m.amount, units: m.units });
         }
       }
     }
@@ -411,14 +442,14 @@ export class PrismaBudgetRepository implements BudgetRepository {
       await prisma.budgetMonth.createMany({ data: creates });
     }
 
-    // Para los updates, Prisma envia las peticiones de 1 en 1 dentro de una transaccion
-    // Si hay 700 celdas, 700 queries en 1 conexion toman más de 5000ms y arrojan timeout.
-    // Usamos concurrencia dividiendo en pedazos para aprovechar todo el pool de Neon sin transaccion.
     const CHUNK_SIZE = 50;
     for(let i=0; i<updates.length; i+=CHUNK_SIZE) {
       const chunk = updates.slice(i, i+CHUNK_SIZE);
       await Promise.all(
-        chunk.map(u => prisma.budgetMonth.update({ where: { id: u.id }, data: { amount: u.amount } }))
+        chunk.map(u => prisma.budgetMonth.update({
+          where: { id: u.id },
+          data: { amount: u.amount, units: u.units }
+        }))
       );
     }
   }
@@ -516,6 +547,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
       }
     } else {
       // Create
+      await this.createBudgetIfNotExists(rest.condominiumId, rest.year);
       const newGroup = await prisma.budgetGroup.create({
         data: {
           name: rest.name,
