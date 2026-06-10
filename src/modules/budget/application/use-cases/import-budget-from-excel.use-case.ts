@@ -42,6 +42,52 @@ export class ImportBudgetFromExcelUseCase {
       activeConcepts.map(c => [c.id, c])
     );
 
+    // Obtener las líneas de presupuesto actuales para rellenar los valores por defecto si no vienen en el Excel
+    const existingLines = await prisma.budgetLine.findMany({
+      where: { budgetId: budget.id }
+    });
+    const lineMapByConceptId = new Map(existingLines.map(l => [l.budgetConceptId, l]));
+
+    const headers = data[0];
+    if (!headers || headers.length === 0) {
+      throw new Error("El archivo de Excel no contiene cabeceras válidas.");
+    }
+
+    let conceptIdIdx = 0;
+    let unitCostIdx = -1;
+    let supplierIdx = -1;
+    const amountIndices: Record<number, number> = {};
+    const unitsIndices: Record<number, number> = {};
+
+    const monthAbbrevs = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+    for (let col = 0; col < headers.length; col++) {
+      const headerVal = String(headers[col] || "").trim().toLowerCase();
+      if (!headerVal) continue;
+
+      if (headerVal === "id" || headerVal.startsWith("id ") || headerVal.endsWith(" id") || headerVal === "id concepto") {
+        conceptIdIdx = col;
+      } else if (headerVal.includes("unitario")) {
+        unitCostIdx = col;
+      } else if (headerVal.includes("proveedor")) {
+        supplierIdx = col;
+      } else {
+        for (let m = 1; m <= 12; m++) {
+          const abbrev = monthAbbrevs[m - 1];
+          if (headerVal.includes(abbrev)) {
+            if (headerVal.includes("unidad")) {
+              unitsIndices[m] = col;
+            } else if (headerVal.includes("presupuesto") || headerVal === abbrev) {
+              amountIndices[m] = col;
+            } else {
+              amountIndices[m] = col;
+            }
+            break;
+          }
+        }
+      }
+    }
+
     const rowsToImport: {
       budgetConceptId: string;
       conceptName: string;
@@ -51,66 +97,95 @@ export class ImportBudgetFromExcelUseCase {
       monthsData: { month: number; amount: number; units: number | null }[];
     }[] = [];
 
-    // Empezar desde 1 para ignorar cabeceras. (Puede que tengan multi cabeceras, buscamos primera fila con ID valido)
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (!row || row.length < 2) continue;
       
-      const rawIdValue = row[0];
+      const rawIdValue = row[conceptIdIdx];
+      if (rawIdValue === undefined || rawIdValue === null || String(rawIdValue).trim() === "") continue;
+      
       let concept: any;
+      const idStr = String(rawIdValue).trim();
 
-      if (typeof rawIdValue === 'string' && rawIdValue.length > 20) {
-        concept = conceptMapById.get(rawIdValue);
+      if (idStr.length > 20) {
+        concept = conceptMapById.get(idStr);
       } else {
-        const rawId = parseInt(rawIdValue);
-        if (!isNaN(rawId)) {
-          const conceptId = conceptMapByLegacy.get(rawId);
-          if (conceptId) concept = conceptMapById.get(conceptId);
-        } else {
-          continue; // Cabecera o titulo
+        // 1. Intentamos buscar por prefijo de UUID (para UUIDs truncados en Excel)
+        if (idStr.length >= 8) {
+          const matchingConcept = activeConcepts.find(c => c.id.toLowerCase().startsWith(idStr.toLowerCase()));
+          if (matchingConcept) {
+            concept = matchingConcept;
+          }
+        }
+        
+        // 2. Si no se encontró por prefijo, intentamos por ID Legacy
+        if (!concept) {
+          const rawId = parseInt(idStr, 10);
+          if (!isNaN(rawId)) {
+            const conceptId = conceptMapByLegacy.get(rawId);
+            if (conceptId) concept = conceptMapById.get(conceptId);
+          }
         }
       }
 
       if (!concept) {
-        errors.push(`Fila ${i+1}: El concepto '${rawIdValue}' no existe para el año ${year} o está inactivo en base de datos Neon.`);
+        const rowName = row[1] ? ` (${row[1]})` : "";
+        errors.push(`Fila ${i+1}${rowName}: No se encontró un concepto activo con el ID '${rawIdValue}' para el año ${year}.`);
         continue;
       }
 
+      const existingLine = lineMapByConceptId.get(concept.id);
+
       // Procesar Costo Unitario
-      let unitCost: number | null = null;
-      if (row[2] !== undefined && row[2] !== null && row[2] !== "") {
-        const parsed = parseFloat(row[2]);
-        if (!isNaN(parsed) && parsed >= 0) {
-          unitCost = parsed;
+      let unitCost: number | null = existingLine?.unitCost ? existingLine.unitCost.toNumber() : null;
+      if (unitCostIdx !== -1) {
+        if (row[unitCostIdx] !== undefined && row[unitCostIdx] !== null && row[unitCostIdx] !== "") {
+          const parsed = parseFloat(row[unitCostIdx]);
+          unitCost = !isNaN(parsed) && parsed >= 0 ? parsed : null;
+        } else {
+          unitCost = null;
         }
       }
 
       // Procesar Proveedor
-      let supplierUrl: string | null = null;
-      if (row[3] !== undefined && row[3] !== null) {
-        const val = String(row[3]).trim();
-        if (val) {
-          supplierUrl = val;
+      let supplierUrl: string | null = existingLine?.supplierUrl ?? null;
+      if (supplierIdx !== -1) {
+        if (row[supplierIdx] !== undefined && row[supplierIdx] !== null) {
+          supplierUrl = String(row[supplierIdx]).trim() || null;
+        } else {
+          supplierUrl = null;
         }
       }
 
-      // Procesar 12 meses
+      // Procesar los meses
       const monthsData = [];
       for (let m = 1; m <= 12; m++) {
-        const amtIdx = 4 + (m - 1) * 2;
-        const unitIdx = 5 + (m - 1) * 2;
+        const amtIdx = amountIndices[m];
+        const unitIdx = unitsIndices[m];
 
-        let amount = parseFloat(row[amtIdx]);
-        if (isNaN(amount) || amount < 0) {
-          amount = 0; // fallback para vacios
+        if (amtIdx === undefined && unitIdx === undefined) {
+          continue;
+        }
+
+        let amount = 0;
+        if (amtIdx !== undefined && row[amtIdx] !== undefined && row[amtIdx] !== null && row[amtIdx] !== "") {
+          const parsed = parseFloat(row[amtIdx]);
+          if (!isNaN(parsed) && parsed >= 0) {
+            amount = parsed;
+          }
         }
 
         let units: number | null = null;
-        if (row[unitIdx] !== undefined && row[unitIdx] !== null && row[unitIdx] !== "") {
+        if (unitIdx !== undefined && row[unitIdx] !== undefined && row[unitIdx] !== null && row[unitIdx] !== "") {
           const parsed = parseFloat(row[unitIdx]);
           if (!isNaN(parsed) && parsed >= 0) {
             units = parsed;
           }
+        }
+
+        // Si tenemos costo unitario y unidades definidas, calculamos el presupuesto automáticamente
+        if (unitCost !== null && units !== null) {
+          amount = unitCost * units;
         }
 
         monthsData.push({ month: m, amount, units });

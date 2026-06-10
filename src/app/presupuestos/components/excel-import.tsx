@@ -25,8 +25,12 @@ export function ExcelImport({ year, isClosed }: { year: number; isClosed: boolea
       const result = await importBudgetExcelAction(year, formData);
       
       if (result?.success) {
-        alert(`¡Importación exitosa!\nSe actualizaron ${(result as any).totalImported || 0} filas correctamente.`);
-        // Forzar al navegador a recargar los datos actualizados de la tabla
+        const errorsList = (result as any).errors || [];
+        if (errorsList.length > 0) {
+          alert(`Importación completada con observaciones:\n- Se actualizaron ${(result as any).totalImported || 0} filas correctamente.\n\nErrores/Observaciones:\n${errorsList.slice(0, 10).join("\n")}${errorsList.length > 10 ? `\n... y ${errorsList.length - 10} errores más.` : ""}`);
+        } else {
+          alert(`¡Importación exitosa!\nSe actualizaron ${(result as any).totalImported || 0} filas correctamente.`);
+        }
         router.refresh();
       } else {
         const errorMsg = (result as any)?.error || (result as any)?.errors?.join("\n");

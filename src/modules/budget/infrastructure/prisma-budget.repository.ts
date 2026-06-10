@@ -223,6 +223,20 @@ export class PrismaBudgetRepository implements BudgetRepository {
         data: { unitCost }
       });
     }
+
+    // Recalcular monto de presupuesto para todos los meses que tengan unidades definidas
+    const months = await prisma.budgetMonth.findMany({
+      where: { budgetLineId: line.id }
+    });
+    for (const m of months) {
+      if (m.units !== null) {
+        const newAmount = unitCost * m.units.toNumber();
+        await prisma.budgetMonth.update({
+          where: { id: m.id },
+          data: { amount: newAmount }
+        });
+      }
+    }
   }
 
   async updateSupplierUrl(budgetId: string, budgetConceptId: string, supplierUrl: string | null): Promise<void> {
@@ -270,14 +284,18 @@ export class PrismaBudgetRepository implements BudgetRepository {
       where: { budgetLineId_month: { budgetLineId: line.id, month } }
     });
 
+    const unitCost = line.unitCost ? line.unitCost.toNumber() : 0;
+    
     if (existingMonth) {
+      const newAmount = unitCost > 0 ? unitCost * units : existingMonth.amount.toNumber();
       await prisma.budgetMonth.update({
         where: { id: existingMonth.id },
-        data: { units }
+        data: { units, amount: newAmount }
       });
     } else {
+      const newAmount = unitCost > 0 ? unitCost * units : 0;
       await prisma.budgetMonth.create({
-        data: { budgetLineId: line.id, month, amount: 0, units }
+        data: { budgetLineId: line.id, month, amount: newAmount, units }
       });
     }
   }
