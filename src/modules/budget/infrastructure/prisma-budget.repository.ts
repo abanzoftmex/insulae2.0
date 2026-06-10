@@ -17,7 +17,15 @@ export class PrismaBudgetRepository implements BudgetRepository {
     });
 
     const activeConcepts = await prisma.budgetExpenseConcept.findMany({
-      where: { condominiumId, year, isActive: true },
+      where: {
+        condominiumId,
+        year,
+        isActive: true,
+        OR: [
+          { budgetGroupId: null },
+          { group: { isActive: true } }
+        ]
+      },
       include: { group: true },
       orderBy: [
         { group: { order: 'asc' } },
@@ -157,10 +165,27 @@ export class PrismaBudgetRepository implements BudgetRepository {
       });
     }
 
+    const isExtraordinaryGroup = (name: string) => {
+      const n = name.toUpperCase();
+      return n.includes("EXTRA") || n.includes("EXTRAORDINARIO") || n.includes("EXTRAORDINARIA") || n === "EXTRAORDINARY";
+    };
+
     groups.sort((a, b) => {
+      const nameA = a.groupData || "";
+      const nameB = b.groupData || "";
+      const isExtraA = isExtraordinaryGroup(nameA);
+      const isExtraB = isExtraordinaryGroup(nameB);
+
+      if (isExtraA && !isExtraB) return 1;
+      if (!isExtraA && isExtraB) return -1;
+
       const orderA = groupsMap.get(a.groupId)?.order ?? 0;
       const orderB = groupsMap.get(b.groupId)?.order ?? 0;
-      return orderA - orderB;
+      if (orderA !== orderB) return orderA - orderB;
+
+      const subA = groupsMap.get(a.groupId)?.subname || "";
+      const subB = groupsMap.get(b.groupId)?.subname || "";
+      return subA.localeCompare(subB);
     });
 
     return {
@@ -590,10 +615,16 @@ export class PrismaBudgetRepository implements BudgetRepository {
   }
 
   async deleteBudgetGroup(groupId: string): Promise<void> {
-    await prisma.budgetGroup.update({
-      where: { id: groupId },
-      data: { isActive: false }
-    });
+    await prisma.$transaction([
+      prisma.budgetGroup.update({
+        where: { id: groupId },
+        data: { isActive: false }
+      }),
+      prisma.budgetExpenseConcept.updateMany({
+        where: { budgetGroupId: groupId },
+        data: { isActive: false }
+      })
+    ]);
   }
 
   async deleteBudgetConcept(conceptId: string): Promise<void> {

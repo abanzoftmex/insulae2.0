@@ -725,6 +725,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
   const m2Updated = toNumber(formData.get("m2Updated"));
   const m2Original = toNumber(formData.get("m2Original"));
   const m2Construction = toNumber(formData.get("m2Construction"));
+  const m2ConstructionCommonArea = toNumber(formData.get("m2ConstructionCommonArea"));
   const vccc = toNumber(formData.get("vccc"));
   
   const isFusionValue = toString(formData.get("isFusion")).toLowerCase();
@@ -788,6 +789,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
         m2Apole: m2Updated,
         m2Original: m2Original,
         m2Construction,
+        m2ConstructionCommonArea,
         m2CommonArea: calculatedM2CommonArea,
         vccc,
         isFusion,

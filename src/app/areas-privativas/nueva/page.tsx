@@ -243,6 +243,14 @@ export default async function NuevaAreaPrivativaPage({ searchParams }: PageProps
               />
 
               <Input
+                label="M2 construcción áreas comunes"
+                type="number"
+                step="0.000001"
+                name="m2ConstructionCommonArea"
+                placeholder="0.000000"
+              />
+
+              <Input
                 label="M2 del área común (Automático)"
                 type="number"
                 step="0.0001"
