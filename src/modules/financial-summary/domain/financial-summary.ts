@@ -116,6 +116,7 @@ export interface FinancialSummary {
   ordinaryReceivablesTable: FinancialSummaryOrdinaryReceivableTable;
   ordinaryPayablesTable: FinancialSummaryOrdinaryPayableTable;
   generatedAt: Date;
+  activeMonths?: number[];
 }
 
 export interface FinancialSummaryInput {

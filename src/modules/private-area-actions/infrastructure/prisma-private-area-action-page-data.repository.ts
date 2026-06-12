@@ -273,6 +273,7 @@ export class PrismaPrivateAreaActionPageDataRepository
             concept: true,
             notes: true,
             amount: true,
+            chargeGroupId: true,
             chargeGroup: {
               select: {
                 name: true,
@@ -461,11 +462,58 @@ export class PrismaPrivateAreaActionPageDataRepository
       }),
     ]);
 
+    const inMemoryAllocationsByChargeId = new Map<string, number>();
+
+    const calculateAllocationsForArea = (charges: any[], incomes: any[]) => {
+      const sortedCharges = [...charges].sort((a, b) => {
+        if (a.periodYear !== b.periodYear) {
+          return a.periodYear - b.periodYear;
+        }
+        return a.periodMonth - b.periodMonth;
+      });
+
+      const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+      for (const income of sortedIncomes) {
+        const chargeGroupId = income.chargeGroupId;
+        if (!chargeGroupId) continue;
+
+        let remainingIncome = decimalToNumber(income.amount);
+        const groupCharges = sortedCharges.filter((c) => c.chargeGroupId === chargeGroupId);
+
+        for (const charge of groupCharges) {
+          if (remainingIncome <= 0.005) break;
+
+          const dbPaid = charge.allocations.reduce(
+            (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+            0,
+          );
+          const prevAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
+          const currentPaid = dbPaid + prevAllocated;
+
+          const chargedAmount = decimalToNumber(charge.amount);
+          const interest = decimalToNumber(charge.interestAmount);
+          const discount = decimalToNumber(charge.discountAmount);
+          const balance = chargedAmount - currentPaid + interest - discount;
+
+          if (balance > 0.005) {
+            const allocate = Math.min(remainingIncome, balance);
+            inMemoryAllocationsByChargeId.set(charge.id, prevAllocated + allocate);
+            remainingIncome -= allocate;
+          }
+        }
+      }
+    };
+
+    calculateAllocationsForArea(area.charges, area.incomes);
+
     const charges: PrivateAreaChargeLine[] = area.charges.map((charge) => {
       const chargedAmount = decimalToNumber(charge.amount);
-      const paidAmount = charge.allocations.reduce((total, allocation) => {
+      const dbPaidAmount = charge.allocations.reduce((total, allocation) => {
         return total + decimalToNumber(allocation.amount);
       }, 0);
+      const inMemoryAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
+      const paidAmount = dbPaidAmount + inMemoryAllocated;
       const interestAmount = decimalToNumber(charge.interestAmount);
       const discountAmount = decimalToNumber(charge.discountAmount);
 
@@ -647,9 +695,11 @@ export class PrismaPrivateAreaActionPageDataRepository
 
     for (const charge of collectibleCharges) {
       const amount = decimalToNumber(charge.amount);
-      const paid = charge.allocations.reduce((total, allocation) => {
+      const dbPaid = charge.allocations.reduce((total, allocation) => {
         return total + decimalToNumber(allocation.amount);
       }, 0);
+      const inMemoryAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
+      const paid = dbPaid + inMemoryAllocated;
       const interest = decimalToNumber(charge.interestAmount);
       const discount = decimalToNumber(charge.discountAmount);
       const pending = amount - paid - discount + interest;

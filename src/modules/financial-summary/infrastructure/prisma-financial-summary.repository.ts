@@ -55,6 +55,7 @@ type IncomeSnapshot = {
 type MiscIncomeCatalogSnapshot = {
   id: string;
   name: string;
+  order: number;
   chargeGroup: {
     kind: ChargeGroupKind;
   } | null;
@@ -537,12 +538,14 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           isActive: true,
           chargeGroupId: { not: null },
         },
-        orderBy: {
-          name: "asc",
-        },
+        orderBy: [
+          { order: "asc" },
+          { name: "asc" },
+        ],
         select: {
           id: true,
           name: true,
+          order: true,
           chargeGroup: {
             select: {
               kind: true,

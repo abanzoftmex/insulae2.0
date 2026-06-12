@@ -30,6 +30,21 @@ function periodLabel(year: number, month: number): string {
   return `${String(month).padStart(2, "0")}/${year}`;
 }
 
+function getPaymentMethodLabel(method: string): string {
+  switch (method) {
+    case "CASH":
+      return "Efectivo";
+    case "TRANSFER":
+      return "Transferencia";
+    case "CARD":
+      return "Tarjeta";
+    case "CHECK":
+      return "Cheque";
+    default:
+      return "Otro";
+  }
+}
+
 export default async function ListadoPagosPage({ searchParams }: PageProps) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);
@@ -327,7 +342,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                 visiblePaymentMovements.map(payment => (
                   <tr key={payment.paymentId} className="border-b border-[#e1ebf6] last:border-0">
                     <td className="py-2 px-3 font-bold">{payment.reference || payment.paymentId.substring(0, 8)}</td>
-                    <td className="py-2 px-3 capitalize">{payment.method.toLowerCase()}</td>
+                    <td className="py-2 px-3">{getPaymentMethodLabel(payment.method)}</td>
                     <td className="py-2 px-3">{formatDate(payment.paidAt)}</td>
                     <td className="py-2 px-3 text-right font-bold text-[#3a2a18]">{formatCurrency(payment.paymentTotalAmount)}</td>
                   </tr>
