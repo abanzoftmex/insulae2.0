@@ -342,12 +342,36 @@ export class PrismaCondominiumReportRepository
     const classificationBaseTotal = parentAreas.length;
     const classificationBaseLabel = "lotes padre activos";
 
+    const useTypeLookup = new Map<string, { label: string; initials: string }>();
+    for (const catalog of landUseCatalogs as LandUseCatalogSnapshot[]) {
+      const label = catalog.name.trim();
+      const initials = catalog.initials?.trim() ? catalog.initials.trim() : label;
+      const entry = { label, initials };
+      useTypeLookup.set(normalizeKey(label), entry);
+      useTypeLookup.set(normalizeKey(initials), entry);
+    }
+
+    const resolveUseType = (rawUseType: string | null | undefined): { label: string; initials: string } => {
+      const useType = rawUseType?.trim();
+      if (!useType) {
+        return { label: "Sin uso de suelo", initials: "N/A" };
+      }
+
+      const match = useTypeLookup.get(normalizeKey(useType));
+      if (match) {
+        return match;
+      }
+
+      const initials = resolveUseTypeInitials(useType) ?? "N/A";
+      return { label: useType, initials };
+    };
+
     let availableAreas = 0;
     let classifiedAreas = 0;
 
     for (const area of reportableAreas) {
       if (area.isFusion) continue;
-      const initials = resolveUseTypeInitials(area.useType);
+      const { initials } = resolveUseType(area.useType);
       
       if (classificationMode === "SASSI_LT") {
         if (initials === "LT") {
@@ -364,7 +388,7 @@ export class PrismaCondominiumReportRepository
         continue;
       }
 
-      if (initials) {
+      if (initials && initials !== "N/A") {
         classifiedAreas += 1;
       }
     }
@@ -375,7 +399,7 @@ export class PrismaCondominiumReportRepository
     if (classificationMode === "SASSI_LT") {
       builtAreas = reportableAreas.filter(area => {
         if (area.isFusion) return false;
-        const initials = resolveUseTypeInitials(area.useType);
+        const { initials } = resolveUseType(area.useType);
         return initials === "LT-CR";
       }).length;
     } else {
@@ -411,10 +435,10 @@ export class PrismaCondominiumReportRepository
     const matrixAreas = reportableAreas.filter((area) => hasUseType(area.useType));
 
     for (const area of matrixAreas) {
-      const landUseName = normalizeUseType(area.useType);
+      const { label: landUseName, initials: landUseInitials } = resolveUseType(area.useType);
       const rowKey = normalizeKey(landUseName);
       if (!rowsByUseType.has(rowKey)) {
-        rowsByUseType.set(rowKey, createRow(landUseName, resolveUseTypeInitials(area.useType)));
+        rowsByUseType.set(rowKey, createRow(landUseName, landUseInitials));
       }
 
       const row = rowsByUseType.get(rowKey);

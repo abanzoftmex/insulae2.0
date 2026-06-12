@@ -93,6 +93,7 @@ export function toCondominiumOverviewVM(overview: CondominiumOverview): Condomin
     updatedAtLabel: new Intl.DateTimeFormat("es-MX", {
       dateStyle: "medium",
       timeStyle: "short",
+      timeZone: "America/Mexico_City",
     }).format(overview.lastUpdatedAt),
   };
 }

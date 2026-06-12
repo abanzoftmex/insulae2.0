@@ -139,10 +139,12 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     updatedAtLabel: `${new Intl.DateTimeFormat("es-MX", {
       dateStyle: "medium",
       timeStyle: "short",
+      timeZone: "America/Mexico_City",
     }).format(report.lastUpdatedAt)}${report.lastUpdatedBy ? ` por ${report.lastUpdatedBy}` : ""}`,
     generatedAtLabel: new Intl.DateTimeFormat("es-MX", {
       dateStyle: "medium",
       timeStyle: "short",
+      timeZone: "America/Mexico_City",
     }).format(report.generatedAt),
   };
 }

@@ -119,6 +119,7 @@ type PrivateAreaSnapshot = {
     };
   }>;
   charges: Array<{
+    id: string;
     amount: Prisma.Decimal | number;
     paidAmount: Prisma.Decimal | number;
     interestAmount: Prisma.Decimal | number;
@@ -127,10 +128,20 @@ type PrivateAreaSnapshot = {
     periodYear: number;
     periodMonth: number;
     responsibility: "OWNER" | "COMMERCE";
+    chargeGroupId: string;
     chargeGroup: {
       name: string;
       chargeType: string | null;
     };
+    allocations: Array<{
+      amount: Prisma.Decimal | number;
+    }>;
+  }>;
+  incomes: Array<{
+    id: string;
+    date: Date;
+    amount: Prisma.Decimal | number;
+    chargeGroupId: string | null;
   }>;
 };
 
@@ -391,9 +402,19 @@ function emptyFinancialSplit(): PrivateAreaFinancialSplit {
   return { owner: 0, commerce: 0 };
 }
 
-function toPendingAmount(charge: PrivateAreaSnapshot["charges"][number]): number {
+function toPendingAmount(
+  charge: PrivateAreaSnapshot["charges"][number],
+  inMemoryAllocationsByChargeId?: Map<string, number>,
+): number {
   const amount = decimalToNumber(charge.amount);
-  const paidAmount = decimalToNumber(charge.paidAmount);
+  const dbPaid =
+    charge.allocations?.reduce(
+      (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+      0,
+    ) ?? decimalToNumber(charge.paidAmount);
+  const inMemoryAllocated = inMemoryAllocationsByChargeId?.get(charge.id) ?? 0;
+  const paidAmount = dbPaid + inMemoryAllocated;
+
   const interestAmount = decimalToNumber(charge.interestAmount);
   const discountAmount = decimalToNumber(charge.discountAmount);
   return Math.max(0, amount - paidAmount - discountAmount + interestAmount);
@@ -444,7 +465,8 @@ function withMonthlyKey(year: number, month: number): PrivateAreaFinancialCellKe
 function buildFinancialCells(
   charges: PrivateAreaSnapshot["charges"],
   currentOrdinaryYear: number,
-  ordinaryCatalog: { quotaPeriodStart: Date | null, quotaPeriodEnd: Date | null } | null
+  ordinaryCatalog: { quotaPeriodStart: Date | null, quotaPeriodEnd: Date | null } | null,
+  inMemoryAllocationsByChargeId: Map<string, number>,
 ): Partial<Record<PrivateAreaFinancialCellKey, PrivateAreaFinancialSplit>> {
   const nextOrdinaryYear = currentOrdinaryYear + 1;
   const previousOrdinaryYear = currentOrdinaryYear - 1;
@@ -463,7 +485,7 @@ function buildFinancialCells(
       charge.isCollectible &&
       isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
       charge.periodYear === currentOrdinaryYear,
-    (charge) => toPendingAmount(charge),
+    (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
   );
 
   const ordinaryNextAnnual = splitCharges(
@@ -480,13 +502,13 @@ function buildFinancialCells(
       charge.isCollectible &&
       isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
       charge.periodYear === nextOrdinaryYear,
-    (charge) => toPendingAmount(charge),
+    (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
   );
 
   const totalOutstanding = splitCharges(
     charges,
     (charge) => charge.isCollectible,
-    (charge) => toPendingAmount(charge),
+    (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
   );
 
   const cells: Partial<Record<PrivateAreaFinancialCellKey, PrivateAreaFinancialSplit>> = {
@@ -496,7 +518,7 @@ function buildFinancialCells(
         charge.isCollectible &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
         charge.periodYear <= previousOrdinaryYear,
-      (charge) => toPendingAmount(charge),
+      (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
     ),
     advance_2024: splitCharges(
       charges,
@@ -532,7 +554,7 @@ function buildFinancialCells(
         isChargeGroup(charge, CHARGE_GROUP_KIND.EXTRA_CONDO) &&
         charge.periodYear >= previousOrdinaryYear &&
         charge.periodYear <= currentOrdinaryYear,
-      (charge) => toPendingAmount(charge),
+      (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
     ),
     extra_commerce_2024_2025: splitCharges(
       charges,
@@ -549,7 +571,7 @@ function buildFinancialCells(
         isChargeGroup(charge, CHARGE_GROUP_KIND.EXTRA_COMMERCE) &&
         charge.periodYear >= previousOrdinaryYear &&
         charge.periodYear <= currentOrdinaryYear,
-      (charge) => toPendingAmount(charge),
+      (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
     ),
     stc: splitCharges(
       charges,
@@ -559,7 +581,7 @@ function buildFinancialCells(
     stc_outstanding: splitCharges(
       charges,
       (charge) => charge.isCollectible && isChargeGroup(charge, CHARGE_GROUP_KIND.STC),
-      (charge) => toPendingAmount(charge),
+      (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
     ),
     sancion: splitCharges(
       charges,
@@ -571,7 +593,7 @@ function buildFinancialCells(
       (charge) =>
         charge.isCollectible &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.SANCTION),
-      (charge) => toPendingAmount(charge),
+      (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
     ),
     comodato: splitCharges(
       charges,
@@ -583,7 +605,7 @@ function buildFinancialCells(
       (charge) =>
         charge.isCollectible &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.COMODATO),
-      (charge) => toPendingAmount(charge),
+      (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
     ),
     total_outstanding: totalOutstanding,
   };
@@ -606,7 +628,7 @@ function buildFinancialCells(
           isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
           charge.periodYear === year &&
           charge.periodMonth === month,
-        (charge) => toPendingAmount(charge),
+        (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
       );
     }
   }
@@ -886,6 +908,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           },
           charges: {
             select: {
+              id: true,
               amount: true,
               paidAmount: true,
               interestAmount: true,
@@ -894,12 +917,27 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               periodYear: true,
               periodMonth: true,
               responsibility: true,
+              chargeGroupId: true,
               chargeGroup: {
                 select: {
                   name: true,
                   chargeType: true,
                 },
               },
+              allocations: {
+                select: {
+                  amount: true,
+                },
+              },
+            },
+          },
+          incomes: {
+            where: { isActive: true },
+            select: {
+              id: true,
+              date: true,
+              amount: true,
+              chargeGroupId: true,
             },
           },
         },
@@ -959,7 +997,57 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           ? (indiviso / 100) * projectCommonAreasM2
           : m2CommonAreaRaw;
 
-      const financialCells = buildFinancialCells(area.charges, currentOrdinaryYear, ordinaryCatalog as { quotaPeriodStart: Date | null, quotaPeriodEnd: Date | null } | null);
+      const inMemoryAllocationsByChargeId = new Map<string, number>();
+
+      const calculateAllocationsForArea = (charges: any[], incomes: any[]) => {
+        const sortedCharges = [...charges].sort((a, b) => {
+          if (a.periodYear !== b.periodYear) {
+            return a.periodYear - b.periodYear;
+          }
+          return a.periodMonth - b.periodMonth;
+        });
+
+        const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
+
+        for (const income of sortedIncomes) {
+          const chargeGroupId = income.chargeGroupId;
+          if (!chargeGroupId) continue;
+
+          let remainingIncome = decimalToNumber(income.amount);
+          const groupCharges = sortedCharges.filter((c) => c.chargeGroupId === chargeGroupId);
+
+          for (const charge of groupCharges) {
+            if (remainingIncome <= 0.005) break;
+
+            const dbPaid = charge.allocations?.reduce(
+              (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+              0,
+            ) ?? decimalToNumber(charge.paidAmount);
+            const prevAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
+            const currentPaid = dbPaid + prevAllocated;
+
+            const chargedAmount = decimalToNumber(charge.amount);
+            const interest = decimalToNumber(charge.interestAmount);
+            const discount = decimalToNumber(charge.discountAmount);
+            const balance = chargedAmount - currentPaid + interest - discount;
+
+            if (balance > 0.005) {
+              const allocate = Math.min(remainingIncome, balance);
+              inMemoryAllocationsByChargeId.set(charge.id, prevAllocated + allocate);
+              remainingIncome -= allocate;
+            }
+          }
+        }
+      };
+
+      calculateAllocationsForArea(area.charges, area.incomes);
+
+      const financialCells = buildFinancialCells(
+        area.charges,
+        currentOrdinaryYear,
+        ordinaryCatalog as { quotaPeriodStart: Date | null; quotaPeriodEnd: Date | null } | null,
+        inMemoryAllocationsByChargeId,
+      );
       const ordinaryAnnualCell = financialCells.ordinary_2025_annual ?? emptyFinancialSplit();
       const ordinaryMonthlyCell = financialCells.ordinary_2025_monthly ?? emptyFinancialSplit();
       const outstandingCell = financialCells.total_outstanding ?? emptyFinancialSplit();
@@ -974,7 +1062,13 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
 
       for (const charge of collectibleCharges) {
         const amount = decimalToNumber(charge.amount);
-        const paid = decimalToNumber(charge.paidAmount);
+        const dbPaid = charge.allocations?.reduce(
+          (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+          0,
+        ) ?? decimalToNumber(charge.paidAmount);
+        const inMemoryAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
+        const paid = dbPaid + inMemoryAllocated;
+
         const interest = decimalToNumber(charge.interestAmount);
         const discount = decimalToNumber(charge.discountAmount);
         const pending = amount - paid - discount + interest;
