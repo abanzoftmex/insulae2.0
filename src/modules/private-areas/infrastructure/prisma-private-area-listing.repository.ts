@@ -347,7 +347,11 @@ function assignmentMatchesRole(
     return roleName.includes("moral") || roleName.includes("inicial") || roleName.includes("historia");
   }
 
-  return roleName.includes("dominiopleno") || (roleName.includes("dominio") && roleName.includes("pleno"));
+  return (
+    roleName.includes("actual") ||
+    roleName.includes("dominiopleno") ||
+    (roleName.includes("dominio") && roleName.includes("pleno"))
+  );
 }
 
 function toPartyContactFromAssignment(assignment: PrivateAreaSnapshot["assignments"][number]): PartyContact {

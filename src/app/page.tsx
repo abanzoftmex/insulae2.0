@@ -27,16 +27,19 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const currentYear = 2025; // Fiscal year with fully loaded legacy records
+  const currentYear = new Date().getFullYear();
+  const prevYear = currentYear - 1;
 
   const [
     condominiumOverview,
-    financialSummary,
+    financialSummaryCurrent,
+    financialSummaryPrev,
     directoryOverview,
     openTicketsCount,
   ] = await Promise.all([
     getCondominiumOverviewUseCase.execute(),
     getFinancialSummaryUseCase.execute({ year: currentYear }),
+    getFinancialSummaryUseCase.execute({ year: prevYear }),
     getDirectoryUseCase.execute({ query: "", page: 1, pageSize: 1 }),
     prisma.ticket.count({
       where: {
@@ -46,6 +49,14 @@ export default async function Home() {
     }),
   ]);
 
+  // Use the most recent year that has actual financial data
+  const hasCurrentYearData = financialSummaryCurrent?.months.some(
+    (m) => m.totalIncome > 0 || m.totalExpenses > 0,
+  );
+  const financialSummary = hasCurrentYearData
+    ? financialSummaryCurrent
+    : (financialSummaryPrev ?? financialSummaryCurrent);
+
   const stats = {
     areas: condominiumOverview?.activePrivateAreas ?? 0,
     residents: directoryOverview?.totalUsers ?? 0,
@@ -53,12 +64,17 @@ export default async function Home() {
     openTickets: openTicketsCount,
   };
 
+  const reportYear = financialSummary?.year ?? currentYear;
+
   const MONTH_ABBR = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  const chartData = (financialSummary?.months ?? []).map((m) => ({
-    month: MONTH_ABBR[(m.month - 1) % 12],
-    ingresos: m.totalIncome,
-    gastos: m.totalExpenses,
-  }));
+  // Only include months that have at least some income or expense data
+  const chartData = (financialSummary?.months ?? [])
+    .filter((m) => m.totalIncome > 0 || m.totalExpenses > 0)
+    .map((m) => ({
+      month: MONTH_ABBR[(m.month - 1) % 12],
+      ingresos: m.totalIncome,
+      gastos: m.totalExpenses,
+    }));
 
   const condominiumName =
     condominiumOverview?.condominiumName || "Val'Quirico";
@@ -104,7 +120,7 @@ export default async function Home() {
         />
         <StatCard
           accent="gold"
-          label={`Cobranza Anual (${currentYear})`}
+          label={`Cobranza Anual (${reportYear})`}
           value={`$${stats.collections.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
           icon={<DollarSign className="h-3.5 w-3.5" />}
           trend={{ value: "Total Recaudado", isUp: true }}
@@ -123,14 +139,20 @@ export default async function Home() {
         <Card className="w-full">
           <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-col gap-0.5">
             <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
-              Actividad Financiera: Ingresos vs Gastos ({currentYear})
+              Actividad Financiera: Ingresos vs Gastos ({reportYear})
             </CardTitle>
             <p className="text-[9px] text-white/70 font-semibold uppercase tracking-wider">
               Comparativo mensual del flujo de caja (Recaudación de cuotas vs Egresos del condominio)
             </p>
           </CardHeader>
           <CardContent className="px-2 pb-3 pt-4">
-            <FinancialChart data={chartData} />
+            {chartData.length > 0 ? (
+              <FinancialChart data={chartData} />
+            ) : (
+              <div className="flex items-center justify-center h-[160px] text-[12px] text-ink-soft/50 font-medium">
+                Sin movimientos registrados para {reportYear}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
