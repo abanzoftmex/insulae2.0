@@ -326,7 +326,7 @@ export function IncomeWorkbench({
       {/* Summary Section */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard accent="brand" label="Total Registros" value={filteredIncomes.length} icon={<Layers className="h-3.5 w-3.5" />} />
-        <StatCard accent="lime" label="Monto Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime" label="Monto Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} />
         <StatCard accent="cyan" label="Categorías" value={catalogs.length} icon={<Filter className="h-3.5 w-3.5" />} />
       </div>
 

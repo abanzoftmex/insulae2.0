@@ -365,8 +365,8 @@ export function MassChargeWorkbench({
                             )}
                           </td>
                           <td className="px-4 text-[11px] font-medium text-ink-soft italic">{p.reason}</td>
-                          <td className="px-4 text-right font-mono text-[11px] text-ink-soft">${p.amountPerMonth.toLocaleString('en-US')}</td>
-                          <td className="px-4 text-right font-bold text-brand text-[13px]">${p.totalAmount.toLocaleString('en-US')}</td>
+                          <td className="px-4 text-right font-mono text-[11px] text-ink-soft">${p.amountPerMonth.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                          <td className="px-4 text-right font-bold text-brand text-[13px]">${p.totalAmount.toLocaleString('es-MX', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                         </tr>
                       );
                     })}

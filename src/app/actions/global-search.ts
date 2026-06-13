@@ -114,7 +114,7 @@ export async function globalSearch(query: string): Promise<SearchResultItem[]> {
     ...expenses.map((e) => ({
       id: e.id,
       label: e.concept,
-      sublabel: `$${Number(e.amount).toLocaleString("es-MX")}`,
+      sublabel: `$${Number(e.amount).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       href: `/listado-gastos`,
       category: "Gasto",
       type: "expense" as const,
@@ -122,7 +122,7 @@ export async function globalSearch(query: string): Promise<SearchResultItem[]> {
     ...incomes.map((i) => ({
       id: i.id,
       label: i.concept,
-      sublabel: `$${Number(i.amount).toLocaleString("es-MX")}`,
+      sublabel: `$${Number(i.amount).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
       href: `/listado-ingresos`,
       category: "Ingreso",
       type: "income" as const,

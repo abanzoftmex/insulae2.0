@@ -20,6 +20,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { FinancialChart } from "@/components/ui/financial-chart";
+import { LiveClock } from "@/components/ui/live-clock";
 
 export const metadata: Metadata = {
   title: "Inicio | Val'Quirico",
@@ -78,10 +79,17 @@ export default async function Home() {
 
   const condominiumName =
     condominiumOverview?.condominiumName || "Val'Quirico";
-  const today = new Date().toLocaleDateString("es-MX", {
+  const initialDate = new Date().toLocaleDateString("es-MX", {
     day: "numeric",
     month: "long",
     year: "numeric",
+    timeZone: "America/Mexico_City",
+  });
+  const initialTime = new Date().toLocaleTimeString("es-MX", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+    timeZone: "America/Mexico_City",
   });
 
   const isSassi = condominiumOverview?.condominiumSlug === "sassi";
@@ -122,11 +130,7 @@ export default async function Home() {
                   Bienvenido a tu gestor de condominio
                 </h1>
                 <p className="text-brand-mint/90 text-[11px] font-bold uppercase tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                  {condominiumName} · {today} · {new Date().toLocaleTimeString("es-MX", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
+                  {condominiumName} · <LiveClock initialDate={initialDate} initialTime={initialTime} />
                 </p>
               </div>
             </div>
@@ -144,11 +148,7 @@ export default async function Home() {
                 Información y Gestión
               </Badge>
               <p className={`text-[11px] font-bold uppercase tracking-tight ${isSassi ? "text-brand-mint/90 drop-shadow-sm" : "text-ink-soft/80"}`}>
-                {condominiumName} · {today} · {new Date().toLocaleTimeString("es-MX", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: true,
-                })}
+                {condominiumName} · <LiveClock initialDate={initialDate} initialTime={initialTime} />
               </p>
             </div>
           </div>
@@ -174,7 +174,7 @@ export default async function Home() {
           <StatCard
             accent="gold"
             label={`Cobranza Anual (${reportYear})`}
-            value={`$${stats.collections.toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+            value={`$${stats.collections.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={<DollarSign className="h-3.5 w-3.5" />}
             trend={{ value: "Total Recaudado", isUp: true }}
             className={isSassi ? "bg-white border-gold/30 shadow-sm" : ""}

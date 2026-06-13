@@ -136,9 +136,9 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
         <StatCard 
           accent="brand"
           label={`Ordinario ${year}`} 
-          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(sumOrdinaryBudget)} 
+          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2}).format(sumOrdinaryBudget)} 
           trend={{
-            value: `Ejercido: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(sumOrdinaryGenerated)}`,
+            value: `Ejercido: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2}).format(sumOrdinaryGenerated)}`,
             isUp: true
           }}
           icon={<Calculator className="h-3.5 w-3.5" />} 
@@ -146,9 +146,9 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
         <StatCard 
           accent="cyan"
           label={`Extraordinario ${year}`} 
-          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(sumExtraBudget)} 
+          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2}).format(sumExtraBudget)} 
           trend={{
-            value: `Ejercido: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(sumExtraGenerated)}`,
+            value: `Ejercido: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2}).format(sumExtraGenerated)}`,
             isUp: true
           }}
           icon={<TrendingUp className="h-3.5 w-3.5" />} 
@@ -156,9 +156,9 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
         <StatCard 
           accent="lime"
           label={`Total Consolidado`} 
-          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalBudgeted)} 
+          value={new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2}).format(vm.totalBudgeted)} 
           trend={{
-            value: `Disponible: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", maximumFractionDigits: 0}).format(vm.totalBalance)}`,
+            value: `Disponible: ${new Intl.NumberFormat("es-MX", {style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2}).format(vm.totalBalance)}`,
             isUp: vm.totalBalance >= 0
           }}
           icon={<DollarSign className="h-3.5 w-3.5" />} 

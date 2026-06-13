@@ -250,7 +250,7 @@ export function ExpenseWorkbench({
     <>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard accent="brand" label="Total Registros" value={filteredExpenses.length} icon={<Layers className="h-3.5 w-3.5" />} />
-        <StatCard accent="gold" label="Egreso Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} className="bg-danger/3 border-danger/10" />
+        <StatCard accent="gold" label="Egreso Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} className="bg-danger/3 border-danger/10" />
         <StatCard accent="cyan" label="Conceptos" value={budgetConcepts.length} icon={<Briefcase className="h-3.5 w-3.5" />} />
       </div>
 

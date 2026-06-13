@@ -33,7 +33,7 @@ function CustomTooltip({ active, payload, label }: {
         <p key={entry.name} style={{ color: entry.color }} className="font-medium">
           {entry.name === "ingresos" ? "Ingresos" : "Gastos"}:{" "}
           <span className="tabular-nums">
-            ${(entry.value as number).toLocaleString("es-MX")}
+            ${(entry.value as number).toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </span>
         </p>
       ))}
