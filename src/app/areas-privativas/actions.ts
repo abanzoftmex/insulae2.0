@@ -80,7 +80,7 @@ function parsePrivateAreaStatus(formData: FormData): PrivateAreaStatus | undefin
 }
 
 async function revalidatePrivateAreaFormPath(privateAreaId: string): Promise<void> {
-  revalidatePath(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
+  revalidatePath("/areas-privativas/formulario-apol");
 }
 
 export async function updatePrivateAreaSnapshotAction(formData: FormData): Promise<void> {
@@ -375,7 +375,7 @@ export async function createPrivateAreaRentalAction(formData: FormData): Promise
   });
 
   revalidatePath("/areas-privativas");
-  revalidatePath(`/areas-privativas/listado-arrendamientos?id=${area.id}`);
+  revalidatePath("/areas-privativas/listado-arrendamientos");
 }
 
 function roleBucketToRoleName(roleBucket: string): string {
@@ -582,7 +582,7 @@ export async function setPrivateAreaRentalTenantAction(formData: FormData): Prom
   }
 
   revalidatePath("/areas-privativas");
-  revalidatePath(`/areas-privativas/listado-arrendamientos?id=${area.id}`);
+  revalidatePath("/areas-privativas/listado-arrendamientos");
   await revalidatePrivateAreaFormPath(privateAreaId);
 }
 
