@@ -46,6 +46,24 @@ export async function createFullDirectoryContactAction(data: any) {
       },
     });
 
+    if (data.initialRole && data.initialRole.trim() !== "") {
+      const role = await prisma.role.findFirst({
+        where: {
+          condominiumId: condominium.id,
+          name: data.initialRole,
+          isActive: true,
+        },
+      });
+      if (role) {
+        await prisma.userRole.create({
+          data: {
+            userId: newUser.id,
+            roleId: role.id,
+          },
+        });
+      }
+    }
+
     revalidatePath("/directorio");
     return { ok: true, message: "Persona creada exitosamente.", id: newUser.id };
   } catch (error) {

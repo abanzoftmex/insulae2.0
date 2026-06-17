@@ -659,30 +659,58 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
   }
 
   async updateContact(id: string, data: Partial<DirectoryContactParticipation>): Promise<void> {
-    await prisma.user.update({
-      where: { id },
-      data: {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        lastNamePaterno: data.lastNamePaterno,
-        lastNameMaterno: data.lastNameMaterno,
-        businessName: data.businessName,
-        commercialName: data.commercialName,
-        curp: data.curp,
-        rfc: data.rfc,
-        address: data.address,
-        taxAddress: data.taxAddress,
-        userType: data.userType,
-        requiresInvoice: data.requiresInvoice,
-        email: data.email,
-        personalEmail: data.personalEmail,
-        businessEmail: data.businessEmail,
-        phone: data.phone,
-        personalPhone: data.personalPhone,
-        businessPhone: data.businessPhone,
-        taxStatusPdfUrl: data.taxStatusPdfUrl,
-        initialRole: data.initialRole,
-      },
+    await prisma.$transaction(async (tx) => {
+      const updatedUser = await tx.user.update({
+        where: { id },
+        data: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          lastNamePaterno: data.lastNamePaterno,
+          lastNameMaterno: data.lastNameMaterno,
+          businessName: data.businessName,
+          commercialName: data.commercialName,
+          curp: data.curp,
+          rfc: data.rfc,
+          address: data.address,
+          taxAddress: data.taxAddress,
+          userType: data.userType,
+          requiresInvoice: data.requiresInvoice,
+          email: data.email,
+          personalEmail: data.personalEmail,
+          businessEmail: data.businessEmail,
+          phone: data.phone,
+          personalPhone: data.personalPhone,
+          businessPhone: data.businessPhone,
+          taxStatusPdfUrl: data.taxStatusPdfUrl,
+          initialRole: data.initialRole,
+        },
+      });
+
+      if (data.initialRole !== undefined) {
+        // Clear all existing UserRole links for this user
+        await tx.userRole.deleteMany({
+          where: { userId: id },
+        });
+
+        if (data.initialRole && data.initialRole.trim() !== "") {
+          const role = await tx.role.findFirst({
+            where: {
+              condominiumId: updatedUser.condominiumId,
+              name: data.initialRole,
+              isActive: true,
+            },
+          });
+
+          if (role) {
+            await tx.userRole.create({
+              data: {
+                userId: id,
+                roleId: role.id,
+              },
+            });
+          }
+        }
+      }
     });
   }
 }
