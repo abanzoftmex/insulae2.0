@@ -113,9 +113,11 @@ type PrivateAreaSnapshot = {
   }>;
   areaCharges: Array<{
     amount: Prisma.Decimal | number;
+    startsAt: Date | null;
     chargeGroup: {
       name: string;
       isActive: boolean;
+      kind: string;
     };
   }>;
   charges: Array<{
@@ -898,10 +900,12 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
             where: { isActive: true },
             select: {
               amount: true,
+              startsAt: true,
               chargeGroup: {
                 select: {
                   name: true,
                   isActive: true,
+                  kind: true,
                 },
               },
             },
@@ -1048,6 +1052,40 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         ordinaryCatalog as { quotaPeriodStart: Date | null; quotaPeriodEnd: Date | null } | null,
         inMemoryAllocationsByChargeId,
       );
+
+      if (condominium.slug === "valquirico") {
+        const ordinaryCharge2025 = area.areaCharges.find((ac) => {
+          const isOrdinary = ac.chargeGroup.kind === "ORDINARY" || ac.chargeGroup.name.toLowerCase().includes("ordinaria");
+          const isYear2025 = ac.startsAt?.getUTCFullYear() === 2025;
+          return isOrdinary && isYear2025;
+        });
+        const amount2025 = ordinaryCharge2025 ? decimalToNumber(ordinaryCharge2025.amount) : 0;
+
+        const ordinaryCharge2026 = area.areaCharges.find((ac) => {
+          const isOrdinary = ac.chargeGroup.kind === "ORDINARY" || ac.chargeGroup.name.toLowerCase().includes("ordinaria");
+          const isYear2026 = ac.startsAt?.getUTCFullYear() === 2026;
+          return isOrdinary && isYear2026;
+        });
+        const amount2026 = ordinaryCharge2026 ? decimalToNumber(ordinaryCharge2026.amount) : 0;
+
+        financialCells.ordinary_2025_annual = {
+          owner: amount2025 * 12,
+          commerce: 0,
+        };
+        financialCells.ordinary_2025_monthly = {
+          owner: amount2025,
+          commerce: 0,
+        };
+        financialCells.ordinary_2026_annual = {
+          owner: amount2026 * 12,
+          commerce: 0,
+        };
+        financialCells.ordinary_2026_monthly = {
+          owner: amount2026,
+          commerce: 0,
+        };
+      }
+
       const ordinaryAnnualCell = financialCells.ordinary_2025_annual ?? emptyFinancialSplit();
       const ordinaryMonthlyCell = financialCells.ordinary_2025_monthly ?? emptyFinancialSplit();
       const outstandingCell = financialCells.total_outstanding ?? emptyFinancialSplit();

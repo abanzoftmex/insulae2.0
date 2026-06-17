@@ -172,6 +172,17 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
                           <span className="truncate max-w-xs">{call.location}</span>
                         </div>
                       )}
+                      {call.status === "Realizada" && (
+                        <div className="flex items-center gap-1.5 text-success font-bold">
+                          <UserCheck className="h-3.5 w-3.5 text-success shrink-0" />
+                          <span>
+                            {call.checkedPositions
+                              ? call.checkedPositions.split(",").filter(Boolean).length
+                              : 0}{" "}
+                            Presentes
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))
@@ -222,6 +233,22 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
               {announcement.topics.length > 0 ? (
                 announcement.topics.map((topic, idx) => {
                   const presenterName = topic.presenterId ? userMap.get(topic.presenterId) : undefined;
+                  
+                  // Parse votes count
+                  let favorCount = 0;
+                  let againstCount = 0;
+                  let abstainCount = 0;
+                  if (topic.votesJson) {
+                    try {
+                      const votes = JSON.parse(topic.votesJson);
+                      Object.values(votes).forEach(vt => {
+                        if (vt === "FAVOR") favorCount++;
+                        else if (vt === "AGAINST") againstCount++;
+                        else if (vt === "ABSTAIN") abstainCount++;
+                      });
+                    } catch (e) {}
+                  }
+
                   return (
                     <div key={topic.id} className="p-4 rounded-card border border-line bg-canvas space-y-3 relative">
                       <div className="flex items-center gap-2">
@@ -254,6 +281,49 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
                           </div>
                         )}
                       </div>
+
+                      {/* Render conclusions / comments if set */}
+                      {topic.conclusions && (
+                        <div className="mt-2.5 p-3 rounded bg-white border border-brand/20 text-xs">
+                          <span className="text-[9px] font-bold text-brand uppercase tracking-wider block mb-1">
+                            Acuerdos / Conclusiones
+                          </span>
+                          <p className="text-ink-soft italic leading-relaxed">"{topic.conclusions}"</p>
+                        </div>
+                      )}
+
+                      {/* Render voting results breakdown if votes are cast */}
+                      {topic.actionType && topic.actionType !== "NONE" && (favorCount > 0 || againstCount > 0 || abstainCount > 0) && (
+                        <div className="mt-2.5 pt-2.5 border-t border-line/50 space-y-2">
+                          <span className="text-[9px] font-bold text-ink-soft uppercase tracking-wider block">
+                            Resultados de la Votación
+                          </span>
+                          
+                          <div className="grid grid-cols-3 gap-2 text-center text-[10px]">
+                            {topic.actionType === "VOTE" ? (
+                              <>
+                                <div className="bg-success/5 border border-success/10 p-1.5 rounded">
+                                  <span className="text-success font-bold block">A Favor</span>
+                                  <span className="text-xs font-extrabold text-success mt-0.5 block">{favorCount}</span>
+                                </div>
+                                <div className="bg-amber-500/5 border border-amber-500/10 p-1.5 rounded">
+                                  <span className="text-amber-500 font-bold block">Abstención</span>
+                                  <span className="text-xs font-extrabold text-amber-500 mt-0.5 block">{abstainCount}</span>
+                                </div>
+                                <div className="bg-danger/5 border border-danger/10 p-1.5 rounded">
+                                  <span className="text-danger font-bold block">En Contra</span>
+                                  <span className="text-xs font-extrabold text-danger mt-0.5 block">{againstCount}</span>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="bg-success/5 border border-success/10 p-1.5 rounded col-span-3">
+                                <span className="text-success font-bold block">Confirmaciones</span>
+                                <span className="text-xs font-extrabold text-success mt-0.5 block">{favorCount}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })

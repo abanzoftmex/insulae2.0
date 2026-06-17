@@ -34,7 +34,7 @@ export async function toggleAttendanceAction(dateId: string, positionId: string,
       }
     });
 
-    revalidatePath(`/gobernanza/convocatorias/[id]/asamblea/[dateId]`);
+    revalidatePath(`/gobernanza/convocatorias/${callDate.announcementId}`, "layout");
     return { success: true, checkedPositions: updated.checkedPositions };
   } catch (error: any) {
     console.error("Error toggling attendance:", error);
@@ -76,7 +76,7 @@ export async function registerVoteAction(topicId: string, positionId: string, vo
       }
     });
 
-    revalidatePath(`/gobernanza/convocatorias/[id]/asamblea/[dateId]`);
+    revalidatePath(`/gobernanza/convocatorias/${updated.announcementId}`, "layout");
     return { success: true, votesJson: updated.votesJson };
   } catch (error: any) {
     console.error("Error registering vote:", error);
@@ -89,12 +89,12 @@ export async function registerVoteAction(topicId: string, positionId: string, vo
  */
 export async function saveTopicConclusionsAction(topicId: string, conclusions: string) {
   try {
-    await prisma.announcementTopic.update({
+    const updated = await prisma.announcementTopic.update({
       where: { id: topicId },
       data: { conclusions }
     });
 
-    revalidatePath(`/gobernanza/convocatorias/[id]/asamblea/[dateId]`);
+    revalidatePath(`/gobernanza/convocatorias/${updated.announcementId}`, "layout");
     return { success: true };
   } catch (error: any) {
     console.error("Error saving topic conclusions:", error);
@@ -122,7 +122,7 @@ export async function closeAsambleaAction(dateId: string, isCompleted: boolean) 
 
     if (callDate) {
       const closedStatus = await prisma.announcementStatus.findFirst({
-        where: { name: { contains: "Realizada" } }
+        where: { name: { contains: isCompleted ? "Terminada" : "Cancelada" } }
       });
       
       if (closedStatus) {
@@ -131,10 +131,11 @@ export async function closeAsambleaAction(dateId: string, isCompleted: boolean) 
           data: { statusId: closedStatus.id }
         });
       }
+      
+      revalidatePath(`/gobernanza/convocatorias/${callDate.announcementId}`, "layout");
     }
 
     revalidatePath("/gobernanza/convocatorias");
-    revalidatePath(`/gobernanza/convocatorias/[id]`);
     return { success: true, status };
   } catch (error: any) {
     console.error("Error closing assembly:", error);

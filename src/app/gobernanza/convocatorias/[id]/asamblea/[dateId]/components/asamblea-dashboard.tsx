@@ -79,23 +79,29 @@ export function AsambleaDashboard({
   const [savingTopicId, setSavingTopicId] = useState<string | null>(null);
 
   // Computations
-  const totalCalled = invitedPositions.length;
-  const totalPresent = checkedIds.length;
+  const specialGuests = announcement.specialGuests || [];
+  const totalCalled = invitedPositions.length + specialGuests.length;
+  
+  // Calculate total present based on both invited positions and special guests
+  const presentPositions = invitedPositions.filter(p => checkedIds.includes(p.positionId));
+  const presentGuests = specialGuests.filter((g: any) => checkedIds.includes(g.id));
+  const totalPresent = presentPositions.length + presentGuests.length;
+  
   const presentPercent = totalCalled > 0 ? (totalPresent / totalCalled) * 100 : 0;
   
   // Set minimum quórum to 50.00%
   const minimumRequired = 50.00;
   const isQuorumMet = presentPercent >= minimumRequired;
 
-  const handleToggleAttendance = async (positionId: string, isChecked: boolean) => {
+  const handleToggleAttendance = async (targetId: string, isChecked: boolean) => {
     // Update local state first for instant reaction
     const updated = isChecked
-      ? [...checkedIds, positionId]
-      : checkedIds.filter(id => id !== positionId);
+      ? [...checkedIds, targetId]
+      : checkedIds.filter(id => id !== targetId);
     setCheckedIds(updated);
 
     startTransition(async () => {
-      const res = await toggleAttendanceAction(dateSession.id, positionId, isChecked);
+      const res = await toggleAttendanceAction(dateSession.id, targetId, isChecked);
       if (res.success && res.checkedPositions !== undefined) {
         setCheckedIds(res.checkedPositions ? res.checkedPositions.split(",") : []);
       }
@@ -269,42 +275,85 @@ export function AsambleaDashboard({
               <h2 className={sectionTitleCls}>Asistentes</h2>
             </div>
             <div className={`${sectionBodyCls} space-y-4`}>
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                {invitedPositions.map(pos => {
-                  const posName = positionMap[pos.positionId] || pos.positionId;
-                  const isChecked = checkedIds.includes(pos.positionId);
-                  
-                  return (
-                    <div 
-                      key={pos.id} 
-                      onClick={() => handleToggleAttendance(pos.positionId, !isChecked)}
-                      className={`flex items-center justify-between p-3.5 rounded-card border cursor-pointer select-none transition-all active-scale ${
-                        isChecked 
-                          ? "bg-brand/5 border-brand/40 shadow-sm" 
-                          : "bg-white border-line hover:bg-canvas"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                          isChecked ? "bg-brand text-white" : "bg-canvas text-ink-soft"
-                        }`}>
-                          <UserCheck className="w-3.5 h-3.5" />
+              {invitedPositions.length === 0 && specialGuests.length === 0 ? (
+                <div className="py-8 text-center text-ink-soft text-xs italic border border-dashed border-line/60 rounded-card bg-canvas">
+                  No se han registrado convocados ni invitados especiales para esta asamblea.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                  {invitedPositions.map(pos => {
+                    const posName = positionMap[pos.positionId] || pos.positionId;
+                    const isChecked = checkedIds.includes(pos.positionId);
+                    
+                    return (
+                      <div 
+                        key={pos.id} 
+                        onClick={() => handleToggleAttendance(pos.positionId, !isChecked)}
+                        className={`flex items-center justify-between p-3.5 rounded-card border cursor-pointer select-none transition-all active-scale ${
+                          isChecked 
+                            ? "bg-brand/5 border-brand/40 shadow-sm" 
+                            : "bg-white border-line hover:bg-canvas"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                            isChecked ? "bg-brand text-white" : "bg-canvas text-ink-soft"
+                          }`}>
+                            <UserCheck className="w-3.5 h-3.5" />
+                          </div>
+                          <span className={`text-[11px] font-bold leading-tight truncate ${
+                            isChecked ? "text-brand" : "text-ink"
+                          }`}>{posName}</span>
                         </div>
-                        <span className={`text-[11px] font-bold leading-tight truncate ${
-                          isChecked ? "text-brand" : "text-ink"
-                        }`}>{posName}</span>
-                      </div>
 
-                      {/* Toggle status indicator */}
-                      <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
-                        isChecked ? "bg-brand border-brand text-white" : "border-line bg-canvas text-transparent"
-                      }`}>
-                        <Check className="w-3 h-3 stroke-[3]" />
+                        {/* Toggle status indicator */}
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                          isChecked ? "bg-brand border-brand text-white" : "border-line bg-canvas text-transparent"
+                        }`}>
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+
+                  {specialGuests.map((guest: any) => {
+                    const isChecked = checkedIds.includes(guest.id);
+                    
+                    return (
+                      <div 
+                        key={guest.id} 
+                        onClick={() => handleToggleAttendance(guest.id, !isChecked)}
+                        className={`flex items-center justify-between p-3.5 rounded-card border cursor-pointer select-none transition-all active-scale ${
+                          isChecked 
+                            ? "bg-brand/5 border-brand/40 shadow-sm" 
+                            : "bg-white border-line hover:bg-canvas"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                            isChecked ? "bg-brand text-white" : "bg-canvas text-ink-soft"
+                          }`}>
+                            <UserCheck className="w-3.5 h-3.5" />
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className={`text-[11px] font-bold leading-tight truncate ${
+                              isChecked ? "text-brand" : "text-ink"
+                            }`}>{guest.name}</span>
+                            <span className="text-[9px] text-ink-soft truncate">{guest.email || "Invitado Especial"}</span>
+                          </div>
+                        </div>
+
+                        {/* Toggle status indicator */}
+                        <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                          isChecked ? "bg-brand border-brand text-white" : "border-line bg-canvas text-transparent"
+                        }`}>
+                          <Check className="w-3 h-3 stroke-[3]" />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </section>
 
@@ -334,15 +383,31 @@ export function AsambleaDashboard({
 
               // Filter called positions to show only checked (present) positions
               const presentPositions = invitedPositions.filter(p => checkedIds.includes(p.positionId));
+              const presentGuests = specialGuests.filter((g: any) => checkedIds.includes(g.id));
+
+              const presentParticipants = [
+                ...presentPositions.map(p => ({
+                  id: p.positionId,
+                  key: p.positionId,
+                  name: positionMap[p.positionId] || p.positionId,
+                  type: "POSITION"
+                })),
+                ...presentGuests.map((g: any) => ({
+                  id: g.id,
+                  key: g.id,
+                  name: g.name,
+                  type: "GUEST"
+                }))
+              ];
 
               // Compute vote outcomes based on the checked present attendees
-              const voteCount = presentPositions.length;
+              const voteCount = presentParticipants.length;
               let favorCount = 0;
               let againstCount = 0;
               let abstainCount = 0;
 
-              presentPositions.forEach(p => {
-                const vt = topicVotes[p.positionId];
+              presentParticipants.forEach(p => {
+                const vt = topicVotes[p.key];
                 if (vt === "FAVOR") favorCount++;
                 else if (vt === "AGAINST") againstCount++;
                 else if (vt === "ABSTAIN") abstainCount++;
@@ -369,18 +434,22 @@ export function AsambleaDashboard({
                     {/* Present positions list with real-time casting */}
                     <div className="space-y-2.5">
                       <span className="text-[9px] font-bold uppercase tracking-widest text-ink-soft">
-                        Votos de Condóminos Presentes
+                        Votos de Asistentes Presentes
                       </span>
                       
-                      {presentPositions.length > 0 ? (
+                      {presentParticipants.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {presentPositions.map(p => {
-                            const posName = positionMap[p.positionId] || p.positionId;
-                            const voteType = topicVotes[p.positionId];
+                          {presentParticipants.map(p => {
+                            const voteType = topicVotes[p.key];
 
                             return (
                               <div key={p.id} className="flex items-center justify-between p-3 rounded-card bg-canvas border border-line">
-                                <span className="text-[10px] font-bold text-ink max-w-[200px] truncate">{posName}</span>
+                                <div className="flex flex-col min-w-0">
+                                  <span className="text-[10px] font-bold text-ink max-w-[200px] truncate">{p.name}</span>
+                                  {p.type === "GUEST" && (
+                                    <span className="text-[8px] text-ink-soft uppercase tracking-wider">Invitado Especial</span>
+                                  )}
+                                </div>
                                 
                                 <div className="flex gap-1.5">
                                   {topic.actionType === "VOTE" ? (
@@ -388,7 +457,7 @@ export function AsambleaDashboard({
                                       {/* Favor button */}
                                       <button
                                         type="button"
-                                        onClick={() => handleCastVote(topic.id, p.positionId, voteType === "FAVOR" ? "NONE" : "FAVOR")}
+                                        onClick={() => handleCastVote(topic.id, p.key, voteType === "FAVOR" ? "NONE" : "FAVOR")}
                                         className={`w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
                                           voteType === "FAVOR"
                                             ? "bg-success border-success text-white shadow-sm"
@@ -402,7 +471,7 @@ export function AsambleaDashboard({
                                       {/* Abstain button */}
                                       <button
                                         type="button"
-                                        onClick={() => handleCastVote(topic.id, p.positionId, voteType === "ABSTAIN" ? "NONE" : "ABSTAIN")}
+                                        onClick={() => handleCastVote(topic.id, p.key, voteType === "ABSTAIN" ? "NONE" : "ABSTAIN")}
                                         className={`w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
                                           voteType === "ABSTAIN"
                                             ? "bg-amber-500 border-amber-500 text-white shadow-sm"
@@ -416,7 +485,7 @@ export function AsambleaDashboard({
                                       {/* Against button */}
                                       <button
                                         type="button"
-                                        onClick={() => handleCastVote(topic.id, p.positionId, voteType === "AGAINST" ? "NONE" : "AGAINST")}
+                                        onClick={() => handleCastVote(topic.id, p.key, voteType === "AGAINST" ? "NONE" : "AGAINST")}
                                         className={`w-7 h-7 rounded-full flex items-center justify-center border transition-all ${
                                           voteType === "AGAINST"
                                             ? "bg-danger border-danger text-white shadow-sm"
@@ -430,7 +499,7 @@ export function AsambleaDashboard({
                                   ) : topic.actionType === "CONFIRMATION" ? (
                                     <button
                                       type="button"
-                                      onClick={() => handleCastVote(topic.id, p.positionId, voteType === "FAVOR" ? "NONE" : "FAVOR")}
+                                      onClick={() => handleCastVote(topic.id, p.key, voteType === "FAVOR" ? "NONE" : "FAVOR")}
                                       className={`h-7 px-4 rounded-full flex items-center justify-center border text-[9px] font-bold uppercase tracking-widest transition-all gap-1.5 ${
                                         voteType === "FAVOR"
                                           ? "bg-success border-success text-white shadow-sm"
@@ -456,14 +525,14 @@ export function AsambleaDashboard({
                     </div>
 
                     {/* Dynamic voting results cards */}
-                    {presentPositions.length > 0 && topic.actionType !== "NONE" && (
+                    {presentParticipants.length > 0 && topic.actionType !== "NONE" && (
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-line/50">
                         {topic.actionType === "VOTE" ? (
                           <>
                             <div className="p-3 bg-success/5 border border-success/15 rounded-card text-center">
                               <span className="text-[9px] font-bold text-success uppercase tracking-wider block">A Favor</span>
                               <span className="text-xl font-black text-success block mt-1">{favorPercent.toFixed(2)}%</span>
-                              <span className="text-[9px] font-medium text-ink-soft block">({favorCount} condóminos)</span>
+                              <span className="text-[9px] font-medium text-ink-soft block">({favorCount} asistentes)</span>
                             </div>
                             
                             <div className="p-3 bg-amber-500/5 border border-amber-500/15 rounded-card text-center">

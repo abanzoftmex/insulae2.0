@@ -234,6 +234,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
   revalidatePath("/areas-privativas");
   revalidatePath("/reporte-condominio");
   await revalidatePrivateAreaFormPath(privateAreaId);
+  redirect(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
 }
 
 export async function togglePrivateAreaStatusAction(formData: FormData): Promise<void> {
@@ -256,6 +257,7 @@ export async function togglePrivateAreaStatusAction(formData: FormData): Promise
 
   revalidatePath("/areas-privativas");
   revalidatePath("/reporte-condominio");
+  redirect(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
 }
 
 export async function updateOrdinaryAreaChargeAction(formData: FormData): Promise<void> {
@@ -336,6 +338,7 @@ export async function updateOrdinaryAreaChargeAction(formData: FormData): Promis
   }
 
   revalidatePath("/areas-privativas");
+  redirect(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
 }
 
 export async function createPrivateAreaRentalAction(formData: FormData): Promise<void> {
@@ -448,6 +451,7 @@ export async function addPrivateAreaAssignmentAction(formData: FormData): Promis
 
   revalidatePath("/areas-privativas");
   await revalidatePrivateAreaFormPath(privateAreaId);
+  redirect(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
 }
 
 export async function removePrivateAreaAssignmentAction(formData: FormData): Promise<void> {
@@ -468,6 +472,7 @@ export async function removePrivateAreaAssignmentAction(formData: FormData): Pro
 
   revalidatePath("/areas-privativas");
   await revalidatePrivateAreaFormPath(privateAreaId);
+  redirect(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
 }
 
 export async function setPrivateAreaAdministratorAction(formData: FormData): Promise<void> {
@@ -533,6 +538,7 @@ export async function setPrivateAreaAdministratorAction(formData: FormData): Pro
 
   revalidatePath("/areas-privativas");
   await revalidatePrivateAreaFormPath(privateAreaId);
+  redirect(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
 }
 
 export async function setPrivateAreaRentalTenantAction(formData: FormData): Promise<void> {
@@ -584,6 +590,7 @@ export async function setPrivateAreaRentalTenantAction(formData: FormData): Prom
   revalidatePath("/areas-privativas");
   revalidatePath("/areas-privativas/listado-arrendamientos");
   await revalidatePrivateAreaFormPath(privateAreaId);
+  redirect(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
 }
 
 export async function createPrivateAreaChargeAction(formData: FormData): Promise<void> {
