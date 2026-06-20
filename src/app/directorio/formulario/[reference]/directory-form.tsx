@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { 
   FileText, 
   Upload, 
@@ -43,6 +44,7 @@ export function DirectoryForm({
   roleOptions,
   backHref,
 }: DirectoryFormProps) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [isPasswordPending, startPasswordTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -157,6 +159,10 @@ export function DirectoryForm({
 
       if (result.ok) {
         setMessage({ type: "success", text: result.message });
+        if (result.idVq !== undefined) {
+          setFormData((prev) => ({ ...prev, idVq: result.idVq || "" }));
+        }
+        router.refresh();
       } else {
         setMessage({ type: "error", text: result.message });
       }

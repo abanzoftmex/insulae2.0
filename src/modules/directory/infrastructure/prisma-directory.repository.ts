@@ -671,7 +671,8 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
     return roles;
   }
 
-  async updateContact(id: string, data: Partial<DirectoryContactParticipation>): Promise<void> {
+  async updateContact(id: string, data: Partial<DirectoryContactParticipation>): Promise<{ idVq: string | null }> {
+    let finalIdVq: string | null = null;
     await prisma.$transaction(async (tx) => {
       const currentUser = await tx.user.findUnique({
         where: { id },
@@ -683,7 +684,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         },
       });
 
-      let calculatedIdVq = currentUser?.idVq;
+      let calculatedIdVq: string | null = currentUser?.idVq || null;
 
       if (currentUser) {
         const newApol = data.apolfap !== undefined ? data.apolfap : currentUser.apolfap;
@@ -729,6 +730,8 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           calculatedIdVq = null;
         }
       }
+
+      finalIdVq = calculatedIdVq;
 
       const updatedUser = await tx.user.update({
         where: { id },
@@ -788,5 +791,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         }
       }
     });
+
+    return { idVq: finalIdVq };
   }
 }

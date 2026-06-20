@@ -7,10 +7,10 @@ export interface UpdateDirectoryContactInput {
   data: Partial<DirectoryContactParticipation>;
 }
 
-export class UpdateDirectoryContactUseCase implements UseCase<UpdateDirectoryContactInput, void> {
+export class UpdateDirectoryContactUseCase implements UseCase<UpdateDirectoryContactInput, { idVq: string | null }> {
   constructor(private readonly repository: DirectoryRepository) {}
 
-  async execute(input: UpdateDirectoryContactInput): Promise<void> {
+  async execute(input: UpdateDirectoryContactInput): Promise<{ idVq: string | null }> {
     return this.repository.updateContact(input.id, input.data);
   }
 }
