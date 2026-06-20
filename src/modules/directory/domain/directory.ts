@@ -81,6 +81,13 @@ export interface DirectoryContactParticipation {
   participationBlocks: ParticipationBlock[];
   linkedCommerces: LinkedCommerce[];
   assignments: DirectoryContactAssignment[];
+  condominiumId: string;
+  birthDate: string | null;
+  gender: string | null;
+  apolfap: string | null;
+  registrationTypeCode: string | null;
+  registrationTypeDesc: string | null;
+  idVq: string | null;
 }
 
 export interface DirectoryOverview {

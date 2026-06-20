@@ -51,6 +51,7 @@ model Condominium {
   budgetExpenseConcepts        BudgetExpenseConcept[]
   budgetGroups                 BudgetGroup[]
   expenseConceptGroupMaps      ExpenseConceptGroupMap[]
+  registrationTypes            RegistrationType[]
 }
 
 model User {
@@ -91,6 +92,12 @@ model User {
   condominium                    Condominium                              @relation(fields: [condominiumId], references: [id])
   commerces                      UserCommerce[]
   userRoles                      UserRole[]
+  birthDate                      DateTime?
+  gender                         String?
+  apolfap                        String?
+  registrationTypeCode           String?
+  registrationTypeDesc           String?
+  idVq                           String?
 
   @@unique([condominiumId, legacyId])
   @@index([condominiumId])
@@ -1254,4 +1261,18 @@ enum MigrationValidationSeverity {
 enum BudgetStatus {
   OPEN
   CLOSED
+}
+
+model RegistrationType {
+  id            String      @id @default(uuid())
+  condominiumId String
+  code          String
+  description   String
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  condominium   Condominium @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, code])
+  @@index([condominiumId])
 }

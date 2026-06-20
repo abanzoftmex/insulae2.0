@@ -451,6 +451,12 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         requiresInvoice: true,
         taxStatusPdfUrl: true,
         initialRole: true,
+        birthDate: true,
+        gender: true,
+        apolfap: true,
+        registrationTypeCode: true,
+        registrationTypeDesc: true,
+        idVq: true,
         userRoles: {
           select: {
             role: {
@@ -631,6 +637,13 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       businessPhone: user.businessPhone,
       taxStatusPdfUrl: user.taxStatusPdfUrl,
       initialRole: user.initialRole,
+      condominiumId: condominium.id,
+      birthDate: user.birthDate ? user.birthDate.toISOString().split("T")[0] : null,
+      gender: user.gender,
+      apolfap: user.apolfap || (user.assignments.length > 0 ? user.assignments[0].privateArea.name : null),
+      registrationTypeCode: user.registrationTypeCode,
+      registrationTypeDesc: user.registrationTypeDesc,
+      idVq: user.idVq,
       roles: uniqueSorted(
         user.userRoles
           .filter((item) => item.role.isActive)
@@ -660,6 +673,63 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
 
   async updateContact(id: string, data: Partial<DirectoryContactParticipation>): Promise<void> {
     await prisma.$transaction(async (tx) => {
+      const currentUser = await tx.user.findUnique({
+        where: { id },
+        select: {
+          condominiumId: true,
+          apolfap: true,
+          registrationTypeCode: true,
+          idVq: true,
+        },
+      });
+
+      let calculatedIdVq = currentUser?.idVq;
+
+      if (currentUser) {
+        const newApol = data.apolfap !== undefined ? data.apolfap : currentUser.apolfap;
+        const newCode = data.registrationTypeCode !== undefined ? data.registrationTypeCode : currentUser.registrationTypeCode;
+
+        if (newApol && newCode) {
+          const prefix = `${newApol}/${newCode}-`;
+          if (!calculatedIdVq || !calculatedIdVq.startsWith(prefix)) {
+            const siblings = await tx.user.findMany({
+              where: {
+                condominiumId: currentUser.condominiumId,
+                isActive: true,
+                apolfap: newApol,
+                registrationTypeCode: newCode,
+                id: { not: id },
+                idVq: { startsWith: prefix },
+              },
+              select: { idVq: true },
+            });
+
+            const usedSuffixes = new Set(
+              siblings
+                .map((s) => {
+                  if (!s.idVq) return null;
+                  const parts = s.idVq.split("-");
+                  const suffixVal = parseInt(parts[parts.length - 1], 10);
+                  return isNaN(suffixVal) ? null : suffixVal;
+                })
+                .filter((s): s is number => s !== null)
+            );
+
+            let suffix = 1;
+            for (let i = 1; i <= 5; i++) {
+              if (!usedSuffixes.has(i)) {
+                suffix = i;
+                break;
+              }
+            }
+
+            calculatedIdVq = `${newApol}/${newCode}-${suffix}`;
+          }
+        } else {
+          calculatedIdVq = null;
+        }
+      }
+
       const updatedUser = await tx.user.update({
         where: { id },
         data: {
@@ -683,6 +753,12 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           businessPhone: data.businessPhone,
           taxStatusPdfUrl: data.taxStatusPdfUrl,
           initialRole: data.initialRole,
+          birthDate: data.birthDate === undefined ? undefined : (data.birthDate ? new Date(data.birthDate) : null),
+          gender: data.gender,
+          apolfap: data.apolfap,
+          registrationTypeCode: data.registrationTypeCode,
+          registrationTypeDesc: data.registrationTypeDesc,
+          idVq: calculatedIdVq,
         },
       });
 

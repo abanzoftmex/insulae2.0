@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { 
   FileText, 
   Upload, 
@@ -9,13 +9,23 @@ import {
   Plus,
   Users,
   Building2,
+  Settings,
+  Edit3,
+  Trash2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
-import { saveDirectoryContactAction, updatePasswordAction } from "./actions";
+import { 
+  saveDirectoryContactAction, 
+  updatePasswordAction,
+  getRegistrationTypesAction,
+  addRegistrationTypeAction,
+  updateRegistrationTypeAction,
+  deleteRegistrationTypeAction
+} from "./actions";
 import type { DirectoryContactParticipation } from "@/modules/directory/domain/directory";
 
 interface DirectoryFormProps {
@@ -41,6 +51,16 @@ export function DirectoryForm({
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const [registrationTypes, setRegistrationTypes] = useState<Array<{ id: string; code: string; description: string }>>([]);
+  const [isManagerOpen, setIsManagerOpen] = useState(false);
+  const [newTypeDesc, setNewTypeDesc] = useState("");
+  const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
+  const [editingTypeDesc, setEditingTypeDesc] = useState("");
+
+  const uniqueAssignments = Array.from(
+    new Map((initialData.assignments || []).map((a) => [a.privateAreaId, a])).values()
+  );
+
   const [formData, setFormData] = useState({
     userType: initialData.userType,
     requiresInvoice: initialData.requiresInvoice,
@@ -59,11 +79,43 @@ export function DirectoryForm({
     taxAddress: initialData.taxAddress || "",
     taxStatusPdfUrl: initialData.taxStatusPdfUrl || "",
     initialRole: initialData.initialRole || "",
+    birthDate: initialData.birthDate || "",
+    gender: initialData.gender || "",
+    apolfap: initialData.apolfap || (uniqueAssignments.length > 0 ? uniqueAssignments[0].privateAreaName : ""),
+    registrationTypeCode: initialData.registrationTypeCode || "",
+    registrationTypeDesc: initialData.registrationTypeDesc || "",
+    idVq: initialData.idVq || "",
   });
+
+  useEffect(() => {
+    getRegistrationTypesAction(initialData.condominiumId).then((res) => {
+      if (res.ok && res.data) {
+        setRegistrationTypes(res.data);
+      }
+    });
+  }, [initialData.condominiumId]);
+
+  const handleRegTypeChange = (code: string) => {
+    const matched = registrationTypes.find((t) => t.code === code);
+    if (matched) {
+      setFormData((prev) => ({
+        ...prev,
+        registrationTypeCode: matched.code,
+        registrationTypeDesc: matched.description,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        registrationTypeCode: "",
+        registrationTypeDesc: "",
+      }));
+    }
+  };
 
   const handleChange = (field: keyof typeof formData, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -291,6 +343,75 @@ export function DirectoryForm({
                   )}
                 </div>
               </div>
+
+              <div className="space-y-1.5">
+                <label className={labelCls}>ApolFap a la que pertenece</label>
+                <select
+                  value={formData.apolfap}
+                  onChange={(e) => handleChange("apolfap", e.target.value)}
+                  className={fieldCls}
+                >
+                  {uniqueAssignments.length === 0 ? (
+                    <option value="">Sin áreas asignadas</option>
+                  ) : (
+                    uniqueAssignments.map((assignment) => (
+                      <option key={assignment.privateAreaId} value={assignment.privateAreaName}>
+                        {assignment.privateAreaName}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={labelCls}>Tipo de registro (Descripción)</label>
+                <div className="flex gap-2">
+                  <select
+                    value={formData.registrationTypeCode}
+                    onChange={(e) => handleRegTypeChange(e.target.value)}
+                    className={fieldCls}
+                  >
+                    <option value="">Seleccionar tipo...</option>
+                    {registrationTypes.map((type) => (
+                      <option key={type.id} value={type.code}>
+                        {type.description} ({type.code})
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setIsManagerOpen(true)}
+                    className="h-9 px-3 bg-canvas hover:bg-canvas/80 border border-line text-ink rounded-sm transition-colors flex items-center justify-center shrink-0"
+                    title="Gestionar tipos"
+                  >
+                    <Settings className="w-4 h-4 text-ink-soft" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={labelCls}>Tipo de registro (Código)</label>
+                <input
+                  type="text"
+                  value={formData.registrationTypeCode}
+                  readOnly
+                  disabled
+                  className={cn(fieldCls, "bg-canvas/50 text-ink-soft cursor-not-allowed")}
+                  placeholder="8-XX"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={labelCls}>ID VQ</label>
+                <input
+                  type="text"
+                  value={formData.idVq || "Autogenerado al guardar..."}
+                  readOnly
+                  disabled
+                  className={cn(fieldCls, "bg-canvas/50 text-ink-soft cursor-not-allowed font-mono")}
+                  placeholder="VQ#..."
+                />
+              </div>
             </div>
           </div>
 
@@ -306,6 +427,31 @@ export function DirectoryForm({
               <Input label="CURP" value={formData.curp} onChange={(e) => handleChange("curp", e.target.value)} />
               <Input label="Teléfono" value={formData.personalPhone} onChange={(e) => handleChange("personalPhone", e.target.value)} />
               <Input label="Email Personal" value={formData.personalEmail} onChange={(e) => handleChange("personalEmail", e.target.value)} />
+
+              <div className="space-y-1.5">
+                <label className={labelCls}>Fecha de nacimiento</label>
+                <input
+                  type="date"
+                  value={formData.birthDate}
+                  onChange={(e) => handleChange("birthDate", e.target.value)}
+                  className={fieldCls}
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={labelCls}>Género</label>
+                <select
+                  value={formData.gender}
+                  onChange={(e) => handleChange("gender", e.target.value)}
+                  className={fieldCls}
+                >
+                  <option value="">Seleccionar género...</option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Femenino">Femenino</option>
+                  <option value="Otro">Otro</option>
+                  <option value="Sin especificar">Sin especificar</option>
+                </select>
+              </div>
               <div className="sm:col-span-3">
                 <Input label="Dirección" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} />
               </div>
@@ -443,6 +589,160 @@ export function DirectoryForm({
               </div>
             </div>
           ))}
+        </div>
+      )}
+      {/* Modal to manage registration types */}
+      {isManagerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-brand bg-brand flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white">Gestionar Tipos de Registro</h3>
+              <button
+                onClick={() => setIsManagerOpen(false)}
+                className="text-white hover:text-white/80 text-xl font-bold leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 max-h-[50vh] overflow-y-auto space-y-3">
+              <div className="space-y-2">
+                {registrationTypes.length === 0 ? (
+                  <p className="text-center text-ink-soft text-xs py-4">No hay tipos de registro creados.</p>
+                ) : (
+                  registrationTypes.map((type) => (
+                    <div key={type.id} className="flex items-center gap-2 border-b border-line/60 pb-2">
+                      <span className="w-16 font-mono text-xs font-bold text-brand-accent bg-brand-mint/10 border border-brand-mint/20 py-1 rounded text-center shrink-0">
+                        {type.code}
+                      </span>
+                      {editingTypeId === type.id ? (
+                        <input
+                          type="text"
+                          value={editingTypeDesc}
+                          onChange={(e) => setEditingTypeDesc(e.target.value)}
+                          className="flex-1 h-8 px-2 text-sm border border-brand rounded-sm outline-none"
+                          autoFocus
+                        />
+                      ) : (
+                        <span className="flex-1 text-sm text-ink font-medium px-2">{type.description}</span>
+                      )}
+                      <div className="flex gap-1">
+                        {editingTypeId === type.id ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const desc = editingTypeDesc.trim();
+                                if (desc && desc !== type.description) {
+                                  const res = await updateRegistrationTypeAction(type.id, desc);
+                                  if (res.ok) {
+                                    setRegistrationTypes((prev) =>
+                                      prev.map((t) => (t.id === type.id ? { ...t, description: desc } : t))
+                                    );
+                                    if (formData.registrationTypeCode === type.code) {
+                                      setFormData((prev) => ({ ...prev, registrationTypeDesc: desc }));
+                                    }
+                                  }
+                                }
+                                setEditingTypeId(null);
+                              }}
+                              className="px-2 py-1 bg-brand text-white text-[9px] font-bold uppercase rounded-sm hover:bg-brand-accent transition-colors"
+                            >
+                              Ok
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setEditingTypeId(null)}
+                              className="px-2 py-1 bg-canvas border border-line text-ink-soft text-[9px] font-bold uppercase rounded-sm hover:bg-line transition-colors"
+                            >
+                              Esc
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setEditingTypeId(type.id);
+                                setEditingTypeDesc(type.description);
+                              }}
+                              className="text-brand hover:text-brand-accent p-1"
+                              title="Editar"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (confirm(`¿Estás seguro de eliminar "${type.description}"?`)) {
+                                  const res = await deleteRegistrationTypeAction(type.id);
+                                  if (res.ok) {
+                                    setRegistrationTypes((prev) => prev.filter((t) => t.id !== type.id));
+                                    if (formData.registrationTypeCode === type.code) {
+                                      setFormData((prev) => ({
+                                        ...prev,
+                                        registrationTypeCode: "",
+                                        registrationTypeDesc: "",
+                                      }));
+                                    }
+                                  }
+                                }
+                              }}
+                              className="text-danger hover:text-danger-accent p-1"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Add Section */}
+              <div className="pt-4 border-t border-line space-y-2">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft">Nueva descripción</p>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newTypeDesc}
+                    onChange={(e) => setNewTypeDesc(e.target.value)}
+                    placeholder="Ej. Condómino Habitacional"
+                    className="flex-1 h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      const desc = newTypeDesc.trim();
+                      if (!desc) return;
+                      const res = await addRegistrationTypeAction(initialData.condominiumId, desc);
+                      if (res.ok && res.data) {
+                        setRegistrationTypes((prev) => [...prev, res.data]);
+                        setNewTypeDesc("");
+                      }
+                    }}
+                    className="h-9 px-4 bg-brand hover:bg-brand-accent text-white text-[10px] font-bold uppercase tracking-widest rounded-sm transition-colors"
+                  >
+                    Agregar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3 bg-canvas border-t border-line flex justify-end">
+              <button
+                onClick={() => setIsManagerOpen(false)}
+                className="h-8 px-5 bg-white border border-line rounded-full text-[10px] font-bold uppercase tracking-widest text-ink hover:bg-canvas transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
