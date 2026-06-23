@@ -33,6 +33,7 @@ export interface CondominiumReportVM {
   parentAreasCount: string;
   parentAreasM2: string;
   parentAreasCommonM2: string;
+  parentTotalM2: string;
   activeFusionsCount: string;
   classificationBaseTotal: string;
   classificationBaseLabel: string;
@@ -116,6 +117,7 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     parentAreasCount: formatInteger(report.parentAreasCount),
     parentAreasM2: formatNumber4(report.parentAreasM2),
     parentAreasCommonM2: formatNumber4(report.parentAreasCommonM2),
+    parentTotalM2: formatNumber4(report.parentAreasM2 + report.parentAreasCommonM2),
     activeFusionsCount: formatInteger(report.activeFusionsCount),
     classificationBaseTotal: formatInteger(report.classificationBaseTotal),
     classificationBaseLabel: report.classificationBaseLabel,
