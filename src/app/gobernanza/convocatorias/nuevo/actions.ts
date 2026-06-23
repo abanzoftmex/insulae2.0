@@ -12,10 +12,23 @@ export async function createAnnouncementAction(formData: any) {
 
     if (!condominium) throw new Error("Condominium not found");
 
-    // 2. Get Default Status
-    const status = await prisma.announcementStatus.findFirst({
-      where: { name: { contains: "Pendiente" } }
+    // 2. Get Default Status (case-insensitive lookup, fallback to first available, or auto-create)
+    let status = await prisma.announcementStatus.findFirst({
+      where: { name: { contains: "Pendiente", mode: "insensitive" } }
     });
+
+    if (!status) {
+      status = await prisma.announcementStatus.findFirst();
+    }
+
+    if (!status) {
+      status = await prisma.announcementStatus.create({
+        data: {
+          name: "Pendiente",
+          color: "#6d422a"
+        }
+      });
+    }
 
     // 3. Create Announcement
     const announcement = await prisma.announcement.create({

@@ -26,7 +26,7 @@ export default async function BudgetPrintPage(props: { searchParams: Promise<{ a
           <h2 className="text-2xl font-medium text-gray-600 tracking-wide">{condo.name.toUpperCase()}</h2>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-gray-800">VAL'QUIRICO</div>
+          <div className="text-2xl font-bold text-gray-800">{condo.name.toUpperCase()}</div>
           <p className="text-xs text-gray-400 mt-1 uppercase tracking-tighter">Sistema Condominal | Impresión</p>
         </div>
       </div>
@@ -54,8 +54,8 @@ export default async function BudgetPrintPage(props: { searchParams: Promise<{ a
 
       {/* Group Tables */}
       <div className="space-y-12">
-        {vm.groups.map((group) => (
-          <div key={group.groupData} className="break-inside-avoid">
+        {vm.groups.map((group, idx) => (
+          <div key={`${group.groupData}-${idx}`} className="break-inside-avoid">
               <h3 className="text-xs font-bold text-brand uppercase tracking-wider mb-3 pb-1 border-b border-brand/20">
                 {group.groupData}
               </h3>
@@ -106,7 +106,7 @@ export default async function BudgetPrintPage(props: { searchParams: Promise<{ a
 
       {/* Footer */}
       <div className="mt-16 pt-8 border-t border-gray-100 text-center text-[10px] text-gray-400 uppercase tracking-widest">
-        Documento generado automáticamente por el Sistema Condominal Val'Quirico &bull; {new Date().toLocaleDateString()}
+        Documento generado automáticamente por el Sistema Condominal {condo.name} &bull; {new Date().toLocaleDateString()}
       </div>
     </div>
   );
