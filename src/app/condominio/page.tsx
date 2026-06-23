@@ -91,7 +91,8 @@ export default async function CondominioPage() {
   }
 
   const activeCount = overview ? parseInt(overview.activePrivateAreas.replace(/,/g, "")) : 0;
-  const totalRegistered = activeCount;
+  const inactiveCount = overview ? parseInt(overview.inactivePrivateAreas.replace(/,/g, "")) : 0;
+  const totalRegistered = activeCount + inactiveCount;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
