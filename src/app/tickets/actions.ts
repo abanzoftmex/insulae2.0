@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { saveTicketResponseUseCase, getTicketResponseFormUseCase, toTicketResponseFormVM } from "@/modules/tickets";
 import type { TicketStatusValue } from "@/modules/tickets/domain/ticket";
-import { getCurrentUser } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
@@ -49,7 +49,8 @@ export async function createTicketAction(data: {
 
     if (!condominium) return { ok: false, message: "Condominio inactivo" };
 
-    const currentUserId = await getCurrentUser();
+    const session = await getCurrentSession();
+    const currentUserId = session?.userId;
 
     await prisma.ticket.create({
       data: {

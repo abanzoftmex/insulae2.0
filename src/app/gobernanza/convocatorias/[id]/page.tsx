@@ -4,6 +4,7 @@ import { prisma } from "@/shared/infrastructure/db/prisma";
 import { AnnouncementDetailsActions } from "../components/announcement-details-actions";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
+import { cookies } from "next/headers";
 import { Card } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
@@ -28,9 +29,18 @@ interface PageProps {
 export default async function AnnouncementDetailPage({ params }: PageProps) {
   const { id } = await params;
 
+  // Read session to verify if Admin or Resident
+  const cookieStore = await cookies();
+  const sessionStr = cookieStore.get("insulae_session")?.value;
+  const session = sessionStr ? JSON.parse(sessionStr) : null;
+  const isAdmin = session?.role === "ADMIN";
+
   // 1. Fetch Convocatoria Details
   const announcement = await getAnnouncementByIdUseCase.execute(id);
   if (!announcement) notFound();
+
+  const activeDateId = announcement.dates[0]?.id;
+  const statusName = announcement.status.name;
 
   // 2. Fetch all directories & positions catalogs for friendly display name mappings
   const formData = await getAnnouncementFormDataUseCase.execute();
@@ -87,7 +97,13 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
               Ver PDF
             </a>
           )}
-          <AnnouncementDetailsActions id={announcement.id} pdfUrl={announcement.pdfUrl} />
+          <AnnouncementDetailsActions
+            id={announcement.id}
+            pdfUrl={announcement.pdfUrl}
+            isAdmin={isAdmin}
+            activeDateId={activeDateId}
+            statusName={statusName}
+          />
         </div>
       </div>
 

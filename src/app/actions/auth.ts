@@ -121,3 +121,15 @@ export async function getCurrentUser(): Promise<string> {
     return "Sistema";
   }
 }
+
+export async function getCurrentSession(): Promise<any> {
+  try {
+    const cookieStore = await cookies();
+    const sessionStr = cookieStore.get("insulae_session")?.value;
+    if (!sessionStr) return null;
+    return JSON.parse(sessionStr);
+  } catch {
+    return null;
+  }
+}
+

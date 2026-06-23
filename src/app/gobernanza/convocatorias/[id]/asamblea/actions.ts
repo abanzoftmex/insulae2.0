@@ -2,6 +2,8 @@
 
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { revalidatePath } from "next/cache";
+import { Resend } from "resend";
+import { headers } from "next/headers";
 
 /**
  * Toggle attendance for a given position ID in the specific date called session.
@@ -139,6 +141,245 @@ export async function closeAsambleaAction(dateId: string, isCompleted: boolean) 
     return { success: true, status };
   } catch (error: any) {
     console.error("Error closing assembly:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send an email invitation for the announcement to all convocados and special guests.
+ */
+export async function sendAnnouncementInvitationAction(announcementId: string) {
+  try {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (!resendApiKey) {
+      throw new Error("La variable de entorno RESEND_API_KEY no está configurada.");
+    }
+
+    const resend = new Resend(resendApiKey);
+
+    // Fetch the announcement details, invited positions, special guests and condominium
+    const announcement = await prisma.announcement.findUnique({
+      where: { id: announcementId },
+      include: {
+        type: true,
+        subtype: true,
+        dates: {
+          where: { isActive: true },
+          orderBy: { date: "asc" }
+        },
+        invitedPositions: {
+          where: { isActive: true },
+          include: {
+            position: {
+              include: {
+                assignments: {
+                  where: { isActive: true },
+                  include: {
+                    user: true
+                  }
+                }
+              }
+            }
+          }
+        },
+        specialGuests: {
+          where: { isActive: true }
+        },
+        condominium: true
+      }
+    });
+
+    if (!announcement) {
+      throw new Error("No se encontró la convocatoria.");
+    }
+
+    // Resolve all distinct valid emails
+    const emailSet = new Set<string>();
+
+    for (const invitedPos of announcement.invitedPositions) {
+      const position = invitedPos.position;
+      if (position && position.assignments) {
+        for (const assignment of position.assignments) {
+          const user = assignment.user;
+          if (user) {
+            const email = user.email || user.personalEmail || user.businessEmail;
+            if (email && email.trim() !== "") {
+              emailSet.add(email.trim().toLowerCase());
+            }
+          }
+        }
+      }
+    }
+
+    for (const guest of announcement.specialGuests) {
+      if (guest.email && guest.email.trim() !== "") {
+        emailSet.add(guest.email.trim().toLowerCase());
+      }
+    }
+
+    const emails = Array.from(emailSet);
+    if (emails.length === 0) {
+      return { success: false, error: "No se encontraron destinatarios con correos válidos para esta convocatoria." };
+    }
+
+    const condominiumName = announcement.condominium.name;
+    const announcementName = announcement.name;
+    const typeName = announcement.type.name;
+    const subtypeName = announcement.subtype.name;
+
+    // Generate calls list HTML
+    let callsHtml = "";
+    for (const dateVal of announcement.dates) {
+      const formattedDate = new Date(dateVal.date).toLocaleDateString("es-MX", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      callsHtml += `
+        <div style="margin-bottom: 15px; padding: 15px; background-color: #fcf9f5; border-radius: 8px; border: 1px solid #e8dbcc;">
+          <p style="margin: 0; font-size: 14px; font-weight: bold; color: #6d422a;">${dateVal.callType}</p>
+          <p style="margin: 5px 0 0; font-size: 14px; color: #2f221a;"><strong>Fecha:</strong> ${formattedDate} a las ${dateVal.time || ""} hrs</p>
+          <p style="margin: 5px 0 0; font-size: 14px; color: #2f221a;"><strong>Lugar:</strong> ${dateVal.location || "No especificado"}</p>
+        </div>
+      `;
+    }
+
+    const hostHeader = (await headers()).get("host") || "insulae.sistemasabanza.com";
+    const proto = hostHeader.includes("localhost") ? "http" : "https";
+    const portalUrl = `${proto}://${hostHeader}/gobernanza/convocatorias/${announcementId}`;
+
+    const emailSubject = `${condominiumName} - Convocatoria: ${announcementName}`;
+
+    const emailBody = `
+      <!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Invitación Convocatoria</title>
+        </head>
+        <body style="background-color: #fcf9f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 30px; margin: 0;">
+          <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-collapse: collapse; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(109, 66, 42, 0.08); border: 1px solid #e8dbcc;">
+            <tbody>
+              <!-- Header -->
+              <tr>
+                <td style="background-color: #6d422a; padding: 30px; text-align: center;">
+                  <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; text-transform: uppercase;">
+                    ${condominiumName}
+                  </h1>
+                </td>
+              </tr>
+              <!-- Body -->
+              <tr>
+                <td style="padding: 40px 30px; color: #2f221a;">
+                  <p style="font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    Apreciable condómino,
+                  </p>
+                  <p style="font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
+                    Le hacemos llevar la convocatoria para la <strong>${announcementName}</strong> (${typeName} - ${subtypeName}) que se llevará a cabo en el condominio.
+                  </p>
+
+                  <h3 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #6d422a; margin: 0 0 15px 0; border-bottom: 2px solid #e8dbcc; padding-bottom: 5px;">
+                    Detalles del llamado
+                  </h3>
+                  
+                  ${callsHtml}
+
+                  ${
+                    announcement.pdfUrl
+                      ? `
+                        <div style="margin-top: 20px; text-align: center;">
+                          <a href="${announcement.pdfUrl}" target="_blank" style="background-color: #ffffff; border: 1px solid #e8dbcc; color: #6d422a; text-decoration: none; padding: 10px 20px; font-size: 13px; font-weight: bold; border-radius: 9999px; display: inline-block; box-shadow: 0 2px 6px rgba(109, 66, 42, 0.04);">
+                            Ver PDF de la convocatoria
+                          </a>
+                        </div>
+                      `
+                      : ""
+                  }
+
+                  <div style="margin-top: 30px; padding: 20px; background-color: #fcf9f5; border-radius: 12px; border: 1px solid #e8dbcc;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #6d422a; text-transform: uppercase; letter-spacing: 0.5px;">
+                      Instrucciones para Participar y Votar:
+                    </h4>
+                    <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #2f221a; line-height: 1.6;">
+                      <li style="margin-bottom: 8px;">Haga clic en el botón de abajo para acceder a la convocatoria.</li>
+                      <li style="margin-bottom: 8px;">Inicie sesión en el portal con su cuenta de condómino.</li>
+                      <li style="margin-bottom: 8px;">En la pantalla de la convocatoria, presione el botón <strong>"Participar en asamblea"</strong>.</li>
+                      <li>Confirme su asistencia en las propiedades que representa y emita sus votos en el orden del día.</li>
+                    </ol>
+                    <div style="margin-top: 20px; text-align: center;">
+                      <a href="${portalUrl}" target="_blank" style="background-color: #6d422a; color: #ffffff; text-decoration: none; padding: 12px 25px; font-size: 14px; font-weight: bold; border-radius: 9999px; display: inline-block; box-shadow: 0 2px 10px rgba(109, 66, 42, 0.2); text-transform: uppercase; letter-spacing: 0.5px;">
+                        Acceder al Portal de Asamblea
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div style="margin-top: 35px; border-top: 1px solid #e8dbcc; padding-top: 20px;">
+                    <p style="font-size: 16px; line-height: 1.6; margin: 0; font-weight: bold;">
+                      Agradecemos de antemano su puntual asistencia y participación.
+                    </p>
+                    <p style="font-size: 14px; color: #958172; margin: 5px 0 0 0;">
+                      Saludos cordiales, <br/>
+                      Administración de ${condominiumName}
+                    </p>
+                  </div>
+                </td>
+              </tr>
+              <!-- Footer -->
+              <tr>
+                <td style="background-color: #f7f9fa; padding: 20px 30px; text-align: center; font-size: 11px; color: #958172; border-top: 1px solid #e8dbcc;">
+                  Recibió este correo porque está registrado en el sistema condominal de ${condominiumName}. 
+                  Si hay un error en esta información, por favor póngase en contacto con la administración.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </body>
+      </html>
+    `;
+
+    // Send individual emails using Resend to avoid listing all recipients in CC/TO
+    let sentCount = 0;
+    let failedCount = 0;
+
+    for (const email of emails) {
+      try {
+        await resend.emails.send({
+          from: `Gobernanza ${condominiumName} <gobernanza@insulae.sistemasabanza.com>`,
+          to: email,
+          subject: emailSubject,
+          html: emailBody
+        });
+        sentCount++;
+      } catch (err) {
+        console.error(`Error sending email to ${email}:`, err);
+        failedCount++;
+      }
+    }
+
+    // Update parent Announcement status to "En Proceso"
+    const inProcessStatus = await prisma.announcementStatus.findFirst({
+      where: { name: { contains: "En Proceso", mode: "insensitive" } }
+    });
+
+    if (inProcessStatus) {
+      await prisma.announcement.update({
+        where: { id: announcementId },
+        data: { statusId: inProcessStatus.id }
+      });
+    }
+
+    revalidatePath("/gobernanza/convocatorias");
+    revalidatePath(`/gobernanza/convocatorias/${announcementId}`);
+
+    return {
+      success: true,
+      sentCount,
+      failedCount,
+      total: emails.length
+    };
+  } catch (error: any) {
+    console.error("Error in sendAnnouncementInvitationAction:", error);
     return { success: false, error: error.message };
   }
 }

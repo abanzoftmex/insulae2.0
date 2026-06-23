@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { Announcement } from "@/modules/announcement/domain/announcement.types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -14,9 +14,13 @@ import {
   MoreVertical,
   Eye,
   Edit2,
-  Play
+  Play,
+  Mail,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { sendAnnouncementInvitationAction } from "../[id]/asamblea/actions";
 
 interface AnnouncementCardProps {
   announcement: Announcement;
@@ -24,6 +28,23 @@ interface AnnouncementCardProps {
 
 export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isSending, startSendingTransition] = useTransition();
+  const pathname = usePathname();
+  const isResidentView = pathname.startsWith("/condomino");
+
+  const handleSendByEmail = () => {
+    if (confirm("¿Estás seguro de que deseas enviar esta convocatoria por correo electrónico a todos los participantes e invitados?")) {
+      startSendingTransition(async () => {
+        const res = await sendAnnouncementInvitationAction(announcement.id);
+        setDropdownOpen(false);
+        if (res.success) {
+          alert(`Convocatoria enviada con éxito.\nTotal de correos enviados: ${res.sentCount}.\nFallidos: ${res.failedCount}.`);
+        } else {
+          alert(`Error al enviar correos: ${res.error}`);
+        }
+      });
+    }
+  };
 
   return (
     <Card className="overflow-hidden flex flex-col hover:shadow-md transition-shadow relative">
@@ -138,23 +159,52 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
                       Ver detalles
                     </Link>
 
-                    <Link
-                      href={`/gobernanza/convocatorias/${announcement.id}/editar`}
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
-                    >
-                      <Edit2 className="h-3.5 w-3.5 text-ink-soft" />
-                      Editar convocatoria
-                    </Link>
+                    {!isResidentView && (
+                      <>
+                        <Link
+                          href={`/gobernanza/convocatorias/${announcement.id}/editar`}
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
+                        >
+                          <Edit2 className="h-3.5 w-3.5 text-ink-soft" />
+                          Editar convocatoria
+                        </Link>
 
-                    <Link
-                      href={`/gobernanza/convocatorias/${announcement.id}/asamblea`}
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
-                    >
-                      <Play className="h-3.5 w-3.5 text-ink-soft" />
-                      Iniciar asamblea
-                    </Link>
+                        <Link
+                          href={`/gobernanza/convocatorias/${announcement.id}/asamblea`}
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
+                        >
+                          <Play className="h-3.5 w-3.5 text-ink-soft" />
+                          Iniciar asamblea
+                        </Link>
+
+                        <button
+                          type="button"
+                          disabled={isSending}
+                          onClick={handleSendByEmail}
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors disabled:opacity-50 cursor-pointer"
+                        >
+                          {isSending ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" />
+                          ) : (
+                            <Mail className="h-3.5 w-3.5 text-ink-soft" />
+                          )}
+                          {isSending ? "Enviando..." : "Enviar por correo"}
+                        </button>
+                      </>
+                    )}
+
+                    {isResidentView && (announcement.status.name === "En Proceso" || announcement.status.name === "Iniciada") && announcement.dates[0] && (
+                      <Link
+                        href={`/gobernanza/convocatorias/${announcement.id}/asamblea/${announcement.dates[0].id}/participar`}
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-brand hover:bg-brand/5 transition-colors"
+                      >
+                        <Play className="h-3.5 w-3.5 text-brand fill-brand" />
+                        Participar
+                      </Link>
+                    )}
                   </div>
                 </>
               )}
