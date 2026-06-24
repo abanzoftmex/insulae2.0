@@ -4,9 +4,43 @@ import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import Link from "next/link";
 import { CalendarDays, Plus } from "lucide-react";
+import { getCurrentSession } from "@/app/actions/auth";
+import { prisma } from "@/shared/infrastructure/db/prisma";
 
 export default async function AnnouncementsPage() {
-  const announcements = await getAnnouncementsUseCase.execute();
+  const session = await getCurrentSession();
+  if (!session) {
+    return (
+      <div className="space-y-4 animate-in fade-in duration-500">
+        <div className="flex flex-col items-center justify-center py-20 bg-card rounded-card border border-line shadow-layered">
+          <p className="text-ink-soft text-[11px]">Inicie sesión para ver las convocatorias.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isAdmin = session.role === "ADMIN";
+  const rawAnnouncements = await getAnnouncementsUseCase.execute();
+
+  let announcements = rawAnnouncements;
+  if (!isAdmin) {
+    const userAssignments = await prisma.condominiumStructurePositionAssignment.findMany({
+      where: { userId: session.userId, isActive: true },
+      select: { positionId: true }
+    });
+    const userPositionIds = userAssignments.map(ua => ua.positionId);
+    const userEmail = session.email ? session.email.toLowerCase() : "";
+
+    announcements = rawAnnouncements.filter(ann => {
+      const isPositionInvited = (ann.invitedPositions || []).some((ip: any) => 
+        userPositionIds.includes(ip.positionId)
+      );
+      const isSpecialGuest = (ann.specialGuests || []).some((sg: any) => 
+        sg.email && sg.email.toLowerCase() === userEmail
+      );
+      return isPositionInvited || isSpecialGuest;
+    });
+  }
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
@@ -23,13 +57,15 @@ export default async function AnnouncementsPage() {
           </div>
         </div>
 
-        <Link
-          href="/gobernanza/convocatorias/nuevo"
-          className="flex items-center gap-2 h-8 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors self-start md:self-auto shrink-0"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Nueva convocatoria
-        </Link>
+        {isAdmin && (
+          <Link
+            href="/gobernanza/convocatorias/nuevo"
+            className="flex items-center gap-2 h-8 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors self-start md:self-auto shrink-0"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Nueva convocatoria
+          </Link>
+        )}
       </div>
 
       {/* Announcements Grid */}
@@ -48,12 +84,14 @@ export default async function AnnouncementsPage() {
             <h3 className="text-sm font-bold uppercase tracking-tight text-ink">No hay convocatorias</h3>
             <p className="text-ink-soft text-[11px] mt-1">Aún no se han registrado convocatorias en este condominio.</p>
           </div>
-          <Link
-            href="/gobernanza/convocatorias/nuevo"
-            className="text-brand font-bold text-[11px] uppercase tracking-widest hover:underline"
-          >
-            Crear la primera convocatoria
-          </Link>
+          {isAdmin && (
+            <Link
+              href="/gobernanza/convocatorias/nuevo"
+              className="text-brand font-bold text-[11px] uppercase tracking-widest hover:underline"
+            >
+              Crear la primera convocatoria
+            </Link>
+          )}
         </div>
       )}
     </div>

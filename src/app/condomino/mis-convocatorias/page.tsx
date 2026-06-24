@@ -1,10 +1,42 @@
 import { getAnnouncementsUseCase } from "@/modules/announcement/application/announcement.use-cases";
 import { AnnouncementCard } from "@/app/gobernanza/convocatorias/components/announcement-card";
+import { getCurrentSession } from "@/app/actions/auth";
+import { prisma } from "@/shared/infrastructure/db/prisma";
 
 export default async function MyAnnouncementsPage() {
-  // En una fase posterior, esto se filtraría por las convocatorias 
-  // que el condómino tiene permitido ver según su área privativa.
-  const announcements = await getAnnouncementsUseCase.execute();
+  const session = await getCurrentSession();
+  if (!session) {
+    return (
+      <div className="p-4 sm:p-6 lg:p-8 space-y-8">
+        <div className="flex flex-col items-center justify-center py-20 bg-white/50 rounded-3xl border-2 border-dashed border-[#e8dbcc]">
+          <p className="text-[#958172] text-sm">Por favor, inicie sesión para ver sus convocatorias.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isAdmin = session.role === "ADMIN";
+  const rawAnnouncements = await getAnnouncementsUseCase.execute();
+
+  let announcements = rawAnnouncements;
+  if (!isAdmin) {
+    const userAssignments = await prisma.condominiumStructurePositionAssignment.findMany({
+      where: { userId: session.userId, isActive: true },
+      select: { positionId: true }
+    });
+    const userPositionIds = userAssignments.map(ua => ua.positionId);
+    const userEmail = session.email ? session.email.toLowerCase() : "";
+
+    announcements = rawAnnouncements.filter(ann => {
+      const isPositionInvited = (ann.invitedPositions || []).some((ip: any) => 
+        userPositionIds.includes(ip.positionId)
+      );
+      const isSpecialGuest = (ann.specialGuests || []).some((sg: any) => 
+        sg.email && sg.email.toLowerCase() === userEmail
+      );
+      return isPositionInvited || isSpecialGuest;
+    });
+  }
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8">
