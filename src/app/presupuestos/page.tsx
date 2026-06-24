@@ -4,8 +4,9 @@ import Link from "next/link";
 import { getBudgetByYearUseCase } from "@/modules/budget";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import BudgetTable from "./components/budget-table";
-import { toggleBudgetStatusAction, importBudgetExcelAction } from "./actions";
+import { toggleBudgetStatusAction } from "./actions";
 import { YearSelector } from "./components/year-selector";
+import { ExcelImport } from "./components/excel-import";
 import { StatCard } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -50,34 +51,6 @@ async function StatusToggle({ isClosed, budgetId }: { isClosed: boolean, budgetI
         <span>{isClosed ? "Cerrado" : "Abierto"}</span>
       </button>
     </form>
-  );
-}
-
-function ExcelImport({ year, isClosed }: { year: number, isClosed: boolean }) {
-  if (isClosed) return null;
-  const actionWithYear = async (formData: FormData) => {
-    "use server";
-    await importBudgetExcelAction(year, formData);
-  };
-
-  return (
-    <div className="flex items-center gap-2 p-1 bg-canvas-2 rounded-lg border border-line/50">
-      <Link 
-        href={`/presupuestos/plantilla?anio=${year}`} 
-        className="h-7 px-3 flex items-center gap-1.5 text-ink-soft hover:text-ink text-[11px] font-semibold uppercase transition-colors"
-        download
-      >
-        <Download className="h-3 w-3" /> Plantilla
-      </Link>
-      <div className="w-px h-4 bg-line" />
-      <form action={actionWithYear} className="flex items-center gap-2">
-        <label className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[11px] font-semibold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard">
-          <Upload className="h-3 w-3 mr-1" /> Importar
-          <input type="file" name="file" accept=".xlsx" required className="hidden" />
-        </label>
-        <button type="submit" className="hidden" id="submit-import" />
-      </form>
-    </div>
   );
 }
 

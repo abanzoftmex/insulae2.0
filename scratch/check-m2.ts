@@ -1,38 +1,46 @@
 import { prisma } from "../src/shared/infrastructure/db/prisma";
 
 async function main() {
-  const condominium = await prisma.condominium.findFirst({
+  const sample = await prisma.privateArea.findMany({
     where: { isActive: true },
-    orderBy: { updatedAt: "desc" },
-    select: { id: true, name: true }
-  });
-
-  if (!condominium) {
-    console.log("No active condominium found.");
-    return;
-  }
-
-  console.log(`Active Condominium: ${condominium.name} (${condominium.id})`);
-
-  const stats = await prisma.privateArea.aggregate({
-    where: { condominiumId: condominium.id, isActive: true },
-    _sum: {
-      m2Original: true,
-      m2Apole: true,
-      m2Construction: true,
-      m2CommonArea: true,
-    },
-    _count: {
+    select: {
       id: true,
-    }
+      name: true,
+      parentPrivateAreaId: true,
+      m2Original: true,
+      m2CommonArea: true,
+      m2CommonAreaChildren: true,
+      m2ConstructionCommonArea: true,
+    },
+    take: 10,
   });
+  console.log("Sample Areas in INSULAE:", JSON.stringify(sample, null, 2));
 
-  console.log("Stats for active private areas:");
-  console.log(`Count: ${stats._count.id}`);
-  console.log(`m2Original (Original): ${stats._sum.m2Original?.toNumber()}`);
-  console.log(`m2Apole (Apole): ${stats._sum.m2Apole?.toNumber()}`);
-  console.log(`m2Construction (Construction): ${stats._sum.m2Construction?.toNumber()}`);
-  console.log(`m2CommonArea (Common): ${stats._sum.m2CommonArea?.toNumber()}`);
+  const parentsWithChildren = await prisma.privateArea.findMany({
+    where: {
+      isActive: true,
+      parentPrivateAreaId: null,
+      childPrivateAreas: { some: {} }
+    },
+    select: {
+      id: true,
+      name: true,
+      m2CommonArea: true,
+      m2CommonAreaChildren: true,
+      m2ConstructionCommonArea: true,
+      childPrivateAreas: {
+        select: {
+          id: true,
+          name: true,
+          m2CommonArea: true,
+          m2CommonAreaChildren: true,
+          m2ConstructionCommonArea: true,
+        }
+      }
+    },
+    take: 3,
+  });
+  console.log("Parents with children in INSULAE:", JSON.stringify(parentsWithChildren, null, 2));
 }
 
-main().catch(console.error);
+main().catch(console.error).finally(() => prisma.$disconnect());

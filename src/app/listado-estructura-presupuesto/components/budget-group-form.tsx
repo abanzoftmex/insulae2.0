@@ -9,6 +9,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 
+const MONTHS = [
+  { value: "01", label: "Enero" },
+  { value: "02", label: "Febrero" },
+  { value: "03", label: "Marzo" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Mayo" },
+  { value: "06", label: "Junio" },
+  { value: "07", label: "Julio" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Septiembre" },
+  { value: "10", label: "Octubre" },
+  { value: "11", label: "Noviembre" },
+  { value: "12", label: "Diciembre" },
+];
+
+const YEARS = Array.from({ length: 10 }, (_, i) => String(new Date().getFullYear() - 2 + i));
+
 interface ConceptFormState {
   id: string;
   name: string;
@@ -28,7 +45,18 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
 
   const [formName, setFormName] = useState(initialData?.name || "");
   const [formCategory, setFormCategory] = useState(initialData?.category || "Gastos de mantenimiento");
+  const [formOrder, setFormOrder] = useState<number>(initialData?.order ?? 0);
+
   
+  const toInputMonth = (d: Date | null) => {
+    if (!d) return "";
+    const date = new Date(d);
+    return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+  };
+
+  const [formStartsAt, setFormStartsAt] = useState(toInputMonth(initialData?.startsAt || null));
+  const [formEndsAt, setFormEndsAt] = useState(toInputMonth(initialData?.endsAt || null));
+
   const [formConcepts, setFormConcepts] = useState<ConceptFormState[]>(
     initialData?.concepts?.map((c: any) => ({
       id: c.id,
@@ -62,9 +90,9 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
          if(res.success) setFormConcepts(prev => prev.filter((_, i) => i !== index));
          else alert(res.error);
        });
-    } else {
-      setFormConcepts(prev => prev.filter((_, i) => i !== index));
-    }
+     } else {
+       setFormConcepts(prev => prev.filter((_, i) => i !== index));
+     }
   };
 
   const handleConceptChange = (index: number, field: keyof ConceptFormState, value: any) => {
@@ -81,6 +109,9 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
         year,
         name: formName,
         category: finalCategory,
+        order: Number(formOrder),
+        startsAt: formStartsAt ? new Date(`${formStartsAt}-01T00:00:00Z`) : null,
+        endsAt: formEndsAt ? new Date(`${formEndsAt}-01T00:00:00Z`) : null,
         concepts: formConcepts.map(c => ({ 
           id: c.id || undefined, 
           name: c.name,
@@ -90,7 +121,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
       });
 
       if (res.success) {
-        router.push("/listado-estructura-presupuesto");
+        router.push(`/listado-estructura-presupuesto?anio=${year}`);
       } else {
         alert(res.error);
       }
@@ -102,7 +133,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
       <Card className="border-transparent shadow-layered">
         <CardContent className="p-6 space-y-6">
           <div className="flex items-center justify-between mb-6">
-            <Button variant="outline" onClick={() => router.push("/listado-estructura-presupuesto")} className="h-8 px-4 text-[10px] font-bold uppercase gap-2">
+            <Button variant="outline" onClick={() => router.push(`/listado-estructura-presupuesto?anio=${year}`)} className="h-8 px-4 text-[10px] font-bold uppercase gap-2">
               <ArrowLeft className="h-3.5 w-3.5" /> Volver
             </Button>
             <Button 
@@ -114,7 +145,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-line">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-line">
             <Input label="Nombre del Grupo" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Ej. Gastos de Limpieza" />
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
@@ -146,7 +177,77 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                 </select>
               )}
             </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Orden de Visualización</label>
+              <input
+                type="number"
+                min={0}
+                value={formOrder}
+                onChange={(e) => setFormOrder(parseInt(e.target.value) || 0)}
+                placeholder="1"
+                className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none text-center"
+              />
+              <p className="text-[9px] text-ink-soft/40 font-bold uppercase tracking-wide">1 = primero en la lista</p>
+            </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-6 border-b border-line">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 ml-2">Mes Inicial (Opcional)</label>
+              <div className="flex gap-2">
+                <select
+                  value={formStartsAt ? formStartsAt.split("-")[1] : ""}
+                  onChange={(e) => {
+                    const y = formStartsAt ? formStartsAt.split("-")[0] : String(year);
+                    setFormStartsAt(e.target.value ? `${y}-${e.target.value}` : "");
+                  }}
+                  className="h-9 flex-1 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                >
+                  <option value="">Mes</option>
+                  {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <select
+                  value={formStartsAt ? formStartsAt.split("-")[0] : ""}
+                  onChange={(e) => {
+                    const m = formStartsAt ? formStartsAt.split("-")[1] : "01";
+                    setFormStartsAt(e.target.value && formStartsAt ? `${e.target.value}-${m}` : e.target.value ? `${e.target.value}-01` : "");
+                  }}
+                  className="h-9 w-24 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                >
+                  <option value="">Año</option>
+                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 ml-2">Mes Final (Opcional)</label>
+              <div className="flex gap-2">
+                <select
+                  value={formEndsAt ? formEndsAt.split("-")[1] : ""}
+                  onChange={(e) => {
+                    const y = formEndsAt ? formEndsAt.split("-")[0] : String(year);
+                    setFormEndsAt(e.target.value ? `${y}-${e.target.value}` : "");
+                  }}
+                  className="h-9 flex-1 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                >
+                  <option value="">Mes</option>
+                  {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <select
+                  value={formEndsAt ? formEndsAt.split("-")[0] : ""}
+                  onChange={(e) => {
+                    const m = formEndsAt ? formEndsAt.split("-")[1] : "01";
+                    setFormEndsAt(e.target.value && formEndsAt ? `${e.target.value}-${m}` : e.target.value ? `${e.target.value}-01` : "");
+                  }}
+                  className="h-9 w-24 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                >
+                  <option value="">Año</option>
+                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+            </div>
+          </div>
+        </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-line pb-2">
@@ -200,7 +301,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                     <div className="flex items-center gap-4 h-9 px-3 rounded border border-line bg-canvas/20">
                       {["N/A", "Variable", "Fijo"].map(t => (
                         <label key={t} className="flex items-center gap-1.5 cursor-pointer">
-                          <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-colors ${concept.type === t ? 'border-brand-accent bg-brand-accent' : 'border-ink-soft/30 bg-card'}`}>
+                           <div className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center transition-colors ${concept.type === t ? 'border-brand-accent bg-brand-accent' : 'border-ink-soft/30 bg-card'}`}>
                             {concept.type === t && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                           </div>
                           <span className="text-[12px] font-medium text-ink-soft select-none">{t}</span>

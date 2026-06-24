@@ -31,6 +31,8 @@ export interface BudgetGroupVM {
   budgeted: number;
   generated: number;
   balance: number;
+  startsAt?: Date | null;
+  endsAt?: Date | null;
   concepts: BudgetConceptRowVM[];
 }
 

@@ -4,6 +4,21 @@ import { BudgetVM, BudgetGroupVM as BudgetOverviewGroupVM, BudgetConceptRowVM, B
 import { BudgetStructureVM, BudgetGroupVM } from "../domain/budget-structure.types";
 import { prisma } from "../../../shared/infrastructure/db/prisma";
 
+function formatPeriod(startsAt: Date | null, endsAt: Date | null): string {
+  if (!startsAt && !endsAt) return "";
+  const formatM = (d: Date | null) => {
+    if (!d) return "";
+    const formatted = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(d));
+    return formatted.replace(/\b\w/g, c => c.toUpperCase());
+  };
+  const startStr = formatM(startsAt);
+  const endStr = formatM(endsAt);
+  if (startStr && endStr) return `${startStr} A ${endStr}`;
+  if (startStr) return `Desde ${startStr}`;
+  if (endStr) return `Hasta ${endStr}`;
+  return "";
+}
+
 export class PrismaBudgetRepository implements BudgetRepository {
   
   async getBudget(condominiumId: string, year: number): Promise<BudgetVM> {
@@ -75,7 +90,17 @@ export class PrismaBudgetRepository implements BudgetRepository {
     // Agrupacion: un bloque por cada BudgetGroup real. Guardamos el nombre
     // principal (name) y el subnombre (category) por separado para mostrarlos
     // como en la pantalla de estructura presupuestal.
-    const groupsMap = new Map<string, { name: string; subname: string; order: number; concepts: BudgetConceptRowVM[] }>();
+    const groupsMap = new Map<
+      string,
+      {
+        name: string;
+        subname: string;
+        order: number;
+        startsAt: Date | null;
+        endsAt: Date | null;
+        concepts: BudgetConceptRowVM[];
+      }
+    >();
 
     let globalBudgeted = 0;
     let globalGenerated = 0;
@@ -137,7 +162,14 @@ export class PrismaBudgetRepository implements BudgetRepository {
       const groupName = grp?.name || concept.budgetGroup || "OTHER";
       const groupSubname = grp?.category ?? "";
       if (!groupsMap.has(groupKey)) {
-        groupsMap.set(groupKey, { name: groupName, subname: groupSubname, order: grp?.order ?? 0, concepts: [] });
+        groupsMap.set(groupKey, {
+          name: groupName,
+          subname: groupSubname,
+          order: grp?.order ?? 0,
+          startsAt: grp?.startsAt ?? null,
+          endsAt: grp?.endsAt ?? null,
+          concepts: []
+        });
       }
       groupsMap.get(groupKey)?.concepts.push(row);
     }
@@ -152,15 +184,19 @@ export class PrismaBudgetRepository implements BudgetRepository {
       // sea "OTHER" (caso de insulae). Ambos sistemas se comportan idéntico:
       // nombre principal (name) + subnombre (category). Solo se omite si el
       // subnombre viene vacío o es idéntico al principal (evita duplicarlo).
-      const subname = g.subname && g.subname !== g.name ? g.subname : undefined;
+      const subname = g.subname && g.subname !== g.name ? g.subname : "";
+      const periodStr = formatPeriod(g.startsAt, g.endsAt);
+      const groupSubname = [subname, periodStr].filter(Boolean).join(" · ");
 
       groups.push({
         groupId,
         groupData: g.name,
-        groupSubname: subname,
+        groupSubname: groupSubname || undefined,
         budgeted: gBudgeted,
         generated: gGenerated,
         balance: gBalance,
+        startsAt: g.startsAt,
+        endsAt: g.endsAt,
         concepts: g.concepts
       });
     }
@@ -514,7 +550,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
           orderBy: { order: 'asc' }
         }
       },
-      orderBy: { name: 'asc' }
+      orderBy: [{ order: 'asc' }, { name: 'asc' }]
     });
 
     return {
@@ -525,6 +561,8 @@ export class PrismaBudgetRepository implements BudgetRepository {
         year: g.year,
         category: g.category,
         isActive: g.isActive,
+        startsAt: g.startsAt,
+        endsAt: g.endsAt,
         concepts: g.concepts.map(c => ({
           id: c.id,
           name: c.name,
@@ -557,61 +595,125 @@ export class PrismaBudgetRepository implements BudgetRepository {
 
   async saveBudgetGroup(data: any): Promise<void> {
     const { id, concepts, ...rest } = data;
+    const targetOrder = rest.order ?? 0;
+    const condominiumId = rest.condominiumId;
+    const year = rest.year;
 
-    if (id) {
-      // Update
-      await prisma.budgetGroup.update({
-        where: { id },
-        data: rest
-      });
+    await prisma.$transaction(async (tx) => {
+      let savedGroupId = id;
 
-      // Update concepts
-      for (const concept of concepts) {
-        if (concept.id) {
-          await prisma.budgetExpenseConcept.update({
-            where: { id: concept.id },
-            data: {
-              name: concept.name,
-              order: concept.order,
-              type: concept.type,
-              isActive: concept.isActive ?? true
-            }
-          });
-        } else {
-          await prisma.budgetExpenseConcept.create({
-            data: {
-              ...concept,
-              budgetGroupId: id,
-              condominiumId: rest.condominiumId,
-              year: rest.year
-            }
-          });
-        }
-      }
-    } else {
-      // Create
-      await this.createBudgetIfNotExists(rest.condominiumId, rest.year);
-      const newGroup = await prisma.budgetGroup.create({
-        data: {
-          name: rest.name,
-          category: rest.category,
-          order: rest.order || 0,
-          isActive: rest.isActive ?? true,
-          condominium: { connect: { id: rest.condominiumId } },
-          budget: { connect: { condominiumId_year: { condominiumId: rest.condominiumId, year: rest.year } } },
-          concepts: {
-            create: concepts.map((c: any) => ({
-              name: c.name,
-              order: c.order || 0,
-              type: c.type || "N/A",
-              isActive: c.isActive ?? true,
-              condominiumId: rest.condominiumId,
-              year: rest.year
-            }))
+      if (id) {
+        // Update Group
+        await tx.budgetGroup.update({
+          where: { id },
+          data: {
+            name: rest.name,
+            category: rest.category,
+            order: targetOrder,
+            startsAt: rest.startsAt ?? null,
+            endsAt: rest.endsAt ?? null,
+            isActive: rest.isActive ?? true,
+          }
+        });
+
+        // Update concepts
+        for (const concept of concepts) {
+          if (concept.id) {
+            await tx.budgetExpenseConcept.update({
+              where: { id: concept.id },
+              data: {
+                name: concept.name,
+                order: concept.order,
+                type: concept.type,
+                isActive: concept.isActive ?? true
+              }
+            });
+          } else {
+            await tx.budgetExpenseConcept.create({
+              data: {
+                ...concept,
+                budgetGroupId: id,
+                condominiumId,
+                year
+              }
+            });
           }
         }
+      } else {
+        // Create Group
+        const existingBudget = await tx.budget.findUnique({
+          where: { condominiumId_year: { condominiumId, year } }
+        });
+        if (!existingBudget) {
+          await tx.budget.create({
+            data: { condominiumId, year, status: BudgetStatus.OPEN }
+          });
+        }
+
+        const newGroup = await tx.budgetGroup.create({
+          data: {
+            name: rest.name,
+            category: rest.category,
+            order: targetOrder,
+            isActive: rest.isActive ?? true,
+            startsAt: rest.startsAt,
+            endsAt: rest.endsAt,
+            condominium: { connect: { id: condominiumId } },
+            budget: { connect: { condominiumId_year: { condominiumId, year } } },
+            concepts: {
+              create: concepts.map((c: any) => ({
+                name: c.name,
+                order: c.order || 0,
+                type: c.type || "N/A",
+                isActive: c.isActive ?? true,
+                condominiumId,
+                year
+              }))
+            }
+          }
+        });
+        savedGroupId = newGroup.id;
+      }
+
+      // Re-sequence other groups to resolve order conflicts
+      const allActiveGroups = await tx.budgetGroup.findMany({
+        where: { condominiumId, year, isActive: true },
+        orderBy: [
+          { order: 'asc' },
+          { id: 'asc' }
+        ]
       });
-    }
+
+      const items = allActiveGroups.map(g => ({
+        id: g.id,
+        order: g.id === savedGroupId ? targetOrder : g.order,
+        isCurrent: g.id === savedGroupId
+      }));
+
+      // Stable sort: targetOrder comes first in case of a tie
+      items.sort((a, b) => {
+        if (a.order !== b.order) {
+          return a.order - b.order;
+        }
+        if (a.isCurrent !== b.isCurrent) {
+          return a.isCurrent ? -1 : 1;
+        }
+        return 0;
+      });
+
+      let nextAvailableOrder = 1;
+      for (const item of items) {
+        const assignedOrder = Math.max(item.order, nextAvailableOrder);
+        const originalGroup = allActiveGroups.find(g => g.id === item.id);
+        if (originalGroup && originalGroup.order !== assignedOrder) {
+          await tx.budgetGroup.update({
+            where: { id: item.id },
+            data: { order: assignedOrder }
+          });
+        }
+        nextAvailableOrder = assignedOrder + 1;
+      }
+    });
   }
 
   async deleteBudgetGroup(groupId: string): Promise<void> {

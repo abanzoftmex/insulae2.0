@@ -103,6 +103,10 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
             isAdmin={isAdmin}
             activeDateId={activeDateId}
             statusName={statusName}
+            isReunion={
+              announcement.type.name.toLowerCase().includes("reunion") ||
+              announcement.subtype.name.toLowerCase().includes("reunion")
+            }
           />
         </div>
       </div>

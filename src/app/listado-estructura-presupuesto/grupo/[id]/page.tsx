@@ -5,10 +5,12 @@ import { BudgetGroupForm } from "../../components/budget-group-form";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ anio?: string }>;
 }
 
-export default async function BudgetGroupPage({ params }: PageProps) {
+export default async function BudgetGroupPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { anio } = await searchParams;
 
   const repo = new PrismaBudgetRepository();
 
@@ -20,11 +22,9 @@ export default async function BudgetGroupPage({ params }: PageProps) {
     throw new Error("No active condominium found.");
   }
 
-  // Calculate current active year
-  const startYear = new Date().getFullYear();
-  let currentYear = new Date().getFullYear();
-  if (currentYear < startYear) currentYear = startYear;
-  let year = currentYear + 1; // Assuming we manage the upcoming budget year
+  // Calculate current active year from query param or current calendar year
+  const currentYear = new Date().getUTCFullYear();
+  let year = parseInt(anio ?? "", 10) || currentYear;
 
   let initialData = null;
 

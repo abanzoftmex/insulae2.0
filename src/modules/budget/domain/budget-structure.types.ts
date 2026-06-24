@@ -6,6 +6,8 @@ export interface BudgetGroupVM {
   year: number;
   category: string;
   isActive: boolean;
+  startsAt?: Date | null;
+  endsAt?: Date | null;
   concepts: BudgetConceptShortVM[];
 }
 

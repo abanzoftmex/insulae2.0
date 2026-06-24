@@ -22,6 +22,8 @@ type PrivateAreaSnapshot = {
   m2Apole: Prisma.Decimal | number | null;
   m2Construction: Prisma.Decimal | number | null;
   m2CommonArea: Prisma.Decimal | number | null;
+  m2CommonAreaChildren: Prisma.Decimal | number | null;
+  m2ConstructionCommonArea: Prisma.Decimal | number | null;
   indiviso: Prisma.Decimal | number | null;
   parentPrivateAreaId: string | null;
   parentPrivateArea: {
@@ -147,6 +149,8 @@ export class PrismaCondominiumReportRepository
           m2Apole: true,
           m2Construction: true,
           m2CommonArea: true,
+          m2CommonAreaChildren: true,
+          m2ConstructionCommonArea: true,
           indiviso: true,
           parentPrivateAreaId: true,
           parentPrivateArea: {
@@ -180,9 +184,11 @@ export class PrismaCondominiumReportRepository
     const activePrivateAreas = privateAreaSnapshots.filter((area) => area.isActive).length;
     const inactivePrivateAreas = totalRegisteredPrivateAreas - activePrivateAreas;
     
-    // En el reporte general usamos todas las áreas activas (isActive === true)
-    // ya que al subir áreas nuevas inicialmente tienen estatus UNASSIGNED,
-    // y si filtramos por status, no se reflejan en soles/sombras ni en el total.
+    // Todas las áreas activas son reportables, independientemente del status
+    // comercial (AVAILABLE, SOLD, RENTED, UNASSIGNED). El campo `status` nunca
+    // se puebla desde la app (siempre queda en UNASSIGNED), por lo que usar ese
+    // filtro dejaba fuera TODAS las áreas nuevas → soles=0, sombras=0.
+    // Usamos el mismo criterio que prisma-condominium-overview.repository.ts.
     const reportableAreas = privateAreaSnapshots.filter((area) => area.isActive);
 
     // Parent areas (where legacy id_areas_privativas_padre = 0 or null)
@@ -210,11 +216,32 @@ export class PrismaCondominiumReportRepository
       (acc, area) => acc + decimalToNumber(area.m2Original),
       0
     );
+    // Group active children by parentPrivateAreaId to sum up common area in-memory
+    const childAreasByParentId = new Map<string, PrivateAreaSnapshot[]>();
+    for (const area of reportableAreas) {
+      if (area.parentPrivateAreaId) {
+        const list = childAreasByParentId.get(area.parentPrivateAreaId) ?? [];
+        list.push(area);
+        childAreasByParentId.set(area.parentPrivateAreaId, list);
+      }
+    }
+
     // 3. parentAreasCommonM2
-    const parentAreasCommonM2 = parentAreas.reduce(
-      (acc, area) => acc + decimalToNumber(area.m2CommonArea),
-      0
-    );
+    let parentAreasCommonM2 = parentAreas.reduce((acc, parentArea) => {
+      const children = childAreasByParentId.get(parentArea.id) ?? [];
+      const childrenCommonAreaChildrenM2 = children.reduce(
+        (sum, child) => sum + decimalToNumber(child.m2ConstructionCommonArea),
+        0
+      );
+      return acc + childrenCommonAreaChildrenM2;
+    }, 0);
+
+    if (parentAreasCommonM2 === 0) {
+      parentAreasCommonM2 = parentAreas.reduce(
+        (acc, area) => acc + decimalToNumber(area.m2CommonArea),
+        0
+      );
+    }
     // 4. activeFusionsCount
     const activeFusionsCount = reportableAreas.filter((area) => area.isFusion).length;
 
@@ -256,14 +283,25 @@ export class PrismaCondominiumReportRepository
       0,
     );
 
-    const zoneSet = new Set<string>();
+    const catalogZoneByLower = new Map<string, string>();
     for (const zoneCatalog of zoneCatalogs) {
-      if (zoneCatalog.name.trim().length > 0) {
-        zoneSet.add(zoneCatalog.name.trim());
+      const trimmed = zoneCatalog.name.trim();
+      if (trimmed.length > 0) {
+        catalogZoneByLower.set(trimmed.toLowerCase(), trimmed);
       }
     }
+
+    const resolveZoneName = (zoneVal: string | null | undefined): string => {
+      const norm = normalizeZone(zoneVal);
+      return catalogZoneByLower.get(norm.toLowerCase()) ?? norm;
+    };
+
+    const zoneSet = new Set<string>();
+    for (const exactCatalogName of catalogZoneByLower.values()) {
+      zoneSet.add(exactCatalogName);
+    }
     for (const area of reportableAreas) {
-      zoneSet.add(normalizeZone(area.zone));
+      zoneSet.add(resolveZoneName(area.zone));
     }
     if (zoneSet.size === 0) {
       zoneSet.add("Sin zona");
@@ -446,7 +484,7 @@ export class PrismaCondominiumReportRepository
         continue;
       }
 
-      const zoneName = normalizeZone(area.zone);
+      const zoneName = resolveZoneName(area.zone);
       if (!(zoneName in row.byZone)) {
         row.byZone[zoneName] = 0;
       }

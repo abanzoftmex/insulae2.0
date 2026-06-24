@@ -664,6 +664,8 @@ model BudgetGroup {
   order         Int                    @default(0)
   parentId      String?                @map("parent_id")
   category      String                 @default("OTHER")
+  startsAt      DateTime?              @map("starts_at")
+  endsAt        DateTime?              @map("ends_at")
   concepts      BudgetExpenseConcept[]
   condominium   Condominium            @relation(fields: [condominiumId], references: [id])
   budget        Budget                 @relation(fields: [condominiumId, year], references: [condominiumId, year])

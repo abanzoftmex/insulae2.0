@@ -227,6 +227,20 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
     const typeName = announcement.type.name;
     const subtypeName = announcement.subtype.name;
 
+    const cleanTypeName = typeName.replace(/reunion/gi, "Reunión");
+    const cleanSubtypeName = subtypeName.replace(/reunion/gi, "Reunión");
+
+    const isReunion = 
+      typeName.toLowerCase().includes("reunion") || 
+      subtypeName.toLowerCase().includes("reunion");
+
+    const documentLabel = isReunion ? "reunión" : "convocatoria";
+    const documentLabelCap = isReunion ? "Reunión" : "Convocatoria";
+
+    const introParagraph = isReunion
+      ? `Le hacemos llegar la invitación para la reunión <strong>${announcementName}</strong> (${cleanTypeName} - ${cleanSubtypeName}) que se llevará a cabo en el condominio.`
+      : `Le hacemos llegar la convocatoria para la <strong>${announcementName}</strong> (${cleanTypeName} - ${cleanSubtypeName}) que se llevará a cabo en el condominio.`;
+
     // Generate calls list HTML
     let callsHtml = "";
     for (const dateVal of announcement.dates) {
@@ -249,14 +263,14 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
     const proto = hostHeader.includes("localhost") ? "http" : "https";
     const portalUrl = `${proto}://${hostHeader}/gobernanza/convocatorias/${announcementId}`;
 
-    const emailSubject = `${condominiumName} - Convocatoria: ${announcementName}`;
+    const emailSubject = `${condominiumName} - ${documentLabelCap}: ${announcementName}`;
 
     const emailBody = `
       <!doctype html>
       <html>
         <head>
           <meta charset="utf-8">
-          <title>Invitación Convocatoria</title>
+          <title>Invitación ${documentLabelCap}</title>
         </head>
         <body style="background-color: #fcf9f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 30px; margin: 0;">
           <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-collapse: collapse; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(109, 66, 42, 0.08); border: 1px solid #e8dbcc;">
@@ -276,7 +290,7 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
                     Apreciable condómino,
                   </p>
                   <p style="font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                    Le hacemos llevar la convocatoria para la <strong>${announcementName}</strong> (${typeName} - ${subtypeName}) que se llevará a cabo en el condominio.
+                    ${introParagraph}
                   </p>
 
                   <h3 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #6d422a; margin: 0 0 15px 0; border-bottom: 2px solid #e8dbcc; padding-bottom: 5px;">
@@ -290,7 +304,7 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
                       ? `
                         <div style="margin-top: 20px; text-align: center;">
                           <a href="${announcement.pdfUrl}" target="_blank" style="background-color: #ffffff; border: 1px solid #e8dbcc; color: #6d422a; text-decoration: none; padding: 10px 20px; font-size: 13px; font-weight: bold; border-radius: 9999px; display: inline-block; box-shadow: 0 2px 6px rgba(109, 66, 42, 0.04);">
-                            Ver PDF de la convocatoria
+                            Ver PDF de la ${documentLabel}
                           </a>
                         </div>
                       `
@@ -302,14 +316,14 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
                       Instrucciones para Participar y Votar:
                     </h4>
                     <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #2f221a; line-height: 1.6;">
-                      <li style="margin-bottom: 8px;">Haga clic en el botón de abajo para acceder a la convocatoria.</li>
+                      <li style="margin-bottom: 8px;">Haga clic en el botón de abajo para acceder a la ${documentLabel}.</li>
                       <li style="margin-bottom: 8px;">Inicie sesión en el portal con su cuenta de condómino.</li>
-                      <li style="margin-bottom: 8px;">En la pantalla de la convocatoria, presione el botón <strong>"Participar en asamblea"</strong>.</li>
+                      <li style="margin-bottom: 8px;">En la pantalla de la ${documentLabel}, presione el botón <strong>"${isReunion ? "Participar en reunión" : "Participar en asamblea"}"</strong>.</li>
                       <li>Confirme su asistencia en las propiedades que representa y emita sus votos en el orden del día.</li>
                     </ol>
                     <div style="margin-top: 20px; text-align: center;">
                       <a href="${portalUrl}" target="_blank" style="background-color: #6d422a; color: #ffffff; text-decoration: none; padding: 12px 25px; font-size: 14px; font-weight: bold; border-radius: 9999px; display: inline-block; box-shadow: 0 2px 10px rgba(109, 66, 42, 0.2); text-transform: uppercase; letter-spacing: 0.5px;">
-                        Acceder al Portal de Asamblea
+                        Acceder al Portal de ${isReunion ? "Reunión" : "Asamblea"}
                       </a>
                     </div>
                   </div>
@@ -345,7 +359,7 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
     for (const email of emails) {
       try {
         await resend.emails.send({
-          from: `Gobernanza ${condominiumName} <gobernanza@insulae.sistemasabanza.com>`,
+          from: `Condominio ${condominiumName} <gobernanza@insulae.sistemasabanza.com>`,
           to: email,
           subject: emailSubject,
           html: emailBody

@@ -11,6 +11,7 @@ interface AnnouncementDetailsActionsProps {
   isAdmin?: boolean;
   activeDateId?: string;
   statusName?: string;
+  isReunion?: boolean;
 }
 
 export function AnnouncementDetailsActions({
@@ -18,7 +19,8 @@ export function AnnouncementDetailsActions({
   pdfUrl,
   isAdmin = false,
   activeDateId,
-  statusName
+  statusName,
+  isReunion = false
 }: AnnouncementDetailsActionsProps) {
   const [isSending, startSendingTransition] = useTransition();
 
@@ -77,7 +79,7 @@ export function AnnouncementDetailsActions({
           className="flex items-center gap-2 h-9 px-5 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors active-scale"
         >
           <Play className="h-3 w-3 fill-current" />
-          Participar en asamblea
+          Participar en {isReunion ? "reunión" : "asamblea"}
         </Link>
       )}
     </div>
