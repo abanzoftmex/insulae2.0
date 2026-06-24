@@ -56,6 +56,8 @@ type MiscIncomeCatalogSnapshot = {
   id: string;
   name: string;
   order: number;
+  quotaPeriodStart: Date | null;
+  quotaPeriodEnd: Date | null;
   chargeGroup: {
     kind: ChargeGroupKind;
   } | null;
@@ -546,6 +548,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           id: true,
           name: true,
           order: true,
+          quotaPeriodStart: true,
+          quotaPeriodEnd: true,
           chargeGroup: {
             select: {
               kind: true,
@@ -864,24 +868,47 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
       ]),
     ) as Record<ExtraordinaryIncomeRowId, Record<number, number[]>>;
+    const formatPeriod = (startsAt: Date | null, endsAt: Date | null): string => {
+      if (!startsAt && !endsAt) return "";
+      const formatM = (d: Date | null) => {
+        if (!d) return "";
+        const formatted = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(d));
+        return formatted.replace(/\b\w/g, c => c.toUpperCase());
+      };
+      const startStr = formatM(startsAt);
+      const endStr = formatM(endsAt);
+      if (startStr && endStr) return `${startStr} A ${endStr}`;
+      if (startStr) return `Desde ${startStr}`;
+      if (endStr) return `Hasta ${endStr}`;
+      return "";
+    };
+
     const ordinaryOtherCatalogRows = (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
       .filter((catalog) => catalog.chargeGroup?.kind === CHARGE_GROUP_KIND.ORDINARY)
-      .map((catalog) => ({
-        id: `ordinary-other-${catalog.id}`,
-        label: catalog.name,
-        miscCatalogId: catalog.id,
-      })) as OtherIncomeCatalogRow[];
+      .map((catalog) => {
+        const period = formatPeriod(catalog.quotaPeriodStart, catalog.quotaPeriodEnd);
+        const label = catalog.name + (period ? ` (${period})` : "");
+        return {
+          id: `ordinary-other-${catalog.id}`,
+          label,
+          miscCatalogId: catalog.id,
+        };
+      }) as OtherIncomeCatalogRow[];
     const extraordinaryOtherCatalogRows = (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
       .filter((catalog) =>
         catalog.chargeGroup
           ? EXTRAORDINARY_OTHER_INCOME_KINDS.has(catalog.chargeGroup.kind)
           : false,
       )
-      .map((catalog) => ({
-        id: `extraordinary-other-${catalog.id}`,
-        label: catalog.name,
-        miscCatalogId: catalog.id,
-      })) as OtherIncomeCatalogRow[];
+      .map((catalog) => {
+        const period = formatPeriod(catalog.quotaPeriodStart, catalog.quotaPeriodEnd);
+        const label = catalog.name + (period ? ` (${period})` : "");
+        return {
+          id: `extraordinary-other-${catalog.id}`,
+          label,
+          miscCatalogId: catalog.id,
+        };
+      }) as OtherIncomeCatalogRow[];
     const ordinaryOtherRowByMiscCatalogId = new Map<string, OtherIncomeCatalogRow>(
       ordinaryOtherCatalogRows.map((row) => [row.miscCatalogId, row]),
     );

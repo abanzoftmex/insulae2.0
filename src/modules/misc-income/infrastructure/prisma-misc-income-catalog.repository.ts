@@ -22,6 +22,8 @@ export class PrismaMiscIncomeCatalogRepository implements MiscIncomeCatalogRepos
       id: item.id,
       name: item.name,
       chargeGroupId: item.chargeGroupId,
+      quotaPeriodStart: item.quotaPeriodStart,
+      quotaPeriodEnd: item.quotaPeriodEnd,
       isActive: item.isActive,
       order: item.order,
     }));
@@ -36,6 +38,8 @@ export class PrismaMiscIncomeCatalogRepository implements MiscIncomeCatalogRepos
             data: {
               name: concept.name,
               chargeGroupId: concept.chargeGroupId,
+              quotaPeriodStart: concept.quotaPeriodStart,
+              quotaPeriodEnd: concept.quotaPeriodEnd,
               isActive: concept.isActive ?? true,
               order: concept.order ?? 0,
             },
@@ -46,6 +50,8 @@ export class PrismaMiscIncomeCatalogRepository implements MiscIncomeCatalogRepos
               condominiumId,
               name: concept.name,
               chargeGroupId: concept.chargeGroupId,
+              quotaPeriodStart: concept.quotaPeriodStart,
+              quotaPeriodEnd: concept.quotaPeriodEnd,
               isActive: true,
               order: concept.order ?? 0,
             },

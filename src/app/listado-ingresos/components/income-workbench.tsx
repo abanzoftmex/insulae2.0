@@ -243,20 +243,25 @@ export function IncomeWorkbench({
 
   const columns: DataTableColumn<IncomeRecord>[] = [
     {
-      header: "Categoría / Concepto",
-      accessorKey: "concept",
-      cell: (row) => (
-        <div className="max-w-55 space-y-1">
-          <p className="text-[13px] font-bold text-ink truncate leading-tight">
-            {row.chargeGroupName || row.miscCatalogName || "Sin categoría"}
-          </p>
-          {row.concept && (
-            <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[9px] font-bold tracking-widest">
-              {row.concept}
-            </Badge>
-          )}
-        </div>
-      )
+      header: "Grupo Financiero / Categoría",
+      accessorKey: "chargeGroupName",
+      cell: (row) => {
+        const hasGroup = !!row.chargeGroupName;
+        const mainText = row.chargeGroupName || row.miscCatalogName || "—";
+        const badgeText = hasGroup ? row.miscCatalogName : null;
+        return (
+          <div className="max-w-55 space-y-1">
+            <p className="text-[13px] font-bold text-ink truncate leading-tight">
+              {mainText}
+            </p>
+            {badgeText && (
+              <Badge variant="outline" className="rounded-full px-2 py-0.5 text-[9px] font-bold tracking-widest">
+                {badgeText}
+              </Badge>
+            )}
+          </div>
+        );
+      }
     },
     {
       header: "Propiedad",

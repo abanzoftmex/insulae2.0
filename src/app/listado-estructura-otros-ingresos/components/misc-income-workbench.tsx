@@ -18,6 +18,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/shared/utils/cn";
 
+const MONTHS = [
+  { value: "01", label: "Enero" },
+  { value: "02", label: "Febrero" },
+  { value: "03", label: "Marzo" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Mayo" },
+  { value: "06", label: "Junio" },
+  { value: "07", label: "Julio" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Septiembre" },
+  { value: "10", label: "Octubre" },
+  { value: "11", label: "Noviembre" },
+  { value: "12", label: "Diciembre" },
+];
+
+const YEARS = Array.from({ length: 10 }, (_, i) => String(new Date().getFullYear() - 2 + i));
+
 interface MiscIncomeWorkbenchProps {
   initialConcepts: MiscIncomeConcept[];
   ordinaryGroup: { id: string; name: string };
@@ -38,6 +55,8 @@ export function MiscIncomeWorkbench({
   
   // Form State
   const [formName, setFormName] = useState("");
+  const [formQuotaStart, setFormQuotaStart] = useState("");
+  const [formQuotaEnd, setFormQuotaEnd] = useState("");
   const [formGroupId, setFormChargeGroupId] = useState(ordinaryGroup.id);
   const [formOrder, setFormOrder] = useState("0");
 
@@ -49,14 +68,23 @@ export function MiscIncomeWorkbench({
   const openAddModal = () => {
     setEditingId(null);
     setFormName("");
+    setFormQuotaStart("");
+    setFormQuotaEnd("");
     setFormChargeGroupId(ordinaryGroup.id);
     setFormOrder(String(initialConcepts.length));
     setIsModalOpen(true);
   };
 
   const openEditModal = (concept: MiscIncomeConcept) => {
+    const toInputMonth = (d: Date | null) => {
+      if (!d) return "";
+      const date = new Date(d);
+      return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    };
     setEditingId(concept.id);
     setFormName(concept.name);
+    setFormQuotaStart(toInputMonth(concept.quotaPeriodStart || null));
+    setFormQuotaEnd(toInputMonth(concept.quotaPeriodEnd || null));
     setFormChargeGroupId(concept.chargeGroupId ?? "");
     setFormOrder(String(concept.order));
     setIsModalOpen(true);
@@ -74,6 +102,8 @@ export function MiscIncomeWorkbench({
         {
           id: editingId || "",
           name: formName,
+          quotaPeriodStart: formQuotaStart ? new Date(`${formQuotaStart}-01T00:00:00Z`) : null,
+          quotaPeriodEnd: formQuotaEnd ? new Date(`${formQuotaEnd}-01T00:00:00Z`) : null,
           chargeGroupId: formGroupId,
           order: parseInt(formOrder),
           isActive: true
@@ -105,6 +135,27 @@ export function MiscIncomeWorkbench({
       header: "Concepto",
       accessorKey: "name",
       cell: (row) => <span className="font-bold">{row.name}</span>
+    },
+    {
+      header: "Periodo de Cuota",
+      accessorKey: "quotaPeriodStart", // using this for unique key instead of id
+      cell: (row) => {
+        if (!row.quotaPeriodStart && !row.quotaPeriodEnd) return <span className="text-[11px] font-medium text-ink-soft/80">-</span>;
+        
+        const formatM = (d: Date | null) => {
+          if (!d) return "";
+          return new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(d));
+        };
+        const startStr = formatM(row.quotaPeriodStart || null);
+        const endStr = formatM(row.quotaPeriodEnd || null);
+        
+        let text = "";
+        if (startStr && endStr) text = `${startStr} a ${endStr}`;
+        else if (startStr) text = `Desde ${startStr}`;
+        else if (endStr) text = `Hasta ${endStr}`;
+
+        return <span className="text-[11px] font-medium text-ink-soft/80 capitalize">{text}</span>;
+      }
     },
     {
       header: "Categoría Base",
@@ -203,6 +254,64 @@ export function MiscIncomeWorkbench({
             onChange={(e) => setFormName(e.target.value)} 
             placeholder="Ej. Cuota de TAG / Control"
           />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 ml-2">Mes Inicial (Opcional)</label>
+              <div className="flex gap-2">
+                <select
+                  value={formQuotaStart ? formQuotaStart.split("-")[1] : ""}
+                  onChange={(e) => {
+                    const y = formQuotaStart ? formQuotaStart.split("-")[0] : new Date().getFullYear();
+                    setFormQuotaStart(e.target.value ? `${y}-${e.target.value}` : "");
+                  }}
+                  className="h-9 flex-1 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                >
+                  <option value="">Mes</option>
+                  {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <select
+                  value={formQuotaStart ? formQuotaStart.split("-")[0] : ""}
+                  onChange={(e) => {
+                    const m = formQuotaStart ? formQuotaStart.split("-")[1] : "01";
+                    setFormQuotaStart(e.target.value && formQuotaStart ? `${e.target.value}-${m}` : e.target.value ? `${e.target.value}-01` : "");
+                  }}
+                  className="h-9 w-24 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                >
+                  <option value="">Año</option>
+                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-brand-accent/60 ml-2">Mes Final (Opcional)</label>
+              <div className="flex gap-2">
+                <select
+                  value={formQuotaEnd ? formQuotaEnd.split("-")[1] : ""}
+                  onChange={(e) => {
+                    const y = formQuotaEnd ? formQuotaEnd.split("-")[0] : new Date().getFullYear();
+                    setFormQuotaEnd(e.target.value ? `${y}-${e.target.value}` : "");
+                  }}
+                  className="h-9 flex-1 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                >
+                  <option value="">Mes</option>
+                  {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                </select>
+                <select
+                  value={formQuotaEnd ? formQuotaEnd.split("-")[0] : ""}
+                  onChange={(e) => {
+                    const m = formQuotaEnd ? formQuotaEnd.split("-")[1] : "01";
+                    setFormQuotaEnd(e.target.value && formQuotaEnd ? `${e.target.value}-${m}` : e.target.value ? `${e.target.value}-01` : "");
+                  }}
+                  className="h-9 w-24 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                >
+                  <option value="">Año</option>
+                  {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="relative">
