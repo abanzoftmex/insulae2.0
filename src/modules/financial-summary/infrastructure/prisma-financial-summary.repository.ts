@@ -542,6 +542,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         },
         orderBy: [
           { order: "asc" },
+          { quotaPeriodStart: "asc" },
           { name: "asc" },
         ],
         select: {

@@ -144,16 +144,25 @@ export function AppShell({
   children,
   navbarLogoUrl = null,
   navbarLogoAlt = "Val'Quirico",
+  currentUserName = "Usuario Insulae",
 }: {
   children: React.ReactNode;
   navbarLogoUrl?: string | null;
   navbarLogoAlt?: string;
+  currentUserName?: string;
 }) {
   const pathname = usePathname();
   const currentPath = normalizePath(pathname || "/");
   const { isCollapsed, isMobileOpen, toggleCollapsed, openMobile, closeMobile } =
     useHydratedSidebar();
   const permissions = usePermissions();
+
+  const userInitials = useMemo(() => {
+    const parts = currentUserName.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "U";
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  }, [currentUserName]);
 
   const [openMenus, setOpenMenus] = useState<string[]>([]);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -438,6 +447,34 @@ export function AppShell({
         </button>
       </div>
 
+      {/* User profile */}
+      {isCollapsed ? (
+        <div className="shrink-0 border-t border-line p-2 flex justify-center bg-canvas/20">
+          <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0 group/tip relative">
+            {userInitials}
+            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-brand-deep text-white text-[12px] font-medium rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover/tip:opacity-100 transition-opacity z-50">
+              {currentUserName}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="shrink-0 border-t border-line px-4 py-3 bg-canvas/20">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0">
+              {userInitials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-bold text-ink truncate leading-tight">
+                {currentUserName}
+              </p>
+              <p className="text-[10px] font-medium text-ink-soft/60 truncate leading-tight uppercase mt-0.5">
+                Sesión activa
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Collapse toggle */}
       <div className="shrink-0 border-t border-line p-2">
         <button
@@ -572,6 +609,23 @@ export function AppShell({
               );
             })}
           </nav>
+          
+          {/* User profile mobile */}
+          <div className="shrink-0 border-t border-line px-4 py-3 bg-canvas/20">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0">
+                {userInitials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-bold text-ink truncate leading-tight">
+                  {currentUserName}
+                </p>
+                <p className="text-[10px] font-medium text-ink-soft/60 truncate leading-tight uppercase mt-0.5">
+                  Sesión activa
+                </p>
+              </div>
+            </div>
+          </div>
         </aside>
       </div>
 

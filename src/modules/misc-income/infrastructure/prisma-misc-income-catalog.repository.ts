@@ -14,6 +14,7 @@ export class PrismaMiscIncomeCatalogRepository implements MiscIncomeCatalogRepos
       },
       orderBy: [
         { order: "asc" },
+        { quotaPeriodStart: "asc" },
         { name: "asc" }
       ],
     });

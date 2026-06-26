@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { cookies } from "next/headers";
 import "./globals.css";
 import { AppShell } from "./app-shell";
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
@@ -27,6 +28,18 @@ export default async function RootLayout({
   let navbarLogoAlt = "Sassi";
   const permissions = await getUserPermissions(); // Trigger recompile
 
+  let currentUserName = "Usuario Insulae";
+  try {
+    const cookieStore = await cookies();
+    const sessionStr = cookieStore.get("insulae_session")?.value;
+    if (sessionStr) {
+      const session = JSON.parse(sessionStr);
+      currentUserName = session.name || currentUserName;
+    }
+  } catch (error) {
+    console.warn("[RootLayout] Unable to load user session info", error);
+  }
+
   try {
     const overview = await getCondominiumOverviewUseCase.execute();
     if (overview) {
@@ -44,7 +57,7 @@ export default async function RootLayout({
           <Suspense fallback={null}>
             <GlobalLoader />
           </Suspense>
-          <AppShell navbarLogoUrl={navbarLogoUrl} navbarLogoAlt={navbarLogoAlt}>
+          <AppShell navbarLogoUrl={navbarLogoUrl} navbarLogoAlt={navbarLogoAlt} currentUserName={currentUserName}>
             {children}
           </AppShell>
         </PermissionsProvider>
