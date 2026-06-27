@@ -1,13 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { 
-  reauthenticateWithCredential, 
-  EmailAuthProvider, 
-  updatePassword,
-  signOut
-} from "firebase/auth";
-import { getClientAuth } from "@/shared/infrastructure/storage/firebase-client";
+import { changePasswordAction } from "@/app/actions/auth";
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,37 +35,24 @@ export function PasswordChangeForm() {
     }
 
     try {
-      const auth = getClientAuth();
-      const user = auth.currentUser;
+      const result = await changePasswordAction(currentPassword, newPassword);
 
-      if (!user || !user.email) {
-        throw new Error("No hay un usuario autenticado.");
+      if (!result.success) {
+        setError(result.error || "Ocurrió un error al cambiar la contraseña.");
+        setLoading(false);
+        return;
       }
-
-      // 1. Re-authenticate
-      const credential = EmailAuthProvider.credential(user.email, currentPassword);
-      await reauthenticateWithCredential(user, credential);
-
-      // 2. Update password
-      await updatePassword(user, newPassword);
 
       setSuccess(true);
       
-      // Optional: Sign out after password change for security
-      setTimeout(async () => {
-        await signOut(auth);
-        router.push("/login"); // Adjust to your login route
+      setTimeout(() => {
+        router.push("/login");
+        router.refresh();
       }, 2000);
 
     } catch (err: any) {
       console.error("Error changing password:", err);
-      if (err.code === "auth/wrong-password") {
-        setError("La contraseña actual es incorrecta.");
-      } else if (err.code === "auth/too-many-requests") {
-        setError("Demasiados intentos. Inténtalo más tarde.");
-      } else {
-        setError("Ocurrió un error al cambiar la contraseña. Inténtalo de nuevo.");
-      }
+      setError(err.message || "Ocurrió un error al cambiar la contraseña. Inténtalo de nuevo.");
     } finally {
       setLoading(false);
     }

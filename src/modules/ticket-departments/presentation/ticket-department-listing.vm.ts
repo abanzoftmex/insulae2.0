@@ -4,6 +4,7 @@ export interface TicketDepartmentRowVM {
   id: string;
   name: string;
   email: string;
+  whatsapp: string;
   ticketsCountLabel: string;
   canDelete: boolean;
   workloadLevel: "none" | "low" | "high";
@@ -37,6 +38,7 @@ export function toTicketDepartmentListingVM(listing: TicketDepartmentListing): T
       id: row.id,
       name: row.name,
       email: row.email,
+      whatsapp: row.whatsapp,
       ticketsCountLabel: `${row.ticketsCount} ${row.ticketsCount === 1 ? "ticket" : "tickets"}`,
       canDelete: row.canDelete,
       workloadLevel: toWorkloadLevel(row.ticketsCount),

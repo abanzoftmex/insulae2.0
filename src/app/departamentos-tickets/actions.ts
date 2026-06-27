@@ -11,6 +11,7 @@ export interface SaveTicketDepartmentActionInput {
   id?: string;
   name: string;
   email: string;
+  whatsapp?: string | null;
 }
 
 export async function saveTicketDepartmentAction(

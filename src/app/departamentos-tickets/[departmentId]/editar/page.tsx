@@ -23,6 +23,7 @@ export default async function EditarDepartamentoTicketPage({ params }: EditarDep
       initialData={{
         name: snapshot.name,
         email: snapshot.email,
+        whatsapp: snapshot.whatsapp ?? "",
       }}
     />
   );

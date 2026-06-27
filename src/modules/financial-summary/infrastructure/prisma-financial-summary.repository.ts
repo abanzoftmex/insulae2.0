@@ -493,13 +493,14 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
     const range = toUtcYearRange(requestedYear);
     const nextYear = requestedYear + 1;
+    const visibleYears = [requestedYear, nextYear];
     const ordinaryExpenseYears = [requestedYear, nextYear] as const;
     const ordinaryExpenseComparisonRange = {
       from: new Date(Date.UTC(requestedYear, 0, 1, 0, 0, 0, 0)),
       to: new Date(Date.UTC(nextYear + 1, 0, 1, 0, 0, 0, 0)),
     };
-    const minLegacyYear = Math.min(...REPORT_VISIBLE_YEARS);
-    const maxLegacyYear = Math.max(...REPORT_VISIBLE_YEARS);
+    const minLegacyYear = Math.min(...visibleYears);
+    const maxLegacyYear = Math.max(...visibleYears);
     const legacyRange = {
       from: new Date(Date.UTC(minLegacyYear, 0, 1, 0, 0, 0, 0)),
       to: new Date(Date.UTC(maxLegacyYear + 1, 0, 1, 0, 0, 0, 0)),
@@ -726,7 +727,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       ).budgetExpenseConcept.findMany({
         where: {
           condominiumId: condominium.id,
-          year: { in: [...REPORT_VISIBLE_YEARS] },
+          year: { in: [...visibleYears] },
           budgetGroup: BUDGET_EXPENSE_GROUP.EXTRAORDINARY,
           isActive: true,
           legacyBudgetConceptId: { not: null },
@@ -854,19 +855,19 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const ordinaryIncomeByRowAndYear = Object.fromEntries(
       ORDINARY_RECEIVABLE_ROWS.map((row) => [
         row.id,
-        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+        Object.fromEntries(visibleYears.map((year) => [year, createZeroSeries()])),
       ]),
     ) as Record<OrdinaryReceivableRowId, Record<number, number[]>>;
     const extraordinaryIncomeByRowAndYear = Object.fromEntries(
       EXTRAORDINARY_INCOME_ROWS.map((row) => [
         row.id,
-        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+        Object.fromEntries(visibleYears.map((year) => [year, createZeroSeries()])),
       ]),
     ) as Record<ExtraordinaryIncomeRowId, Record<number, number[]>>;
     const extraordinaryReceivableByRowAndYear = Object.fromEntries(
       EXTRAORDINARY_INCOME_ROWS.map((row) => [
         row.id,
-        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+        Object.fromEntries(visibleYears.map((year) => [year, createZeroSeries()])),
       ]),
     ) as Record<ExtraordinaryIncomeRowId, Record<number, number[]>>;
     const formatPeriod = (startsAt: Date | null, endsAt: Date | null): string => {
@@ -919,13 +920,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const ordinaryOtherIncomeByRowAndYear = new Map<string, Record<number, number[]>>(
       ordinaryOtherCatalogRows.map((row) => [
         row.id,
-        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+        Object.fromEntries(visibleYears.map((year) => [year, createZeroSeries()])),
       ]),
     );
     const extraordinaryOtherIncomeByRowAndYear = new Map<string, Record<number, number[]>>(
       extraordinaryOtherCatalogRows.map((row) => [
         row.id,
-        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+        Object.fromEntries(visibleYears.map((year) => [year, createZeroSeries()])),
       ]),
     );
     const extraordinaryExpenseConceptEntriesByLegacyId = new Map<
@@ -981,7 +982,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const extraordinaryExpenseByRowAndYear = new Map<string, Record<number, number[]>>(
       extraordinaryExpenseConceptRows.map((row) => [
         row.id,
-        Object.fromEntries(REPORT_VISIBLE_YEARS.map((year) => [year, createZeroSeries()])),
+        Object.fromEntries(visibleYears.map((year) => [year, createZeroSeries()])),
       ]),
     );
     const ordinaryExpenseRowByBudgetGroup = new Map<BudgetExpenseGroup, OrdinaryExpenseRow>(
@@ -1055,7 +1056,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     for (const detail of paymentDetailsForLegacyYears as PaymentDetailSnapshot[]) {
       const year = detail.payment.paidAt.getUTCFullYear();
 
-      if (!REPORT_VISIBLE_YEARS.includes(year as (typeof REPORT_VISIBLE_YEARS)[number])) {
+      if (!visibleYears.includes(year as number)) {
         continue;
       }
 
@@ -1112,7 +1113,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     for (const income of incomesForLegacyYears as IncomeSnapshot[]) {
       const year = income.date.getUTCFullYear();
 
-      if (!REPORT_VISIBLE_YEARS.includes(year as (typeof REPORT_VISIBLE_YEARS)[number])) {
+      if (!visibleYears.includes(year as number)) {
         continue;
       }
 
@@ -1232,7 +1233,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
     for (const expense of expensesForLegacyYears as ExpenseSnapshot[]) {
       const year = expense.date.getUTCFullYear();
-      if (!REPORT_VISIBLE_YEARS.includes(year as (typeof REPORT_VISIBLE_YEARS)[number])) {
+      if (!visibleYears.includes(year as number)) {
         continue;
       }
 
@@ -1281,7 +1282,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
       if (
         extraordinaryReceivableRow &&
-        REPORT_VISIBLE_YEARS.includes(charge.periodYear as (typeof REPORT_VISIBLE_YEARS)[number]) &&
+        visibleYears.includes(charge.periodYear as number) &&
         normalizedMonth !== null &&
         !isCanceled
       ) {
@@ -1452,8 +1453,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       monthlyByKind[CHARGE_GROUP_KIND.COMODATO],
     ]);
 
-    const requestedYearIsLegacyVisible = REPORT_VISIBLE_YEARS.includes(
-      requestedYear as (typeof REPORT_VISIBLE_YEARS)[number],
+    const requestedYearIsLegacyVisible = visibleYears.includes(
+      requestedYear as number,
     );
     const ordinaryOtherSeriesByRowForRequestedYear = new Map<string, number[]>(
       ordinaryOtherCatalogRows.map((row) => {
@@ -1722,12 +1723,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const ordinaryIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "ordinary-income-multi-year",
       title: "Ingresos mensuales",
-      years: [...REPORT_VISIBLE_YEARS],
+      years: [...visibleYears],
       rows: [
         ...ORDINARY_RECEIVABLE_ROWS.map((row) => ({
           id: row.id,
           label: row.label,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(year, ordinaryIncomeByRowAndYear[row.id][year]),
           ),
         })),
@@ -1735,7 +1736,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           id: "ordinary-income-total",
           label: "Total",
           isTotal: true,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(
               year,
               sumSeries([
@@ -1750,12 +1751,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const extraordinaryIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "extraordinary-income-multi-year",
       title: "Ingresos mensuales",
-      years: [...REPORT_VISIBLE_YEARS],
+      years: [...visibleYears],
       rows: [
         ...EXTRAORDINARY_INCOME_ROWS.map((row) => ({
           id: row.id,
           label: row.label,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(year, extraordinaryIncomeByRowAndYear[row.id][year]),
           ),
         })),
@@ -1763,7 +1764,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           id: "extraordinary-income-total",
           label: "Total",
           isTotal: true,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(
               year,
               sumSeries(
@@ -1782,7 +1783,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         ? ordinaryOtherCatalogRows.map((row) => ({
             id: row.id,
             label: row.label,
-            yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            yearly: visibleYears.map((year) =>
               toYearSlice(year, ordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()),
             ),
           }))
@@ -1790,21 +1791,21 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             {
               id: "ordinary-other",
               label: "Otros ingresos",
-              yearly: REPORT_VISIBLE_YEARS.map((year) => toYearSlice(year, createZeroSeries())),
+              yearly: visibleYears.map((year) => toYearSlice(year, createZeroSeries())),
             },
           ];
 
     const ordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "ordinary-other-income-multi-year",
       title: "Otros ingresos",
-      years: [...REPORT_VISIBLE_YEARS],
+      years: [...visibleYears],
       rows: [
         ...ordinaryOtherIncomeMultiYearRows,
         {
           id: "ordinary-other-total",
           label: "Total",
           isTotal: true,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(
               year,
               sumSeries(
@@ -1823,7 +1824,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         ? extraordinaryOtherCatalogRows.map((row) => ({
             id: row.id,
             label: row.label,
-            yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            yearly: visibleYears.map((year) =>
               toYearSlice(
                 year,
                 extraordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries(),
@@ -1834,21 +1835,21 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             {
               id: "extraordinary-other",
               label: "Otros ingresos extraordinarios",
-              yearly: REPORT_VISIBLE_YEARS.map((year) => toYearSlice(year, createZeroSeries())),
+              yearly: visibleYears.map((year) => toYearSlice(year, createZeroSeries())),
             },
           ];
 
     const extraordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "extraordinary-other-income-multi-year",
       title: "Otros ingresos",
-      years: [...REPORT_VISIBLE_YEARS],
+      years: [...visibleYears],
       rows: [
         ...extraordinaryOtherIncomeMultiYearRows,
         {
           id: "extraordinary-other-total",
           label: "Total",
           isTotal: true,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(
               year,
               sumSeries(
@@ -1868,7 +1869,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         ? extraordinaryExpenseConceptRows.map((row) => ({
             id: row.id,
             label: row.label,
-            yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            yearly: visibleYears.map((year) =>
               toYearSlice(year, extraordinaryExpenseByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()),
             ),
           }))
@@ -1876,21 +1877,21 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             {
               id: "extraordinary-expense",
               label: "Egresos extraordinarios",
-              yearly: REPORT_VISIBLE_YEARS.map((year) => toYearSlice(year, createZeroSeries())),
+              yearly: visibleYears.map((year) => toYearSlice(year, createZeroSeries())),
             },
           ];
 
     const extraordinaryExpensesMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "extraordinary-expenses-multi-year",
       title: "Egresos mensuales",
-      years: [...REPORT_VISIBLE_YEARS],
+      years: [...visibleYears],
       rows: [
         ...extraordinaryExpensesMultiYearRows,
         {
           id: "extraordinary-expenses-total",
           label: "Total",
           isTotal: true,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(
               year,
               sumSeries(
@@ -1905,7 +1906,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     };
 
     const extraordinaryBalanceByYear = new Map<number, number[]>(
-      REPORT_VISIBLE_YEARS.map((year) => {
+      visibleYears.map((year) => {
         const extraordinaryIncomeForYear = sumSeries(
           EXTRAORDINARY_INCOME_ROWS.map((row) => extraordinaryIncomeByRowAndYear[row.id][year]),
         );
@@ -1930,7 +1931,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       }),
     );
     const extraordinaryBanksCashByYear = new Map<number, number[]>(
-      REPORT_VISIBLE_YEARS.map((year) => [
+      visibleYears.map((year) => [
         year,
         cumulativeSeries(extraordinaryBalanceByYear.get(year) ?? createZeroSeries()),
       ]),
@@ -1939,20 +1940,20 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const extraordinaryBalanceMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "extraordinary-balance-multi-year",
       title: "Saldo Ingresos - Egresos Extraordinarios",
-      years: [...REPORT_VISIBLE_YEARS],
+      years: [...visibleYears],
       rows: [
         {
           id: "extraordinary-balance-total",
           label: "Total",
           isTotal: true,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(year, extraordinaryBalanceByYear.get(year) ?? createZeroSeries()),
           ),
         },
         {
           id: "extraordinary-banks-cash",
           label: "Bancos y caja",
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(year, extraordinaryBanksCashByYear.get(year) ?? createZeroSeries()),
           ),
         },
@@ -1962,12 +1963,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const extraordinaryReceivablesMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "extraordinary-receivables-multi-year",
       title: "Cuentas por cobrar - Cuotas extraordinarias",
-      years: [...REPORT_VISIBLE_YEARS],
+      years: [...visibleYears],
       rows: [
         ...EXTRAORDINARY_INCOME_ROWS.map((row) => ({
           id: row.id,
           label: row.label,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(year, extraordinaryReceivableByRowAndYear[row.id][year]),
           ),
         })),
@@ -1975,7 +1976,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           id: "extraordinary-receivables-total",
           label: "Total",
           isTotal: true,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSlice(
               year,
               sumSeries(
@@ -1994,7 +1995,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         ? extraordinaryExpenseConceptRows.map((row) => ({
             id: row.id,
             label: row.label,
-            yearly: REPORT_VISIBLE_YEARS.map((year) =>
+            yearly: visibleYears.map((year) =>
               toYearSliceWithPeriodEndTotal(
                 year,
                 cumulativeSeries(
@@ -2009,7 +2010,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             {
               id: "extraordinary-payable",
               label: "Cuotas extraordinarias",
-              yearly: REPORT_VISIBLE_YEARS.map((year) =>
+              yearly: visibleYears.map((year) =>
                 toYearSliceWithPeriodEndTotal(year, createZeroSeries()),
               ),
             },
@@ -2018,14 +2019,14 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const extraordinaryPayablesMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "extraordinary-payables-multi-year",
       title: "Cuentas por pagar - Cuotas extraordinarias",
-      years: [...REPORT_VISIBLE_YEARS],
+      years: [...visibleYears],
       rows: [
         ...extraordinaryPayablesMultiYearRows,
         {
           id: "extraordinary-payables-total",
           label: "Total",
           isTotal: true,
-          yearly: REPORT_VISIBLE_YEARS.map((year) =>
+          yearly: visibleYears.map((year) =>
             toYearSliceWithPeriodEndTotal(
               year,
               sumSeries(

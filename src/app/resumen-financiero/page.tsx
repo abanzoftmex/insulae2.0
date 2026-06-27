@@ -161,13 +161,14 @@ function CompactFinancialTable({
 export default async function ResumenFinancieroPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ mode?: string }>;
+  searchParams?: Promise<{ mode?: string; year?: string }>;
 }) {
   const resolvedSearchParams = (await searchParams) ?? {};
   const selectedMode: Mode = resolvedSearchParams.mode === "extraordinary" ? "extraordinary" : "ordinary";
   const showOrdinary = selectedMode === "ordinary";
 
-  const selectedYear = new Date().getUTCFullYear() - 1;
+  const defaultYear = new Date().getUTCFullYear() - 1;
+  const selectedYear = resolvedSearchParams.year ? parseInt(resolvedSearchParams.year, 10) : defaultYear;
   const summary = await getFinancialSummaryUseCase.execute({ year: selectedYear });
   const vm = summary ? toFinancialSummaryVM(summary) : null;
 
@@ -183,7 +184,7 @@ export default async function ResumenFinancieroPage({
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-5 border-b border-brand">
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -195,25 +196,46 @@ export default async function ResumenFinancieroPage({
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
-          <Link
-            href="?mode=ordinary"
-            className={cn(
-              "h-8 px-4 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
-              showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
-            )}
-          >
-            Cuotas Ordinarias
-          </Link>
-          <Link
-            href="?mode=extraordinary"
-            className={cn(
-              "h-8 px-4 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
-              !showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
-            )}
-          >
-            Cuotas Extraordinarias
-          </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Year Selector */}
+          {vm.availableYears.length > 1 && (
+            <div className="flex items-center gap-1 p-1 bg-canvas-2 rounded-lg border border-line/50">
+              {vm.availableYears.map((y) => (
+                <Link
+                  key={y}
+                  href={`?mode=${selectedMode}&year=${y}`}
+                  className={cn(
+                    "h-8 px-3 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
+                    vm.selectedYear === y ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
+                  )}
+                >
+                  {y}
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* Mode Selector */}
+          <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
+            <Link
+              href={`?mode=ordinary&year=${vm.selectedYear}`}
+              className={cn(
+                "h-8 px-4 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
+                showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
+              )}
+            >
+              Cuotas Ordinarias
+            </Link>
+            <Link
+              href={`?mode=extraordinary&year=${vm.selectedYear}`}
+              className={cn(
+                "h-8 px-4 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
+                !showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
+              )}
+            >
+              Cuotas Extraordinarias
+            </Link>
+          </div>
         </div>
       </div>
 

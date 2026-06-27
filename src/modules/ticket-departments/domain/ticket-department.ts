@@ -2,6 +2,7 @@ export interface TicketDepartmentListItem {
   id: string;
   name: string;
   email: string;
+  whatsapp: string;
   ticketsCount: number;
   canDelete: boolean;
 }
@@ -17,12 +18,14 @@ export interface TicketDepartmentFormSnapshot {
   id: string;
   name: string;
   email: string;
+  whatsapp: string | null;
 }
 
 export interface SaveTicketDepartmentInput {
   id?: string;
   name: string;
   email: string;
+  whatsapp?: string | null;
 }
 
 export interface TicketDepartmentCommandResult {

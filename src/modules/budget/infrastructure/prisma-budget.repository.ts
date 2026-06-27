@@ -219,6 +219,10 @@ export class PrismaBudgetRepository implements BudgetRepository {
       const orderB = groupsMap.get(b.groupId)?.order ?? 0;
       if (orderA !== orderB) return orderA - orderB;
 
+      const timeA = groupsMap.get(a.groupId)?.startsAt?.getTime() ?? Infinity;
+      const timeB = groupsMap.get(b.groupId)?.startsAt?.getTime() ?? Infinity;
+      if (timeA !== timeB) return timeA - timeB;
+
       const subA = groupsMap.get(a.groupId)?.subname || "";
       const subB = groupsMap.get(b.groupId)?.subname || "";
       return subA.localeCompare(subB);
@@ -550,7 +554,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
           orderBy: { order: 'asc' }
         }
       },
-      orderBy: [{ order: 'asc' }, { name: 'asc' }]
+      orderBy: [{ order: 'asc' }, { startsAt: 'asc' }, { name: 'asc' }]
     });
 
     return {
@@ -589,7 +593,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
   async getCondominiumBudgetGroups(condominiumId: string, year: number): Promise<any[]> {
     return prisma.budgetGroup.findMany({
       where: { condominiumId, year, isActive: true },
-      orderBy: { order: 'asc' }
+      orderBy: [{ order: 'asc' }, { startsAt: 'asc' }, { name: 'asc' }]
     });
   }
 

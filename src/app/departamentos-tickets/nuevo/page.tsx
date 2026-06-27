@@ -7,6 +7,7 @@ export default function NuevoDepartamentoTicketPage() {
       initialData={{
         name: "",
         email: "",
+        whatsapp: "",
       }}
     />
   );

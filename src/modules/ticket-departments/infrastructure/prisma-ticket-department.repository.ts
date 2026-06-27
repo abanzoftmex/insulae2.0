@@ -15,6 +15,7 @@ type TicketDepartmentRow = {
   id: string;
   name: string;
   email: string | null;
+  whatsapp: string | null;
   _count: {
     tickets: number;
   };
@@ -87,6 +88,7 @@ export class PrismaTicketDepartmentRepository implements TicketDepartmentReposit
         id: true,
         name: true,
         email: true,
+        whatsapp: true,
         _count: {
           select: {
             tickets: true,
@@ -104,6 +106,7 @@ export class PrismaTicketDepartmentRepository implements TicketDepartmentReposit
         id: row.id,
         name: row.name,
         email: row.email ?? "",
+        whatsapp: row.whatsapp ?? "",
         ticketsCount: row._count.tickets,
         canDelete: row._count.tickets === 0,
       })),
@@ -131,6 +134,7 @@ export class PrismaTicketDepartmentRepository implements TicketDepartmentReposit
         id: true,
         name: true,
         email: true,
+        whatsapp: true,
       },
     })) as TicketDepartmentFormSnapshot | null;
 
@@ -207,6 +211,7 @@ export class PrismaTicketDepartmentRepository implements TicketDepartmentReposit
         data: {
           name,
           email,
+          whatsapp: input.whatsapp ? trimSafe(input.whatsapp) : null,
         },
       });
 
@@ -238,6 +243,7 @@ export class PrismaTicketDepartmentRepository implements TicketDepartmentReposit
         condominiumId: condominium.id,
         name,
         email,
+        whatsapp: input.whatsapp ? trimSafe(input.whatsapp) : null,
         isActive: true,
       },
       select: {
