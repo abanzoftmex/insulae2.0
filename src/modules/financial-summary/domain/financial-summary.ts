@@ -55,6 +55,8 @@ export interface FinancialSummaryMultiYearTable {
   title: string;
   years: number[];
   rows: FinancialSummaryMultiYearTableRow[];
+  /** If set, only these month indices (1-based) will be shown as columns for this table. */
+  activeMonths?: number[];
 }
 
 export interface FinancialSummaryOrdinaryReceivableRow {
@@ -116,7 +118,8 @@ export interface FinancialSummary {
   ordinaryReceivablesTable: FinancialSummaryOrdinaryReceivableTable;
   ordinaryPayablesTable: FinancialSummaryOrdinaryPayableTable;
   generatedAt: Date;
-  activeMonths?: number[];
+  ordinaryActiveMonths?: number[];
+  extraordinaryActiveMonths?: number[];
 }
 
 export interface FinancialSummaryInput {

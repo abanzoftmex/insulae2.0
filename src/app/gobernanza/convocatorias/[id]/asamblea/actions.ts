@@ -397,3 +397,83 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Build a WhatsApp-ready plain-text version of the announcement invitation.
+ * Returns { text, phone } so the client can open wa.me/{phone}?text={text}
+ */
+export async function getAnnouncementWhatsAppTextAction(announcementId: string) {
+  try {
+    const announcement = await prisma.announcement.findUnique({
+      where: { id: announcementId },
+      include: {
+        type: true,
+        subtype: true,
+        dates: {
+          where: { isActive: true },
+          orderBy: { date: "asc" }
+        },
+        condominium: true,
+        topics: { orderBy: { order: "asc" } },
+      }
+    });
+
+    if (!announcement) throw new Error("No se encontró la convocatoria.");
+
+    const condominiumName = announcement.condominium.name;
+    const announcementName = announcement.name;
+    const typeName = announcement.type.name;
+    const subtypeName = announcement.subtype.name;
+
+    const isReunion =
+      typeName.toLowerCase().includes("reunion") ||
+      subtypeName.toLowerCase().includes("reunion");
+
+    const documentLabel = isReunion ? "Reunión" : "Convocatoria";
+
+    const callsText = announcement.dates.map((d) => {
+      const formattedDate = new Date(d.date).toLocaleDateString("es-MX", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+      return `🗓 *${d.callType}*\nFecha: ${formattedDate} a las ${d.time || ""} hrs\nLugar: ${d.location || "No especificado"}`;
+    }).join("\n\n");
+
+    const topicsText = announcement.topics.length > 0
+      ? `\n\n📋 *Orden del día:*\n` + announcement.topics.map((t, i) => `${i + 1}. ${t.title}`).join("\n")
+      : "";
+
+    const pdfText = announcement.pdfUrl
+      ? `\n\n📄 PDF: ${announcement.pdfUrl}`
+      : "";
+
+    const text =
+`🏠 *${condominiumName}*
+${documentLabel}: *${announcementName}*
+(${typeName} - ${subtypeName})
+
+Apreciable condómino,
+
+Le hacemos llegar la invitación para la ${documentLabel.toLowerCase()} que se llevará a cabo en el condominio.
+
+📅 *Detalles del llamado:*
+
+${callsText}${topicsText}${pdfText}
+
+✅ *Instrucciones para participar:*
+1. Acceda al portal del condominio.
+2. Inicie sesión con su cuenta de condómino.
+3. Presione el botón "Participar en ${isReunion ? "reunión" : "asamblea"}".
+4. Confirme su asistencia y emita sus votos en el orden del día.
+
+Agradecemos de antemano su puntual asistencia y participación.
+Atentamente, Administración de ${condominiumName}.`;
+
+    return { success: true, text, phone: "5212212721794" };
+  } catch (error: any) {
+    console.error("Error building WhatsApp text:", error);
+    return { success: false, error: error.message, text: "", phone: "5212212721794" };
+  }
+}

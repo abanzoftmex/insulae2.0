@@ -16,21 +16,41 @@ import {
   Edit2,
   Play,
   Mail,
+  MessageCircle,
   Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { sendAnnouncementInvitationAction } from "../[id]/asamblea/actions";
+import { sendAnnouncementInvitationAction, getAnnouncementWhatsAppTextAction } from "../[id]/asamblea/actions";
+
+const WHATSAPP_NUMBER = "5212212721794";
 
 interface AnnouncementCardProps {
   announcement: Announcement;
+  canManage?: boolean;
 }
 
-export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
+export function AnnouncementCard({ announcement, canManage = false }: AnnouncementCardProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isSending, startSendingTransition] = useTransition();
+  const [isSendingWA, startSendingWATransition] = useTransition();
   const pathname = usePathname();
   const isResidentView = pathname.startsWith("/condomino");
+
+  const handleSendByWhatsApp = () => {
+    if (confirm("¿Deseas enviar esta convocatoria por WhatsApp? Se abrirá WhatsApp con el mensaje completo listo para enviar.")) {
+      startSendingWATransition(async () => {
+        const res = await getAnnouncementWhatsAppTextAction(announcement.id);
+        setDropdownOpen(false);
+        if (res.success && res.text) {
+          const url = `https://wa.me/${res.phone}?text=${encodeURIComponent(res.text)}`;
+          window.open(url, "_blank");
+        } else {
+          alert(`Error al preparar mensaje de WhatsApp: ${res.error}`);
+        }
+      });
+    }
+  };
 
   const handleSendByEmail = () => {
     if (confirm("¿Estás seguro de que deseas enviar esta convocatoria por correo electrónico a todos los participantes e invitados?")) {
@@ -159,7 +179,7 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
                       Ver detalles
                     </Link>
 
-                    {!isResidentView && (
+                    {canManage && (
                       <>
                         <Link
                           href={`/gobernanza/convocatorias/${announcement.id}/editar`}
@@ -192,6 +212,19 @@ export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
                           )}
                           {isSending ? "Enviando..." : "Enviar por correo"}
                         </button>
+
+                        <a
+                          role="button"
+                          onClick={handleSendByWhatsApp}
+                          className={`flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors cursor-pointer ${isSendingWA ? "opacity-50 pointer-events-none" : ""}`}
+                        >
+                          {isSendingWA ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin text-[#25D366]" />
+                          ) : (
+                            <MessageCircle className="h-3.5 w-3.5 text-[#25D366]" />
+                          )}
+                          {isSendingWA ? "Preparando..." : "Enviar por WhatsApp"}
+                        </a>
                       </>
                     )}
 

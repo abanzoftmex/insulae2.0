@@ -5,6 +5,7 @@ import { PageBackBadge } from "@/components/ui/page-back-badge";
 import Link from "next/link";
 import { CalendarDays, Plus } from "lucide-react";
 import { getCurrentSession } from "@/app/actions/auth";
+import { getUserPermissions } from "@/shared/application/auth/permissions";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 export default async function AnnouncementsPage() {
@@ -19,11 +20,17 @@ export default async function AnnouncementsPage() {
     );
   }
 
+  const permissions = await getUserPermissions();
+  // canManage: ADMIN role OR user has Convocatorias permission assigned via roles
   const isAdmin = session.role === "ADMIN";
+  const canManage = isAdmin
+    || !!permissions["Convocatorias"]?.canCreate
+    || !!permissions["convocatorias"]?.canCreate
+    || !!permissions["Gobernanza"]?.canCreate;
   const rawAnnouncements = await getAnnouncementsUseCase.execute();
 
   let announcements = rawAnnouncements;
-  if (!isAdmin) {
+  if (!canManage) {
     const userAssignments = await prisma.condominiumStructurePositionAssignment.findMany({
       where: { userId: session.userId, isActive: true },
       select: { positionId: true }
@@ -57,7 +64,7 @@ export default async function AnnouncementsPage() {
           </div>
         </div>
 
-        {isAdmin && (
+        {canManage && (
           <Link
             href="/gobernanza/convocatorias/nuevo"
             className="flex items-center gap-2 h-8 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors self-start md:self-auto shrink-0"
@@ -72,7 +79,7 @@ export default async function AnnouncementsPage() {
       {announcements.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {announcements.map((announcement) => (
-            <AnnouncementCard key={announcement.id} announcement={announcement} />
+            <AnnouncementCard key={announcement.id} announcement={announcement} canManage={canManage} />
           ))}
         </div>
       ) : (
@@ -84,7 +91,7 @@ export default async function AnnouncementsPage() {
             <h3 className="text-sm font-bold uppercase tracking-tight text-ink">No hay convocatorias</h3>
             <p className="text-ink-soft text-[11px] mt-1">Aún no se han registrado convocatorias en este condominio.</p>
           </div>
-          {isAdmin && (
+          {canManage && (
             <Link
               href="/gobernanza/convocatorias/nuevo"
               className="text-brand font-bold text-[11px] uppercase tracking-widest hover:underline"

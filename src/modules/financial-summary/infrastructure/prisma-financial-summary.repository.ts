@@ -284,6 +284,13 @@ function resolveIncomeBucket(kind: ChargeGroupKind): IncomeBucket {
   return "other";
 }
 
+function isExtraordinaryBudgetGroup(group: { name: string; category: string }): boolean {
+  return (
+    group.name.toLowerCase().includes("extraordinario") ||
+    group.category.toLowerCase().includes("extraordinario")
+  );
+}
+
 function yearFromDate(value: Date | null | undefined): number | null {
   return value ? value.getUTCFullYear() : null;
 }
@@ -841,6 +848,76 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       }),
     ]);
 
+    const activeBudgetGroups = await prisma.budgetGroup.findMany({
+      where: {
+        condominiumId: condominium.id,
+        year: { in: [...ordinaryExpenseYears] },
+        isActive: true,
+      },
+      orderBy: {
+        order: "asc",
+      },
+    });
+
+    // Calculate ordinary active months range
+    let ordinaryStartMonth = 12;
+    let ordinaryEndMonth = 1;
+    let hasOrdinaryRange = false;
+
+    activeBudgetGroups.forEach((g) => {
+      if (!isExtraordinaryBudgetGroup(g) && g.year === requestedYear && (g.startsAt || g.endsAt)) {
+        hasOrdinaryRange = true;
+        const start = g.startsAt ? new Date(g.startsAt).getUTCMonth() + 1 : 1;
+        const end = g.endsAt ? new Date(g.endsAt).getUTCMonth() + 1 : 12;
+        if (start < ordinaryStartMonth) ordinaryStartMonth = start;
+        if (end > ordinaryEndMonth) ordinaryEndMonth = end;
+      }
+    });
+
+    (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[]).forEach((c) => {
+      if (c.chargeGroup?.kind === CHARGE_GROUP_KIND.ORDINARY && (c.quotaPeriodStart || c.quotaPeriodEnd)) {
+        hasOrdinaryRange = true;
+        const start = c.quotaPeriodStart ? new Date(c.quotaPeriodStart).getUTCMonth() + 1 : 1;
+        const end = c.quotaPeriodEnd ? new Date(c.quotaPeriodEnd).getUTCMonth() + 1 : 12;
+        if (start < ordinaryStartMonth) ordinaryStartMonth = start;
+        if (end > ordinaryEndMonth) ordinaryEndMonth = end;
+      }
+    });
+
+    const ordinaryActiveMonths = hasOrdinaryRange
+      ? Array.from({ length: ordinaryEndMonth - ordinaryStartMonth + 1 }, (_, i) => ordinaryStartMonth + i)
+      : Array.from({ length: 12 }, (_, i) => i + 1);
+
+    // Calculate extraordinary active months range
+    let extraordinaryStartMonth = 12;
+    let extraordinaryEndMonth = 1;
+    let hasExtraordinaryRange = false;
+
+    activeBudgetGroups.forEach((g) => {
+      if (isExtraordinaryBudgetGroup(g) && g.year === requestedYear && (g.startsAt || g.endsAt)) {
+        hasExtraordinaryRange = true;
+        const start = g.startsAt ? new Date(g.startsAt).getUTCMonth() + 1 : 1;
+        const end = g.endsAt ? new Date(g.endsAt).getUTCMonth() + 1 : 12;
+        if (start < extraordinaryStartMonth) extraordinaryStartMonth = start;
+        if (end > extraordinaryEndMonth) extraordinaryEndMonth = end;
+      }
+    });
+
+    (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[]).forEach((c) => {
+      const isExtraordinary = c.chargeGroup ? EXTRAORDINARY_KINDS.has(c.chargeGroup.kind) : false;
+      if (isExtraordinary && (c.quotaPeriodStart || c.quotaPeriodEnd)) {
+        hasExtraordinaryRange = true;
+        const start = c.quotaPeriodStart ? new Date(c.quotaPeriodStart).getUTCMonth() + 1 : 1;
+        const end = c.quotaPeriodEnd ? new Date(c.quotaPeriodEnd).getUTCMonth() + 1 : 12;
+        if (start < extraordinaryStartMonth) extraordinaryStartMonth = start;
+        if (end > extraordinaryEndMonth) extraordinaryEndMonth = end;
+      }
+    });
+
+    const extraordinaryActiveMonths = hasExtraordinaryRange
+      ? Array.from({ length: extraordinaryEndMonth - extraordinaryStartMonth + 1 }, (_, i) => extraordinaryStartMonth + i)
+      : Array.from({ length: 12 }, (_, i) => i + 1);
+
     const chargeGroupKindById = new Map<string, ChargeGroupKind>();
     const monthlyByKind = createSeriesByKind();
     const extraordinaryExpenseSeries = createZeroSeries();
@@ -884,6 +961,31 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       if (endStr) return `Hasta ${endStr}`;
       return "";
     };
+
+    /**
+     * Compute the active months array for a set of rows that each carry optional
+     * startsAt / endsAt dates. Falls back to `defaultMonths` when none carry date info.
+     */
+    const computeActiveMonthsFromRows = (
+      rows: Array<{ startsAt: Date | null; endsAt: Date | null }>,
+      defaultMonths: number[],
+    ): number[] => {
+      let start = 13;
+      let end = 0;
+      let hasRange = false;
+      for (const row of rows) {
+        if (row.startsAt || row.endsAt) {
+          hasRange = true;
+          const s = row.startsAt ? new Date(row.startsAt).getUTCMonth() + 1 : 1;
+          const e = row.endsAt   ? new Date(row.endsAt).getUTCMonth()   + 1 : 12;
+          if (s < start) start = s;
+          if (e > end)   end   = e;
+        }
+      }
+      if (!hasRange) return defaultMonths;
+      return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+    };
+
 
     const ordinaryOtherCatalogRows = (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
       .filter((catalog) => catalog.chargeGroup?.kind === CHARGE_GROUP_KIND.ORDINARY)
@@ -1752,6 +1854,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       id: "extraordinary-income-multi-year",
       title: "Ingresos mensuales",
       years: [...visibleYears],
+      activeMonths: computeActiveMonthsFromRows(
+        (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
+          .filter((c) => c.chargeGroup ? EXTRAORDINARY_OTHER_INCOME_KINDS.has(c.chargeGroup.kind) : false)
+          .map((c) => ({ startsAt: c.quotaPeriodStart, endsAt: c.quotaPeriodEnd })),
+        extraordinaryActiveMonths,
+      ),
       rows: [
         ...EXTRAORDINARY_INCOME_ROWS.map((row) => ({
           id: row.id,
@@ -1843,6 +1951,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       id: "extraordinary-other-income-multi-year",
       title: "Otros ingresos",
       years: [...visibleYears],
+      activeMonths: computeActiveMonthsFromRows(
+        (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
+          .filter((c) => c.chargeGroup ? EXTRAORDINARY_OTHER_INCOME_KINDS.has(c.chargeGroup.kind) : false)
+          .map((c) => ({ startsAt: c.quotaPeriodStart, endsAt: c.quotaPeriodEnd })),
+        extraordinaryActiveMonths,
+      ),
       rows: [
         ...extraordinaryOtherIncomeMultiYearRows,
         {
@@ -1941,6 +2055,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       id: "extraordinary-balance-multi-year",
       title: "Saldo Ingresos - Egresos Extraordinarios",
       years: [...visibleYears],
+      activeMonths: computeActiveMonthsFromRows(
+        (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
+          .filter((c) => c.chargeGroup ? EXTRAORDINARY_OTHER_INCOME_KINDS.has(c.chargeGroup.kind) : false)
+          .map((c) => ({ startsAt: c.quotaPeriodStart, endsAt: c.quotaPeriodEnd })),
+        extraordinaryActiveMonths,
+      ),
       rows: [
         {
           id: "extraordinary-balance-total",
@@ -1964,6 +2084,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       id: "extraordinary-receivables-multi-year",
       title: "Cuentas por cobrar - Cuotas extraordinarias",
       years: [...visibleYears],
+      activeMonths: computeActiveMonthsFromRows(
+        (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
+          .filter((c) => c.chargeGroup ? EXTRAORDINARY_OTHER_INCOME_KINDS.has(c.chargeGroup.kind) : false)
+          .map((c) => ({ startsAt: c.quotaPeriodStart, endsAt: c.quotaPeriodEnd })),
+        extraordinaryActiveMonths,
+      ),
       rows: [
         ...EXTRAORDINARY_INCOME_ROWS.map((row) => ({
           id: row.id,
@@ -2145,6 +2271,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       condominiumSlug: condominium.slug,
       year: requestedYear,
       availableYears,
+      ordinaryActiveMonths,
+      extraordinaryActiveMonths,
       months: monthly,
       totals: {
         ordinaryIncome: ordinaryTotal,

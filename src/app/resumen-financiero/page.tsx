@@ -273,7 +273,7 @@ export default async function ResumenFinancieroPage({
               firstColumnLabel="Tipo de Ingreso"
               annualLabelPrefix="Ingreso Anual"
               table={vm.ordinaryIncomeMultiYearTable}
-              monthLabels={vm.monthLabels}
+              monthLabels={vm.ordinaryMonthLabels}
               tone={TABLE_TONE.income}
             />
 
@@ -283,7 +283,7 @@ export default async function ResumenFinancieroPage({
               firstColumnLabel="Tipo de Ingreso"
               annualLabelPrefix="Ingreso Anual"
               table={vm.ordinaryOtherIncomeMultiYearTable}
-              monthLabels={vm.monthLabels}
+              monthLabels={vm.ordinaryMonthLabels}
               tone={TABLE_TONE.income}
             />
 
@@ -304,7 +304,7 @@ export default async function ResumenFinancieroPage({
                       <tr className="h-9 bg-danger/10 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-danger">
                         <th className="sticky left-0 z-30 px-4 border-r border-line bg-danger/10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Tipo de Egreso</th>
                         <th className="px-4 text-right border-r border-line">Egreso {vm.ordinaryExpensesLegacyTable.years[0]}</th>
-                        {vm.monthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m} {vm.ordinaryExpensesLegacyTable.years[0]}</th>)}
+                        {vm.ordinaryMonthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m} {vm.ordinaryExpensesLegacyTable.years[0]}</th>)}
                         <th className="px-4 text-right border-r border-line">Egreso {vm.ordinaryExpensesLegacyTable.years[1]}</th>
                       </tr>
                     </thead>
@@ -343,7 +343,7 @@ export default async function ResumenFinancieroPage({
                         <thead>
                           <tr className="h-9 bg-gold-soft border-b border-line text-[10px] font-bold uppercase tracking-tighter text-gold">
                             <th className="sticky left-0 z-30 px-4 border-r border-line bg-gold-soft shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Saldo</th>
-                            {vm.monthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m.slice(0, 3)}</th>)}
+                            {vm.ordinaryMonthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m.slice(0, 3)}</th>)}
                             <th className="px-4 text-right border-r border-line">Total Anual</th>
                           </tr>
                         </thead>
@@ -392,7 +392,7 @@ export default async function ResumenFinancieroPage({
                   ]
                 }))
               }}
-              monthLabels={vm.monthLabels}
+              monthLabels={vm.ordinaryMonthLabels}
               tone={TABLE_TONE.income}
             />
           </>
@@ -405,7 +405,7 @@ export default async function ResumenFinancieroPage({
               firstColumnLabel="Tipo de Ingreso"
               annualLabelPrefix="Total"
               table={vm.extraordinaryIncomeMultiYearTable}
-              monthLabels={vm.monthLabels}
+              monthLabels={vm.extraordinaryIncomeMultiYearTable.monthLabels}
               tone={TABLE_TONE.income}
             />
             <CompactFinancialTable
@@ -414,7 +414,7 @@ export default async function ResumenFinancieroPage({
               firstColumnLabel="Tipo de Egreso"
               annualLabelPrefix="Total"
               table={vm.extraordinaryExpensesMultiYearTable}
-              monthLabels={vm.monthLabels}
+              monthLabels={vm.extraordinaryExpensesMultiYearTable.monthLabels}
               tone={TABLE_TONE.expense}
             />
             <CompactFinancialTable
@@ -423,7 +423,7 @@ export default async function ResumenFinancieroPage({
               firstColumnLabel="Concepto"
               annualLabelPrefix="Periodo"
               table={vm.extraordinaryBalanceMultiYearTable}
-              monthLabels={vm.monthLabels}
+              monthLabels={vm.extraordinaryBalanceMultiYearTable.monthLabels}
               tone={TABLE_TONE.balance}
             />
           </div>

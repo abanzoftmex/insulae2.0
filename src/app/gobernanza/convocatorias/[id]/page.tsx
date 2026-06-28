@@ -5,6 +5,7 @@ import { AnnouncementDetailsActions } from "../components/announcement-details-a
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cookies } from "next/headers";
+import { getUserPermissions } from "@/shared/application/auth/permissions";
 import { Card } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
@@ -33,7 +34,12 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
   const cookieStore = await cookies();
   const sessionStr = cookieStore.get("insulae_session")?.value;
   const session = sessionStr ? JSON.parse(sessionStr) : null;
+  const permissions = await getUserPermissions();
   const isAdmin = session?.role === "ADMIN";
+  const isAdmin_detail = isAdmin
+    || !!permissions["Convocatorias"]?.canCreate
+    || !!permissions["convocatorias"]?.canCreate
+    || !!permissions["Gobernanza"]?.canCreate;
 
   // 1. Fetch Convocatoria Details
   const announcement = await getAnnouncementByIdUseCase.execute(id);
@@ -99,8 +105,9 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
           )}
           <AnnouncementDetailsActions
             id={announcement.id}
+            name={announcement.name}
             pdfUrl={announcement.pdfUrl}
-            isAdmin={isAdmin}
+            isAdmin={isAdmin_detail}
             activeDateId={activeDateId}
             statusName={statusName}
             isReunion={

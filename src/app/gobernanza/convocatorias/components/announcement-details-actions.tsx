@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { Edit2, Play, Mail, Loader2 } from "lucide-react";
+import { Edit2, Play, Mail, MessageCircle, Loader2 } from "lucide-react";
 import { useTransition } from "react";
-import { sendAnnouncementInvitationAction } from "../[id]/asamblea/actions";
+import { sendAnnouncementInvitationAction, getAnnouncementWhatsAppTextAction } from "../[id]/asamblea/actions";
+
+const WHATSAPP_NUMBER = "5212212721794";
 
 interface AnnouncementDetailsActionsProps {
   id: string;
+  name?: string;
   pdfUrl?: string | null;
   isAdmin?: boolean;
   activeDateId?: string;
@@ -16,6 +19,7 @@ interface AnnouncementDetailsActionsProps {
 
 export function AnnouncementDetailsActions({
   id,
+  name = "",
   pdfUrl,
   isAdmin = false,
   activeDateId,
@@ -23,6 +27,21 @@ export function AnnouncementDetailsActions({
   isReunion = false
 }: AnnouncementDetailsActionsProps) {
   const [isSending, startSendingTransition] = useTransition();
+  const [isSendingWA, startSendingWATransition] = useTransition();
+
+  const handleSendByWhatsApp = () => {
+    if (confirm("¿Deseas enviar esta convocatoria por WhatsApp? Se abrirá WhatsApp con el mensaje completo listo para enviar.")) {
+      startSendingWATransition(async () => {
+        const res = await getAnnouncementWhatsAppTextAction(id);
+        if (res.success && res.text) {
+          const url = `https://wa.me/${res.phone}?text=${encodeURIComponent(res.text)}`;
+          window.open(url, "_blank");
+        } else {
+          alert(`Error al preparar mensaje de WhatsApp: ${res.error}`);
+        }
+      });
+    }
+  };
 
   const handleSendByEmail = () => {
     if (confirm("¿Estás seguro de que deseas enviar esta convocatoria por correo electrónico a todos los participantes e invitados?")) {
@@ -69,6 +88,20 @@ export function AnnouncementDetailsActions({
               <Mail className="h-3 w-3" />
             )}
             {isSending ? "Enviando..." : "Enviar por correo"}
+          </button>
+
+          <button
+            type="button"
+            disabled={isSendingWA}
+            onClick={handleSendByWhatsApp}
+            className="flex items-center gap-2 h-9 px-4 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink hover:bg-canvas transition-colors disabled:opacity-50 cursor-pointer"
+          >
+            {isSendingWA ? (
+              <Loader2 className="h-3 w-3 animate-spin text-[#25D366]" />
+            ) : (
+              <MessageCircle className="h-3 w-3 text-[#25D366]" />
+            )}
+            {isSendingWA ? "Preparando..." : "Enviar por WhatsApp"}
           </button>
         </>
       )}
