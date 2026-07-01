@@ -1895,19 +1895,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
               toYearSlice(year, ordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()),
             ),
           }))
-        : [
-            {
-              id: "ordinary-other",
-              label: "Otros ingresos",
-              yearly: visibleYears.map((year) => toYearSlice(year, createZeroSeries())),
-            },
-          ];
+        : [];
 
     const ordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "ordinary-other-income-multi-year",
       title: "Otros ingresos",
       years: [...visibleYears],
-      rows: [
+      rows: ordinaryOtherIncomeMultiYearRows.length > 0 ? [
         ...ordinaryOtherIncomeMultiYearRows,
         {
           id: "ordinary-other-total",
@@ -1924,7 +1918,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             ),
           ),
         },
-      ],
+      ] : [],
     };
 
     const extraordinaryOtherIncomeMultiYearRows =
@@ -1939,13 +1933,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
               ),
             ),
           }))
-        : [
-            {
-              id: "extraordinary-other",
-              label: "Otros ingresos extraordinarios",
-              yearly: visibleYears.map((year) => toYearSlice(year, createZeroSeries())),
-            },
-          ];
+        : [];
 
     const extraordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "extraordinary-other-income-multi-year",
@@ -1957,7 +1945,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           .map((c) => ({ startsAt: c.quotaPeriodStart, endsAt: c.quotaPeriodEnd })),
         extraordinaryActiveMonths,
       ),
-      rows: [
+      rows: extraordinaryOtherIncomeMultiYearRows.length > 0 ? [
         ...extraordinaryOtherIncomeMultiYearRows,
         {
           id: "extraordinary-other-total",
@@ -1975,7 +1963,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             ),
           ),
         },
-      ],
+      ] : [],
     };
 
     const extraordinaryExpensesMultiYearRows =
