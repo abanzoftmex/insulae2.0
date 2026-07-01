@@ -209,6 +209,37 @@ export function AppShell({
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  // Inactivity timeout: 15 minutes of no user interaction redirects to /logout
+  useEffect(() => {
+    if (currentPath === "/login") return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        window.location.href = "/logout";
+      }, 15 * 60 * 1000);
+    };
+
+    const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart"];
+
+    // Set initial timer
+    resetTimer();
+
+    // Attach activity listeners
+    events.forEach((event) => {
+      document.addEventListener(event, resetTimer);
+    });
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach((event) => {
+        document.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [currentPath]);
+
   // ─── Nav item renderer ───────────────────────────────────────────────────────
 
   const renderNavItem = (item: NavItem) => {
