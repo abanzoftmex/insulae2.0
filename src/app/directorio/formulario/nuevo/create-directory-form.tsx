@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { FileText, Upload, Check, AlertCircle } from "lucide-react";
+import { FileText, Upload, Check, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
@@ -23,6 +23,8 @@ export function CreateDirectoryForm({
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     userType: "INDIVIDUAL" as "INDIVIDUAL" | "LEGAL_ENTITY" | "S_A",
@@ -317,23 +319,43 @@ export function CreateDirectoryForm({
               <div className="space-y-3">
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 leading-none">Nueva Contraseña</label>
-                  <input 
-                    type="password" 
-                    placeholder="Escribe la contraseña..." 
-                    value={formData.password}
-                    onChange={(e) => handleChange("password", e.target.value)}
-                    className="h-9 w-full rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" 
-                  />
+                  <div className="relative w-full">
+                    <input 
+                      type={showPassword ? "text" : "password"} 
+                      placeholder="Escribe la contraseña..." 
+                      value={formData.password}
+                      onChange={(e) => handleChange("password", e.target.value)}
+                      className="h-9 w-full rounded-sm border border-white/10 bg-white/5 pl-3 pr-9 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-sm text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 leading-none">Confirmar Contraseña</label>
-                  <input 
-                    type="password" 
-                    placeholder="Confirma la contraseña..." 
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleChange("confirmPassword", e.target.value)}
-                    className="h-9 w-full rounded-sm border border-white/10 bg-white/5 px-3 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" 
-                  />
+                  <div className="relative w-full">
+                    <input 
+                      type={showConfirmPassword ? "text" : "password"} 
+                      placeholder="Confirma la contraseña..." 
+                      value={formData.confirmPassword}
+                      onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                      className="h-9 w-full rounded-sm border border-white/10 bg-white/5 pl-3 pr-9 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-sm text-white/40 hover:text-white hover:bg-white/10 transition-colors"
+                      aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

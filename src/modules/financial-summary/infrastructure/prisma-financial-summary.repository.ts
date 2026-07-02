@@ -42,6 +42,7 @@ type PaymentDetailSnapshot = {
   payment: {
     paidAt: Date;
     isVisibleInFinancialSummary?: boolean | null;
+    method: string | null;
   };
 };
 
@@ -50,6 +51,7 @@ type IncomeSnapshot = {
   date: Date;
   chargeGroupId: string | null;
   miscCatalogId: string | null;
+  paymentMethod: string | null;
 };
 
 type MiscIncomeCatalogSnapshot = {
@@ -69,6 +71,7 @@ type ExpenseSnapshot = {
   concept: string;
   notes: string | null;
   legacyProjectName: string | null;
+  paymentMethod: string | null;
   budgetConcept: {
     year: number;
     name: string;
@@ -584,6 +587,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             select: {
               paidAt: true,
               isVisibleInFinancialSummary: true,
+              method: true,
             },
           },
         },
@@ -606,6 +610,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             select: {
               paidAt: true,
               isVisibleInFinancialSummary: true,
+              method: true,
             },
           },
         },
@@ -624,6 +629,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           date: true,
           chargeGroupId: true,
           miscCatalogId: true,
+          paymentMethod: true,
         },
       }),
       incomeModel.findMany({
@@ -640,6 +646,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           date: true,
           chargeGroupId: true,
           miscCatalogId: true,
+          paymentMethod: true,
         },
       }),
       expenseModel.findMany({
@@ -657,6 +664,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           concept: true,
           notes: true,
           legacyProjectName: true,
+          paymentMethod: true,
           budgetConcept: {
             select: {
               year: true,
@@ -683,6 +691,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           concept: true,
           notes: true,
           legacyProjectName: true,
+          paymentMethod: true,
           budgetConcept: {
             select: {
               year: true,
@@ -709,6 +718,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           concept: true,
           notes: true,
           legacyProjectName: true,
+          paymentMethod: true,
           budgetConcept: {
             select: {
               year: true,
@@ -1128,6 +1138,10 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const payableBudgetCurrentSeries = createZeroSeries();
     const payableBudgetNextSeries = createZeroSeries();
 
+    // Cash vs bank income series (for splitting "Bancos y caja" into two rows)
+    const ordinaryBankIncomeMonthly = createZeroSeries(); // TRANSFER, CARD, CHECK, OTHER
+    const ordinaryCashIncomeMonthly = createZeroSeries(); // CASH (efectivo)
+
     const monthly = initMonthlyRows();
 
     for (const detail of paymentDetails as PaymentDetailSnapshot[]) {
@@ -1148,6 +1162,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
       if (bucket === "ordinary") {
         row.ordinaryIncome += amount;
+        // Track cash vs bank split
+        if (detail.payment.method === "CASH") {
+          addAmountToSeries(ordinaryCashIncomeMonthly, month, amount);
+        } else {
+          addAmountToSeries(ordinaryBankIncomeMonthly, month, amount);
+        }
       } else if (bucket === "extraordinary") {
         row.extraordinaryIncome += amount;
       } else {
@@ -1205,6 +1225,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
       if (bucket === "ordinary") {
         row.ordinaryIncome += amount;
+        // Track cash vs bank split
+        if ((income as IncomeSnapshot).paymentMethod === "CASH") {
+          addAmountToSeries(ordinaryCashIncomeMonthly, month, amount);
+        } else {
+          addAmountToSeries(ordinaryBankIncomeMonthly, month, amount);
+        }
       } else if (bucket === "extraordinary") {
         row.extraordinaryIncome += amount;
       } else {
@@ -1294,6 +1320,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       }
 
       addAmountToSeries(ordinaryExpenseSeries, month, amount);
+
+      // Track cash vs bank split of ordinary expenses
+      if (expense.paymentMethod === "CASH") {
+        addAmountToSeries(ordinaryCashIncomeMonthly, month, -amount);
+      } else {
+        addAmountToSeries(ordinaryBankIncomeMonthly, month, -amount);
+      }
     }
 
     for (const expense of expensesForOrdinaryExpenseYears as ExpenseSnapshot[]) {
@@ -1664,6 +1697,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       ordinaryExpenseSeries,
     );
     const ordinaryBanksCashSeries = cumulativeSeries(ordinaryBalanceSeries);
+    // Monthly net flow by method (for split display)
+    const ordinaryBanksSeries = ordinaryBankIncomeMonthly;
+    const ordinaryCashSeries = ordinaryCashIncomeMonthly;
 
     const extraordinaryIncomeSeries = sumSeries([
       monthlyByKind[CHARGE_GROUP_KIND.EXTRA_CONDO],
@@ -1736,10 +1772,15 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             title: "Saldo Ingresos - Egresos Ordinarios",
             rows: [
               toTableRow("ordinary-balance-total", "Total", ordinaryBalanceSeries, true),
-              toTableRowWithPeriodEndTotal(
-                "ordinary-banks-cash",
-                "Bancos y caja",
-                ordinaryBanksCashSeries,
+              toTableRow(
+                "ordinary-banks",
+                "Bancos (Transferencia, Cheque, Tarjeta)",
+                ordinaryBanksSeries,
+              ),
+              toTableRow(
+                "ordinary-cash",
+                "Caja (Efectivo)",
+                ordinaryCashSeries,
               ),
             ],
           },
