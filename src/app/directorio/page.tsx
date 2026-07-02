@@ -20,6 +20,7 @@ import {
   ArrowRight,
   Briefcase
 } from "lucide-react";
+import { ProvisionalPasswordButton } from "./provisional-password-button";
 
 export const metadata: Metadata = {
   title: "Directorio | Insulae 2.0",
@@ -225,11 +226,18 @@ export default async function DirectorioPage(props: PageProps) {
                     </td>
 
                     <td className="px-4 py-3 text-right">
-                       <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25">
-                         <Link href={buildEditHref(person.reference)}>
-                           Perfil <ArrowRight className="h-3.5 w-3.5" />
-                         </Link>
-                       </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <ProvisionalPasswordButton
+                          userId={person.id}
+                          userEmail={person.email}
+                          userName={person.legalNameLabel}
+                        />
+                        <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25">
+                          <Link href={buildEditHref(person.reference)}>
+                            Perfil <ArrowRight className="h-3.5 w-3.5" />
+                          </Link>
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))

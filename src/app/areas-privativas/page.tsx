@@ -315,16 +315,16 @@ export default async function AreasPrivativasPage(props: PageProps) {
   }
 
   const colWidths = [
-    160, // Acciones
-    130, // Ubicacion
-    200, // Apoles
-    140, // Tipo de Apol
-    110, // Nivel
-    140, // Superficie
-    140, // Superficie Orig
-    110, // Indiviso
-    140, // Areas Comunes
-    140, // Totales
+    100, // Acciones
+    110, // Ubicacion
+    290, // Apoles
+    100, // Tipo de Apol
+    60, // Nivel
+    110, // Superficie
+    110, // Superficie Orig
+    80, // Indiviso
+    110, // Areas Comunes
+    110, // Totales
     140, // m2 construcción áreas comunes
     140, // Construccion
     140, // Comunes Sub
@@ -584,7 +584,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
       />
 
       {/* Main Extensive Table */}
-      <section className="overflow-hidden rounded-[1.6rem] border border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm">
+      <section className="overflow-hidden border-t border-b border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm -mx-4 md:-mx-6 lg:-mx-10 -mb-4 md:-mb-6 lg:-mb-8 rounded-none">
         <div className="overflow-auto max-h-[75vh]">
           <table className="table-fixed border-separate border-spacing-0" style={{ width: `${fullTableWidth}px` }}>
             <colgroup>{colWidths.map((w, i) => <col key={i} style={{ width: `${w}px` }} />)}</colgroup>
@@ -593,8 +593,8 @@ export default async function AreasPrivativasPage(props: PageProps) {
             <thead className="sticky top-0 z-30 shadow-sm">
               <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
                 <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Acciones</th>
-                <th className="sticky left-[160px] top-0 z-50 px-3 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Ubicación</th>
-                <th className="sticky left-[290px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8]">Área privativa/ Fracción de área privativa</th>
+                <th className="sticky left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Ubicación</th>
+                <th className="sticky left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8]">Área privativa/ Fracción de área privativa</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Tipo de Apol</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Nivel</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Superficie m2 área privativa actualizado</th>
@@ -660,16 +660,16 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     
                     {/* Sticky Column 1: Acciones */}
                     <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
-                      <div className="flex flex-wrap gap-1">{actions.map(renderLegacyAction)}</div>
+                      <div className="flex flex-wrap gap-1 w-[80px]">{actions.map(renderLegacyAction)}</div>
                     </td>
 
                     {/* Sticky Column 2: Ubicación */}
-                    <td className={cn("sticky left-[160px] z-20 px-3 text-xs font-bold text-[#5a4838] uppercase border-r border-[#ddd0be] transition-colors", rowBg)}>
+                    <td className={cn("sticky left-[100px] z-20 px-3 text-xs font-bold text-[#5a4838] uppercase border-r border-[#ddd0be] transition-colors", rowBg)}>
                       {row.zone}
                     </td>
 
                     {/* Sticky Column 3: Área / Fracción */}
-                    <td className={cn("sticky left-[290px] z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
+                    <td className={cn("sticky left-[210px] z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
                       <p className="font-bold text-[#2b1e12] leading-tight truncate">{row.name}</p>
                       <div className="flex gap-1.5 mt-0.5">
                         <span className="px-1.5 py-px rounded-xs bg-[#faf6f0] border border-[#c8b8a0]/30 text-xs font-bold text-[#7a5e44]/80 uppercase">{row.code}</span>
@@ -732,17 +732,6 @@ export default async function AreasPrivativasPage(props: PageProps) {
           </table>
         </div>
       </section>
-
-      {/* Paginator bottom */}
-      <Paginator 
-        page={vm.pagination.page}
-        totalPages={vm.pagination.totalPages}
-        totalRows={vm.pagination.totalRows}
-        hasPrev={vm.pagination.hasPrev}
-        hasNext={vm.pagination.hasNext}
-        prevHref={buildHref(Math.max(1, vm.pagination.page - 1))}
-        nextHref={buildHref(Math.min(vm.pagination.totalPages, vm.pagination.page + 1))}
-      />
     </div>
   );
 }

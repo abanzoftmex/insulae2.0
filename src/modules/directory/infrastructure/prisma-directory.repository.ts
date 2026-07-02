@@ -203,6 +203,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       condominiumId: condominium.id,
       isActive: true,
       NOT: { userType: "ADMIN" },
+      parentId: null,
     };
 
     if (query) {
@@ -457,6 +458,20 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         registrationTypeCode: true,
         registrationTypeDesc: true,
         idVq: true,
+        children: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            registrationTypeCode: true,
+            registrationTypeDesc: true,
+            idVq: true,
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
         userRoles: {
           select: {
             role: {
@@ -513,16 +528,37 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
 
     // Process participation blocks
     const blockMap: Record<string, { title: string; roles: string[] }> = {
-      legal: { title: "Propietario Legal", roles: ["legal"] },
-      pleno: { title: "Dominio actual", roles: ["pleno"] },
-      arrendatario: { title: "Arrendatario", roles: ["arrendatario", "arrend"] },
-      moral: { title: "Propietario Inicial", roles: ["moral"] },
+      legal: { title: "Propietario Legal", roles: ["legal", "dueño legal", "propietario legal"] },
+      pleno: { title: "Dominio actual", roles: ["pleno", "dominio actual", "dominio pleno", "dominio"] },
+      arrendatario: { title: "Arrendatario", roles: ["arrendatario", "arrend", "arrendamiento"] },
+      moral: { title: "Propietario Inicial", roles: ["moral", "dueño moral", "inicial", "propietario inicial"] },
     };
 
     // Pre-calculate area name sets for cross-block filtering
-    const legalNames = new Set(user.assignments.filter(a => (a.roleName || "").toLowerCase().includes("legal")).map(a => a.privateArea.name));
-    const plenoNames = new Set(user.assignments.filter(a => (a.roleName || "").toLowerCase().includes("pleno")).map(a => a.privateArea.name));
-    const arrendNames = new Set(user.assignments.filter(a => (a.roleName || "").toLowerCase().includes("arrend")).map(a => a.privateArea.name));
+    const legalNames = new Set(
+      user.assignments
+        .filter((a) => {
+          const r = (a.roleName || "").toLowerCase();
+          return ["legal", "dueño legal", "propietario legal"].some((keyword) => r.includes(keyword));
+        })
+        .map((a) => a.privateArea.name)
+    );
+    const plenoNames = new Set(
+      user.assignments
+        .filter((a) => {
+          const r = (a.roleName || "").toLowerCase();
+          return ["pleno", "dominio actual", "dominio pleno", "dominio"].some((keyword) => r.includes(keyword));
+        })
+        .map((a) => a.privateArea.name)
+    );
+    const arrendNames = new Set(
+      user.assignments
+        .filter((a) => {
+          const r = (a.roleName || "").toLowerCase();
+          return ["arrendatario", "arrend", "arrendamiento"].some((keyword) => r.includes(keyword));
+        })
+        .map((a) => a.privateArea.name)
+    );
 
     const blocks: ParticipationBlock[] = Object.entries(blockMap).map(([key, config]) => {
       const rows: ParticipationRow[] = [];
@@ -585,15 +621,13 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
 
           // Normalize entity type naming to match legacy and fix encoding issues
           let entityType = assignment.roleName || "Sin rol";
-          const normalizedRole = entityType.toLowerCase();
-          
-          if (config.roles.includes("legal") && (normalizedRole.includes("due") || normalizedRole.includes("legal") || normalizedRole.includes("propietario"))) {
+          if (key === "legal") {
             entityType = "Propietario Legal";
-          } else if (config.roles.includes("pleno") && (normalizedRole.includes("dominio") || normalizedRole.includes("pleno"))) {
+          } else if (key === "pleno") {
             entityType = "Dominio actual";
-          } else if (config.roles.includes("arrendatario") && (normalizedRole.includes("arrend"))) {
+          } else if (key === "arrendatario") {
             entityType = "Arrendatario";
-          } else if (config.roles.includes("moral") && (normalizedRole.includes("moral") || normalizedRole.includes("inicial"))) {
+          } else if (key === "moral") {
             entityType = "Propietario Inicial";
           }
 
@@ -659,6 +693,14 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         privateAreaName: assignment.privateArea.name,
         roleName: assignment.roleName?.trim() || "Sin rol",
       })),
+      children: user.children.map((child) => ({
+        id: child.id,
+        firstName: child.firstName,
+        lastName: child.lastName,
+        registrationTypeCode: child.registrationTypeCode,
+        registrationTypeDesc: child.registrationTypeDesc,
+        idVq: child.idVq,
+      })),
     };
   }
 
@@ -687,47 +729,34 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       let calculatedIdVq: string | null = currentUser?.idVq || null;
 
       if (currentUser) {
-        const newApol = data.apolfap !== undefined ? data.apolfap : currentUser.apolfap;
-        const newCode = data.registrationTypeCode !== undefined ? data.registrationTypeCode : currentUser.registrationTypeCode;
+        if (!calculatedIdVq || !calculatedIdVq.startsWith("#")) {
+          const siblings = await tx.user.findMany({
+            where: {
+              condominiumId: currentUser.condominiumId,
+              isActive: true,
+              id: { not: id },
+              idVq: { startsWith: "#" },
+            },
+            select: { idVq: true },
+          });
 
-        if (newApol && newCode) {
-          const prefix = `${newApol}/${newCode}-`;
-          if (!calculatedIdVq || !calculatedIdVq.startsWith(prefix)) {
-            const siblings = await tx.user.findMany({
-              where: {
-                condominiumId: currentUser.condominiumId,
-                isActive: true,
-                apolfap: newApol,
-                registrationTypeCode: newCode,
-                id: { not: id },
-                idVq: { startsWith: prefix },
-              },
-              select: { idVq: true },
-            });
+          const usedNumbers = new Set(
+            siblings
+              .map((s) => {
+                if (!s.idVq) return null;
+                const numStr = s.idVq.replace("#", "");
+                const val = parseInt(numStr, 10);
+                return isNaN(val) ? null : val;
+              })
+              .filter((val): val is number => val !== null)
+          );
 
-            const usedSuffixes = new Set(
-              siblings
-                .map((s) => {
-                  if (!s.idVq) return null;
-                  const parts = s.idVq.split("-");
-                  const suffixVal = parseInt(parts[parts.length - 1], 10);
-                  return isNaN(suffixVal) ? null : suffixVal;
-                })
-                .filter((s): s is number => s !== null)
-            );
-
-            let suffix = 1;
-            for (let i = 1; i <= 5; i++) {
-              if (!usedSuffixes.has(i)) {
-                suffix = i;
-                break;
-              }
-            }
-
-            calculatedIdVq = `${newApol}/${newCode}-${suffix}`;
+          let nextNum = 1;
+          while (usedNumbers.has(nextNum)) {
+            nextNum++;
           }
-        } else {
-          calculatedIdVq = null;
+
+          calculatedIdVq = `#${String(nextNum).padStart(3, "0")}`;
         }
       }
 

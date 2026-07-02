@@ -27,7 +27,10 @@ import {
   getRegistrationTypesAction,
   addRegistrationTypeAction,
   updateRegistrationTypeAction,
-  deleteRegistrationTypeAction
+  deleteRegistrationTypeAction,
+  createNestedUserAction,
+  deleteNestedUserAction,
+  generateTemporaryPasswordAction,
 } from "./actions";
 import type { DirectoryContactParticipation } from "@/modules/directory/domain/directory";
 
@@ -61,6 +64,13 @@ export function DirectoryForm({
   const [isManagerOpen, setIsManagerOpen] = useState(false);
   const [newTypeDesc, setNewTypeDesc] = useState("");
   const [editingTypeId, setEditingTypeId] = useState<string | null>(null);
+
+  const [children, setChildren] = useState<Array<any>>(initialData.children || []);
+  const [isCreateChildOpen, setIsCreateChildOpen] = useState(false);
+  const [childFirstName, setChildFirstName] = useState("");
+  const [childLastName, setChildLastName] = useState("");
+  const [childRegTypeCode, setChildRegTypeCode] = useState("");
+  const [isChildPending, startChildTransition] = useTransition();
   const [editingTypeDesc, setEditingTypeDesc] = useState("");
 
   const uniqueAssignments = Array.from(
@@ -189,6 +199,18 @@ export function DirectoryForm({
         setMessage({ type: "success", text: result.message });
         setPassword("");
         setConfirmPassword("");
+      } else {
+        setMessage({ type: "error", text: result.message });
+      }
+    });
+  };
+
+  const handleGenerateTempPassword = () => {
+    setMessage(null);
+    startPasswordTransition(async () => {
+      const result = await generateTemporaryPasswordAction(reference);
+      if (result.ok) {
+        setMessage({ type: "success", text: result.message });
       } else {
         setMessage({ type: "error", text: result.message });
       }
@@ -540,9 +562,15 @@ export function DirectoryForm({
                   </div>
                 </div>
               </div>
-              <button type="button" onClick={handleUpdatePassword} disabled={isPasswordPending} className="text-[10px] font-bold uppercase tracking-widest text-brand-mint hover:text-white transition-colors disabled:opacity-50">
-                {isPasswordPending ? "Actualizando..." : "Actualizar contraseña"}
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button type="button" onClick={handleUpdatePassword} disabled={isPasswordPending} className="text-[10px] font-bold uppercase tracking-widest text-brand-mint hover:text-white transition-colors disabled:opacity-50">
+                  {isPasswordPending ? "Actualizando..." : "Actualizar contraseña"}
+                </button>
+                <span className="text-white/10 text-xs">|</span>
+                <button type="button" onClick={handleGenerateTempPassword} disabled={isPasswordPending} className="text-[10px] font-bold uppercase tracking-widest text-brand-accent hover:text-white transition-colors disabled:opacity-50">
+                  {isPasswordPending ? "Actualizando..." : "Generar y enviar contraseña provisional"}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -631,6 +659,81 @@ export function DirectoryForm({
           ))}
         </div>
       )}
+
+      {/* Nested Users Section */}
+      <div className="space-y-4 pt-4">
+        <div className="pb-3 border-b border-brand flex items-center justify-between">
+          <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">Usuarios vinculados / anidados</h2>
+          <button
+            type="button"
+            onClick={() => {
+              setChildFirstName("");
+              setChildLastName("");
+              setChildRegTypeCode("");
+              setIsCreateChildOpen(true);
+            }}
+            className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand text-white text-[9px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors animate-in fade-in duration-150"
+          >
+            <Plus className="w-3 h-3" />
+            Agregar usuario anidado
+          </button>
+        </div>
+        <div className={sectionCls}>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-canvas border-b border-line">
+                  <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">ID SDV</th>
+                  <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Nombre</th>
+                  <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Tipo de registro</th>
+                  <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-center">Acción</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {children.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-ink-soft text-[11px]">
+                      Sin usuarios anidados vinculados.
+                    </td>
+                  </tr>
+                ) : (
+                  children.map((child) => (
+                    <tr key={child.id} className="hover:bg-canvas/50 transition-colors">
+                      <td className="px-4 py-2.5 font-mono text-[11px] text-brand-accent">{child.idVq || "-"}</td>
+                      <td className="px-4 py-2.5 text-[11px] font-medium text-ink">
+                        {`${child.firstName ?? ""} ${child.lastName ?? ""}`.trim() || "-"}
+                      </td>
+                      <td className="px-4 py-2.5 text-[11px] text-ink-soft">
+                        {child.registrationTypeDesc || child.registrationTypeCode || "-"}
+                      </td>
+                      <td className="px-4 py-2.5 text-center">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (confirm(`¿Estás seguro de eliminar a ${child.firstName} ${child.lastName}?`)) {
+                              startChildTransition(async () => {
+                                const res = await deleteNestedUserAction(child.id);
+                                if (res.ok) {
+                                  setChildren((prev) => prev.filter((c) => c.id !== child.id));
+                                }
+                              });
+                            }
+                          }}
+                          className="text-danger hover:text-danger-accent p-1"
+                          title="Eliminar"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {/* Modal to manage registration types */}
       {isManagerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
@@ -782,6 +885,120 @@ export function DirectoryForm({
                 Cerrar
               </button>
             </div>
+          </div>
+        </div>
+      )}
+      {/* Modal to add nested user */}
+      {isCreateChildOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-brand bg-brand flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-white">Agregar Usuario Anidado</h3>
+              <button
+                type="button"
+                onClick={() => setIsCreateChildOpen(false)}
+                className="text-white hover:text-white/80 text-xl font-bold leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const firstName = childFirstName.trim();
+                const lastName = childLastName.trim();
+                if (!firstName || !childRegTypeCode) {
+                  alert("Nombre y Tipo de registro son requeridos.");
+                  return;
+                }
+                const matched = registrationTypes.find((t) => t.code === childRegTypeCode);
+                const regDesc = matched ? matched.description : "";
+
+                startChildTransition(async () => {
+                  const res = await createNestedUserAction(initialData.id, {
+                    firstName,
+                    lastName,
+                    registrationTypeCode: childRegTypeCode,
+                    registrationTypeDesc: regDesc,
+                  });
+                  if (res.ok && res.data) {
+                    setChildren((prev) => [...prev, res.data]);
+                    setIsCreateChildOpen(false);
+                  } else {
+                    alert(res.message || "Error al crear el usuario anidado.");
+                  }
+                });
+              }}
+              className="p-5 space-y-4"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    Nombre(s) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={childFirstName}
+                    onChange={(e) => setChildFirstName(e.target.value)}
+                    placeholder="Ej. Juan"
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand"
+                  />
+                </div>
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    Apellidos
+                  </label>
+                  <input
+                    type="text"
+                    value={childLastName}
+                    onChange={(e) => setChildLastName(e.target.value)}
+                    placeholder="Ej. Pérez"
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                  Tipo de Registro *
+                </label>
+                <select
+                  required
+                  value={childRegTypeCode}
+                  onChange={(e) => setChildRegTypeCode(e.target.value)}
+                  className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
+                >
+                  <option value="">Selecciona tipo...</option>
+                  {registrationTypes.map((t) => (
+                    <option key={t.id} value={t.code}>
+                      {t.description} ({t.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Modal Footer / Buttons */}
+              <div className="pt-4 border-t border-line flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateChildOpen(false)}
+                  className="h-8 px-5 bg-white border border-line rounded-full text-[10px] font-bold uppercase tracking-widest text-ink hover:bg-canvas transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={isChildPending}
+                  className="h-8 px-5 bg-brand hover:bg-brand-accent text-white text-[10px] font-bold uppercase tracking-widest rounded-full transition-colors disabled:opacity-50"
+                >
+                  {isChildPending ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

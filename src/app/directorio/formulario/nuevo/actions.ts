@@ -20,9 +20,37 @@ export async function createFullDirectoryContactAction(data: any) {
       return { ok: false, message: "No se encontró el condominio activo." };
     }
 
+    const siblings = await prisma.user.findMany({
+      where: {
+        condominiumId: condominium.id,
+        isActive: true,
+        idVq: { startsWith: "#" },
+      },
+      select: { idVq: true },
+    });
+
+    const usedNumbers = new Set(
+      siblings
+        .map((s) => {
+          if (!s.idVq) return null;
+          const numStr = s.idVq.replace("#", "");
+          const val = parseInt(numStr, 10);
+          return isNaN(val) ? null : val;
+        })
+        .filter((val): val is number => val !== null)
+    );
+
+    let nextNum = 1;
+    while (usedNumbers.has(nextNum)) {
+      nextNum++;
+    }
+
+    const generatedIdVq = `#${String(nextNum).padStart(3, "0")}`;
+
     const newUser = await prisma.user.create({
       data: {
         condominiumId: condominium.id,
+        idVq: generatedIdVq,
         userType: data.userType,
         requiresInvoice: data.requiresInvoice,
         firstName: data.firstName || null,

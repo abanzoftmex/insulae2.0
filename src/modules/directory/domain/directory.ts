@@ -54,6 +54,15 @@ export interface LinkedCommerce {
   name: string;
 }
 
+export interface NestedUser {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  registrationTypeCode: string | null;
+  registrationTypeDesc: string | null;
+  idVq: string | null;
+}
+
 export interface DirectoryContactParticipation {
   id: string;
   displayName: string;
@@ -88,6 +97,7 @@ export interface DirectoryContactParticipation {
   registrationTypeCode: string | null;
   registrationTypeDesc: string | null;
   idVq: string | null;
+  children: NestedUser[];
 }
 
 export interface DirectoryOverview {
