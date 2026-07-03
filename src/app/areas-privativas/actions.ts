@@ -858,6 +858,24 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
     });
     if (!condominium) return { success: false, error: "Condominio no encontrado" };
 
+    const cleanKey = (key: string): string => {
+      return key
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9]/g, "");
+    };
+
+    const getVal = (row: any, aliases: string[]): any => {
+      const cleanedAliases = aliases.map(cleanKey);
+      for (const k of Object.keys(row)) {
+        if (cleanedAliases.includes(cleanKey(k))) {
+          return row[k];
+        }
+      }
+      return undefined;
+    };
+
     const parseDecimal = (val: any) => {
       if (val === null || val === undefined || val === "") return null;
       if (typeof val === "number") return val;
@@ -880,47 +898,55 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
     };
 
     for (const row of rows) {
-      if (!row["Nombre"] || String(row["Nombre"]).trim() === "") continue;
+      const name = getVal(row, ["Nombre", "Name"])?.trim() || "";
+      if (!name) continue;
 
-      const parsedStatus = toPrivateAreaStatus(row["Estatus"]?.trim());
+      const code = getVal(row, ["Código", "Codigo", "Code"])?.trim() || null;
+      const id = getVal(row, ["ID", "Id"])?.trim() || null;
+
+      const rawStatus = getVal(row, ["Estatus", "Status", "estado"]);
+      const parsedStatus = toPrivateAreaStatus(rawStatus?.trim());
 
       const baseData = {
         condominiumId: condominium.id,
-        code: row["Código"]?.trim() || null,
-        name: row["Nombre"]?.trim() || "Sin Nombre",
-        zone: row["Zona"]?.trim() || null,
-        subzone: row["Subzona"]?.trim() || null,
-        street: row["Calle"]?.trim() || null,
-        useType: row["Tipo Uso"]?.trim() || null,
+        code,
+        name,
+        zone: getVal(row, ["Zona", "Zone"])?.trim() || null,
+        subzone: getVal(row, ["Subzona", "Subzone"])?.trim() || null,
+        street: getVal(row, ["Calle", "Street"])?.trim() || null,
+        useType: getVal(row, ["Tipo Uso", "Tipo de Uso", "Use Type", "useType"])?.trim() || null,
         status: parsedStatus as any,
-        m2Original: parseDecimal(row["M2 Original"]),
-        m2Apole: parseDecimal(row["M2 Actual"]),
-        m2Construction: parseDecimal(row["M2 Construcción"]),
-        m2CommonArea: parseDecimal(row["M2 Comunes"]),
-        m2ConstructionChildren: parseDecimal(row["M2 Construcción Hijos"]),
-        m2CommonAreaChildren: parseDecimal(row["M2 Comunes Hijos"]),
-        indiviso: parseDecimal(row["Indiviso"]),
-        vccc: parseDecimal(row["VCCC"]),
-        isFusion: parseBool(row["Es Fusión"]),
-        isActive: (row["Activo"] !== undefined && row["Activo"] !== "") ? parseBool(row["Activo"]) : true,
+        m2Original: parseDecimal(getVal(row, ["M2 Original", "original m2"])),
+        m2Apole: parseDecimal(getVal(row, ["M2 Actual", "actual m2", "M2 Apole", "m2 apole"])),
+        m2Construction: parseDecimal(getVal(row, ["M2 Construcción", "M2 Construccion", "M2 Construction"])),
+        m2CommonArea: parseDecimal(getVal(row, ["M2 Comunes", "M2 Áreas Comunes", "M2 Areas Comunes", "M2 Common Area"])),
+        m2ConstructionChildren: parseDecimal(getVal(row, ["M2 Construcción Hijos", "M2 Construccion Hijos", "M2 Construction Children"])),
+        m2CommonAreaChildren: parseDecimal(getVal(row, ["M2 Comunes Hijos", "M2 Common Area Children"])),
+        indiviso: parseDecimal(getVal(row, ["Indiviso", "indiviso"])),
+        vccc: parseDecimal(getVal(row, ["VCCC", "vccc"])),
+        isFusion: parseBool(getVal(row, ["Es Fusión", "Es Fusion", "Is Fusion", "isFusion"])),
+        isActive: (getVal(row, ["Activo", "Active", "activo", "active"]) !== undefined && getVal(row, ["Activo", "Active", "activo", "active"]) !== "") 
+          ? parseBool(getVal(row, ["Activo", "Active", "activo", "active"])) 
+          : true,
+        level: getVal(row, ["Nivel", "Level", "nivel", "level"])?.trim() || null,
       };
 
-      if (row["ID"]) {
-        const existing = await prisma.privateArea.findUnique({ where: { id: row["ID"] } });
+      if (id) {
+        const existing = await prisma.privateArea.findUnique({ where: { id } });
         if (existing) {
-          await prisma.privateArea.update({ where: { id: row["ID"] }, data: baseData });
+          await prisma.privateArea.update({ where: { id }, data: baseData });
         } else {
-          await prisma.privateArea.create({ data: { id: row["ID"], ...baseData } });
+          await prisma.privateArea.create({ data: { id, ...baseData } });
         }
-      } else if (row["Código"]) {
-        const existing = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code: row["Código"] } });
+      } else if (code) {
+        const existing = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code } });
         if (existing) {
           await prisma.privateArea.update({ where: { id: existing.id }, data: baseData });
         } else {
           await prisma.privateArea.create({ data: baseData });
         }
       } else {
-        const existing = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, name: row["Nombre"] } });
+        const existing = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, name } });
         if (existing) {
           await prisma.privateArea.update({ where: { id: existing.id }, data: baseData });
         } else {
@@ -930,13 +956,16 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
     }
 
     for (const row of rows) {
-      if (row["Código Padre"] && row["Código Padre"].trim() !== "") {
-        const parentCode = row["Código Padre"].trim();
+      const parentCode = getVal(row, ["Código Padre", "Codigo Padre", "Parent Code", "parentCode"])?.trim();
+      const code = getVal(row, ["Código", "Codigo", "Code"])?.trim();
+      const id = getVal(row, ["ID", "Id"])?.trim();
+      
+      if (parentCode && parentCode !== "") {
         const parent = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code: parentCode } });
         if (parent) {
           let child;
-          if (row["ID"]) child = await prisma.privateArea.findUnique({ where: { id: row["ID"] } });
-          else if (row["Código"]) child = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code: row["Código"] } });
+          if (id) child = await prisma.privateArea.findUnique({ where: { id } });
+          else if (code) child = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code } });
           
           if (child) {
             await prisma.privateArea.update({ where: { id: child.id }, data: { parentPrivateAreaId: parent.id } });

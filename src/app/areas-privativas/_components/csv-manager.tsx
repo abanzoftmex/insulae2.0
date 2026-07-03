@@ -17,14 +17,14 @@ export function CsvManager() {
 
   const handleDownloadTemplate = () => {
     const headers = [
-      "ID", "Código", "Nombre", "Zona", "Subzona", "Calle", "Tipo Uso", 
+      "ID", "Código", "Nombre", "Zona", "Subzona", "Calle", "Tipo Uso", "Nivel", 
       "Estatus", "M2 Original", "M2 Actual", "M2 Construcción", "M2 Comunes", 
       "M2 Construcción Hijos", "M2 Comunes Hijos", "Indiviso", "VCCC", 
       "Código Padre", "Es Fusión", "Activo"
     ];
     
     const row = [
-      "", "APOL-001", "Ejemplo APOL", "NORTE", "Sub A", "Calle 1", "COMERCIAL", 
+      "", "APOL-001", "Ejemplo APOL", "NORTE", "Sub A", "Calle 1", "COMERCIAL", "PB", 
       "DELIVERED", 100, 100, 80, 20, 0, 0, 1.5, 500, "", "NO", "SI"
     ];
 

@@ -585,8 +585,19 @@ export default async function AreasPrivativasPage(props: PageProps) {
 
       {/* Main Extensive Table */}
       <section className="overflow-hidden border-t border-b border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm -mx-4 md:-mx-6 lg:-mx-10 -mb-4 md:-mb-6 lg:-mb-8 rounded-none">
+        <style dangerouslySetInnerHTML={{ __html: `
+          .fap-inventory-table td {
+            border-top: 1px solid #e5d8c8 !important;
+          }
+          .fap-block-start td {
+            border-top: 2.5px solid #a89678 !important;
+          }
+          .fap-block-end td {
+            border-bottom: 2.5px solid #a89678 !important;
+          }
+        `}} />
         <div className="overflow-auto max-h-[75vh]">
-          <table className="table-fixed border-separate border-spacing-0" style={{ width: `${fullTableWidth}px` }}>
+          <table className="fap-inventory-table table-fixed border-separate border-spacing-0" style={{ width: `${fullTableWidth}px` }}>
             <colgroup>{colWidths.map((w, i) => <col key={i} style={{ width: `${w}px` }} />)}</colgroup>
             
             {/* THEAD */}
@@ -652,11 +663,28 @@ export default async function AreasPrivativasPage(props: PageProps) {
                   return renderFinancialCards(s?.owner ?? empty, s?.commerce ?? empty, hasCom, row.paymentStatusColor);
                 };
 
+                const isParent = row.hierarchyLabel === "Padre";
                 const isChild = row.hierarchyLabel === "Hijo";
-                const rowBg = isChild ? "bg-[#faf6f0]" : "bg-white";
+
+                const isBlockStart = isParent;
+                const nextRow = vm.rows[rowIdx + 1];
+                const isBlockEnd = (isChild || isParent) && (!nextRow || nextRow.hierarchyLabel !== "Hijo");
+
+                const rowBg = isParent
+                  ? "bg-[#dfcfb9]"
+                  : isChild
+                  ? "bg-[#f0e6d6]"
+                  : "bg-white";
+
+                const blockRowClass = cn(
+                  isBlockStart && "fap-block-start",
+                  isBlockEnd && "fap-block-end",
+                  isParent && "fap-parent",
+                  isChild && "fap-child"
+                );
                 
                 return (
-                  <tr key={`${row.id}-${rowIdx}`} className={cn("h-12 border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] group", rowBg)}>
+                  <tr key={`${row.id}-${rowIdx}`} className={cn("h-12 border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] group", rowBg, blockRowClass)}>
                     
                     {/* Sticky Column 1: Acciones */}
                     <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
@@ -673,7 +701,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
                       <p className="font-bold text-[#2b1e12] leading-tight truncate">{row.name}</p>
                       <div className="flex gap-1.5 mt-0.5">
                         <span className="px-1.5 py-px rounded-xs bg-[#faf6f0] border border-[#c8b8a0]/30 text-xs font-bold text-[#7a5e44]/80 uppercase">{row.code}</span>
-                        <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.statusLabel}</Badge>
+                        <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="rounded-full px-2 py-0.5 text-[8px] font-bold tracking-widest">{row.statusLabel}</Badge>
                       </div>
                     </td>
 

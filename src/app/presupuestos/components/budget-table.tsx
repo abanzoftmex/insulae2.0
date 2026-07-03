@@ -171,9 +171,9 @@ export default function BudgetTable({
     e.target.dataset.original = val.toString();
   };
 
-  const stickyHeaderBase = "z-30 px-4 border-r border-line bg-[#f2f0eb] shadow-[2px_0_5px_rgba(0,0,0,0.02)]";
-  const stickyCellBase = "z-10 px-4 border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)] group-hover:bg-canvas/5 transition-colors";
-  const stickyFootBase = "z-10 px-4 border-r border-line bg-[#f6f4f0] shadow-[2px_0_5px_rgba(0,0,0,0.02)]";
+  const stickyHeaderBase = "z-30 px-4 py-3.5 border-r border-line bg-[#f2f0eb] shadow-[2px_0_5px_rgba(0,0,0,0.02)]";
+  const stickyCellBase = "z-10 px-4 py-3.5 border-r border-line bg-card shadow-[2px_0_5px_rgba(0,0,0,0.02)] group-hover:bg-canvas/5 transition-colors";
+  const stickyFootBase = "z-10 px-4 py-3.5 border-r border-line bg-[#f6f4f0] shadow-[2px_0_5px_rgba(0,0,0,0.02)]";
 
   return (
     <div className="space-y-6">
@@ -224,7 +224,7 @@ export default function BudgetTable({
                   <div className="overflow-x-auto no-scrollbar">
                     <table className="w-full text-left border-collapse min-w-480">
                       <thead>
-                        <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
+                        <tr className="bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
                           {/* Sticky: Concepto */}
                           <th className={cn("sticky", stickyHeaderBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Concepto</th>
                           {/* Sticky: Costo Unitario */}
@@ -240,17 +240,17 @@ export default function BudgetTable({
                           {/* Monthly columns: Presupuesto, Unidades, Ejercido */}
                           {monthNames.map((m) => (
                             <Fragment key={m}>
-                              <th className="px-3 text-right border-r border-line/30 font-bold opacity-60 min-w-[130px]">Presupuesto {m}</th>
-                              <th className="px-3 text-right border-r border-line/30 font-bold opacity-70 bg-brand-deep/3 min-w-[80px]">Unidades {m}</th>
-                              <th className="px-3 text-right border-r border-line font-bold opacity-80 bg-canvas/20 min-w-[120px]">Ejercido {m}</th>
+                              <th className="px-3 py-3 text-right border-r border-line/30 font-bold opacity-60 min-w-[130px]">Presupuesto {m}</th>
+                              <th className="px-3 py-3 text-right border-r border-line/30 font-bold opacity-70 bg-brand-deep/3 min-w-[80px]">Unidades {m}</th>
+                              <th className="px-3 py-3 text-right border-r border-line font-bold opacity-80 bg-canvas/20 min-w-[120px]">Ejercido {m}</th>
                             </Fragment>
                           ))}
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-line/30">
+                      <tbody className="divide-y divide-line">
                         {/* Concept Rows */}
                         {group.concepts.map((concept) => (
-                          <tr key={concept.conceptId} className="h-10 hover:bg-canvas/10 transition-colors group">
+                          <tr key={concept.conceptId} className="hover:bg-canvas/10 transition-colors group">
                             {/* Sticky: Concepto */}
                             <td className={cn("sticky text-[12px] font-bold text-ink-soft", stickyCellBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>
                               {concept.conceptName}
@@ -396,7 +396,7 @@ export default function BudgetTable({
                             {concept.months.map((m) => (
                               <Fragment key={m.month}>
                                 {/* Ppto Mes */}
-                                <td className="px-2 py-1.5 min-w-[130px] border-r border-line/30">
+                                <td className="px-2 py-3.5 min-w-[130px] border-r border-line/30">
                                   {isClosed ? (
                                     <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                                       {formatMXN(m.budgeted)}
@@ -416,7 +416,7 @@ export default function BudgetTable({
                                   )}
                                 </td>
                                 {/* Unidades Mes (editable) */}
-                                <td className="px-2 py-1.5 min-w-[80px] border-r border-line/30 bg-brand-deep/2">
+                                <td className="px-2 py-3.5 min-w-[80px] border-r border-line/30 bg-brand-deep/2">
                                   {isClosed ? (
                                     <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                                       {m.units != null ? m.units : "—"}
@@ -433,7 +433,7 @@ export default function BudgetTable({
                                   )}
                                 </td>
                                 {/* Ejerc Mes */}
-                                <td className="px-3 text-right text-[11px] font-mono text-ink-soft/60 border-r border-line bg-canvas/10 italic min-w-[120px]">
+                                <td className="px-3 py-3.5 text-right text-[11px] font-mono text-ink-soft/60 border-r border-line bg-canvas/10 italic min-w-[120px]">
                                   {formatMXN(m.generated)}
                                 </td>
                               </Fragment>
@@ -442,7 +442,7 @@ export default function BudgetTable({
                         ))}
                       </tbody>
                       <tfoot>
-                        <tr className="h-10 bg-brand-deep/3 border-t border-line">
+                        <tr className="bg-brand-deep/3 border-t border-line">
                           {/* Sticky: Total Concepto */}
                           <td className={cn("sticky font-bold text-[12px] uppercase text-brand", stickyFootBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>
                             Total {groupName}
@@ -468,9 +468,9 @@ export default function BudgetTable({
                             
                             return (
                               <Fragment key={m}>
-                                <td className="px-2 py-1 text-right text-[12px] font-mono font-bold text-brand border-r border-line/30 min-w-[130px]">{formatMXN(monthBudgeted)}</td>
-                                <td className="px-2 py-1 text-right text-[12px] font-mono font-bold text-brand/70 border-r border-line/30 bg-brand-deep/2 min-w-[80px]">{monthUnits || "—"}</td>
-                                <td className="px-3 py-1 text-right text-[12px] font-mono font-bold text-brand border-r border-line bg-canvas/10 min-w-[120px]">{formatMXN(monthGenerated)}</td>
+                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line/30 min-w-[130px]">{formatMXN(monthBudgeted)}</td>
+                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand/70 border-r border-line/30 bg-brand-deep/2 min-w-[80px]">{monthUnits || "—"}</td>
+                                <td className="px-3 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line bg-canvas/10 min-w-[120px]">{formatMXN(monthGenerated)}</td>
                               </Fragment>
                             );
                           })}
@@ -489,13 +489,13 @@ export default function BudgetTable({
         <div className="overflow-x-auto no-scrollbar">
           <table className="w-full text-left border-collapse min-w-480">
             <tfoot>
-              <tr className="h-12 bg-brand-deep text-white">
-                <td className="sticky px-4 font-bold uppercase text-[13px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Total General</td>
-                <td className="sticky px-2 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
-                <td className="sticky px-1.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBudgeted)}</td>
-                <td className="sticky px-1.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalGenerated)}</td>
-                <td className="sticky px-1.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBalance)}</td>
-                <td className="sticky px-4 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PROVEEDOR, width: COL_PROVEEDOR, minWidth: COL_PROVEEDOR, maxWidth: COL_PROVEEDOR }}></td>
+              <tr className="bg-brand-deep text-white">
+                <td className="sticky px-4 py-3.5 font-bold uppercase text-[13px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Total General</td>
+                <td className="sticky px-2 py-3.5 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
+                <td className="sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBudgeted)}</td>
+                <td className="sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalGenerated)}</td>
+                <td className="sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBalance)}</td>
+                <td className="sticky px-4 py-3.5 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PROVEEDOR, width: COL_PROVEEDOR, minWidth: COL_PROVEEDOR, maxWidth: COL_PROVEEDOR }}></td>
                 
                 {monthNames.map((m, index) => {
                   const monthNumber = index + 1;
@@ -512,9 +512,9 @@ export default function BudgetTable({
 
                   return (
                     <Fragment key={m}>
-                      <td className="px-2 py-1 text-right text-[12px] font-mono font-bold text-white/90 border-r border-white/10 min-w-[130px]">{formatMXNFull(totalMonthBudgeted)}</td>
-                      <td className="px-2 py-1 text-right text-[12px] font-mono font-bold text-white/60 border-r border-white/10 min-w-[80px] bg-white/5">{totalMonthUnits || "—"}</td>
-                      <td className="px-3 py-1 text-right text-[12px] font-mono font-bold text-white/90 border-r border-white/10 bg-white/5 min-w-[120px]">{formatMXNFull(totalMonthGenerated)}</td>
+                      <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-white/90 border-r border-white/10 min-w-[130px]">{formatMXNFull(totalMonthBudgeted)}</td>
+                      <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-white/60 border-r border-white/10 min-w-[80px] bg-white/5">{totalMonthUnits || "—"}</td>
+                      <td className="px-3 py-3.5 text-right text-[12px] font-mono font-bold text-white/90 border-r border-white/10 bg-white/5 min-w-[120px]">{formatMXNFull(totalMonthGenerated)}</td>
                     </Fragment>
                   );
                 })}

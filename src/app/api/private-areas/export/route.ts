@@ -60,6 +60,7 @@ export async function GET() {
       "Subzona",
       "Calle",
       "Tipo Uso",
+      "Nivel",
       "Estatus",
       "M2 Original",
       "M2 Actual",
@@ -142,6 +143,7 @@ export async function GET() {
         "", // Subzone is not in row
         "", // Street is not in row
         area.useType || "",
+        area.level || "",
         area.businessStatusLabel || "",
         parseNum(area.m2Original),
         parseNum(area.m2Updated),
