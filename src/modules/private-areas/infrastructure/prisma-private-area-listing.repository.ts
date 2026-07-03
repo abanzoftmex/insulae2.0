@@ -667,11 +667,42 @@ function matchesQuery(row: PrivateAreaListRow, query: string): boolean {
     return true;
   }
 
-  const normalizedQuery = normalizeKey(query);
-  const normalizedQueryWithoutPrefix = normalizeKey(sanitizeAreaIdentifier(query));
-  const candidateQueries = [normalizedQuery, normalizedQueryWithoutPrefix].filter(
-    (value, index, values) => value.length > 0 && values.indexOf(value) === index,
-  );
+  const queryWords = query
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .split(/\s+/)
+    .map((w) => w.replace(/[^a-z0-9+]/g, ""))
+    .filter((w) => w.length > 0);
+
+  if (queryWords.length === 0) {
+    return true;
+  }
+
+  const contactNames = [
+    ...row.ownerInitialHistory.map((c) => c.name),
+    ...row.ownerInitialHistory.map((c) => c.email ?? ""),
+    ...row.ownerInitialHistory.map((c) => c.phone ?? ""),
+    ...row.ownerLegal.map((c) => c.name),
+    ...row.ownerLegal.map((c) => c.email ?? ""),
+    ...row.ownerLegal.map((c) => c.phone ?? ""),
+    ...row.domainCurrent.map((c) => c.name),
+    ...row.domainCurrent.map((c) => c.email ?? ""),
+    ...row.domainCurrent.map((c) => c.phone ?? ""),
+    ...row.domainFull.map((c) => c.name),
+    ...row.domainFull.map((c) => c.email ?? ""),
+    ...row.domainFull.map((c) => c.phone ?? ""),
+    ...row.tenantUsers.map((c) => c.name),
+    ...row.tenantUsers.map((c) => c.email ?? ""),
+    ...row.tenantUsers.map((c) => c.phone ?? ""),
+    ...row.rentalAdministrativeContacts.map((c) => c.name),
+    ...row.rentalAdministrativeContacts.map((c) => c.email ?? ""),
+    ...row.rentalAdministrativeContacts.map((c) => c.phone ?? ""),
+    ...row.rentalOperationalContacts.map((c) => c.name),
+    ...row.rentalOperationalContacts.map((c) => c.email ?? ""),
+    ...row.rentalOperationalContacts.map((c) => c.phone ?? ""),
+  ];
 
   const rowTokens = [
     row.name,
@@ -680,11 +711,23 @@ function matchesQuery(row: PrivateAreaListRow, query: string): boolean {
     row.useType,
     row.useTypeInitials,
     sanitizeAreaIdentifier(row.name),
+    ...contactNames,
   ]
-    .map((value) => normalizeKey(value))
-    .join(" ");
+    .map((value) => {
+      return value
+        .trim()
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9+]/g, " ");
+    })
+    .join(" ")
+    .split(/\s+/)
+    .filter((w) => w.length > 0);
 
-  return candidateQueries.some((candidate) => rowTokens.includes(candidate));
+  return queryWords.every((qWord) => {
+    return rowTokens.some((rToken) => rToken.includes(qWord));
+  });
 }
 
 const legacyNameCollator = new Intl.Collator("es", {
