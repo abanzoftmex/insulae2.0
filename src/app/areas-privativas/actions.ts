@@ -897,6 +897,7 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
       return false;
     };
 
+    let rowIndex = 0;
     for (const row of rows) {
       const name = getVal(row, ["Nombre", "Name"])?.trim() || "";
       if (!name) continue;
@@ -906,6 +907,10 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
 
       const rawStatus = getVal(row, ["Estatus", "Status", "estado"]);
       const parsedStatus = toPrivateAreaStatus(rawStatus?.trim());
+
+      const explicitSortOrder = parseDecimal(getVal(row, ["Orden", "Sort Order", "sortOrder"]));
+      const sortOrder = explicitSortOrder !== null ? Math.round(explicitSortOrder) : rowIndex * 10;
+      rowIndex++;
 
       const baseData = {
         condominiumId: condominium.id,
@@ -929,6 +934,7 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
           ? parseBool(getVal(row, ["Activo", "Active", "activo", "active"])) 
           : true,
         level: getVal(row, ["Nivel", "Level", "nivel", "level"])?.trim() || null,
+        sortOrder,
       };
 
       if (id) {
@@ -956,20 +962,37 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
     }
 
     for (const row of rows) {
-      const parentCode = getVal(row, ["Código Padre", "Codigo Padre", "Parent Code", "parentCode"])?.trim();
       const code = getVal(row, ["Código", "Codigo", "Code"])?.trim();
       const id = getVal(row, ["ID", "Id"])?.trim();
       
-      if (parentCode && parentCode !== "") {
-        const parent = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code: parentCode } });
-        if (parent) {
-          let child;
-          if (id) child = await prisma.privateArea.findUnique({ where: { id } });
-          else if (code) child = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code } });
-          
-          if (child) {
-            await prisma.privateArea.update({ where: { id: child.id }, data: { parentPrivateAreaId: parent.id } });
+      const parentCodeVal = getVal(row, ["Código Padre", "Codigo Padre", "Parent Code", "parentCode"]);
+      if (parentCodeVal !== undefined) {
+        const parentCode = typeof parentCodeVal === "string" ? parentCodeVal.trim() : "";
+        let parentId: string | null = null;
+        
+        if (parentCode !== "") {
+          const parent = await prisma.privateArea.findFirst({
+            where: { condominiumId: condominium.id, code: parentCode },
+          });
+          if (parent) {
+            parentId = parent.id;
           }
+        }
+        
+        let child;
+        if (id) {
+          child = await prisma.privateArea.findUnique({ where: { id } });
+        } else if (code) {
+          child = await prisma.privateArea.findFirst({
+            where: { condominiumId: condominium.id, code },
+          });
+        }
+        
+        if (child) {
+          await prisma.privateArea.update({
+            where: { id: child.id },
+            data: { parentPrivateAreaId: parentId },
+          });
         }
       }
     }
