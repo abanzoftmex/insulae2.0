@@ -897,7 +897,6 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
       return false;
     };
 
-    let rowIndex = 0;
     for (const row of rows) {
       const name = getVal(row, ["Nombre", "Name"])?.trim() || "";
       if (!name) continue;
@@ -907,10 +906,6 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
 
       const rawStatus = getVal(row, ["Estatus", "Status", "estado"]);
       const parsedStatus = toPrivateAreaStatus(rawStatus?.trim());
-
-      const explicitSortOrder = parseDecimal(getVal(row, ["Orden", "Sort Order", "sortOrder"]));
-      const sortOrder = explicitSortOrder !== null ? Math.round(explicitSortOrder) : rowIndex * 10;
-      rowIndex++;
 
       const baseData = {
         condominiumId: condominium.id,
@@ -934,7 +929,6 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
           ? parseBool(getVal(row, ["Activo", "Active", "activo", "active"])) 
           : true,
         level: getVal(row, ["Nivel", "Level", "nivel", "level"])?.trim() || null,
-        sortOrder,
       };
 
       if (id) {
