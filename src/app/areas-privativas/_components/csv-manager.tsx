@@ -19,13 +19,13 @@ export function CsvManager() {
     const headers = [
       "ID", "Código", "Nombre", "Zona", "Subzona", "Calle", "Tipo Uso", "Nivel", 
       "Estatus", "M2 Original", "M2 Actual", "M2 Construcción", "M2 Comunes", 
-      "M2 Construcción Hijos", "M2 Comunes Hijos", "Indiviso", "VCCC", 
+      "M2 Construcción Hijos", "M2 Comunes Hijos", "M2 Construcción Áreas Comunes", "Indiviso", "VCCC", 
       "Código Padre", "Es Fusión", "Activo"
     ];
     
     const row = [
       "", "APOL-001", "Ejemplo APOL", "NORTE", "Sub A", "Calle 1", "COMERCIAL", "PB", 
-      "DELIVERED", 100, 100, 80, 20, 0, 0, 1.5, 500, "", "NO", "SI"
+      "DELIVERED", 100, 100, 80, 20, 0, 0, 0, 1.5, 500, "", "NO", "SI"
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, row]);

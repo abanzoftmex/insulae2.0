@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { randomUUID } from "crypto";
 
 import { toPrivateAreaStatus, toPrivateAreaStatusFromLegacy, type PrivateAreaStatus } from "@/shared/domain/private-area-status";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -891,26 +892,70 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
       if (typeof val === "boolean") return val;
       if (typeof val === "string") {
         const str = val.trim().toUpperCase();
-        return str === "SI" || str === "TRUE" || str === "1";
+        return str === "SI" || str === "TRUE" || str === "1" || str === "ACTIVO" || str === "ACTIVA";
       }
       if (typeof val === "number") return val === 1;
       return false;
     };
 
-    for (const row of rows) {
+    // Fetch all existing private areas for the condominium at once
+    const allExisting = await prisma.privateArea.findMany({
+      where: { condominiumId: condominium.id }
+    });
+
+    const existingById = new Map(allExisting.map(a => [a.id, a]));
+    const existingByCode = new Map<string, typeof allExisting[0]>();
+    for (const a of allExisting) {
+      if (a.code && !existingByCode.has(a.code)) {
+        existingByCode.set(a.code, a);
+      }
+    }
+    const existingByName = new Map(allExisting.map(a => [a.name.trim().toLowerCase(), a]));
+
+    async function runInChunks<T>(items: T[], chunkSize: number, fn: (item: T) => Promise<any>) {
+      for (let i = 0; i < items.length; i += chunkSize) {
+        const chunk = items.slice(i, i + chunkSize);
+        await Promise.all(chunk.map(fn));
+      }
+    }
+
+    const operations: Array<{ type: "create" | "update"; id?: string; data: any }> = [];
+    const createdOrUpdatedIds = new Map<string, string>(); // maps row identifier to final DB ID
+
+    for (let idx = 0; idx < rows.length; idx++) {
+      const row = rows[idx];
       const name = getVal(row, ["Nombre", "Name"])?.trim() || "";
       if (!name) continue;
 
-      const code = getVal(row, ["Código", "Codigo", "Code"])?.trim() || null;
+      let code = getVal(row, ["Código", "Codigo", "Code"])?.trim() || null;
+      if (code === "-") {
+        code = null;
+      }
       const id = getVal(row, ["ID", "Id"])?.trim() || null;
 
       const rawStatus = getVal(row, ["Estatus", "Status", "estado"]);
       const parsedStatus = toPrivateAreaStatus(rawStatus?.trim());
 
+      let isActiveVal = (getVal(row, ["Activo", "Active", "activo", "active"]) !== undefined && getVal(row, ["Activo", "Active", "activo", "active"]) !== "") 
+        ? parseBool(getVal(row, ["Activo", "Active", "activo", "active"])) 
+        : true;
+
+      // Force main system parent folders/lots to be active so their children are visible
+      const upperName = name.trim().toUpperCase();
+      if (
+        upperName === "ESTACIONAMIENTO" || 
+        upperName === "AREAS COMUNES CALLES" || 
+        upperName === "AREAS COMUNES ZONA DE EQUIPAMIENTO" ||
+        /^(?:FAP:\s*)?SV\d+$/i.test(name.trim())
+      ) {
+        isActiveVal = true;
+      }
+
       const baseData = {
         condominiumId: condominium.id,
         code,
         name,
+        sortOrder: idx + 1,
         zone: getVal(row, ["Zona", "Zone"])?.trim() || null,
         subzone: getVal(row, ["Subzona", "Subzone"])?.trim() || null,
         street: getVal(row, ["Calle", "Street"])?.trim() || null,
@@ -922,73 +967,132 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
         m2CommonArea: parseDecimal(getVal(row, ["M2 Comunes", "M2 Áreas Comunes", "M2 Areas Comunes", "M2 Common Area"])),
         m2ConstructionChildren: parseDecimal(getVal(row, ["M2 Construcción Hijos", "M2 Construccion Hijos", "M2 Construction Children"])),
         m2CommonAreaChildren: parseDecimal(getVal(row, ["M2 Comunes Hijos", "M2 Common Area Children"])),
+        m2ConstructionCommonArea: parseDecimal(getVal(row, ["M2 Construcción Áreas Comunes", "M2 Construccion Areas Comunes", "M2 de Construcción de Áreas Comunes", "M2 de Construccion de Areas Comunes"])),
         indiviso: parseDecimal(getVal(row, ["Indiviso", "indiviso"])),
         vccc: parseDecimal(getVal(row, ["VCCC", "vccc"])),
         isFusion: parseBool(getVal(row, ["Es Fusión", "Es Fusion", "Is Fusion", "isFusion"])),
-        isActive: (getVal(row, ["Activo", "Active", "activo", "active"]) !== undefined && getVal(row, ["Activo", "Active", "activo", "active"]) !== "") 
-          ? parseBool(getVal(row, ["Activo", "Active", "activo", "active"])) 
-          : true,
+        isActive: isActiveVal,
         level: getVal(row, ["Nivel", "Level", "nivel", "level"])?.trim() || null,
       };
 
+      let existing = null;
       if (id) {
-        const existing = await prisma.privateArea.findUnique({ where: { id } });
-        if (existing) {
-          await prisma.privateArea.update({ where: { id }, data: baseData });
-        } else {
-          await prisma.privateArea.create({ data: { id, ...baseData } });
-        }
+        existing = existingById.get(id);
       } else if (code) {
-        const existing = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, code } });
-        if (existing) {
-          await prisma.privateArea.update({ where: { id: existing.id }, data: baseData });
-        } else {
-          await prisma.privateArea.create({ data: baseData });
-        }
+        existing = existingByCode.get(code);
       } else {
-        const existing = await prisma.privateArea.findFirst({ where: { condominiumId: condominium.id, name } });
-        if (existing) {
-          await prisma.privateArea.update({ where: { id: existing.id }, data: baseData });
+        existing = existingByName.get(name.trim().toLowerCase());
+      }
+
+      if (existing) {
+        operations.push({
+          type: "update",
+          id: existing.id,
+          data: baseData,
+        });
+        createdOrUpdatedIds.set(id || code || name.trim().toLowerCase(), existing.id);
+      } else {
+        const newId = id || randomUUID();
+        operations.push({
+          type: "create",
+          data: { id: newId, ...baseData },
+        });
+        createdOrUpdatedIds.set(id || code || name.trim().toLowerCase(), newId);
+      }
+    }
+
+    if (operations.length > 0) {
+      await runInChunks(operations, 50, async (op) => {
+        if (op.type === "update") {
+          await prisma.privateArea.update({
+            where: { id: op.id },
+            data: op.data,
+          });
         } else {
-          await prisma.privateArea.create({ data: baseData });
+          await prisma.privateArea.create({
+            data: op.data,
+          });
+        }
+      });
+    }
+
+    // Rebuild lookup map to resolve parents using the latest database records
+    const allLatest = await prisma.privateArea.findMany({
+      where: { condominiumId: condominium.id }
+    });
+    const latestByCode = new Map(allLatest.filter(a => a.code).map(a => [a.code!, a]));
+    const latestById = new Map(allLatest.map(a => [a.id, a]));
+    const latestByName = new Map(allLatest.map(a => [a.name.trim().toLowerCase(), a]));
+
+    const parentUpdates: Array<{ id: string; parentId: string | null }> = [];
+
+    for (const row of rows) {
+      let code = getVal(row, ["Código", "Codigo", "Code"])?.trim();
+      if (code === "-") {
+        code = undefined;
+      }
+      const id = getVal(row, ["ID", "Id"])?.trim();
+      const name = getVal(row, ["Nombre", "Name"])?.trim() || "";
+      
+      let child = null;
+      if (id) {
+        child = latestById.get(id);
+      } else if (code) {
+        child = latestByCode.get(code);
+      } else if (name) {
+        child = latestByName.get(name.trim().toLowerCase());
+      }
+
+      if (child) {
+        let parentId: string | null = child.parentPrivateAreaId;
+
+        const parentCodeVal = getVal(row, ["Código Padre", "Codigo Padre", "Parent Code", "parentCode"]);
+        if (parentCodeVal !== undefined) {
+          let parentCode = typeof parentCodeVal === "string" ? parentCodeVal.trim() : "";
+          if (parentCode === "-") {
+            parentCode = "";
+          }
+          
+          if (parentCode !== "") {
+            let parent = latestByCode.get(parentCode);
+            if (!parent) {
+              parent = latestByName.get(parentCode.toLowerCase());
+            }
+
+            if (parent) {
+              parentId = parent.id;
+            } else {
+              parentId = null;
+            }
+          } else {
+            parentId = null;
+          }
+        }
+
+        // If parentId is still null/cleared, check if this is a street under "Áreas comunes" to group under "Áreas comunes Calles"
+        if (parentId === null && child.zone === "Áreas comunes" && child.code === "AC" && child.name !== "Áreas comunes Calles" && child.name !== "Áreas comunes zona de equipamiento") {
+          const defaultParent = [...latestById.values()].find(p => p.name === "Áreas comunes Calles");
+          if (defaultParent) {
+            parentId = defaultParent.id;
+          }
+        }
+
+        if (child.parentPrivateAreaId !== parentId) {
+          parentUpdates.push({
+            id: child.id,
+            parentId,
+          });
         }
       }
     }
 
-    for (const row of rows) {
-      const code = getVal(row, ["Código", "Codigo", "Code"])?.trim();
-      const id = getVal(row, ["ID", "Id"])?.trim();
-      
-      const parentCodeVal = getVal(row, ["Código Padre", "Codigo Padre", "Parent Code", "parentCode"]);
-      if (parentCodeVal !== undefined) {
-        const parentCode = typeof parentCodeVal === "string" ? parentCodeVal.trim() : "";
-        let parentId: string | null = null;
-        
-        if (parentCode !== "") {
-          const parent = await prisma.privateArea.findFirst({
-            where: { condominiumId: condominium.id, code: parentCode },
-          });
-          if (parent) {
-            parentId = parent.id;
-          }
-        }
-        
-        let child;
-        if (id) {
-          child = await prisma.privateArea.findUnique({ where: { id } });
-        } else if (code) {
-          child = await prisma.privateArea.findFirst({
-            where: { condominiumId: condominium.id, code },
-          });
-        }
-        
-        if (child) {
-          await prisma.privateArea.update({
-            where: { id: child.id },
-            data: { parentPrivateAreaId: parentId },
-          });
-        }
-      }
+    if (parentUpdates.length > 0) {
+      await runInChunks(parentUpdates, 50, async (up) => {
+        await prisma.privateArea.update({
+          where: { id: up.id },
+          data: { parentPrivateAreaId: up.parentId },
+        });
+      });
     }
     
     revalidatePath("/areas-privativas");
