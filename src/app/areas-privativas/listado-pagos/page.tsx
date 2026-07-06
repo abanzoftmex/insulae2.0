@@ -414,7 +414,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                         <td className="py-2 px-3">{charge.chargeGroupName} {charge.periodYear}</td>
                         <td className="py-2 px-3">01 {charge.periodMonth.toString().padStart(2, '0')} {charge.periodYear.toString().slice(-2)}</td>
                         <td className="py-2 px-3">{formatDate(charge.dueDate)}</td>
-                        <td className="py-2 px-3 text-[#3a2a18]/60">-</td>
+                        <td className="py-2 px-3 text-[#3a2a18]/60">{charge.paymentDates.length > 0 ? charge.paymentDates.join(" / ") : "-"}</td>
                         <td className="py-2 px-3 text-right font-bold text-[#3a2a18]">{formatCurrency(charge.amount)}</td>
                         <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.paidAmount)}</td>
                         <td className="py-2 px-3 text-right text-[#3a2a18]">$0.00</td>

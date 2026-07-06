@@ -268,6 +268,7 @@ export class PrismaPrivateAreaActionPageDataRepository
           },
           select: {
             id: true,
+            legacyId: true,
             date: true,
             paymentMethod: true,
             concept: true,
@@ -283,6 +284,9 @@ export class PrismaPrivateAreaActionPageDataRepository
           },
         },
         charges: {
+          where: {
+            isCollectible: true,
+          },
           orderBy: [
             {
               periodYear: "desc",
@@ -316,11 +320,13 @@ export class PrismaPrivateAreaActionPageDataRepository
                 payment: {
                   select: {
                     id: true,
+                    legacyId: true,
                     paidAt: true,
                     method: true,
                     reference: true,
                     notes: true,
                     amount: true,
+                    isVisibleInFinancialSummary: true,
                   },
                 },
               },
@@ -474,7 +480,23 @@ export class PrismaPrivateAreaActionPageDataRepository
 
       const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
 
+      // Build a set of legacyIds of payments that already have allocations in the database
+      const allocatedLegacyIds = new Set<number>();
+      for (const charge of charges) {
+        for (const alloc of charge.allocations) {
+          if (alloc.payment.legacyId !== null) {
+            allocatedLegacyIds.add(alloc.payment.legacyId);
+          }
+        }
+      }
+
       for (const income of sortedIncomes) {
+        if (income.legacyId !== null && allocatedLegacyIds.has(income.legacyId)) {
+          // This income is already represented as a Payment with allocations in the database.
+          // Skip simulating it in memory to prevent double-allocation!
+          continue;
+        }
+
         const chargeGroupId = income.chargeGroupId;
         if (!chargeGroupId) continue;
 
@@ -510,12 +532,29 @@ export class PrismaPrivateAreaActionPageDataRepository
     const charges: PrivateAreaChargeLine[] = area.charges.map((charge) => {
       const chargedAmount = decimalToNumber(charge.amount);
       const dbPaidAmount = charge.allocations.reduce((total, allocation) => {
+        if (allocation.payment.isVisibleInFinancialSummary === false) {
+          return total;
+        }
         return total + decimalToNumber(allocation.amount);
       }, 0);
       const inMemoryAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
       const paidAmount = dbPaidAmount + inMemoryAllocated;
       const interestAmount = decimalToNumber(charge.interestAmount);
       const discountAmount = decimalToNumber(charge.discountAmount);
+
+      const paymentDates = Array.from(
+        new Set(
+          charge.allocations
+            .filter((alloc) => alloc.payment.isVisibleInFinancialSummary !== false)
+            .map((alloc) => {
+              const date = alloc.payment.paidAt;
+              const day = date.getDate().toString().padStart(2, "0");
+              const month = (date.getMonth() + 1).toString().padStart(2, "0");
+              const year = date.getFullYear().toString().slice(-2);
+              return `${day} ${month} ${year}`;
+            })
+        )
+      );
 
       return {
         id: charge.id,
@@ -533,6 +572,7 @@ export class PrismaPrivateAreaActionPageDataRepository
         interestAmount,
         discountAmount,
         responsibility: charge.responsibility,
+        paymentDates,
       };
     });
 
@@ -541,6 +581,9 @@ export class PrismaPrivateAreaActionPageDataRepository
     for (const charge of area.charges) {
       for (const allocation of charge.allocations) {
         const payment = allocation.payment;
+        if (payment.isVisibleInFinancialSummary === false) {
+          continue;
+        }
         const allocatedAmount = decimalToNumber(allocation.amount);
         const existing = paymentMovementsById.get(payment.id);
 

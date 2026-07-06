@@ -951,12 +951,25 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
         isActiveVal = true;
       }
 
+      const rowZone = getVal(row, ["Zona", "Zone"])?.trim() || "";
+      const isStreet = code === "AC" || rowZone.startsWith("Áreas comun");
+
+      let m2CommonAreaVal = parseDecimal(getVal(row, ["M2 Comunes", "M2 Áreas Comunes", "M2 Areas Comunes", "M2 Common Area"]));
+      let m2ConstructionCommonAreaVal = parseDecimal(getVal(row, ["M2 Construcción Áreas Comunes", "M2 Construccion Areas Comunes", "M2 de Construcción de Áreas Comunes", "M2 de Construccion de Areas Comunes"]));
+
+      if (isStreet) {
+        if (m2ConstructionCommonAreaVal === null) {
+          m2ConstructionCommonAreaVal = m2CommonAreaVal;
+        }
+        m2CommonAreaVal = null; // Clear duplicate representation for streets in DB
+      }
+
       const baseData = {
         condominiumId: condominium.id,
         code,
         name,
         sortOrder: idx + 1,
-        zone: getVal(row, ["Zona", "Zone"])?.trim() || null,
+        zone: rowZone || null,
         subzone: getVal(row, ["Subzona", "Subzone"])?.trim() || null,
         street: getVal(row, ["Calle", "Street"])?.trim() || null,
         useType: getVal(row, ["Tipo Uso", "Tipo de Uso", "Use Type", "useType"])?.trim() || null,
@@ -964,10 +977,10 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
         m2Original: parseDecimal(getVal(row, ["M2 Original", "original m2"])),
         m2Apole: parseDecimal(getVal(row, ["M2 Actual", "actual m2", "M2 Apole", "m2 apole"])),
         m2Construction: parseDecimal(getVal(row, ["M2 Construcción", "M2 Construccion", "M2 Construction"])),
-        m2CommonArea: parseDecimal(getVal(row, ["M2 Comunes", "M2 Áreas Comunes", "M2 Areas Comunes", "M2 Common Area"])),
+        m2CommonArea: m2CommonAreaVal,
         m2ConstructionChildren: parseDecimal(getVal(row, ["M2 Construcción Hijos", "M2 Construccion Hijos", "M2 Construction Children"])),
         m2CommonAreaChildren: parseDecimal(getVal(row, ["M2 Comunes Hijos", "M2 Common Area Children"])),
-        m2ConstructionCommonArea: parseDecimal(getVal(row, ["M2 Construcción Áreas Comunes", "M2 Construccion Areas Comunes", "M2 de Construcción de Áreas Comunes", "M2 de Construccion de Areas Comunes"])),
+        m2ConstructionCommonArea: m2ConstructionCommonAreaVal,
         indiviso: parseDecimal(getVal(row, ["Indiviso", "indiviso"])),
         vccc: parseDecimal(getVal(row, ["VCCC", "vccc"])),
         isFusion: parseBool(getVal(row, ["Es Fusión", "Es Fusion", "Is Fusion", "isFusion"])),
@@ -1070,7 +1083,7 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
         }
 
         // If parentId is still null/cleared, check if this is a street under "Áreas comunes" to group under "Áreas comunes Calles"
-        if (parentId === null && child.zone === "Áreas comunes" && child.code === "AC" && child.name !== "Áreas comunes Calles" && child.name !== "Áreas comunes zona de equipamiento") {
+        if (parentId === null && child.zone && child.zone.startsWith("Áreas comun") && child.code === "AC" && child.name !== "Áreas comunes Calles" && child.name !== "Áreas comunes zona de equipamiento") {
           const defaultParent = [...latestById.values()].find(p => p.name === "Áreas comunes Calles");
           if (defaultParent) {
             parentId = defaultParent.id;

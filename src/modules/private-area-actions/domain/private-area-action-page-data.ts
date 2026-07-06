@@ -47,6 +47,7 @@ export interface PrivateAreaChargeLine {
   interestAmount: number;
   discountAmount: number;
   responsibility: "OWNER" | "COMMERCE";
+  paymentDates: string[];
 }
 
 export interface PrivateAreaPaymentMovement {
