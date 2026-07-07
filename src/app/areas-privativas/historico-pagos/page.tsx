@@ -158,10 +158,10 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
     );
 
     if (isComercio) {
-      return hasCommerceAllocations || hasCommerceDetails;
+      return hasOwnerAllocations || hasOwnerDetails;
     } else {
       const hasNoInfo = payment.allocations.length === 0 && payment.details.length === 0;
-      return hasOwnerAllocations || hasOwnerDetails || hasNoInfo;
+      return hasCommerceAllocations || hasCommerceDetails || hasNoInfo;
     }
   });
 

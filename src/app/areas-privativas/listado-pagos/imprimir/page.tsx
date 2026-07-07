@@ -65,15 +65,13 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
     },
   });
 
-  // opc=1 → Propietario (OWNER), opc=2 → Comercio (COMMERCE) — matches legacy id_opcion_estado_cuenta
-  const targetResponsibility = opc === "2" ? "COMMERCE" : "OWNER";
+  // opc=1 → Propietario (COMMERCE), opc=2 → Comercio (OWNER) — matches legacy id_opcion_estado_cuenta
+  const targetResponsibility = opc === "2" ? "OWNER" : "COMMERCE";
 
   // Filter charges by responsibility
-  const commerceFilteredCharges = dbCharges.filter((c) =>
+  const finalCharges = dbCharges.filter((c) =>
     c.responsibility === targetResponsibility,
   );
-
-  const finalCharges = commerceFilteredCharges.length > 0 ? commerceFilteredCharges : dbCharges;
 
   // Map to rich client objects
   const mappedCharges = finalCharges.map((c) => {

@@ -15,12 +15,12 @@ export interface PrivateAreaActionPageViewData {
   didFallbackToAllCharges: boolean;
 }
 
-// opc=1 → Propietario (OWNER), opc=2 → Comercio (COMMERCE) — matches legacy id_opcion_estado_cuenta
+// opc=1 → Propietario (COMMERCE), opc=2 → Comercio (OWNER) — matches legacy id_opcion_estado_cuenta
 function toVisibleChargeLines(
   charges: PrivateAreaActionPageData["charges"],
   opc: "1" | "2",
 ): { visible: PrivateAreaActionPageData["charges"]; fallback: boolean } {
-  const targetResponsibility = opc === "2" ? "COMMERCE" : "OWNER";
+  const targetResponsibility = opc === "2" ? "OWNER" : "COMMERCE";
 
   const filtered = charges.filter(
     (charge) => charge.responsibility === targetResponsibility,
@@ -33,7 +33,7 @@ function toVisiblePaymentMovements(
   payments: PrivateAreaActionPageData["payments"],
   opc: "1" | "2",
 ): PrivateAreaActionPageData["payments"] {
-  const targetResponsibility = opc === "2" ? "COMMERCE" : "OWNER";
+  const targetResponsibility = opc === "2" ? "OWNER" : "COMMERCE";
   return payments.filter((payment) => payment.responsibility === targetResponsibility);
 }
 
