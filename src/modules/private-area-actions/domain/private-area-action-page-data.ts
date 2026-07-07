@@ -58,6 +58,7 @@ export interface PrivateAreaPaymentMovement {
   notes: string | null;
   allocatedAmount: number;
   paymentTotalAmount: number;
+  responsibility: "OWNER" | "COMMERCE";
 }
 
 export interface PrivateAreaRentalLine {

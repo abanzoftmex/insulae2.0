@@ -26,32 +26,15 @@ function toVisibleChargeLines(
     (charge) => charge.responsibility === targetResponsibility,
   );
 
-  if (filtered.length > 0) {
-    return { visible: filtered, fallback: false };
-  }
-
-  return { visible: charges, fallback: true };
+  return { visible: filtered, fallback: false };
 }
 
 function toVisiblePaymentMovements(
   payments: PrivateAreaActionPageData["payments"],
-  visibleChargeLines: PrivateAreaActionPageData["charges"],
+  opc: "1" | "2",
 ): PrivateAreaActionPageData["payments"] {
-  if (visibleChargeLines.length === 0) {
-    return [];
-  }
-
-  const visiblePaymentIds = new Set(
-    visibleChargeLines
-      .map((charge) => charge.id)
-      .filter((chargeId) => chargeId.length > 0),
-  );
-
-  if (visiblePaymentIds.size === 0) {
-    return payments;
-  }
-
-  return payments;
+  const targetResponsibility = opc === "2" ? "COMMERCE" : "OWNER";
+  return payments.filter((payment) => payment.responsibility === targetResponsibility);
 }
 
 export class GetPrivateAreaActionPageDataUseCase
@@ -76,7 +59,7 @@ export class GetPrivateAreaActionPageDataUseCase
     const chargeLinesResult = toVisibleChargeLines(area.charges, input.opc);
     const paymentMovements = toVisiblePaymentMovements(
       area.payments,
-      chargeLinesResult.visible,
+      input.opc,
     );
 
     return {

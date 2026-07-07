@@ -577,12 +577,16 @@ export class PrismaPrivateAreaActionPageDataRepository
     });
 
     const paymentMovementsById = new Map<string, PrivateAreaPaymentMovement>();
+    const paymentLegacyIds = new Set<number>();
 
     for (const charge of area.charges) {
       for (const allocation of charge.allocations) {
         const payment = allocation.payment;
         if (payment.isVisibleInFinancialSummary === false) {
           continue;
+        }
+        if (payment.legacyId !== null) {
+          paymentLegacyIds.add(payment.legacyId);
         }
         const allocatedAmount = decimalToNumber(allocation.amount);
         const existing = paymentMovementsById.get(payment.id);
@@ -600,13 +604,23 @@ export class PrismaPrivateAreaActionPageDataRepository
           notes: payment.notes,
           allocatedAmount,
           paymentTotalAmount: decimalToNumber(payment.amount),
+          responsibility: charge.responsibility,
         });
       }
     }
 
     // Include Incomes that are not tied to charges
     for (const income of area.incomes) {
+      if (income.legacyId !== null && paymentLegacyIds.has(income.legacyId)) {
+        // Skip duplicate legacy incomes already added as Payments
+        continue;
+      }
       if (!paymentMovementsById.has(income.id)) {
+        const isComercio = income.chargeGroup?.name
+          ? income.chargeGroup.name.toLowerCase().includes("comercio") || income.chargeGroup.name.toLowerCase().includes("comercios")
+          : false;
+        const responsibility = isComercio ? "COMMERCE" : "OWNER";
+
         paymentMovementsById.set(income.id, {
           paymentId: income.id,
           paidAt: income.date,
@@ -615,6 +629,7 @@ export class PrismaPrivateAreaActionPageDataRepository
           notes: income.notes,
           allocatedAmount: decimalToNumber(income.amount), // Count the whole income as allocated to the area
           paymentTotalAmount: decimalToNumber(income.amount),
+          responsibility,
         });
       }
     }
