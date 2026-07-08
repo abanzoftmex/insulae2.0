@@ -22,8 +22,7 @@ export default function LoginPage() {
       try {
         const result = await loginAction(null, formData);
         if (result.success) {
-          router.push("/");
-          router.refresh();
+          window.location.href = "/";
         } else {
           setError(result.error || "Ocurrió un error inesperado.");
         }
