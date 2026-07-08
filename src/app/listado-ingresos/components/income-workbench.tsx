@@ -57,6 +57,29 @@ const PAYMENT_METHOD_VARIANT: Record<string, "success" | "brand" | "warning" | "
 
 const PAYMENT_METHODS = ["CASH", "TRANSFER", "CARD", "CHECK", "OTHER"];
 
+function formatToShortDate(dateVal: Date | string | null): string {
+  if (!dateVal) return "-";
+  const date = typeof dateVal === "string" ? new Date(dateVal) : dateVal;
+  const day = date.getUTCDate().toString().padStart(2, "0");
+  const monthNames = [
+    "ene",
+    "feb",
+    "mar",
+    "abr",
+    "may",
+    "jun",
+    "jul",
+    "ago",
+    "sep",
+    "oct",
+    "nov",
+    "dic",
+  ];
+  const month = monthNames[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+  return `${day} ${month} ${year}`;
+}
+
 export function IncomeWorkbench({
   initialIncomes,
   catalogs,
@@ -319,7 +342,7 @@ export function IncomeWorkbench({
       accessorKey: "date",
       cell: (row) => (
         <span className="text-[11px] font-bold text-ink-soft/60 uppercase tracking-tight">
-          {new Date(row.date).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "2-digit", timeZone: "UTC" })}
+          {formatToShortDate(row.date)}
         </span>
       )
     },
