@@ -412,7 +412,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                         </td>
                         <td className="py-2 px-3">{charge.chargeGroupName}</td>
                         <td className="py-2 px-3">{charge.chargeGroupName} {charge.periodYear}</td>
-                        <td className="py-2 px-3">01 {charge.periodMonth.toString().padStart(2, '0')} {charge.periodYear.toString().slice(-2)}</td>
+                        <td className="py-2 px-3">{formatDate(new Date(charge.periodYear, charge.periodMonth - 1, 1))}</td>
                         <td className="py-2 px-3">{formatDate(charge.dueDate)}</td>
                         <td className="py-2 px-3 text-[#3a2a18]/60">{charge.paymentDates.length > 0 ? charge.paymentDates.join(" / ") : "-"}</td>
                         <td className="py-2 px-3 text-right font-bold text-[#3a2a18]">{formatCurrency(charge.amount)}</td>

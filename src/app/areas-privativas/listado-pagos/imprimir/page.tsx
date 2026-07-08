@@ -514,7 +514,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                       <td className="py-2 px-2 text-gray-700">{c.chargeGroupName}</td>
                       <td className="py-2 px-2 text-gray-700">{c.concept || `${c.chargeGroupName} ${c.periodYear}`}</td>
                       <td className="py-2 px-2 text-gray-600">
-                        01 {formatPeriodMonth(c.periodMonth)} {c.periodYear.toString().slice(-2)}
+                        {formatDate(new Date(c.periodYear, c.periodMonth - 1, 1))}
                       </td>
                       <td className="py-2 px-2 text-gray-600">{c.dueDate ? formatDate(c.dueDate) : "—"}</td>
                       <td className="py-2 px-2 text-gray-500 font-medium">{paidDates}</td>

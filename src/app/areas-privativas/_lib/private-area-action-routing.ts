@@ -93,11 +93,24 @@ export function formatDate(value: Date | null): string {
     return "-";
   }
 
-  return new Intl.DateTimeFormat("es-MX", {
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-  }).format(value);
+  const day = value.getDate().toString().padStart(2, "0");
+  const monthNames = [
+    "ene",
+    "feb",
+    "mar",
+    "abr",
+    "may",
+    "jun",
+    "jul",
+    "ago",
+    "sep",
+    "oct",
+    "nov",
+    "dic",
+  ];
+  const month = monthNames[value.getMonth()];
+  const year = value.getFullYear();
+  return `${day} ${month} ${year}`;
 }
 
 export function statusLabel(isActive: boolean): string {

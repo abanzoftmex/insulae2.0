@@ -549,8 +549,22 @@ export class PrismaPrivateAreaActionPageDataRepository
             .map((alloc) => {
               const date = alloc.payment.paidAt;
               const day = date.getDate().toString().padStart(2, "0");
-              const month = (date.getMonth() + 1).toString().padStart(2, "0");
-              const year = date.getFullYear().toString().slice(-2);
+              const monthNames = [
+                "ene",
+                "feb",
+                "mar",
+                "abr",
+                "may",
+                "jun",
+                "jul",
+                "ago",
+                "sep",
+                "oct",
+                "nov",
+                "dic",
+              ];
+              const month = monthNames[date.getMonth()];
+              const year = date.getFullYear();
               return `${day} ${month} ${year}`;
             })
         )
