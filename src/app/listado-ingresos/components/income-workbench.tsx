@@ -16,7 +16,7 @@ import {
 import { createIncomeAction, updateIncomeAction, deleteIncomeAction } from "../actions";
 import { importIncomesAction } from "../import-actions";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
-import { read, utils } from "xlsx";
+import { read, utils, writeFile } from "xlsx";
 import type { IncomeRecord } from "@/modules/income";
 
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
@@ -241,6 +241,28 @@ export function IncomeWorkbench({
     }
   };
 
+  const handleExport = () => {
+    const data = filteredIncomes.map((income) => ({
+      "Categoría": income.chargeGroupName || income.miscCatalogName || "—",
+      "Propiedad": income.privateAreaName || "—",
+      "Forma de Pago": PAYMENT_METHOD_LABELS[income.paymentMethod || ""] || "N/A",
+      "Monto": income.amount,
+      "Fecha": new Date(income.date).toLocaleDateString("es-MX", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC"
+      }).replace(/\./g, ""),
+      "Concepto": income.concept,
+      "Notas": income.notes || "",
+    }));
+
+    const ws = utils.json_to_sheet(data);
+    const wb = utils.book_new();
+    utils.book_append_sheet(wb, ws, "Historial de Ingresos");
+    writeFile(wb, "Historial_de_Ingresos.xlsx");
+  };
+
   const columns: DataTableColumn<IncomeRecord>[] = [
     {
       header: "Grupo Financiero / Categoría",
@@ -348,6 +370,12 @@ export function IncomeWorkbench({
           <Badge variant="brand">{initialIncomes.length} Total</Badge>
         </div>
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleExport}
+            className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard"
+          >
+            <FileDown className="h-3 w-3 mr-1" /> Exportar
+          </button>
           <Link href="/listado-ingresos/plantilla" className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard">
             <FileDown className="h-3 w-3 mr-1" /> Plantilla
           </Link>

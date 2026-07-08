@@ -280,7 +280,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
 
   const formatPeriodMonth = (m: number) => {
     const months = [
-      "Ene", "Feb", "Mar", "Abr", "May", "Jun", 
+      "Ene", "Feb", "Mar", "Abr", "May", "Jun",
       "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"
     ];
     return months[m - 1] || "";
@@ -303,9 +303,9 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
           <h1 className="text-3xl font-extrabold tracking-tight text-black">Estado de cuenta</h1>
         </div>
         <div>
-          <img 
-            src="/brand/valquirico-logo-light.png" 
-            alt="Val'Quirico Logo" 
+          <img
+            src="/brand/valquirico-logo-light.png"
+            alt="Val'Quirico Logo"
             className="h-16 w-auto object-contain"
           />
         </div>
@@ -457,7 +457,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
             <thead>
               <tr className="bg-sky-50 text-slate-700 font-bold border-b border-sky-100">
                 <th className="py-2 px-3 text-left w-1/3">Folio</th>
-                <th className="py-2 px-3 text-left w-1/3">Fecha real de cobro</th>
+                <th className="py-2 px-3 text-left w-1/3">Pagado el</th>
                 <th className="py-2 px-3 text-right w-1/3">Abono realizado</th>
               </tr>
             </thead>
@@ -505,7 +505,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                 </tr>
               ) : (
                 mappedCharges.map((c) => {
-                  const paidDates = c.paidDatesList.length > 0 
+                  const paidDates = c.paidDatesList.length > 0
                     ? c.paidDatesList.map(date => formatDate(date)).join(" / ")
                     : "—";
 

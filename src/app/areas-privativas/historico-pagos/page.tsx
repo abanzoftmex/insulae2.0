@@ -199,9 +199,8 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
             return (
               <div
                 key={payment.id}
-                className={`border border-[#ddd0be] rounded-md overflow-hidden bg-white shadow-sm transition-all duration-300 ${
-                  isCancelled ? "opacity-60 border-red-200" : ""
-                }`}
+                className={`border border-[#ddd0be] rounded-md overflow-hidden bg-white shadow-sm transition-all duration-300 ${isCancelled ? "opacity-60 border-red-200" : ""
+                  }`}
               >
                 {/* 1. Datos de pago */}
                 <div className="bg-[#e9f0f9] px-4 py-3 border-b border-[#e1ebf6] flex flex-wrap items-center justify-between gap-4">
@@ -232,7 +231,7 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
                         <tr className="bg-[#fbf9f4] border border-[#d6c7b3] text-left text-ink-soft uppercase tracking-wider font-bold">
                           <th className="px-3 py-2 border-r border-[#d6c7b3]">Folio</th>
                           <th className="px-3 py-2 border-r border-[#d6c7b3]">Forma de pago</th>
-                          <th className="px-3 py-2 border-r border-[#d6c7b3]">Fecha real de cobro</th>
+                          <th className="px-3 py-2 border-r border-[#d6c7b3]">Pagado el</th>
                           <th className="px-3 py-2 border-r border-[#d6c7b3] text-right">Abono realizado</th>
                           <th className="px-3 py-2">Comentarios</th>
                         </tr>

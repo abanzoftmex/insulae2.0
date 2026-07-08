@@ -104,10 +104,10 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
 
   const chargeGroups = areaCondo
     ? await prisma.chargeGroup.findMany({
-        where: { condominiumId: areaCondo.condominiumId, isActive: true },
-        orderBy: { name: "asc" },
-        select: { id: true, name: true },
-      })
+      where: { condominiumId: areaCondo.condominiumId, isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    })
     : [];
 
   const totalCharged = visibleChargeLines.reduce((total, charge) => total + charge.amount, 0);
@@ -329,7 +329,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
               <tr className="bg-[#e9f0f9] text-[#2c3e50] font-bold">
                 <th className="py-2 px-3 text-left">Folio</th>
                 <th className="py-2 px-3 text-left">Forma de pago</th>
-                <th className="py-2 px-3 text-left">Fecha real de cobro</th>
+                <th className="py-2 px-3 text-left">Pagado el</th>
                 <th className="py-2 px-3 text-right">Abono realizado</th>
               </tr>
             </thead>
@@ -358,20 +358,20 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           <div className="[&>button]:bg-[#2c3e50] [&>button]:hover:bg-[#1a252f] [&>button]:text-white [&>button]:border-transparent [&>button]:shadow-sm">
             <CapturarCuotaDialog privateAreaId={area.privateAreaId} opc={opc} chargeGroups={chargeGroups} />
           </div>
-          
+
           <Link
             href={buildActionHref("historico-pagos", area.privateAreaId, opc)}
             className="bg-[#2c3e50] text-white text-[11px] font-bold px-4 py-2 rounded shadow-sm hover:bg-[#1a252f] transition-colors flex items-center gap-2"
           >
             <AlertCircle className="h-3.5 w-3.5" /> Histórico de pagos
           </Link>
-            {/* Client Buttons: Export, Send, Print */}
-            <ActionBarButtons 
-              privateAreaId={area.privateAreaId} 
-              opc={opc} 
-              areaName={area.name} 
-              charges={visibleChargeLines} 
-            />
+          {/* Client Buttons: Export, Send, Print */}
+          <ActionBarButtons
+            privateAreaId={area.privateAreaId}
+            opc={opc}
+            areaName={area.name}
+            charges={visibleChargeLines}
+          />
         </div>
 
         {/* Main Charges Table */}
@@ -421,7 +421,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                         <td className="py-2 px-3 text-right text-[#3a2a18]">$0.00</td>
                         <td className="py-2 px-3 text-right font-bold text-[#b58b4f]">{formatCurrency(charge.balanceAmount)}</td>
                         <td className="py-2 px-3 text-center">
-                           <input type="text" className="border border-[#ddd0be] rounded px-2 py-0.5 w-32 text-[10px]" />
+                          <input type="text" className="border border-[#ddd0be] rounded px-2 py-0.5 w-32 text-[10px]" />
                         </td>
                       </tr>
                     );
