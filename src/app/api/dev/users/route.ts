@@ -1,5 +1,5 @@
 /**
- * Endpoint de DESARROLLO — SOLO LOCALHOST.
+ * Endpoint de DESARROLLO.
  *
  *   GET  /api/dev/users            → lista usuarios del condominio (con estado de password y asignaciones)
  *        ?condominos=1             → solo usuarios con asignación (condóminos)
@@ -9,8 +9,13 @@
  *        body: { "userId": "..." , "password": "..." }   ó
  *              { "email":  "..." , "password": "..." }
  *
- * Bloqueado en producción y para hosts que no sean localhost.
- * Útil para preparar credenciales de demo. NO exponer en deploy.
+ * Seguridad — GET y POST NO comparten el mismo modelo:
+ *   - GET  lo consume el selector de superadmin del minisitio (server-to-server),
+ *          también en producción. Se autoriza con el mismo secreto compartido que
+ *          /api/dev/impersonate vía el header `x-superadmin-secret`. Sin secreto
+ *          definido, sigue siendo localhost-only y bloqueado en producción.
+ *   - POST fija contraseñas arbitrarias sin autenticar al usuario objetivo, así que
+ *          permanece localhost-only. El secreto NO lo habilita.
  */
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
@@ -45,6 +50,18 @@ function assertLocalhost(request: NextRequest): NextResponse | null {
   return null;
 }
 
+// Solo para GET: un secreto correcto autoriza desde cualquier host. Si no se envía
+// header, se cae al modelo localhost-only, de modo que el desarrollo local sigue
+// funcionando aunque el secreto esté definido.
+function assertReadAuthorized(request: NextRequest): NextResponse | null {
+  const secret = process.env.SUPERADMIN_IMPERSONATE_SECRET;
+  const provided = request.headers.get("x-superadmin-secret");
+  if (secret && provided) {
+    return provided === secret ? null : NextResponse.json({ error: "No autorizado." }, { status: 401 });
+  }
+  return assertLocalhost(request);
+}
+
 async function getCondominiumId(): Promise<string | null> {
   const c = await prisma.condominium.findFirst({
     where: { slug: PROJECT_SCOPE.condominiumCode, isActive: true },
@@ -54,7 +71,7 @@ async function getCondominiumId(): Promise<string | null> {
 }
 
 export async function GET(request: NextRequest) {
-  const blocked = assertLocalhost(request);
+  const blocked = assertReadAuthorized(request);
   if (blocked) return blocked;
 
   const condoId = await getCondominiumId();
