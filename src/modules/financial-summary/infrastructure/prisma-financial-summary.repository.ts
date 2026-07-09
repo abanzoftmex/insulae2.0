@@ -78,6 +78,12 @@ type ExpenseSnapshot = {
     budgetGroup: BudgetExpenseGroup;
     legacyBudgetConceptId: number | null;
     isActive: boolean;
+    group?: {
+      category: string;
+      parent?: {
+        category: string;
+      } | null;
+    } | null;
   } | null;
 };
 
@@ -100,6 +106,12 @@ type BudgetLineSnapshot = {
   budgetConcept: {
     budgetGroup: BudgetExpenseGroup;
     isActive: boolean;
+    group?: {
+      category: string;
+      parent?: {
+        category: string;
+      } | null;
+    } | null;
   } | null;
   months: BudgetMonthSnapshot[];
 };
@@ -148,6 +160,39 @@ const expenseModel = (
     expense: ExpenseDelegate;
   }
 ).expense;
+
+const CATEGORY_MAP: Record<string, string> = {
+  'Gastos administración': 'ADMINISTRATION',
+  'Gastos de mantenimiento': 'MAINTENANCE',
+  'Gastos de seguridad': 'SECURITY',
+  'Gastos de infraestructura': 'INFRASTRUCTURE',
+  'Gastos extraordinarios': 'EXTRAORDINARY',
+  'Gastos mantenimiento': 'MAINTENANCE',
+  'Gastos seguridad': 'SECURITY',
+  'Gastos infraestructura': 'INFRASTRUCTURE',
+  'Gastos administración ordinarios': 'ADMINISTRATION',
+  'Gastos administración ordinario': 'ADMINISTRATION'
+};
+
+function resolveBudgetGroup(concept: {
+  budgetGroup: string;
+  group?: {
+    category: string;
+    parent?: {
+      category: string;
+    } | null;
+  } | null;
+} | null | undefined): string {
+  if (!concept) return 'OTHER';
+  if (concept.budgetGroup && concept.budgetGroup !== 'OTHER') {
+    return concept.budgetGroup;
+  }
+  const category = concept.group?.category || concept.group?.parent?.category;
+  if (category && CATEGORY_MAP[category]) {
+    return CATEGORY_MAP[category];
+  }
+  return concept.budgetGroup || 'OTHER';
+}
 
 
 const EXTRAORDINARY_KINDS = new Set<ChargeGroupKind>([
@@ -449,7 +494,7 @@ function resolveExtendedKind(kind: ChargeGroupKind): ExtendedChargeGroupKind {
 }
 
 function resolveExpenseBucket(expense: ExpenseSnapshot): ExpenseBucket {
-  if (expense.budgetConcept?.budgetGroup === BUDGET_EXPENSE_GROUP.EXTRAORDINARY) {
+  if (resolveBudgetGroup(expense.budgetConcept) === BUDGET_EXPENSE_GROUP.EXTRAORDINARY) {
     return "extraordinary";
   }
 
@@ -672,6 +717,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
               budgetGroup: true,
               legacyBudgetConceptId: true,
               isActive: true,
+              group: {
+                select: {
+                  category: true,
+                  parent: {
+                    select: {
+                      category: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -699,6 +754,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
               budgetGroup: true,
               legacyBudgetConceptId: true,
               isActive: true,
+              group: {
+                select: {
+                  category: true,
+                  parent: {
+                    select: {
+                      category: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -726,6 +791,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
               budgetGroup: true,
               legacyBudgetConceptId: true,
               isActive: true,
+              group: {
+                select: {
+                  category: true,
+                  parent: {
+                    select: {
+                      category: true,
+                    },
+                  },
+                },
+              },
             },
           },
         },
@@ -738,6 +813,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
               name: string;
               legacyBudgetConceptId: number | null;
               isActive: boolean;
+              budgetGroup: string;
+              group?: {
+                category: string;
+                parent?: {
+                  category: string;
+                } | null;
+              } | null;
             }>>;
           };
         }
@@ -745,7 +827,6 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         where: {
           condominiumId: condominium.id,
           year: { in: [...visibleYears] },
-          budgetGroup: BUDGET_EXPENSE_GROUP.EXTRAORDINARY,
           isActive: true,
           legacyBudgetConceptId: { not: null },
         },
@@ -754,6 +835,17 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           name: true,
           legacyBudgetConceptId: true,
           isActive: true,
+          budgetGroup: true,
+          group: {
+            select: {
+              category: true,
+              parent: {
+                select: {
+                  category: true,
+                },
+              },
+            },
+          },
         },
       }),
       prisma.payment.aggregate({
@@ -817,6 +909,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
                 select: {
                   budgetGroup: true,
                   isActive: true,
+                  group: {
+                    select: {
+                      category: true,
+                      parent: {
+                        select: {
+                          category: true,
+                        },
+                      },
+                    },
+                  },
                 },
               },
               months: {
@@ -844,6 +946,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
                 select: {
                   budgetGroup: true,
                   isActive: true,
+                  group: {
+                    select: {
+                      category: true,
+                      parent: {
+                        select: {
+                          category: true,
+                        },
+                      },
+                    },
+                  },
                 },
               },
               months: {
@@ -1050,6 +1162,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       if (concept.legacyBudgetConceptId === null) {
         continue;
       }
+      if (resolveBudgetGroup(concept) !== BUDGET_EXPENSE_GROUP.EXTRAORDINARY) {
+        continue;
+      }
 
       const entries = extraordinaryExpenseConceptEntriesByLegacyId.get(concept.legacyBudgetConceptId) ?? [];
       entries.push({ year: concept.year, name: concept.name });
@@ -1142,6 +1257,11 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const ordinaryBankIncomeMonthly = createZeroSeries(); // TRANSFER, CARD, CHECK, OTHER
     const ordinaryCashIncomeMonthly = createZeroSeries(); // CASH (efectivo)
 
+    const ordinaryUnclassifiedOtherIncomeSeries = createZeroSeries();
+    const ordinaryUnclassifiedOtherIncomeSeriesByYear = new Map<number, number[]>(
+      visibleYears.map((year) => [year, createZeroSeries()]),
+    );
+
     const monthly = initMonthlyRows();
 
     for (const detail of paymentDetails as PaymentDetailSnapshot[]) {
@@ -1215,7 +1335,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       const month = getMonth(income.date);
       const row = monthly[month - 1];
       const amount = decimalToNumber(income.amount);
-      const kind = income.chargeGroupId !== null
+      const kind = income.chargeGroupId !== null && income.miscCatalogId === null
         ? (chargeGroupKindById.get(income.chargeGroupId) ?? CHARGE_GROUP_KIND.OTHER)
         : CHARGE_GROUP_KIND.OTHER;
       const extendedKind = resolveExtendedKind(kind);
@@ -1235,6 +1355,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         row.extraordinaryIncome += amount;
       } else {
         row.otherIncome += amount;
+        if (income.miscCatalogId === null) {
+          addAmountToSeries(ordinaryUnclassifiedOtherIncomeSeries, month, amount);
+        }
       }
     }
 
@@ -1246,7 +1369,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       }
 
       const incomeKind =
-        income.chargeGroupId !== null
+        income.chargeGroupId !== null && income.miscCatalogId === null
           ? (chargeGroupKindById.get(income.chargeGroupId) ?? null)
           : null;
       if (incomeKind !== null) {
@@ -1262,16 +1385,22 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         }
       }
 
-      if (income.miscCatalogId === null) {
-        continue;
-      }
-
-      if (income.chargeGroupId !== null) {
-        continue;
-      }
-
       const month = getMonth(income.date);
       const amount = decimalToNumber(income.amount);
+
+      if (income.miscCatalogId === null) {
+        const isCoreKind = income.chargeGroupId !== null &&
+          [CHARGE_GROUP_KIND.ORDINARY, CHARGE_GROUP_KIND.STC, CHARGE_GROUP_KIND.SANCTION, CHARGE_GROUP_KIND.COMODATO].includes(
+            chargeGroupKindById.get(income.chargeGroupId) as any
+          );
+        if (!isCoreKind) {
+          const series = ordinaryUnclassifiedOtherIncomeSeriesByYear.get(year);
+          if (series) {
+            addAmountToSeries(series, month, amount);
+          }
+        }
+        continue;
+      }
 
       const ordinaryRow = ordinaryOtherRowByMiscCatalogId.get(income.miscCatalogId);
       if (ordinaryRow) {
@@ -1315,7 +1444,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
-      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(budgetConcept.budgetGroup)) {
+      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(resolveBudgetGroup(budgetConcept) as BudgetExpenseGroup)) {
         continue;
       }
 
@@ -1352,11 +1481,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
-      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(budgetConcept.budgetGroup)) {
+      const resolvedGroup = resolveBudgetGroup(budgetConcept) as BudgetExpenseGroup;
+      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(resolvedGroup)) {
         continue;
       }
 
-      const rowMeta = ordinaryExpenseRowByBudgetGroup.get(budgetConcept.budgetGroup);
+      const rowMeta = ordinaryExpenseRowByBudgetGroup.get(resolvedGroup);
       if (!rowMeta) {
         continue;
       }
@@ -1484,7 +1614,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           continue;
         }
 
-        if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(budgetConcept.budgetGroup)) {
+        if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(resolveBudgetGroup(budgetConcept) as BudgetExpenseGroup)) {
           continue;
         }
 
@@ -1527,7 +1657,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
-      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(budgetConcept.budgetGroup)) {
+      if (!ORDINARY_BUDGET_EXPENSE_GROUPS.has(resolveBudgetGroup(budgetConcept) as BudgetExpenseGroup)) {
         continue;
       }
 
@@ -1631,10 +1761,6 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           continue;
         }
 
-        if (income.chargeGroupId !== null) {
-          continue;
-        }
-
         const month = getMonth(income.date);
         const amount = decimalToNumber(income.amount);
 
@@ -1681,13 +1807,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       }
     }
 
-    const ordinaryOtherSeriesList = ordinaryOtherCatalogRows.map(
-      (row) => ordinaryOtherSeriesByRowForRequestedYear.get(row.id) ?? createZeroSeries(),
-    );
-    const ordinaryOtherIncomeSeries =
-      ordinaryOtherSeriesList.length > 0
-        ? sumSeries(ordinaryOtherSeriesList)
-        : monthlyByKind[CHARGE_GROUP_KIND.OTHER];
+    const ordinaryOtherSeriesList = [
+      ...ordinaryOtherCatalogRows.map(
+        (row) => ordinaryOtherSeriesByRowForRequestedYear.get(row.id) ?? createZeroSeries(),
+      ),
+      ordinaryUnclassifiedOtherIncomeSeries,
+    ];
+    const ordinaryOtherIncomeSeries = sumSeries(ordinaryOtherSeriesList);
     const ordinaryTotalIncomeSeries = sumSeries([
       ordinaryIncomeSeries,
       ordinaryOtherIncomeSeries,
@@ -1742,22 +1868,21 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           {
             id: "ordinary-other-income",
             title: "Otros ingresos",
-            rows:
-              ordinaryOtherCatalogRows.length > 0
-                ? [
-                    ...ordinaryOtherCatalogRows.map((row) =>
-                      toTableRow(
-                        row.id,
-                        row.label,
-                        ordinaryOtherSeriesByRowForRequestedYear.get(row.id) ?? createZeroSeries(),
-                      ),
-                    ),
-                    toTableRow("ordinary-other-total", "Total", ordinaryOtherIncomeSeries, true),
-                  ]
-                : [
-                    toTableRow("ordinary-other", "Otros ingresos", ordinaryOtherIncomeSeries),
-                    toTableRow("ordinary-other-total", "Total", ordinaryOtherIncomeSeries, true),
-                  ],
+            rows: [
+              ...ordinaryOtherCatalogRows.map((row) =>
+                toTableRow(
+                  row.id,
+                  row.label,
+                  ordinaryOtherSeriesByRowForRequestedYear.get(row.id) ?? createZeroSeries(),
+                ),
+              ),
+              toTableRow(
+                "ordinary-other-unclassified",
+                "Otros ingresos",
+                ordinaryUnclassifiedOtherIncomeSeries,
+              ),
+              toTableRow("ordinary-other-total", "Total", ordinaryOtherIncomeSeries, true),
+            ],
           },
           {
             id: "ordinary-expenses",
@@ -1771,6 +1896,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             id: "ordinary-balance",
             title: "Saldo Ingresos - Egresos Ordinarios",
             rows: [
+              toTableRow("ordinary-balance-income", "Ingresos", ordinaryTotalIncomeSeries),
+              toTableRow("ordinary-balance-expenses", "Egresos", ordinaryExpenseSeries),
               toTableRow("ordinary-balance-total", "Total", ordinaryBalanceSeries, true),
               toTableRow(
                 "ordinary-banks",
@@ -1927,22 +2054,28 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       ],
     };
 
-    const ordinaryOtherIncomeMultiYearRows =
-      ordinaryOtherCatalogRows.length > 0
-        ? ordinaryOtherCatalogRows.map((row) => ({
-            id: row.id,
-            label: row.label,
-            yearly: visibleYears.map((year) =>
-              toYearSlice(year, ordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()),
-            ),
-          }))
-        : [];
+    const ordinaryOtherIncomeMultiYearRows = [
+      ...ordinaryOtherCatalogRows.map((row) => ({
+        id: row.id,
+        label: row.label,
+        yearly: visibleYears.map((year) =>
+          toYearSlice(year, ordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()),
+        ),
+      })),
+      {
+        id: "ordinary-other-unclassified",
+        label: "Otros ingresos",
+        yearly: visibleYears.map((year) =>
+          toYearSlice(year, ordinaryUnclassifiedOtherIncomeSeriesByYear.get(year) ?? createZeroSeries()),
+        ),
+      },
+    ];
 
     const ordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable = {
       id: "ordinary-other-income-multi-year",
       title: "Otros ingresos",
       years: [...visibleYears],
-      rows: ordinaryOtherIncomeMultiYearRows.length > 0 ? [
+      rows: [
         ...ordinaryOtherIncomeMultiYearRows,
         {
           id: "ordinary-other-total",
@@ -1959,7 +2092,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             ),
           ),
         },
-      ] : [],
+      ],
     };
 
     const extraordinaryOtherIncomeMultiYearRows =

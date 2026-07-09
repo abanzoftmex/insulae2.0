@@ -1475,9 +1475,15 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       estimatedOutstandingBalance: orderedRows.reduce((acc, row) => acc + row.outstandingBalance, 0),
     };
 
+    const isRowDisplayActive = (row: PrivateAreaListRow): boolean => {
+      const isParent = row.hierarchyRole === "PARENT";
+      return isParent ? false : row.isActive;
+    };
+
     const prefilteredRows = orderedRows.filter((row) => {
-      if (filters.status === "ACTIVE" && !row.isActive) return false;
-      if (filters.status === "INACTIVE" && row.isActive) return false;
+      const displayActive = isRowDisplayActive(row);
+      if (filters.status === "ACTIVE" && !displayActive) return false;
+      if (filters.status === "INACTIVE" && displayActive) return false;
 
       if (row.isActive) {
         return shouldRenderInLegacyTable(row);
@@ -1527,9 +1533,30 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         rowsByParentId.set(row.parentPrivateAreaId, bucket);
       }
 
-      const topLevelRows = filteredRows
-        .filter((row) => !row.parentPrivateAreaId)
-        .sort(sortRowsLegacyOrder);
+      const getTopLevelAncestor = (row: PrivateAreaListRow): PrivateAreaListRow => {
+        let current = row;
+        while (current.parentPrivateAreaId) {
+          const parent = rowsById.get(current.parentPrivateAreaId);
+          if (!parent) {
+            break;
+          }
+          current = parent;
+        }
+        return current;
+      };
+
+      const topLevelRowsSet = new Set<string>();
+      const topLevelRows: PrivateAreaListRow[] = [];
+
+      for (const row of filteredRows) {
+        const topLevel = getTopLevelAncestor(row);
+        if (!topLevelRowsSet.has(topLevel.id)) {
+          topLevelRowsSet.add(topLevel.id);
+          topLevelRows.push(topLevel);
+        }
+      }
+
+      topLevelRows.sort(sortRowsLegacyOrder);
 
       totalRows = topLevelRows.length;
       const computedPageSizeTop = shouldPaginate ? 25 : filters.pageSize;
