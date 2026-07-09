@@ -55,7 +55,7 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [message, setMessage] = useState<string>("");
-  const [editingGroup, setEditingGroup] = useState<{ id: string; name: string; concepts: any[] } | null>(null);
+  const [editingGroup, setEditingGroup] = useState<{ id: string; name: string; position?: number; concepts: any[] } | null>(null);
 
   const [draftByPositionId, setDraftByPositionId] = useState<Record<string, PositionDraft>>(() => {
     const entries: Array<[string, PositionDraft]> = [];
@@ -131,11 +131,13 @@ export function OrganigramaEditorShell({ groups, userOptions }: OrganigramaEdito
       setEditingGroup({
         id: group.groupId,
         name: group.groupName,
+        position: group.groupPosition,
         concepts: group.rows.map(row => ({
           id: row.positionId,
           name: row.positionName,
           quantity: row.maxAssignments,
           isAlternate: row.allowsAlternate,
+          sortOrder: row.sortOrder,
         }))
       });
     }

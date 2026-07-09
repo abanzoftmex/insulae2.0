@@ -22,9 +22,47 @@ import {
   UserCheck
 } from "lucide-react";
 import Link from "next/link";
+import type { Metadata } from "next";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { id } = await params;
+  try {
+    const annDb = await prisma.announcement.findUnique({
+      where: { id },
+      select: { name: true, condominiumId: true }
+    });
+    if (!annDb) return {};
+
+    const project = await prisma.project.findFirst({
+      where: { condominiumId: annDb.condominiumId, isActive: true },
+      select: { condominiumLogoUrl: true }
+    });
+
+    const logoUrl = project?.condominiumLogoUrl || undefined;
+
+    return {
+      title: `${annDb.name} - Convocatoria`,
+      description: `Invitación a la asamblea/reunión en el condominio.`,
+      openGraph: {
+        title: annDb.name,
+        description: `Detalles de la convocatoria para la reunión del condominio.`,
+        images: logoUrl ? [{ url: logoUrl }] : undefined,
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: annDb.name,
+        description: `Detalles de la convocatoria para la reunión del condominio.`,
+        images: logoUrl ? [logoUrl] : undefined,
+      }
+    };
+  } catch (error) {
+    console.error("Error generating metadata:", error);
+    return {};
+  }
 }
 
 export default async function AnnouncementDetailPage({ params }: PageProps) {

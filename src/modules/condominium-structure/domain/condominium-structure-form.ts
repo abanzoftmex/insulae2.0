@@ -5,6 +5,7 @@ export interface CondominiumStructureConceptSnapshot {
   name: string;
   quantity: number;
   isAlternate: boolean;
+  sortOrder: number;
 }
 
 export interface CondominiumStructureFormSnapshot {
@@ -24,6 +25,7 @@ export interface SaveCondominiumStructureConceptInput {
   name: string;
   quantity?: number | null;
   isAlternate?: boolean;
+  sortOrder?: number | null;
 }
 
 export interface SaveCondominiumStructureInput {

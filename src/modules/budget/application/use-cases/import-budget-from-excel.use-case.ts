@@ -183,8 +183,8 @@ export class ImportBudgetFromExcelUseCase {
           }
         }
 
-        // Si tenemos costo unitario y unidades definidas, calculamos el presupuesto automáticamente
-        if (unitCost !== null && units !== null) {
+        // Si tenemos costo unitario y unidades definidas, calculamos el presupuesto automáticamente si no se especificó un monto
+        if (amount === 0 && unitCost !== null && units !== null) {
           amount = unitCost * units;
         }
 

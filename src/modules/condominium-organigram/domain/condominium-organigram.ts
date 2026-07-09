@@ -16,6 +16,7 @@ export interface OrganigramPositionRow {
   allowsAlternate: boolean;
   responsible: OrganigramPositionAssignee[];
   alternates: OrganigramPositionAssignee[];
+  sortOrder: number;
 }
 
 export interface OrganigramGroupSection {

@@ -415,6 +415,20 @@ export async function getAnnouncementWhatsAppTextAction(announcementId: string) 
         },
         condominium: true,
         topics: { orderBy: { order: "asc" } },
+        invitedPositions: {
+          include: {
+            position: {
+              include: {
+                assignments: {
+                  where: { isActive: true },
+                  include: {
+                    user: true
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     });
 
@@ -431,6 +445,17 @@ export async function getAnnouncementWhatsAppTextAction(announcementId: string) 
 
     const documentLabel = isReunion ? "Reunión" : "Convocatoria";
 
+    const hostHeader = (await headers()).get("host") || "sassi-v2.vercel.app";
+    const proto = hostHeader.includes("localhost") ? "http" : "https";
+    const portalUrl = `${proto}://${hostHeader}/gobernanza/convocatorias/${announcementId}`;
+
+    const emojiHouse = String.fromCodePoint(0x1F3E0);
+    const emojiCalendar = String.fromCodePoint(0x1F4C5);
+    const emojiSpiralCalendar = String.fromCodePoint(0x1F5D3);
+    const emojiClipboard = String.fromCodePoint(0x1F4CB);
+    const emojiPage = String.fromCodePoint(0x1F4C4);
+    const emojiCheck = String.fromCodePoint(0x2705);
+
     const callsText = announcement.dates.map((d) => {
       const formattedDate = new Date(d.date).toLocaleDateString("es-MX", {
         weekday: "long",
@@ -438,19 +463,19 @@ export async function getAnnouncementWhatsAppTextAction(announcementId: string) 
         month: "long",
         day: "numeric",
       });
-      return `🗓 *${d.callType}*\nFecha: ${formattedDate} a las ${d.time || ""} hrs\nLugar: ${d.location || "No especificado"}`;
+      return `${emojiSpiralCalendar} *${d.callType}*\nFecha: ${formattedDate} a las ${d.time || ""} hrs\nLugar: ${d.location || "No especificado"}`;
     }).join("\n\n");
 
     const topicsText = announcement.topics.length > 0
-      ? `\n\n📋 *Orden del día:*\n` + announcement.topics.map((t, i) => `${i + 1}. ${t.title}`).join("\n")
+      ? `\n\n${emojiClipboard} *Orden del día:*\n` + announcement.topics.map((t, i) => `${i + 1}. ${t.title}`).join("\n")
       : "";
 
     const pdfText = announcement.pdfUrl
-      ? `\n\n📄 PDF: ${announcement.pdfUrl}`
+      ? `\n\n${emojiPage} PDF: ${announcement.pdfUrl}`
       : "";
 
     const text =
-`🏠 *${condominiumName}*
+`${emojiHouse} *${condominiumName}*
 ${documentLabel}: *${announcementName}*
 (${typeName} - ${subtypeName})
 
@@ -458,22 +483,49 @@ Apreciable condómino,
 
 Le hacemos llegar la invitación para la ${documentLabel.toLowerCase()} que se llevará a cabo en el condominio.
 
-📅 *Detalles del llamado:*
+${emojiCalendar} *Detalles del llamado:*
 
-${callsText}${topicsText}${pdfText}
+${callsText}${topicsText}
 
-✅ *Instrucciones para participar:*
-1. Acceda al portal del condominio.
+${emojiCheck} *Instrucciones para participar:*
+1. Acceda al portal del condominio: ${portalUrl}
 2. Inicie sesión con su cuenta de condómino.
 3. Presione el botón "Participar en ${isReunion ? "reunión" : "asamblea"}".
 4. Confirme su asistencia y emita sus votos en el orden del día.
 
 Agradecemos de antemano su puntual asistencia y participación.
-Atentamente, Administración de ${condominiumName}.`;
+Atentamente, Administración de ${condominiumName}.${pdfText}`;
 
-    return { success: true, text, phone: "5212212721794" };
+    const recipients: { name: string; position: string; phone: string }[] = [];
+    const seenUsers = new Set<string>();
+
+    for (const ip of announcement.invitedPositions) {
+      const positionName = ip.position.name;
+      for (const ass of ip.position.assignments) {
+        if (ass.user && ass.user.isActive) {
+          const userId = ass.user.id;
+          const phone = ass.user.phone || ass.user.personalPhone || ass.user.businessPhone;
+          const cleanPhone = phone ? phone.replace(/[^0-9]/g, "") : "";
+          
+          if (cleanPhone && !seenUsers.has(userId + "_" + cleanPhone)) {
+            seenUsers.add(userId + "_" + cleanPhone);
+            const displayName = [ass.user.firstName, ass.user.lastName].filter(Boolean).join(" ") 
+              || ass.user.businessName 
+              || "Condómino";
+            
+            recipients.push({
+              name: displayName,
+              position: positionName,
+              phone: cleanPhone
+            });
+          }
+        }
+      }
+    }
+
+    return { success: true, text, recipients };
   } catch (error: any) {
     console.error("Error building WhatsApp text:", error);
-    return { success: false, error: error.message, text: "", phone: "5212212721794" };
+    return { success: false, error: error.message, text: "", recipients: [] };
   }
 }

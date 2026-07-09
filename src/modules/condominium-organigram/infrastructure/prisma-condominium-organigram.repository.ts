@@ -28,6 +28,7 @@ type OrganigramPositionRecord = {
   quantity: number;
   isAlternate: boolean;
   assignments: OrganigramAssignmentRecord[];
+  sortOrder: number;
 };
 
 type OrganigramGroupRecord = {
@@ -207,6 +208,7 @@ export class PrismaCondominiumOrganigramRepository implements CondominiumOrganig
             allowsAlternate: position.isAlternate,
             responsible,
             alternates,
+            sortOrder: position.sortOrder,
           };
         }),
       })),

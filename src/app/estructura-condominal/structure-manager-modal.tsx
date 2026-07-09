@@ -15,7 +15,8 @@ interface StructureManagerModalProps {
   initialData?: {
     id: string;
     name: string;
-    concepts: Array<{ id: string; name: string; quantity: number; isAlternate: boolean }>;
+    position?: number;
+    concepts: Array<{ id: string; name: string; quantity: number; isAlternate: boolean; sortOrder?: number }>;
   };
 }
 
@@ -25,22 +26,31 @@ export function StructureManagerModal({ isOpen, onClose, initialData }: Structur
   const [error, setError] = useState("");
 
   const [groupName, setGroupName] = useState("");
-  const [concepts, setConcepts] = useState<Array<{ id: string; name: string; quantity: number; isAlternate: boolean }>>([
-    { id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false }
+  const [groupPosition, setGroupPosition] = useState(0);
+  const [concepts, setConcepts] = useState<Array<{ id: string; name: string; quantity: number; isAlternate: boolean; sortOrder: number }>>([
+    { id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false, sortOrder: 0 }
   ]);
 
   useEffect(() => {
     if (isOpen) {
       if (initialData) {
         setGroupName(initialData.name);
+        setGroupPosition(initialData.position || 0);
         setConcepts(
           initialData.concepts.length > 0 
-            ? initialData.concepts 
-            : [{ id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false }]
+            ? initialData.concepts.map((c, idx) => ({
+                id: c.id,
+                name: c.name,
+                quantity: c.quantity,
+                isAlternate: c.isAlternate,
+                sortOrder: c.sortOrder !== undefined ? c.sortOrder : idx
+              }))
+            : [{ id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false, sortOrder: 0 }]
         );
       } else {
         setGroupName("");
-        setConcepts([{ id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false }]);
+        setGroupPosition(0);
+        setConcepts([{ id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false, sortOrder: 0 }]);
       }
       setError("");
     }
@@ -49,7 +59,7 @@ export function StructureManagerModal({ isOpen, onClose, initialData }: Structur
   if (!isOpen) return null;
 
   const addConcept = () => {
-    setConcepts((prev) => [...prev, { id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false }]);
+    setConcepts((prev) => [...prev, { id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false, sortOrder: prev.length }]);
   };
 
   const updateConcept = (id: string, field: string, value: any) => {
@@ -78,18 +88,21 @@ export function StructureManagerModal({ isOpen, onClose, initialData }: Structur
       const payload = {
         id: initialData?.id,
         name: groupName,
+        position: groupPosition,
         concepts: validConcepts.map((c) => ({
           id: c.id.startsWith("new-") ? undefined : c.id,
           name: c.name,
           quantity: c.quantity,
           isAlternate: c.isAlternate,
+          sortOrder: c.sortOrder,
         })),
       };
 
       const result = await saveCondominiumStructureAction(payload);
       if (result.ok) {
         setGroupName("");
-        setConcepts([{ id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false }]);
+        setGroupPosition(0);
+        setConcepts([{ id: crypto.randomUUID(), name: "", quantity: 1, isAlternate: false, sortOrder: 0 }]);
         onClose();
         router.refresh();
       } else {
@@ -113,14 +126,27 @@ export function StructureManagerModal({ isOpen, onClose, initialData }: Structur
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
-          <div className="space-y-2">
-            <label className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Nombre del Grupo</label>
-            <Input 
-              placeholder="Ej. Consejo de Administración" 
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              className="font-medium"
-            />
+          <div className="grid grid-cols-4 gap-4">
+            <div className="col-span-3 space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Nombre del Grupo</label>
+              <Input 
+                placeholder="Ej. Consejo de Administración" 
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                className="font-medium"
+              />
+            </div>
+            <div className="col-span-1 space-y-2">
+              <label className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Orden</label>
+              <Input 
+                type="number" 
+                min={0}
+                placeholder="0"
+                value={groupPosition}
+                onChange={(e) => setGroupPosition(parseInt(e.target.value) === 0 ? 0 : parseInt(e.target.value) || 0)}
+                className="font-medium text-center"
+              />
+            </div>
           </div>
 
           <div className="space-y-3">

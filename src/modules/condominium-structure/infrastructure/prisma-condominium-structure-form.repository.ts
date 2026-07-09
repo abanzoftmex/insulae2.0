@@ -91,6 +91,7 @@ export class PrismaCondominiumStructureFormRepository implements CondominiumStru
             name: true,
             quantity: true,
             isAlternate: true,
+            sortOrder: true,
           },
         },
       },
@@ -105,11 +106,12 @@ export class PrismaCondominiumStructureFormRepository implements CondominiumStru
       name: group.name,
       position: group.position,
       structureType: normalizeStructureType(group.structureType),
-      concepts: group.positions.map((concept: { id: string; name: string; quantity: number; isAlternate: boolean }) => ({
+      concepts: group.positions.map((concept: { id: string; name: string; quantity: number; isAlternate: boolean; sortOrder: number }) => ({
         id: concept.id,
         name: concept.name,
         quantity: concept.quantity,
         isAlternate: concept.isAlternate,
+        sortOrder: concept.sortOrder,
       })),
     };
   }
@@ -139,7 +141,7 @@ export class PrismaCondominiumStructureFormRepository implements CondominiumStru
       name: trimSafe(concept.name),
       quantity: toSafeQuantity(concept.quantity),
       isAlternate: Boolean(concept.isAlternate),
-      sortOrder: index,
+      sortOrder: typeof concept.sortOrder === "number" ? concept.sortOrder : index,
     }));
 
     const concepts = rawConcepts.filter((concept) => concept.name.length > 0);
