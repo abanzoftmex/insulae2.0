@@ -15,8 +15,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Insulae 2.0 | Sassi",
-  description: "Plataforma condominal para Sassi con arquitectura hexagonal.",
+  title: "Insulae 2.0 | Valquirico",
+  description: "Plataforma condominal para Valquirico con arquitectura hexagonal.",
 };
 
 export default async function RootLayout({
