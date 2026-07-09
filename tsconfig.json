@@ -31,5 +31,12 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "scratch",
+    "check-insulae.ts",
+    "dump-types.ts",
+    "fix-year.ts",
+    "test-report.ts"
+  ]
 }
