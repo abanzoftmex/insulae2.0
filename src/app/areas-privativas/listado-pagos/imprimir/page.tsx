@@ -46,107 +46,25 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
 
   const { area } = pageData;
 
-  // Fetch all charges with allocations and payments
-  const dbCharges = await prisma.charge.findMany({
-    where: {
-      privateAreaId: area.privateAreaId,
-    },
-    orderBy: [
-      { periodYear: "asc" },
-      { periodMonth: "asc" },
-    ],
-    include: {
-      chargeGroup: true,
-      allocations: {
-        include: {
-          payment: true,
-        },
-      },
-    },
-  });
-
-  // opc=1 → Propietario (COMMERCE), opc=2 → Comercio (OWNER) — matches legacy id_opcion_estado_cuenta
-  const targetResponsibility = opc === "2" ? "OWNER" : "COMMERCE";
-
-  // Filter charges by responsibility
-  const finalCharges = dbCharges.filter((c) =>
-    c.responsibility === targetResponsibility,
-  );
-
-  // Map to rich client objects
-  const mappedCharges = finalCharges.map((c) => {
-    const amount = Number(c.amount);
-    const interestAmount = Number(c.interestAmount);
-    const discountAmount = Number(c.discountAmount);
-    const paidAmount = c.allocations.reduce((sum, alloc) => sum + Number(alloc.amount), 0);
-    const balanceAmount = amount - paidAmount + interestAmount - discountAmount;
-
-    // Retrieve unique paid dates from allocations
-    const paidDatesList = c.allocations
-      .map((alloc) => alloc.payment.paidAt)
-      .sort((a, b) => a.getTime() - b.getTime());
-
+  const mappedCharges = pageData.visibleChargeLines.map((c) => {
     return {
       id: c.id,
       periodYear: c.periodYear,
       periodMonth: c.periodMonth,
       dueDate: c.dueDate,
       concept: c.concept,
-      chargeGroupName: c.chargeGroup.name,
-      chargeGroupType: c.chargeGroup.chargeType,
-      amount,
-      interestAmount,
-      discountAmount,
-      paidAmount,
-      balanceAmount,
-      paidDatesList,
+      chargeGroupName: c.chargeGroupName,
+      chargeGroupType: c.chargeGroupType,
+      amount: c.amount,
+      interestAmount: c.interestAmount,
+      discountAmount: c.discountAmount,
+      paidAmount: c.paidAmount,
+      balanceAmount: c.balanceAmount,
+      paidDatesList: c.paymentDates,
     };
   });
 
-  // Build list of payments
-  const paymentMovementsById = new Map<string, {
-    paymentId: string;
-    paidAt: Date;
-    method: string;
-    reference: string | null;
-    paymentTotalAmount: number;
-  }>();
-
-  for (const c of finalCharges) {
-    for (const alloc of c.allocations) {
-      const p = alloc.payment;
-      paymentMovementsById.set(p.id, {
-        paymentId: p.id,
-        paidAt: p.paidAt,
-        method: p.method,
-        reference: p.reference,
-        paymentTotalAmount: Number(p.amount),
-      });
-    }
-  }
-
-  // Fetch independent incomes
-  const dbIncomes = await prisma.income.findMany({
-    where: {
-      privateAreaId: area.privateAreaId,
-      isActive: true,
-    },
-    orderBy: { date: "desc" },
-  });
-
-  for (const inc of dbIncomes) {
-    if (!paymentMovementsById.has(inc.id)) {
-      paymentMovementsById.set(inc.id, {
-        paymentId: inc.id,
-        paidAt: inc.date,
-        method: inc.paymentMethod || "OTHER",
-        reference: inc.concept,
-        paymentTotalAmount: Number(inc.amount),
-      });
-    }
-  }
-
-  const chronologicalPayments = Array.from(paymentMovementsById.values()).sort(
+  const chronologicalPayments = [...pageData.visiblePaymentMovements].sort(
     (a, b) => a.paidAt.getTime() - b.paidAt.getTime()
   );
 
@@ -506,7 +424,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
               ) : (
                 mappedCharges.map((c) => {
                   const paidDates = c.paidDatesList.length > 0
-                    ? c.paidDatesList.map(date => formatDate(date)).join(" / ")
+                    ? c.paidDatesList.join(" / ")
                     : "—";
 
                   return (

@@ -469,6 +469,7 @@ export class PrismaPrivateAreaActionPageDataRepository
     ]);
 
     const inMemoryAllocationsByChargeId = new Map<string, number>();
+    const inMemoryAllocationDatesByChargeId = new Map<string, Set<string>>();
 
     const calculateAllocationsForArea = (charges: any[], incomes: any[]) => {
       const sortedCharges = [...charges].sort((a, b) => {
@@ -522,6 +523,19 @@ export class PrismaPrivateAreaActionPageDataRepository
             const allocate = Math.min(remainingIncome, balance);
             inMemoryAllocationsByChargeId.set(charge.id, prevAllocated + allocate);
             remainingIncome -= allocate;
+
+            if (!inMemoryAllocationDatesByChargeId.has(charge.id)) {
+              inMemoryAllocationDatesByChargeId.set(charge.id, new Set<string>());
+            }
+            const date = income.date;
+            const day = date.getDate().toString().padStart(2, "0");
+            const monthNames = [
+              "ene", "feb", "mar", "abr", "may", "jun",
+              "jul", "ago", "sep", "oct", "nov", "dic"
+            ];
+            const month = monthNames[date.getMonth()];
+            const year = date.getFullYear();
+            inMemoryAllocationDatesByChargeId.get(charge.id)!.add(`${day} ${month} ${year}`);
           }
         }
       }
@@ -542,9 +556,11 @@ export class PrismaPrivateAreaActionPageDataRepository
       const interestAmount = decimalToNumber(charge.interestAmount);
       const discountAmount = decimalToNumber(charge.discountAmount);
 
+      const inMemoryDates = inMemoryAllocationDatesByChargeId.get(charge.id) || new Set<string>();
+
       const paymentDates = Array.from(
-        new Set(
-          charge.allocations
+        new Set([
+          ...charge.allocations
             .filter((alloc) => alloc.payment.isVisibleInFinancialSummary !== false)
             .map((alloc) => {
               const date = alloc.payment.paidAt;
@@ -566,8 +582,9 @@ export class PrismaPrivateAreaActionPageDataRepository
               const month = monthNames[date.getMonth()];
               const year = date.getFullYear();
               return `${day} ${month} ${year}`;
-            })
-        )
+            }),
+          ...inMemoryDates,
+        ])
       );
 
       return {
