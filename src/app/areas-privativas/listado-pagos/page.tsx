@@ -136,16 +136,43 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
 
   const finalBalanceDueToday = totalBalanceDueToday - saldoAFavorValue;
 
+  // M2 calculation matching legacy:
+  const m2Construction = area.m2Construction ?? 0;
+  const m2CommonArea = area.m2CommonArea ?? 0;
+  const m2OriginalVal = area.m2Original ?? 0;
+  const m2ApoleVal = area.m2Apole ?? 0;
+  const displayM2 = area.isChild
+    ? m2Construction + m2CommonArea
+    : (m2OriginalVal > 0 ? m2OriginalVal : m2ApoleVal) + m2CommonArea;
+
+  const landUse = area.landUses.find(
+    (lu) => lu.name.trim().toLowerCase() === (area.useType ?? "").trim().toLowerCase()
+  );
+  const useTypeInitials = landUse?.initials || null;
+  const useTypeLabel = area.useType
+    ? (useTypeInitials ? `${area.useType} - ${useTypeInitials}` : area.useType)
+    : "—";
+
   // Resolve contact: for Comercio (opc=1), use the most recent active rental's admin contact.
   // For Propietario (opc=2), use the owner/administrador assignment.
   let contactUser: { name: string; email: string | null; phone: string | null } | undefined;
 
   if (isComercio) {
-    // Find the most recent rental that has an administrativeContactUser
-    const activeRental = area.rentals.find((r) => r.administrativeContactUser != null);
+    // Find the most recent rental that has an administrativeContactUser, fallback to any rental matching user name
+    const activeRental = area.rentals.find((r) => r.administrativeContactUser != null) ?? area.rentals[0];
     const rentalContact = activeRental?.administrativeContactUser;
     if (rentalContact) {
       contactUser = { name: rentalContact.name, email: rentalContact.email, phone: rentalContact.phone };
+    } else if (activeRental?.tenantName) {
+      const cleanTenantName = activeRental.tenantName.trim();
+      const matchedUser = area.userOptions.find(
+        (u) => u.name.trim().toLowerCase() === cleanTenantName.toLowerCase()
+      );
+      contactUser = {
+        name: cleanTenantName,
+        email: matchedUser?.email ?? null,
+        phone: matchedUser?.phone ?? null,
+      };
     }
   } else {
     const ownerAssignment =
@@ -160,21 +187,65 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
     contactUser = ownerAssignment?.user;
   }
 
-  // Group charges by chargeGroupName for the breakdown tables
-  const chargeSummaryByGroup = new Map<string, { charged: number; balance: number; balanceDueToday: number }>();
-  for (const charge of visibleChargeLines) {
-    const groupName = charge.chargeGroupName;
-    const existing = chargeSummaryByGroup.get(groupName) || { charged: 0, balance: 0, balanceDueToday: 0 };
-    existing.charged += charge.amount;
-    existing.balance += charge.balanceAmount;
-    if (!charge.dueDate || new Date(charge.dueDate) <= today) {
-      existing.balanceDueToday += charge.balanceAmount;
+  // Grouped balances for Debe al día breakdown list
+  let ordinariasBalance = 0;
+  let extraordinariasCondominosBalance = 0;
+  let stcBalance = 0;
+  let sancionBalance = 0;
+  let extraordinariaComerciosBalance = 0;
+  let comodatoBalance = 0;
+
+  for (const c of visibleChargesDueToday) {
+    const name = c.chargeGroupName.toLowerCase();
+    const type = (c.chargeGroupType ?? "").toLowerCase();
+
+    if (name.includes("ordinaria")) {
+      ordinariasBalance += c.balanceAmount;
+    } else if (name.includes("stc")) {
+      stcBalance += c.balanceAmount;
+    } else if (name.includes("sancion") || name.includes("multa")) {
+      sancionBalance += c.balanceAmount;
+    } else if (name.includes("comodato")) {
+      comodatoBalance += c.balanceAmount;
+    } else if (name.includes("extraordinaria")) {
+      if (name.includes("comercio") || type.includes("comercio")) {
+        extraordinariaComerciosBalance += c.balanceAmount;
+      } else {
+        extraordinariasCondominosBalance += c.balanceAmount;
+      }
     }
-    chargeSummaryByGroup.set(groupName, existing);
   }
-  const summaryRows = Array.from(chargeSummaryByGroup.entries())
-    .map(([name, totals]) => ({ name, ...totals }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+
+  // Grouped amounts for Cargos Totales breakdown list
+  let ordinariasCharged = 0;
+  let extraordinariasCondominosCharged = 0;
+  let stcCharged = 0;
+  let sancionCharged = 0;
+  let extraordinariaComerciosCharged = 0;
+  let comodatoCharged = 0;
+
+  for (const c of visibleChargeLines) {
+    const name = c.chargeGroupName.toLowerCase();
+    const type = (c.chargeGroupType ?? "").toLowerCase();
+
+    if (name.includes("ordinaria")) {
+      ordinariasCharged += c.amount;
+    } else if (name.includes("stc")) {
+      stcCharged += c.amount;
+    } else if (name.includes("sancion") || name.includes("multa")) {
+      sancionCharged += c.amount;
+    } else if (name.includes("comodato")) {
+      comodatoCharged += c.amount;
+    } else if (name.includes("extraordinaria")) {
+      if (name.includes("comercio") || type.includes("comercio")) {
+        extraordinariaComerciosCharged += c.amount;
+      } else {
+        extraordinariasCondominosCharged += c.amount;
+      }
+    }
+  }
+
+  const totalCargosCard = totalCharged + totalInterests - totalDiscounts;
 
   return (
     <PrivateAreaActionShell
@@ -225,18 +296,35 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
       </Card>
 
       <div className="space-y-6 mt-6">
-        {/* Contacto Simple */}
-        <div className="border-b border-[#ddd0be] pb-2">
-          <h2 className="text-xl font-bold text-[#3a2a18]">Contacto</h2>
-          {contactUser ? (
-            <div className="mt-3 text-[13px] text-[#3a2a18] space-y-1">
-              <p>Nombre: <span className="font-bold">{contactUser.name}</span></p>
-              <p>Email: <span className="font-bold">{contactUser.email || "—"}</span></p>
-              <p>Teléfono: <span className="font-bold">{contactUser.phone || "—"}</span></p>
-            </div>
-          ) : (
-            <p className="mt-3 text-[13px] text-[#3a2a18] italic">No hay contacto registrado.</p>
-          )}
+        {/* Información de Cuenta Legacy */}
+        <div className="bg-[#fcfaf6] border border-[#ddd0be] rounded-md p-4 text-[#3a2a18]">
+          <h2 className="text-xl font-bold text-[#2c3e50] mb-3 flex items-center gap-2">
+            <Link href="/areas-privativas" className="hover:opacity-80 transition-opacity">
+              <span className="inline-flex items-center justify-center rounded-full bg-[#2c3e50] text-white w-6 h-6 text-xs font-extrabold pb-0.5">←</span>
+            </Link>
+            Cuentas por cobrar
+          </h2>
+          <div className="text-[13px] leading-relaxed space-y-0.5">
+            <p>Área privativa: <span className="font-bold">{area.name}</span></p>
+            <p>Uso de suelo: <span className="font-bold">{useTypeLabel}</span></p>
+            <p>M2: <span className="font-bold">{displayM2.toFixed(4)}</span></p>
+            {contactUser ? (
+              <div className="pt-2 mt-2 border-t border-[#ddd0be]/50">
+                <p className="font-bold text-[14px] text-[#2c3e50]">{contactUser.name}</p>
+                <p className="text-[12px] text-ink-soft mt-0.5">
+                  Email: <span className="font-bold text-[#3a2a18]">{contactUser.email || "—"}</span>
+                  {contactUser.phone && (
+                    <>
+                      <span className="mx-2 text-gray-300">|</span>
+                      Tel.: <span className="font-bold text-[#3a2a18]">{contactUser.phone}</span>
+                    </>
+                  )}
+                </p>
+              </div>
+            ) : (
+              <p className="text-[12px] text-ink-soft italic pt-1">No hay contacto registrado.</p>
+            )}
+          </div>
         </div>
 
         {/* Resúmenes */}
@@ -266,13 +354,31 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                     <td className="px-3 py-1.5">Saldo inicial:</td>
                     <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
                   </tr>
-                  {summaryRows.filter(r => r.balanceDueToday > 0).map((row) => (
-                    <tr key={row.name} className={`border-b border-[#e5d5b5] bg-[#ffecd6]`}>
-                      <td className="px-3 py-1.5">{row.name}:</td>
-                      <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(row.balanceDueToday)}</td>
-                    </tr>
-                  ))}
-                  <tr className="border-b border-[#e5d5b5]">
+                  <tr className={`border-b border-[#e5d5b5] ${ordinariasBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                    <td className="px-3 py-1.5">Cuotas ordinarias:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(ordinariasBalance)}</td>
+                  </tr>
+                  <tr className={`border-b border-[#e5d5b5] ${extraordinariasCondominosBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                    <td className="px-3 py-1.5">Cuotas extraordinarias - Condóminos:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(extraordinariasCondominosBalance)}</td>
+                  </tr>
+                  <tr className={`border-b border-[#e5d5b5] ${stcBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                    <td className="px-3 py-1.5">Cuotas STC:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(stcBalance)}</td>
+                  </tr>
+                  <tr className={`border-b border-[#e5d5b5] ${sancionBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                    <td className="px-3 py-1.5">Sanción:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(sancionBalance)}</td>
+                  </tr>
+                  <tr className={`border-b border-[#e5d5b5] ${extraordinariaComerciosBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                    <td className="px-3 py-1.5">Cuota extraordinaria - Comercios:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(extraordinariaComerciosBalance)}</td>
+                  </tr>
+                  <tr className={`border-b border-[#e5d5b5] ${comodatoBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                    <td className="px-3 py-1.5">Comodato:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(comodatoBalance)}</td>
+                  </tr>
+                  <tr className={`border-b border-[#e5d5b5] ${totalInterestsDueToday > 0 ? "bg-[#ffecd6]" : ""}`}>
                     <td className="px-3 py-1.5">Intereses moratorios:</td>
                     <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(totalInterestsDueToday)}</td>
                   </tr>
@@ -289,7 +395,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                   <AlertCircle className="h-5 w-5" />
                   <span className="text-[12px] font-bold uppercase">Cargos Totales</span>
                 </div>
-                <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(totalCharged)}</p>
+                <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(totalCargosCard)}</p>
               </div>
             </div>
             <div className="bg-[#fbf9f4] border-x border-b border-[#d6c7b3] rounded-b-md p-0">
@@ -299,12 +405,30 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                     <td className="px-3 py-1.5">Saldo inicial:</td>
                     <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
                   </tr>
-                  {summaryRows.map((row) => (
-                    <tr key={row.name} className="border-b border-[#e5d5b5]">
-                      <td className="px-3 py-1.5">{row.name}:</td>
-                      <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(row.charged)}</td>
-                    </tr>
-                  ))}
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Cuotas ordinarias:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(ordinariasCharged)}</td>
+                  </tr>
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Cuotas extraordinarias - Condóminos:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(extraordinariasCondominosCharged)}</td>
+                  </tr>
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Cuotas STC:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(stcCharged)}</td>
+                  </tr>
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Sanción:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(sancionCharged)}</td>
+                  </tr>
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Cuota extraordinaria - Comercios:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(extraordinariaComerciosCharged)}</td>
+                  </tr>
+                  <tr className="border-b border-[#e5d5b5]">
+                    <td className="px-3 py-1.5">Comodato:</td>
+                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(comodatoCharged)}</td>
+                  </tr>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Intereses moratorios:</td>
                     <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(totalInterests)}</td>
