@@ -1359,8 +1359,8 @@ export class PromoteFromStagingUseCase {
       const dueDate = asDate(payload.fechaVigencia);
       const amount = asNumber(payload.monto) ?? 0;
       const paidAmount = asNumber(payload.montoAbonado) ?? 0;
-      const interestAmount = asNumber(payload.interesMoratorio) ?? 0;
-      const discountAmount = asNumber(payload.descuento) ?? 0;
+      const interestAmount = asNumber(payload.intereses) ?? 0;
+      const discountAmount = asNumber(payload.descuento_aplicado) ?? 0;
       const legacyStatusCode = asInt(payload.id_cat_status_pago);
       const isCollectible = asBoolean(payload.activo, true);
       const tenancyId = await this.resolveMappedId({
@@ -1369,7 +1369,7 @@ export class PromoteFromStagingUseCase {
         legacyId: asInt(payload.id_arrendamientos),
         targetEntity: "Rental",
       });
-      const responsibility = asInt(payload.id_opcion_estado_cuenta) === 2 ? "COMMERCE" : "OWNER";
+      const responsibility = asInt(payload.id_opcion_estado_cuenta) === 2 ? "OWNER" : "COMMERCE";
       const status = toLedgerStatus(legacyStatusCode, paidAmount, amount);
       const periodYear = asInt(payload.anio) ?? paymentDate.getUTCFullYear();
       const periodMonth = asMonth(payload.mes) ?? paymentDate.getUTCMonth() + 1;

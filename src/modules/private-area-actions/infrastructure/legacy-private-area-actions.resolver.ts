@@ -33,14 +33,14 @@ export class LegacyPrivateAreaActionsResolver
     const ownerPaymentsUrl = canNavigate
       ? buildInternalUrl("listado-pagos", {
           id: privateAreaId,
-          opc: "1",
+          opc: "2",
         })
       : null;
 
     const commercePaymentsUrl = canNavigate
       ? buildInternalUrl("listado-pagos", {
           id: privateAreaId,
-          opc: "2",
+          opc: "1",
         })
       : null;
 

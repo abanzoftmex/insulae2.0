@@ -974,6 +974,11 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               allocations: {
                 select: {
                   amount: true,
+                  payment: {
+                    select: {
+                      legacyId: true,
+                    },
+                  },
                 },
               },
             },
@@ -982,6 +987,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
             where: { isActive: true },
             select: {
               id: true,
+              legacyId: true,
               date: true,
               amount: true,
               chargeGroupId: true,
@@ -1056,7 +1062,23 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
 
         const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
 
+        // Build a set of legacyIds of payments that already have allocations in the database
+        const allocatedLegacyIds = new Set<number>();
+        for (const charge of charges) {
+          for (const alloc of charge.allocations) {
+            if (alloc.payment?.legacyId !== null && alloc.payment?.legacyId !== undefined) {
+              allocatedLegacyIds.add(alloc.payment.legacyId);
+            }
+          }
+        }
+
         for (const income of sortedIncomes) {
+          if (income.legacyId !== null && income.legacyId !== undefined && allocatedLegacyIds.has(income.legacyId)) {
+            // This income is already represented as a Payment with allocations in the database.
+            // Skip simulating it in memory to prevent double-allocation!
+            continue;
+          }
+
           const chargeGroupId = income.chargeGroupId;
           if (!chargeGroupId) continue;
 
@@ -1098,14 +1120,14 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
 
       if (condominium.slug === "valquirico") {
         const ordinaryCharge2025 = area.areaCharges.find((ac) => {
-          const isOrdinary = ac.chargeGroup.kind === "ORDINARY" || ac.chargeGroup.name.toLowerCase().includes("ordinaria");
+          const isOrdinary = ac.chargeGroup.kind === "ORDINARY";
           const isYear2025 = ac.startsAt?.getUTCFullYear() === 2025;
           return isOrdinary && isYear2025;
         });
         const amount2025 = ordinaryCharge2025 ? decimalToNumber(ordinaryCharge2025.amount) : 0;
 
         const ordinaryCharge2026 = area.areaCharges.find((ac) => {
-          const isOrdinary = ac.chargeGroup.kind === "ORDINARY" || ac.chargeGroup.name.toLowerCase().includes("ordinaria");
+          const isOrdinary = ac.chargeGroup.kind === "ORDINARY";
           const isYear2026 = ac.startsAt?.getUTCFullYear() === 2026;
           return isOrdinary && isYear2026;
         });

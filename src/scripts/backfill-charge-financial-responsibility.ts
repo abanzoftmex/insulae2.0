@@ -83,8 +83,8 @@ type LegacyChargePayload = {
   mes?: unknown;
   montoAbonado?: unknown;
   monto?: unknown;
-  interesMoratorio?: unknown;
-  descuento?: unknown;
+  intereses?: unknown;
+  descuento_aplicado?: unknown;
   activo?: unknown;
 };
 
@@ -241,8 +241,8 @@ async function run(): Promise<void> {
 
     const paidAmount = asNumber(payload.montoAbonado) ?? 0;
     const amount = asNumber(payload.monto) ?? 0;
-    const interestAmount = asNumber(payload.interesMoratorio) ?? 0;
-    const discountAmount = asNumber(payload.descuento) ?? 0;
+    const interestAmount = asNumber(payload.intereses) ?? 0;
+    const discountAmount = asNumber(payload.descuento_aplicado) ?? 0;
     const legacyStatusCode = asInt(payload.id_cat_status_pago);
     const status = toLedgerStatus(legacyStatusCode, paidAmount, amount);
     const periodYear = asInt(payload.anio);

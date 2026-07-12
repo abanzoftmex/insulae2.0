@@ -127,8 +127,8 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
   const totalBalanceDueToday = visibleChargesDueToday.reduce((total, charge) => total + charge.balanceAmount, 0);
   const totalInterestsDueToday = visibleChargesDueToday.reduce((total, charge) => total + charge.interestAmount, 0);
 
-  // opc=1 → Propietario (busca en asignaciones), opc=2 → Comercio (busca en arrendamientos)
-  const isComercio = opc === "2";
+  // opc=2 → Propietario (busca en asignaciones), opc=1 → Comercio (busca en arrendamientos)
+  const isComercio = opc === "1";
 
   const saldoAFavorValue = isComercio
     ? Number((area as any).payload?.saldoAFavorComercio || 0)
@@ -191,7 +191,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           </CardTitle>
           <div className="flex gap-2">
             <Link
-              href={buildActionHref("listado-pagos", area.privateAreaId, "1")}
+              href={buildActionHref("listado-pagos", area.privateAreaId, "2")}
               className={
                 !isComercio
                   ? "rounded-full bg-white/20 border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white"
@@ -201,7 +201,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
               Propietario
             </Link>
             <Link
-              href={buildActionHref("listado-pagos", area.privateAreaId, "2")}
+              href={buildActionHref("listado-pagos", area.privateAreaId, "1")}
               className={
                 isComercio
                   ? "rounded-full bg-white/20 border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white"
@@ -417,8 +417,8 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                         <td className="py-2 px-3 text-[#3a2a18]/60">{charge.paymentDates.length > 0 ? charge.paymentDates.join(" / ") : "-"}</td>
                         <td className="py-2 px-3 text-right font-bold text-[#3a2a18]">{formatCurrency(charge.amount)}</td>
                         <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.paidAmount)}</td>
-                        <td className="py-2 px-3 text-right text-[#3a2a18]">$0.00</td>
-                        <td className="py-2 px-3 text-right text-[#3a2a18]">$0.00</td>
+                        <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.interestAmount)}</td>
+                        <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.discountAmount)}</td>
                         <td className="py-2 px-3 text-right font-bold text-[#b58b4f]">{formatCurrency(charge.balanceAmount)}</td>
                         <td className="py-2 px-3 text-center">
                           <input type="text" className="border border-[#ddd0be] rounded px-2 py-0.5 w-32 text-[10px]" />

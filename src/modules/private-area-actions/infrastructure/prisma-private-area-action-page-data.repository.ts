@@ -499,10 +499,10 @@ export class PrismaPrivateAreaActionPageDataRepository
         }
 
         const chargeGroupId = income.chargeGroupId;
-        if (!chargeGroupId) continue;
-
         let remainingIncome = decimalToNumber(income.amount);
-        const groupCharges = sortedCharges.filter((c) => c.chargeGroupId === chargeGroupId);
+        const groupCharges = chargeGroupId
+          ? sortedCharges.filter((c) => c.chargeGroupId === chargeGroupId)
+          : sortedCharges;
 
         for (const charge of groupCharges) {
           if (remainingIncome <= 0.005) break;

@@ -15,7 +15,7 @@ export interface PrivateAreaActionPageViewData {
   didFallbackToAllCharges: boolean;
 }
 
-// opc=1 → Propietario (COMMERCE), opc=2 → Comercio (OWNER) — matches legacy id_opcion_estado_cuenta
+// opc=1 → Comercio (COMMERCE), opc=2 → Propietario (OWNER) — matches legacy id_opcion_estado_cuenta
 function toVisibleChargeLines(
   charges: PrivateAreaActionPageData["charges"],
   opc: "1" | "2",

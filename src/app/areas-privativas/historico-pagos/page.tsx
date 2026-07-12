@@ -103,7 +103,7 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
   }
 
   const { area } = pageData;
-  const isComercio = opc === "2";
+  const isComercio = opc === "1";
 
   // Fetch all payment history for this private area
   const dbPayments = await prisma.payment.findMany({
@@ -158,10 +158,10 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
     );
 
     if (isComercio) {
-      return hasOwnerAllocations || hasOwnerDetails;
+      return hasCommerceAllocations || hasCommerceDetails;
     } else {
       const hasNoInfo = payment.allocations.length === 0 && payment.details.length === 0;
-      return hasCommerceAllocations || hasCommerceDetails || hasNoInfo;
+      return hasOwnerAllocations || hasOwnerDetails || hasNoInfo;
     }
   });
 

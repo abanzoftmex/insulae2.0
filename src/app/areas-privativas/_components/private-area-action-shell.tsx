@@ -39,12 +39,12 @@ const NAV_TABS = [
   {
     key: "listado-pagos-propietario" as const,
     label: "Pagos Propietario",
-    opc: "1", // opc=1 → Propietario (OWNER) — matches legacy
+    opc: "2", // opc=2 → Propietario (OWNER) — matches legacy
   },
   {
     key: "listado-pagos-comercio" as const,
     label: "Pagos Comercio",
-    opc: "2", // opc=2 → Comercio (COMMERCE) — matches legacy
+    opc: "1", // opc=1 → Comercio (COMMERCE) — matches legacy
   },
   { key: "listado-arrendamientos" as const, label: "Arrendatarios o Usuarios" },
 ] as const;
