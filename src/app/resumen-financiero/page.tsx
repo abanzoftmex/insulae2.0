@@ -408,6 +408,17 @@ export default async function ResumenFinancieroPage({
               monthLabels={vm.extraordinaryIncomeMultiYearTable.monthLabels}
               tone={TABLE_TONE.income}
             />
+            {vm.extraordinaryOtherIncomeMultiYearTable.rows.length > 0 && (
+              <CompactFinancialTable
+                title="Balance Extraordinario"
+                subtitle="Otros Ingresos Extraordinarios"
+                firstColumnLabel="Tipo de Ingreso"
+                annualLabelPrefix="Total"
+                table={vm.extraordinaryOtherIncomeMultiYearTable}
+                monthLabels={vm.extraordinaryOtherIncomeMultiYearTable.monthLabels}
+                tone={TABLE_TONE.income}
+              />
+            )}
             <CompactFinancialTable
               title="Balance Extraordinario"
               subtitle="Egresos Extraordinarios"

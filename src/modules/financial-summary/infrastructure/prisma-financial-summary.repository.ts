@@ -2062,13 +2062,6 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           toYearSlice(year, ordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries()),
         ),
       })),
-      {
-        id: "ordinary-other-unclassified",
-        label: "Otros ingresos",
-        yearly: visibleYears.map((year) =>
-          toYearSlice(year, ordinaryUnclassifiedOtherIncomeSeriesByYear.get(year) ?? createZeroSeries()),
-        ),
-      },
     ];
 
     const ordinaryOtherIncomeMultiYearTable: FinancialSummaryMultiYearTable = {

@@ -69,11 +69,13 @@ function createYearSeries(): YearMonthSeries {
 }
 
 function normalizeLabel(value: string): string {
-  return value
+  const clean = value.replace(/\s*\([^)]*\)/g, "");
+  return clean
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
 }
 
 async function readNdjsonRows<T>(filePath: string): Promise<T[]> {
@@ -215,7 +217,7 @@ async function main(): Promise<void> {
       continue;
     }
 
-    for (const year of YEARS) {
+    for (const year of table.years) {
       const runtimeMonths = runtime.byYear.get(year) ?? createSeries();
       for (let monthIndex = 0; monthIndex < 12; monthIndex += 1) {
         const expectedValue = expected[year][monthIndex] ?? 0;
@@ -242,7 +244,7 @@ async function main(): Promise<void> {
       runtimeTotalRow.yearly.map((slice) => [slice.year, [...slice.months]]),
     );
 
-    for (const year of YEARS) {
+    for (const year of table.years) {
       const expectedMonths = Array.from({ length: 12 }, (_, monthIndex) =>
         expectedKeys.reduce(
           (acc, key) => acc + (expectedByNormalizedLabel.get(key)?.[year][monthIndex] ?? 0),

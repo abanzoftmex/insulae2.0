@@ -84,6 +84,7 @@ async function readNdjsonRows<T>(filePath: string): Promise<T[]> {
 
 function normalizeLabel(value: string): string {
   return value
+    .split("(")[0]
     .trim()
     .toLowerCase()
     .normalize("NFD")
@@ -194,6 +195,40 @@ async function main(): Promise<void> {
   }
 
   const activeLegacyMiscIds = activeOrdinaryCatalogs.map((row) => row.legacyId);
+
+  const dbCatalogs = await prisma.miscIncomeCatalog.findMany({
+    where: {
+      condominiumId: activeCondominium.id,
+      legacyId: { in: activeLegacyMiscIds },
+    },
+    select: { id: true, legacyId: true },
+  });
+
+  const catalogUuidByLegacyId = new Map<number, string>(
+    dbCatalogs
+      .filter((c): c is { id: string; legacyId: number } => c.legacyId !== null)
+      .map((c) => [c.legacyId, c.id]),
+  );
+
+  const translatedExpectedByRowId = new Map<string, YearMonthSeries>();
+  const translatedExpectedLabelByRowId = new Map<string, string>();
+
+  for (const catalog of activeOrdinaryCatalogs) {
+    const uuid = catalogUuidByLegacyId.get(catalog.legacyId);
+    const targetRowId = uuid ? `ordinary-other-${uuid}` : catalog.rowId;
+
+    translatedExpectedByRowId.set(targetRowId, expectedByRowId.get(catalog.rowId)!);
+    translatedExpectedLabelByRowId.set(targetRowId, expectedLabelByRowId.get(catalog.rowId)!);
+
+    const existing = catalogByLegacyId.get(catalog.legacyId)!;
+    existing.rowId = targetRowId;
+  }
+
+  expectedByRowId.clear();
+  for (const [k, v] of translatedExpectedByRowId) expectedByRowId.set(k, v);
+  expectedLabelByRowId.clear();
+  for (const [k, v] of translatedExpectedLabelByRowId) expectedLabelByRowId.set(k, v);
+
 
   const [
     dbRowsForLegacyWindow,

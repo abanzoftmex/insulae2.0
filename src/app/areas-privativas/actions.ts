@@ -1061,15 +1061,13 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
 
         const parentCodeVal = getVal(row, ["Código Padre", "Codigo Padre", "Parent Code", "parentCode"]);
         if (parentCodeVal !== undefined) {
-          let parentCode = typeof parentCodeVal === "string" ? parentCodeVal.trim() : "";
-          if (parentCode === "-") {
-            parentCode = "";
-          }
-          
-          if (parentCode !== "") {
-            let parent = latestByCode.get(parentCode);
+          const rawVal = typeof parentCodeVal === "string" ? parentCodeVal.trim() : "";
+          if (rawVal === "-") {
+            parentId = null;
+          } else if (rawVal !== "") {
+            let parent = latestByCode.get(rawVal);
             if (!parent) {
-              parent = latestByName.get(parentCode.toLowerCase());
+              parent = latestByName.get(rawVal.toLowerCase());
             }
 
             if (parent) {
@@ -1078,7 +1076,8 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
               parentId = null;
             }
           } else {
-            parentId = null;
+            // Celda vacía en Excel: mantenemos el padre actual en lugar de limpiarlo
+            parentId = child.parentPrivateAreaId;
           }
         }
 
