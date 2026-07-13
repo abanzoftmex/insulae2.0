@@ -47,6 +47,8 @@ type PaymentDetailSnapshot = {
 };
 
 type IncomeSnapshot = {
+  id: string;
+  legacyId: number | null;
   amount: Prisma.Decimal | number;
   date: Date;
   chargeGroupId: string | null;
@@ -670,6 +672,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           },
         },
         select: {
+          id: true,
+          legacyId: true,
           amount: true,
           date: true,
           chargeGroupId: true,
@@ -687,6 +691,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           },
         },
         select: {
+          id: true,
+          legacyId: true,
           amount: true,
           date: true,
           chargeGroupId: true,
@@ -1332,6 +1338,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     }
 
     for (const income of incomes) {
+      if (income.legacyId !== null && income.legacyId <= 10000000) {
+        continue;
+      }
       const month = getMonth(income.date);
       const row = monthly[month - 1];
       const amount = decimalToNumber(income.amount);
@@ -1362,6 +1371,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     }
 
     for (const income of incomesForLegacyYears as IncomeSnapshot[]) {
+      if (income.legacyId !== null && income.legacyId <= 10000000) {
+        continue;
+      }
       const year = income.date.getUTCFullYear();
 
       if (!visibleYears.includes(year as number)) {

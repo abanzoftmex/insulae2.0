@@ -181,6 +181,73 @@ export default async function ResumenFinancieroPage({
     );
   }
 
+  // Dynamically extract values from multi-year tables
+  const ordIncomeTotalRow = vm.ordinaryIncomeMultiYearTable.rows.find((r) => r.isTotal);
+  const ordIncomeTotalSlice = ordIncomeTotalRow?.yearly.find((s) => s.year === vm.selectedYear);
+  const ordIncomeValue = ordIncomeTotalSlice?.annualTotalValue ?? 0;
+  const ordIncomeLabel = ordIncomeTotalSlice?.annualTotal ?? "$0.00";
+
+  const ordOtherIncomeTotalRow = vm.ordinaryOtherIncomeMultiYearTable.rows.find((r) => r.isTotal);
+  const ordOtherIncomeTotalSlice = ordOtherIncomeTotalRow?.yearly.find((s) => s.year === vm.selectedYear);
+  const ordOtherIncomeValue = ordOtherIncomeTotalSlice?.annualTotalValue ?? 0;
+  const ordOtherIncomeLabel = ordOtherIncomeTotalSlice?.annualTotal ?? "$0.00";
+
+  const ordExpensesTotalRow = vm.ordinaryExpensesLegacyTable.rows.find((r) => r.isTotal);
+  const ordExpensesTotalSlice = ordExpensesTotalRow?.yearly.find((s) => s.year === vm.selectedYear);
+  const ordExpensesValue = ordExpensesTotalSlice?.annualTotalValue ?? 0;
+  const ordExpensesLabel = ordExpensesTotalSlice?.annualTotal ?? "$0.00";
+
+  const extIncomeTotalRow = vm.extraordinaryIncomeMultiYearTable.rows.find((r) => r.isTotal);
+  const extIncomeTotalSlice = extIncomeTotalRow?.yearly.find((s) => s.year === vm.selectedYear);
+  const extIncomeValue = extIncomeTotalSlice?.annualTotalValue ?? 0;
+  const extIncomeLabel = extIncomeTotalSlice?.annualTotal ?? "$0.00";
+
+  const extOtherIncomeTotalRow = vm.extraordinaryOtherIncomeMultiYearTable.rows.find((r) => r.isTotal);
+  const extOtherIncomeTotalSlice = extOtherIncomeTotalRow?.yearly.find((s) => s.year === vm.selectedYear);
+  const extOtherIncomeValue = extOtherIncomeTotalSlice?.annualTotalValue ?? 0;
+  const extOtherIncomeLabel = extOtherIncomeTotalSlice?.annualTotal ?? "$0.00";
+
+  const extExpensesTotalRow = vm.extraordinaryExpensesMultiYearTable.rows.find((r) => r.isTotal);
+  const extExpensesTotalSlice = extExpensesTotalRow?.yearly.find((s) => s.year === vm.selectedYear);
+  const extExpensesValue = extExpensesTotalSlice?.annualTotalValue ?? 0;
+  const extExpensesLabel = extExpensesTotalSlice?.annualTotal ?? "$0.00";
+
+  function formatCurrency(value: number): string {
+    return new Intl.NumberFormat("es-MX", {
+      style: "currency",
+      currency: "MXN",
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+
+  // Calculate dynamic card variables
+  let cardOrdIncome = "";
+  let cardExtIncome = "";
+  let cardOtherIncome = "";
+  let cardTotalIncome = "";
+  let cardTotalExpenses = "";
+  let cardAnnualBalance = "";
+  let balanceValue = 0;
+
+  if (showOrdinary) {
+    cardOrdIncome = ordIncomeLabel;
+    cardOtherIncome = ordOtherIncomeLabel;
+    const totalIncomeVal = ordIncomeValue + ordOtherIncomeValue;
+    cardTotalIncome = formatCurrency(totalIncomeVal);
+    cardTotalExpenses = ordExpensesLabel;
+    balanceValue = totalIncomeVal - ordExpensesValue;
+    cardAnnualBalance = formatCurrency(balanceValue);
+  } else {
+    cardExtIncome = extIncomeLabel;
+    cardOtherIncome = extOtherIncomeLabel;
+    const totalIncomeVal = extIncomeValue + extOtherIncomeValue;
+    cardTotalIncome = formatCurrency(totalIncomeVal);
+    cardTotalExpenses = extExpensesLabel;
+    balanceValue = totalIncomeVal - extExpensesValue;
+    cardAnnualBalance = formatCurrency(balanceValue);
+  }
+
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       {/* Header */}
@@ -240,18 +307,21 @@ export default async function ResumenFinancieroPage({
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-        <StatCard accent="brand" label="Ingresos Ordinarios" value={vm.totals.ordinaryIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} />
-        <StatCard accent="cyan" label="Extraordinarios" value={vm.totals.extraordinaryIncome} icon={<DollarSign className="h-3.5 w-3.5" />} />
-        <StatCard accent="lime" label="Otros Ingresos" value={vm.totals.otherIncome} icon={<Plus className="h-3.5 w-3.5" />} />
-        <StatCard accent="brand" label="Ingresos Totales" value={vm.totals.totalIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} className="bg-brand-mint/20 border-brand-mint" />
-        <StatCard accent="gold" label="Egresos Totales" value={vm.totals.totalExpenses} icon={<TrendingDown className="h-3.5 w-3.5" />} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {showOrdinary ? (
+          <StatCard accent="brand" label="Ingresos Ordinarios" value={cardOrdIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        ) : (
+          <StatCard accent="cyan" label="Extraordinarios" value={cardExtIncome} icon={<DollarSign className="h-3.5 w-3.5" />} />
+        )}
+        <StatCard accent="lime" label="Otros Ingresos" value={cardOtherIncome} icon={<Plus className="h-3.5 w-3.5" />} />
+        <StatCard accent="brand" label="Ingresos Totales" value={cardTotalIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} className="bg-brand-mint/20 border-brand-mint" />
+        <StatCard accent="gold" label="Egresos Totales" value={cardTotalExpenses} icon={<TrendingDown className="h-3.5 w-3.5" />} />
         <StatCard
-          accent={vm.totals.annualBalanceValue >= 0 ? "brand" : "gold"}
+          accent={balanceValue >= 0 ? "brand" : "gold"}
           label="Balance Anual"
-          value={vm.totals.annualBalance}
+          value={cardAnnualBalance}
           icon={<Calendar className="h-3.5 w-3.5" />}
-          className={cn(vm.totals.annualBalanceValue >= 0 ? "bg-brand-mint/40" : "bg-danger/10 border-danger/20")}
+          className={cn(balanceValue >= 0 ? "bg-brand-mint/40" : "bg-danger/10 border-danger/20")}
         />
       </div>
 
