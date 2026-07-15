@@ -240,9 +240,9 @@ export default function BudgetTable({
                           {/* Monthly columns: Presupuesto, Unidades, Ejercido */}
                           {monthNames.map((m) => (
                             <Fragment key={m}>
-                              <th className="px-3 py-3 text-right border-r border-line/30 font-bold opacity-60 min-w-[130px]">Presupuesto {m}</th>
-                              <th className="px-3 py-3 text-right border-r border-line/30 font-bold opacity-70 bg-brand-deep/3 min-w-[80px]">Unidades {m}</th>
-                              <th className="px-3 py-3 text-right border-r border-line font-bold opacity-80 bg-canvas/20 min-w-[120px]">Ejercido {m}</th>
+                              <th className="px-3 py-3 text-right border-r border-line/30 font-bold opacity-60 min-w-[130px] print:hidden">Presupuesto {m}</th>
+                              <th className="px-3 py-3 text-right border-r border-line/30 font-bold opacity-70 bg-brand-deep/3 min-w-[80px] print:hidden">Unidades {m}</th>
+                              <th className="px-3 py-3 text-right border-r border-line font-bold opacity-80 bg-canvas/20 min-w-[120px] print:hidden">Ejercido {m}</th>
                             </Fragment>
                           ))}
                         </tr>
@@ -262,17 +262,22 @@ export default function BudgetTable({
                                   {concept.unitCost != null ? formatMXN(concept.unitCost) : "—"}
                                 </div>
                               ) : (
-                                <div className="relative flex items-center">
-                                  <span className="absolute left-2 text-[10px] font-bold text-ink-soft/50">$</span>
-                                  <input
-                                    type="number"
-                                    step="0.01"
-                                    defaultValue={concept.unitCost ?? ""}
-                                    data-original={concept.unitCost ?? 0}
-                                    onBlur={(e) => handleUnitCostBlur(e, concept.conceptId)}
-                                    className="w-full h-7 bg-amber-50/50 border border-amber-200/40 rounded pl-5 pr-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
-                                  />
-                                </div>
+                                <>
+                                  <div className="relative flex items-center print:hidden">
+                                    <span className="absolute left-2 text-[10px] font-bold text-ink-soft/50">$</span>
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      defaultValue={concept.unitCost ?? ""}
+                                      data-original={concept.unitCost ?? 0}
+                                      onBlur={(e) => handleUnitCostBlur(e, concept.conceptId)}
+                                      className="w-full h-7 bg-amber-50/50 border border-amber-200/40 rounded pl-5 pr-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
+                                    />
+                                  </div>
+                                  <div className="hidden print:block text-right pr-2 text-[11px] font-mono font-bold text-ink-soft">
+                                    {concept.unitCost != null ? formatMXN(concept.unitCost) : "—"}
+                                  </div>
+                                </>
                               )}
                             </td>
                             {/* Sticky: Anual Presupuesto */}
@@ -312,7 +317,7 @@ export default function BudgetTable({
                                       <button
                                         type="button"
                                         onClick={() => handleClearUrl(concept.conceptId)}
-                                        className="flex items-center justify-center w-7 h-7 rounded-full text-ink-soft/40 hover:text-danger hover:bg-danger/10 transition-colors"
+                                        className="flex items-center justify-center w-7 h-7 rounded-full text-ink-soft/40 hover:text-danger hover:bg-danger/10 transition-colors print:hidden"
                                         title="Eliminar"
                                       >
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -324,17 +329,20 @@ export default function BudgetTable({
                                 ) : uploadingConceptId === concept.conceptId ? (
                                   <Loader2 className="h-4 w-4 animate-spin text-brand" />
                                 ) : (
-                                  <div className="relative">
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setActivePopover(activePopover === concept.conceptId ? null : concept.conceptId);
-                                        setLinkValue("");
-                                      }}
-                                      className="h-6 px-2 rounded-full border border-line hover:border-brand-accent hover:text-brand-accent text-[9px] font-bold uppercase tracking-widest text-ink-soft transition-colors flex items-center gap-1"
-                                    >
-                                      <Plus className="h-2.5 w-2.5" /> Agregar
-                                    </button>
+                                  <>
+                                    <div className="relative print:hidden">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setActivePopover(activePopover === concept.conceptId ? null : concept.conceptId);
+                                          setLinkValue("");
+                                        }}
+                                        className="h-6 px-2 rounded-full border border-line hover:border-brand-accent hover:text-brand-accent text-[9px] font-bold uppercase tracking-widest text-ink-soft transition-colors flex items-center gap-1"
+                                      >
+                                        <Plus className="h-2.5 w-2.5" /> Agregar
+                                      </button>
+                                    </div>
+                                    <span className="hidden print:inline text-ink-soft/30 font-medium">—</span>
                                     {activePopover === concept.conceptId && (
                                       <div className="absolute left-0 mt-1.5 p-3 w-[220px] bg-white border border-line shadow-layered rounded-card text-left space-y-3 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
                                         <div className="flex items-center justify-between border-b border-line pb-1.5">
@@ -387,7 +395,7 @@ export default function BudgetTable({
                                         </div>
                                       </div>
                                     )}
-                                  </div>
+                                  </>
                                 )}
                               </div>
                             </td>
@@ -396,7 +404,7 @@ export default function BudgetTable({
                             {concept.months.map((m) => (
                               <Fragment key={m.month}>
                                 {/* Ppto Mes */}
-                                <td className="px-2 py-3.5 min-w-[130px] border-r border-line/30">
+                                <td className="px-2 py-3.5 min-w-[130px] border-r border-line/30 print:hidden">
                                   {isClosed ? (
                                     <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                                       {formatMXN(m.budgeted)}
@@ -416,7 +424,7 @@ export default function BudgetTable({
                                   )}
                                 </td>
                                 {/* Unidades Mes (editable) */}
-                                <td className="px-2 py-3.5 min-w-[80px] border-r border-line/30 bg-brand-deep/2">
+                                <td className="px-2 py-3.5 min-w-[80px] border-r border-line/30 bg-brand-deep/2 print:hidden">
                                   {isClosed ? (
                                     <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                                       {m.units != null ? m.units : "—"}
@@ -433,7 +441,7 @@ export default function BudgetTable({
                                   )}
                                 </td>
                                 {/* Ejerc Mes */}
-                                <td className="px-3 py-3.5 text-right text-[11px] font-mono text-ink-soft/60 border-r border-line bg-canvas/10 italic min-w-[120px]">
+                                <td className="px-3 py-3.5 text-right text-[11px] font-mono text-ink-soft/60 border-r border-line bg-canvas/10 italic min-w-[120px] print:hidden">
                                   {formatMXN(m.generated)}
                                 </td>
                               </Fragment>
@@ -468,9 +476,9 @@ export default function BudgetTable({
                             
                             return (
                               <Fragment key={m}>
-                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line/30 min-w-[130px]">{formatMXN(monthBudgeted)}</td>
-                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand/70 border-r border-line/30 bg-brand-deep/2 min-w-[80px]">{monthUnits || "—"}</td>
-                                <td className="px-3 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line bg-canvas/10 min-w-[120px]">{formatMXN(monthGenerated)}</td>
+                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line/30 min-w-[130px] print:hidden">{formatMXN(monthBudgeted)}</td>
+                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand/70 border-r border-line/30 bg-brand-deep/2 min-w-[80px] print:hidden">{monthUnits || "—"}</td>
+                                <td className="px-3 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line bg-canvas/10 min-w-[120px] print:hidden">{formatMXN(monthGenerated)}</td>
                               </Fragment>
                             );
                           })}
@@ -512,9 +520,9 @@ export default function BudgetTable({
 
                   return (
                     <Fragment key={m}>
-                      <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-white/90 border-r border-white/10 min-w-[130px]">{formatMXNFull(totalMonthBudgeted)}</td>
-                      <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-white/60 border-r border-white/10 min-w-[80px] bg-white/5">{totalMonthUnits || "—"}</td>
-                      <td className="px-3 py-3.5 text-right text-[12px] font-mono font-bold text-white/90 border-r border-white/10 bg-white/5 min-w-[120px]">{formatMXNFull(totalMonthGenerated)}</td>
+                      <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-white/90 border-r border-white/10 min-w-[130px] print:hidden">{formatMXNFull(totalMonthBudgeted)}</td>
+                      <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-white/60 border-r border-white/10 min-w-[80px] bg-white/5 print:hidden">{totalMonthUnits || "—"}</td>
+                      <td className="px-3 py-3.5 text-right text-[12px] font-mono font-bold text-white/90 border-r border-white/10 bg-white/5 min-w-[120px] print:hidden">{formatMXNFull(totalMonthGenerated)}</td>
                     </Fragment>
                   );
                 })}

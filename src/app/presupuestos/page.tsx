@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { SummaryCards } from "./components/summary-cards";
+import { PrintButton } from "./components/print-button";
 
 export const metadata: Metadata = {
   title: "Presupuestos | Insulae 2.0",
@@ -94,15 +95,77 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
         <div className="flex flex-wrap items-center gap-2">
           <StatusToggle isClosed={isClosed} budgetId={vm.id} />
           <ExcelImport year={year} isClosed={isClosed} />
-          <Link
-            href={`/presupuestos/imprimir?anio=${year}`}
-            target="_blank"
-            className="h-8 px-4 flex items-center gap-2 bg-brand-deep text-white rounded-full text-[10px] font-bold uppercase hover:bg-brand transition-all shadow-md shadow-brand-deep/25"
-          >
-            <Printer className="h-3.5 w-3.5 shrink-0" aria-hidden /> PDF
-          </Link>
+          <PrintButton />
         </div>
       </div>
+
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media print {
+            aside,
+            nav,
+            header,
+            footer,
+            .no-print,
+            .print\\:hidden,
+            a[href*="wa.me"],
+            button,
+            form,
+            .page-back-badge,
+            .flex-wrap.items-center.gap-2 {
+              display: none !important;
+            }
+
+            body {
+              background: #fff !important;
+              color: #000 !important;
+            }
+
+            div[class*="lg:pl-"],
+            div[class*="lg:pl["],
+            main {
+              padding: 0 !important;
+              margin: 0 !important;
+              width: 100% !important;
+              max-width: 100% !important;
+            }
+
+            .shadow-layered,
+            .shadow-md {
+              box-shadow: none !important;
+              border: 1px solid #e5e7eb !important;
+            }
+            
+            .overflow-hidden,
+            .overflow-x-auto,
+            .no-scrollbar {
+              overflow: visible !important;
+            }
+
+            .avoid-break {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+            }
+            
+            /* Clean table for print layout */
+            table {
+              table-layout: auto !important;
+              width: 100% !important;
+              min-width: 0 !important;
+            }
+
+            th, td {
+              width: auto !important;
+              min-width: 0 !important;
+              max-width: none !important;
+              position: static !important;
+              background: transparent !important;
+              box-shadow: none !important;
+              left: auto !important;
+            }
+          }
+        `
+      }} />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
