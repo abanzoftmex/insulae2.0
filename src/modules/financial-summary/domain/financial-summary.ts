@@ -4,6 +4,8 @@ export interface FinancialSummaryMonth {
   extraordinaryIncome: number;
   otherIncome: number;
   totalIncome: number;
+  ordinaryExpenses: number;
+  extraordinaryExpenses: number;
   totalExpenses: number;
   balance: number;
 }

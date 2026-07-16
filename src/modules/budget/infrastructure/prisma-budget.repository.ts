@@ -114,10 +114,20 @@ export class PrismaBudgetRepository implements BudgetRepository {
       let conceptGenerated = 0;
       const months: BudgetMonthVM[] = [];
 
+      let startMonth = 1;
+      let endMonth = 12;
+      if (concept.group?.startsAt) {
+        startMonth = concept.group.startsAt.getUTCMonth() + 1;
+      }
+      if (concept.group?.endsAt) {
+        endMonth = concept.group.endsAt.getUTCMonth() + 1;
+      }
+
       for (let m = 1; m <= 12; m++) {
+        const isOutOfRange = m < startMonth || m > endMonth;
         const matchingMonth = line?.months.find(x => x.month === m);
-        const budgetedVal = matchingMonth ? matchingMonth.amount.toNumber() : 0;
-        const generatedVal = expenseSumMap.get(`${concept.id}_${m}`) ?? 0;
+        const budgetedVal = (!isOutOfRange && matchingMonth) ? matchingMonth.amount.toNumber() : 0;
+        const generatedVal = !isOutOfRange ? (expenseSumMap.get(`${concept.id}_${m}`) ?? 0) : 0;
 
         conceptBudgeted += budgetedVal;
         conceptGenerated += generatedVal;
@@ -127,7 +137,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
           budgetMonthId: matchingMonth?.id,
           budgeted: budgetedVal,
           generated: generatedVal,
-          units: matchingMonth?.units ? matchingMonth.units.toNumber() : null
+          units: (!isOutOfRange && matchingMonth?.units) ? matchingMonth.units.toNumber() : null
         });
       }
 

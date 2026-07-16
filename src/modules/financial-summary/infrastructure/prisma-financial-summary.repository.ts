@@ -510,6 +510,8 @@ function initMonthlyRows(): FinancialSummaryMonth[] {
     extraordinaryIncome: 0,
     otherIncome: 0,
     totalIncome: 0,
+    ordinaryExpenses: 0,
+    extraordinaryExpenses: 0,
     totalExpenses: 0,
     balance: 0,
   }));
@@ -1439,9 +1441,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       row.totalExpenses += amount;
 
       if (resolveExpenseBucket(expense) === "extraordinary") {
+        row.extraordinaryExpenses += amount;
         addAmountToSeries(extraordinaryExpenseSeries, month, amount);
         continue;
       }
+
+      row.ordinaryExpenses += amount;
 
       const budgetConcept = expense.budgetConcept;
       if (!budgetConcept) {

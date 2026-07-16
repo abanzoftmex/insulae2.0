@@ -401,51 +401,71 @@ export default function BudgetTable({
                             </td>
                             
                             {/* Monthly columns */}
-                            {concept.months.map((m) => (
-                              <Fragment key={m.month}>
-                                {/* Ppto Mes */}
-                                <td className="px-2 py-3.5 min-w-[130px] border-r border-line/30 print:hidden">
-                                  {isClosed ? (
-                                    <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
-                                      {formatMXN(m.budgeted)}
-                                    </div>
-                                  ) : (
-                                    <div className="relative flex items-center">
-                                      <span className="absolute left-2 text-[10px] font-bold text-ink-soft/50">$</span>
+                            {concept.months.map((m) => {
+                              let startMonth = 1;
+                              let endMonth = 12;
+                              if (group.startsAt) {
+                                startMonth = new Date(group.startsAt).getUTCMonth() + 1;
+                              }
+                              if (group.endsAt) {
+                                endMonth = new Date(group.endsAt).getUTCMonth() + 1;
+                              }
+                              const isOutOfRange = m.month < startMonth || m.month > endMonth;
+
+                              return (
+                                <Fragment key={m.month}>
+                                  {/* Ppto Mes */}
+                                  <td className="px-2 py-3.5 min-w-[130px] border-r border-line/30 print:hidden">
+                                    {isOutOfRange ? (
+                                      <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/30 italic">
+                                        —
+                                      </div>
+                                    ) : isClosed ? (
+                                      <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
+                                        {formatMXN(m.budgeted)}
+                                      </div>
+                                    ) : (
+                                      <div className="relative flex items-center">
+                                        <span className="absolute left-2 text-[10px] font-bold text-ink-soft/50">$</span>
+                                        <input
+                                          type="number"
+                                          step="0.01"
+                                          defaultValue={m.budgeted || ""}
+                                          data-original={m.budgeted}
+                                          onBlur={(e) => handleBlur(e, concept.conceptId, m.month, m.budgetMonthId)}
+                                          className="w-full h-7 bg-canvas/30 border border-transparent rounded pl-5 pr-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
+                                        />
+                                      </div>
+                                    )}
+                                  </td>
+                                  {/* Unidades Mes (editable) */}
+                                  <td className="px-2 py-3.5 min-w-[80px] border-r border-line/30 bg-brand-deep/2 print:hidden">
+                                    {isOutOfRange ? (
+                                      <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/30 italic">
+                                        —
+                                      </div>
+                                    ) : isClosed ? (
+                                      <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
+                                        {m.units != null ? m.units : "—"}
+                                      </div>
+                                    ) : (
                                       <input
                                         type="number"
                                         step="0.01"
-                                        defaultValue={m.budgeted || ""}
-                                        data-original={m.budgeted}
-                                        onBlur={(e) => handleBlur(e, concept.conceptId, m.month, m.budgetMonthId)}
-                                        className="w-full h-7 bg-canvas/30 border border-transparent rounded pl-5 pr-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
+                                        defaultValue={m.units ?? ""}
+                                        data-original={m.units ?? 0}
+                                        onBlur={(e) => handleUnitsBlur(e, concept.conceptId, m.month)}
+                                        className="w-full h-7 bg-brand-deep/4 border border-brand-deep/10 rounded px-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
                                       />
-                                    </div>
-                                  )}
-                                </td>
-                                {/* Unidades Mes (editable) */}
-                                <td className="px-2 py-3.5 min-w-[80px] border-r border-line/30 bg-brand-deep/2 print:hidden">
-                                  {isClosed ? (
-                                    <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
-                                      {m.units != null ? m.units : "—"}
-                                    </div>
-                                  ) : (
-                                    <input
-                                      type="number"
-                                      step="0.01"
-                                      defaultValue={m.units ?? ""}
-                                      data-original={m.units ?? 0}
-                                      onBlur={(e) => handleUnitsBlur(e, concept.conceptId, m.month)}
-                                      className="w-full h-7 bg-brand-deep/4 border border-brand-deep/10 rounded px-2 text-right text-[11px] font-mono font-bold focus:bg-card focus:border-brand-accent/30 outline-none transition-all"
-                                    />
-                                  )}
-                                </td>
-                                {/* Ejerc Mes */}
-                                <td className="px-3 py-3.5 text-right text-[11px] font-mono text-ink-soft/60 border-r border-line bg-canvas/10 italic min-w-[120px] print:hidden">
-                                  {formatMXN(m.generated)}
-                                </td>
-                              </Fragment>
-                            ))}
+                                    )}
+                                  </td>
+                                  {/* Ejerc Mes */}
+                                  <td className="px-3 py-3.5 text-right text-[11px] font-mono text-ink-soft/60 border-r border-line bg-canvas/10 italic min-w-[120px] print:hidden">
+                                    {isOutOfRange ? "—" : formatMXN(m.generated)}
+                                  </td>
+                                </Fragment>
+                              );
+                            })}
                           </tr>
                         ))}
                       </tbody>
@@ -474,11 +494,27 @@ export default function BudgetTable({
                             const monthUnits = group.concepts.reduce((sum, c) => sum + (c.months.find(x => x.month === monthNumber)?.units || 0), 0);
                             const monthGenerated = group.concepts.reduce((sum, c) => sum + (c.months.find(x => x.month === monthNumber)?.generated || 0), 0);
                             
+                            let startMonth = 1;
+                            let endMonth = 12;
+                            if (group.startsAt) {
+                              startMonth = new Date(group.startsAt).getUTCMonth() + 1;
+                            }
+                            if (group.endsAt) {
+                              endMonth = new Date(group.endsAt).getUTCMonth() + 1;
+                            }
+                            const isOutOfRange = monthNumber < startMonth || monthNumber > endMonth;
+
                             return (
                               <Fragment key={m}>
-                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line/30 min-w-[130px] print:hidden">{formatMXN(monthBudgeted)}</td>
-                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand/70 border-r border-line/30 bg-brand-deep/2 min-w-[80px] print:hidden">{monthUnits || "—"}</td>
-                                <td className="px-3 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line bg-canvas/10 min-w-[120px] print:hidden">{formatMXN(monthGenerated)}</td>
+                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line/30 min-w-[130px] print:hidden">
+                                  {isOutOfRange ? "—" : formatMXN(monthBudgeted)}
+                                </td>
+                                <td className="px-2 py-3.5 text-right text-[12px] font-mono font-bold text-brand/70 border-r border-line/30 bg-brand-deep/2 min-w-[80px] print:hidden">
+                                  {isOutOfRange ? "—" : (monthUnits || "—")}
+                                </td>
+                                <td className="px-3 py-3.5 text-right text-[12px] font-mono font-bold text-brand border-r border-line bg-canvas/10 min-w-[120px] print:hidden">
+                                  {isOutOfRange ? "—" : formatMXN(monthGenerated)}
+                                </td>
                               </Fragment>
                             );
                           })}

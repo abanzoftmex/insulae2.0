@@ -58,7 +58,7 @@ export function toCondominiumOverviewVM(overview: CondominiumOverview): Condomin
       ? (condominiumFormatById[overview.condominiumFormatId] ?? `Formato ${overview.condominiumFormatId}`)
       : "Sin definir",
     condominiumFormatId: overview.condominiumFormatId ? overview.condominiumFormatId.toString() : "",
-    totalM2: overview.totalM2.toLocaleString("es-MX", {
+    totalM2: (overview.commonAreasM2 + overview.privateAreasM2).toLocaleString("es-MX", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 6,
     }),

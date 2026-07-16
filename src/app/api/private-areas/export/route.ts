@@ -28,6 +28,7 @@ export async function GET() {
       m2Max: null,
       page: 1,
       pageSize: 100000,
+      paginateByTopLevel: true,
     });
 
     if (!listing) {
@@ -51,58 +52,33 @@ export async function GET() {
       curr.setUTCMonth(curr.getUTCMonth() + 1);
     }
 
-    // Generate CSV Header
+    // Generate CSV Header matching the requested screen layout columns (actions excluded)
+    // ID and Código are placed at the beginning to allow robust updates via importer.
     const headers = [
       "ID",
       "Código",
-      "Nombre",
-      "Zona",
-      "Subzona",
-      "Calle",
-      "Tipo Uso",
+      "Ubicación",
+      "Área privativa/ Fracción de área privativa",
+      "Tipo de Apol",
       "Nivel",
-      "Estatus",
-      "M2 Original",
-      "M2 Actual",
-      "M2 Construcción",
-      "M2 Comunes",
-      "M2 Construcción Hijos",
-      "M2 Comunes Hijos",
-      "M2 Construcción Áreas Comunes",
-      "Indiviso",
+      "Superficie m2 área privativa actualizado",
+      "Superficie m2 área privativa original",
+      "Indiviso del área privativa",
+      "m2 Áreas comunes del condominio",
+      "m2 Totales área privativa",
+      "m2 construcción áreas comunes",
+      "m2 de construcción AP/FAP",
+      "m2 Áreas comunes subcondominio",
+      "m2 Totales FAP",
+      "% Indiviso FAP",
+      "Indiviso FAP/Condominio",
       "VCCC",
-      "Código Padre",
-      "Es Fusión",
-      "Activo", // Badge status "Activo" / "Inactivo"
-      
-      // Financial columns
-      "Cartera Vencida 2017-2024",
-      "Pago Anticipado 2024",
-      "Cuotas ordinarias 2025 (anual)",
-      "Cuotas ordinarias 2025 (mensual)",
-      "Cuotas ordinarias 2025 (saldo actual)",
-      "Cuotas ordinarias 2026 (anual)",
-      "Cuotas ordinarias 2026 (mensual)",
-      "Cuotas ordinarias 2026 (saldo actual)",
-      "Cuotas extraordinarias - Condóminos 2024 - 2025",
-      "Cuotas extraordinarias - Condóminos 2024 - 2025 (saldo actual)",
-      "Cuota extraordinaria - Comercios 2024 - 2025",
-      "Cuota extraordinaria - Comercios 2024 - 2025 (saldo actual)",
-      "Cuotas STC",
-      "Cuotas STC (saldo actual)",
-      "Sanción",
-      "Sanción (saldo actual)",
-      "Comodato",
-      "Comodato (saldo actual)",
+      "Uso de suelo",
       "Saldo actual",
-      
-      // Months columns
       ...monthLabels.map(m => m.label),
-      
-      // Contacts
-      "Propietario inicial",
-      "Propietario legal",
-      "Dominio actual",
+      "Propietario inicial\n(BLOCKCHAIN) Historia",
+      "Propietario legal\n(Esta columna es para el INIDIVISO)",
+      "Dominio actual\n(Esta columna es para el ESTADO DE CUENTA)",
       "Dominio pleno",
       "Arrendatario / Usuario",
       "Contacto administrativo del arrendamiento",
@@ -139,47 +115,25 @@ export async function GET() {
       return [
         area.id,
         area.code || "",
-        area.name,
         area.zone || "",
-        "", // Subzone is not in row
-        "", // Street is not in row
-        area.useType || "",
+        area.name,
+        area.hierarchyLabel || "",
         area.level || "",
-        area.businessStatusLabel || "",
-        parseNum(area.m2Original),
         parseNum(area.m2Updated),
-        parseNum(area.m2Construction),
+        parseNum(area.m2Original),
+        area.indiviso || "",
         parseNum(area.m2CommonArea),
-        parseNum(area.m2ConstructionChildren),
-        parseNum(area.m2CommonAreaChildren),
+        parseNum(area.totalAreaM2),
         parseNum(area.m2ConstructionCommonArea),
-        parseNum(area.indiviso),
-        parseNum(area.vccc),
-        area.parentName || "",
-        area.hierarchyLabel === "Fusion" ? "SI" : "NO",
-        area.statusLabel, // Exactly "Activo" or "Inactivo"
-
-        // Financial columns
-        getFinancialText("arrears_2017_2024"),
-        getFinancialText("advance_2024"),
-        getFinancialText("ordinary_2025_annual"),
-        getFinancialText("ordinary_2025_monthly"),
-        getFinancialText("ordinary_2025_outstanding"),
-        getFinancialText("ordinary_2026_annual"),
-        getFinancialText("ordinary_2026_monthly"),
-        getFinancialText("ordinary_2026_outstanding"),
-        getFinancialText("extra_condo_2024_2025"),
-        getFinancialText("extra_condo_2024_2025_outstanding"),
-        getFinancialText("extra_commerce_2024_2025"),
-        getFinancialText("extra_commerce_2024_2025_outstanding"),
-        getFinancialText("stc"),
-        getFinancialText("stc_outstanding"),
-        getFinancialText("sancion"),
-        getFinancialText("sancion_outstanding"),
-        getFinancialText("comodato"),
-        getFinancialText("comodato_outstanding"),
+        parseNum(area.m2Construction),
+        parseNum(area.m2CommonAreaChildren),
+        parseNum(area.m2ConstructionChildren),
+        area.indivisoFap || "",
+        area.indivisoCondominio || "",
+        area.vccc || "",
+        area.useType || "",
         getFinancialText("total_outstanding"),
-
+        
         // Months columns
         ...monthLabels.map(m => getFinancialText(m.key)),
 

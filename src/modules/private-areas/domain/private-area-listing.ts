@@ -68,6 +68,7 @@ export interface PrivateAreaListRow {
   businessStatusLabel: string;
   isFusionLegacy: boolean;
   isActive: boolean;
+  hasActiveChildren: boolean;
   hasRental: boolean;
   m2Updated: number;
   m2Original: number;

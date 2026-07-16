@@ -924,7 +924,7 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
 
     for (let idx = 0; idx < rows.length; idx++) {
       const row = rows[idx];
-      const name = getVal(row, ["Nombre", "Name"])?.trim() || "";
+      const name = getVal(row, ["Nombre", "Name", "Área privativa/ Fracción de área privativa"])?.trim() || "";
       if (!name) continue;
 
       let code = getVal(row, ["Código", "Codigo", "Code"])?.trim() || null;
@@ -951,11 +951,11 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
         isActiveVal = true;
       }
 
-      const rowZone = getVal(row, ["Zona", "Zone"])?.trim() || "";
+      const rowZone = getVal(row, ["Zona", "Zone", "Ubicación"])?.trim() || "";
       const isStreet = code === "AC" || rowZone.startsWith("Áreas comun");
 
-      let m2CommonAreaVal = parseDecimal(getVal(row, ["M2 Comunes", "M2 Áreas Comunes", "M2 Areas Comunes", "M2 Common Area"]));
-      let m2ConstructionCommonAreaVal = parseDecimal(getVal(row, ["M2 Construcción Áreas Comunes", "M2 Construccion Areas Comunes", "M2 de Construcción de Áreas Comunes", "M2 de Construccion de Areas Comunes"]));
+      let m2CommonAreaVal = parseDecimal(getVal(row, ["M2 Comunes", "M2 Áreas Comunes", "M2 Areas Comunes", "M2 Common Area", "m2 Áreas comunes del condominio"]));
+      let m2ConstructionCommonAreaVal = parseDecimal(getVal(row, ["M2 Construcción Áreas Comunes", "M2 Construccion Areas Comunes", "M2 de Construcción de Áreas Comunes", "M2 de Construccion de Areas Comunes", "m2 construcción áreas comunes"]));
 
       if (isStreet) {
         if (m2ConstructionCommonAreaVal === null) {
@@ -972,16 +972,16 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
         zone: rowZone || null,
         subzone: getVal(row, ["Subzona", "Subzone"])?.trim() || null,
         street: getVal(row, ["Calle", "Street"])?.trim() || null,
-        useType: getVal(row, ["Tipo Uso", "Tipo de Uso", "Use Type", "useType"])?.trim() || null,
+        useType: getVal(row, ["Tipo Uso", "Tipo de Uso", "Use Type", "useType", "Uso de suelo"])?.trim() || null,
         status: parsedStatus as any,
-        m2Original: parseDecimal(getVal(row, ["M2 Original", "original m2"])),
-        m2Apole: parseDecimal(getVal(row, ["M2 Actual", "actual m2", "M2 Apole", "m2 apole"])),
-        m2Construction: parseDecimal(getVal(row, ["M2 Construcción", "M2 Construccion", "M2 Construction"])),
+        m2Original: parseDecimal(getVal(row, ["M2 Original", "original m2", "Superficie m2 área privativa original"])),
+        m2Apole: parseDecimal(getVal(row, ["M2 Actual", "actual m2", "M2 Apole", "m2 apole", "Superficie m2 área privativa actualizado"])),
+        m2Construction: parseDecimal(getVal(row, ["M2 Construcción", "M2 Construccion", "M2 Construction", "m2 de construcción AP/FAP"])),
         m2CommonArea: m2CommonAreaVal,
-        m2ConstructionChildren: parseDecimal(getVal(row, ["M2 Construcción Hijos", "M2 Construccion Hijos", "M2 Construction Children"])),
-        m2CommonAreaChildren: parseDecimal(getVal(row, ["M2 Comunes Hijos", "M2 Common Area Children"])),
+        m2ConstructionChildren: parseDecimal(getVal(row, ["M2 Construcción Hijos", "M2 Construccion Hijos", "M2 Construction Children", "m2 Totales FAP"])),
+        m2CommonAreaChildren: parseDecimal(getVal(row, ["M2 Comunes Hijos", "M2 Common Area Children", "m2 Áreas comunes subcondominio"])),
         m2ConstructionCommonArea: m2ConstructionCommonAreaVal,
-        indiviso: parseDecimal(getVal(row, ["Indiviso", "indiviso"])),
+        indiviso: parseDecimal(getVal(row, ["Indiviso", "indiviso", "Indiviso del área privativa"])),
         vccc: parseDecimal(getVal(row, ["VCCC", "vccc"])),
         isFusion: parseBool(getVal(row, ["Es Fusión", "Es Fusion", "Is Fusion", "isFusion"])),
         isActive: isActiveVal,

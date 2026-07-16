@@ -151,11 +151,11 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
       )}
 
       {/* ── TABLA ── */}
-      <section className="overflow-hidden rounded-[1.6rem] border border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm">
+      <section className="overflow-hidden rounded-card border border-line bg-card shadow-layered backdrop-blur-sm">
         {vm.rows.length === 0 ? (
           <div className="p-12 text-center">
-            <p className="text-lg font-semibold text-[#3f2f1e]">No hay áreas privativas en esta página</p>
-            <p className="mt-2 text-sm text-[#7a5e48]">
+            <p className="text-lg font-semibold text-brand">No hay áreas privativas en esta página</p>
+            <p className="mt-2 text-sm text-ink-soft">
               Verifica que los datos de áreas privativas estén migrados a Neon.
             </p>
           </div>
@@ -164,46 +164,46 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
             <table className="min-w-max border-collapse text-sm">
               <thead className="sticky top-0 z-30 shadow-sm">
                 {/* Fila 1: grupos de columnas */}
-                <tr>
+                <tr className="bg-brand/10 text-brand">
                   <th
                     rowSpan={2}
-                    className="sticky left-0 top-0 z-40 min-w-50 border-b-2 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]"
+                    className="sticky left-0 top-0 z-40 min-w-50 border-b-2 border-r-2 border-line bg-canvas px-4 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-brand"
                   >
                     Área Privativa / FAP
                   </th>
-                  <th colSpan={2} className="border-b border-r border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                  <th colSpan={2} className="border-b border-r border-line/60 bg-brand/5 px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest">
                     Histórico {previousYear}
                   </th>
-                  <th colSpan={3} className="border-b border-r border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                  <th colSpan={3} className="border-b border-r border-line/60 bg-brand/5 px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest">
                     Ordinarias {primaryYear}
                   </th>
-                  <th colSpan={3} className="border-b border-r border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                  <th colSpan={3} className="border-b border-r border-line/60 bg-brand/5 px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest">
                     Ordinarias {secondaryYear}
                   </th>
-                  <th colSpan={1} className="border-b border-r-2 border-[#d0b898] bg-[#f0e0c8] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a3810]">
+                  <th colSpan={1} className="border-b border-r-2 border-line bg-brand/15 px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-brand-deep">
                     Saldo actual
                   </th>
-                  <th colSpan={12} className="border-b border-r border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                  <th colSpan={12} className="border-b border-r border-line/60 bg-brand/5 px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest">
                     Pagos mes a mes {primaryYear}
                   </th>
-                  <th colSpan={12} className="border-b border-[#c8b8a0] bg-[#e8ddd0] px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest text-[#6a5040]">
+                  <th colSpan={12} className="border-b border-line/60 bg-brand/5 px-2 py-1.5 text-center text-[9px] font-bold uppercase tracking-widest">
                     Pagos mes a mes {secondaryYear}
                   </th>
                 </tr>
 
                 {/* Fila 2: sub-headers */}
-                <tr className="bg-[#ece5d8] text-[9px] font-semibold uppercase tracking-wider text-[#7a5e44]">
+                <tr className="bg-canvas text-[9px] font-semibold uppercase tracking-wider text-ink-soft">
                   {vm.columns.map((col, idx) => (
                     <th
                       key={col.key || idx}
                       className={cn(
-                        "min-w-30 border-b border-[#d8c8b4] px-2 py-2 text-center",
-                        idx < vm.columns.length - 1 && "border-r border-[#d8c8b4]/60"
+                        "min-w-30 border-b border-line px-2 py-2 text-center",
+                        idx < vm.columns.length - 1 && "border-r border-line/40"
                       )}
                     >
                       <span className="block leading-snug">{col.label}</span>
                       {col.subLabel && (
-                        <span className="block font-normal normal-case text-[#a08060]">{col.subLabel}</span>
+                        <span className="block font-normal normal-case text-ink-soft/70">{col.subLabel}</span>
                       )}
                     </th>
                   ))}
@@ -214,60 +214,60 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
               <tbody>
                 {vm.rows.map((row, idx) => {
                   const isChild = row.isChild;
-                  const baseBg = idx % 2 === 0 ? "bg-white" : "bg-[#faf6f0]";
-                  const stickyBg = idx % 2 === 0 ? "bg-white" : "bg-[#faf6f0]";
+                  const baseBg = idx % 2 === 0 ? "bg-card" : "bg-canvas/20";
+                  const stickyBg = idx % 2 === 0 ? "bg-card" : "bg-canvas/20";
 
                   return (
-                    <tr key={row.id} className={`border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] ${baseBg}`}>
+                    <tr key={row.id} className={cn("border-t border-line/60 transition-colors hover:bg-brand-mint/10", baseBg)}>
                       {/* Columna sticky */}
-                      <td className={`sticky left-0 z-10 min-w-50 border-r-2 border-[#ddd0be] px-3 py-2 ${stickyBg}`}>
-                        <p className={`font-semibold leading-tight text-[#2b1e12] ${isChild ? "text-[11px] pl-4 opacity-80" : "text-[12px]"}`}>
+                      <td className={cn("sticky left-0 z-10 min-w-50 border-r-2 border-line px-3 py-2", stickyBg)}>
+                        <p className={cn("font-semibold leading-tight text-ink", isChild ? "text-[11px] pl-4 opacity-80" : "text-[12px]")}>
                           {row.areaLabel}
                         </p>
                         <StatusBadge label={row.statusLabel} css={row.statusCss} />
                       </td>
 
                       {/* Histórico pastDue y prepaid */}
-                      <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center">
+                      <td className="border-r border-line/40 px-2 py-1.5 text-center">
                         <Cell cell={row.pastDue} />
                       </td>
-                      <td className="border-r border-[#c8b8a0] px-2 py-1.5 text-center">
+                      <td className="border-r border-line/60 px-2 py-1.5 text-center">
                         <Cell cell={row.prepaid} />
                       </td>
 
                       {/* Years Cells for primaryYear */}
                       {row.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
                         <React.Fragment key={yc.year}>
-                          <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center"><Cell cell={yc.annual} /></td>
-                          <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center"><Cell cell={yc.monthly} /></td>
-                          <td className="border-r border-[#c8b8a0] px-2 py-1.5 text-center"><Cell cell={yc.balance} /></td>
+                          <td className="border-r border-line/40 px-2 py-1.5 text-center"><Cell cell={yc.annual} /></td>
+                          <td className="border-r border-line/40 px-2 py-1.5 text-center"><Cell cell={yc.monthly} /></td>
+                          <td className="border-r border-line/60 px-2 py-1.5 text-center"><Cell cell={yc.balance} /></td>
                         </React.Fragment>
                       ))}
 
                       {/* Years Cells for secondaryYear */}
                       {row.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
                         <React.Fragment key={yc.year}>
-                          <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center"><Cell cell={yc.annual} /></td>
-                          <td className="border-r border-[#e8ddd0] px-2 py-1.5 text-center"><Cell cell={yc.monthly} /></td>
-                          <td className="border-r border-[#c8b8a0] px-2 py-1.5 text-center"><Cell cell={yc.balance} /></td>
+                          <td className="border-r border-line/40 px-2 py-1.5 text-center"><Cell cell={yc.annual} /></td>
+                          <td className="border-r border-line/40 px-2 py-1.5 text-center"><Cell cell={yc.monthly} /></td>
+                          <td className="border-r border-line/60 px-2 py-1.5 text-center"><Cell cell={yc.balance} /></td>
                         </React.Fragment>
                       ))}
 
                       {/* Saldo global */}
-                      <td className="border-r-2 border-[#d0b898] px-2 py-1.5 text-center font-bold">
+                      <td className="border-r-2 border-line px-2 py-1.5 text-center font-bold bg-brand-deep/3">
                         <Cell cell={row.totalBalance} />
                       </td>
 
                       {/* 12 meses primaryYear */}
                       {row.monthlyCells.filter((_, i) => i < 12).map((mc, i) => (
-                        <td key={`m${primaryYear}-${i + 1}-${row.id}`} className="border-r border-[#e8ddd0] px-2 py-1.5 text-center">
+                        <td key={`m${primaryYear}-${i + 1}-${row.id}`} className="border-r border-line/40 px-2 py-1.5 text-center">
                           <Cell cell={mc} />
                         </td>
                       ))}
 
                       {/* 12 meses secondaryYear */}
                       {row.monthlyCells.filter((_, i) => i >= 12).map((mc, i) => (
-                        <td key={`m${secondaryYear}-${i + 1}-${row.id}`} className="border-r border-[#e8ddd0] px-2 py-1.5 text-center">
+                        <td key={`m${secondaryYear}-${i + 1}-${row.id}`} className={cn("px-2 py-1.5 text-center", i < 11 && "border-r border-line/40")}>
                           <Cell cell={mc} />
                         </td>
                       ))}
@@ -278,45 +278,45 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
 
               {/* TFOOT — fila de totales */}
               <tfoot>
-                <tr className="border-t-2 border-[#b0a090] bg-[#e8dfd0] font-bold">
-                  <td className="sticky left-0 z-10 border-r-2 border-[#c8b49a] bg-[#e8dfd0] px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-[#3a2a18]">
+                <tr className="border-t-2 border-brand/20 bg-brand/5 font-bold">
+                  <td className="sticky left-0 z-10 border-r-2 border-line bg-brand/10 px-4 py-2.5 text-[11px] font-bold uppercase tracking-wider text-brand">
                     Totales
                   </td>
                   
-                  <td className="border-r border-[#e8ddd0] px-2 py-2 text-center">
+                  <td className="border-r border-line/40 px-2 py-2 text-center">
                     <Cell cell={vm.totalsRow.pastDue} />
                   </td>
-                  <td className="border-r border-[#c8b8a0] px-2 py-2 text-center">
+                  <td className="border-r border-line/60 px-2 py-2 text-center">
                     <Cell cell={vm.totalsRow.prepaid} />
                   </td>
 
                   {vm.totalsRow.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
                     <React.Fragment key={yc.year}>
-                      <td className="border-r border-[#e8ddd0] px-2 py-2 text-center"><Cell cell={yc.annual} /></td>
-                      <td className="border-r border-[#e8ddd0] px-2 py-2 text-center"><Cell cell={yc.monthly} /></td>
-                      <td className="border-r border-[#c8b8a0] px-2 py-2 text-center"><Cell cell={yc.balance} /></td>
+                      <td className="border-r border-line/40 px-2 py-2 text-center"><Cell cell={yc.annual} /></td>
+                      <td className="border-r border-line/40 px-2 py-2 text-center"><Cell cell={yc.monthly} /></td>
+                      <td className="border-r border-line/60 px-2 py-2 text-center"><Cell cell={yc.balance} /></td>
                     </React.Fragment>
                   ))}
 
                   {vm.totalsRow.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
                     <React.Fragment key={yc.year}>
-                      <td className="border-r border-[#e8ddd0] px-2 py-2 text-center"><Cell cell={yc.annual} /></td>
-                      <td className="border-r border-[#e8ddd0] px-2 py-2 text-center"><Cell cell={yc.monthly} /></td>
-                      <td className="border-r border-[#c8b8a0] px-2 py-2 text-center"><Cell cell={yc.balance} /></td>
+                      <td className="border-r border-line/40 px-2 py-2 text-center"><Cell cell={yc.annual} /></td>
+                      <td className="border-r border-line/40 px-2 py-2 text-center"><Cell cell={yc.monthly} /></td>
+                      <td className="border-r border-line/60 px-2 py-2 text-center"><Cell cell={yc.balance} /></td>
                     </React.Fragment>
                   ))}
 
-                  <td className="border-r-2 border-[#d0b898] px-2 py-2 text-center">
+                  <td className="border-r-2 border-line px-2 py-2 text-center bg-brand-deep/3">
                     <Cell cell={vm.totalsRow.totalBalance} />
                   </td>
 
                   {vm.totalsRow.monthlyCells.filter((_, i) => i < 12).map((mc, i) => (
-                    <td key={`tot-m${primaryYear}-${i + 1}`} className="border-r border-[#c8b8a0] px-2 py-2 text-center">
+                    <td key={`tot-m${primaryYear}-${i + 1}`} className="border-r border-line/40 px-2 py-2 text-center">
                       <Cell cell={mc} />
                     </td>
                   ))}
                   {vm.totalsRow.monthlyCells.filter((_, i) => i >= 12).map((mc, i) => (
-                    <td key={`tot-m${secondaryYear}-${i + 1}`} className="border-r border-[#c8b8a0] px-2 py-2 text-center">
+                    <td key={`tot-m${secondaryYear}-${i + 1}`} className={cn("px-2 py-2 text-center", i < 11 && "border-r border-line/40")}>
                       <Cell cell={mc} />
                     </td>
                   ))}

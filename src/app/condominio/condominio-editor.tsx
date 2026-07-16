@@ -83,7 +83,17 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
   ], []);
 
   const onInput = (field: keyof UpdateCondominioSettingsInput, value: string | boolean) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === "commonAreasM2" || field === "privateAreasM2") {
+        const commonStr = field === "commonAreasM2" ? (value as string) : prev.commonAreasM2;
+        const privStr = field === "privateAreasM2" ? (value as string) : prev.privateAreasM2;
+        const common = parseFloat(commonStr.replaceAll(",", "")) || 0;
+        const priv = parseFloat(privStr.replaceAll(",", "")) || 0;
+        next.totalM2 = Number((common + priv).toFixed(6)).toString();
+      }
+      return next;
+    });
   };
 
   const onUpload = async (field: AssetFieldKey, file: File | null, kind: AssetKind) => {
@@ -158,7 +168,7 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
               <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Métricas de Inventario</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Input label="Total M2 Terreno" type="number" step="any" value={form.totalM2} onChange={(e) => onInput("totalM2", e.target.value)} onBlur={(e) => onInput("totalM2", toMaxSixDecimalsString(e.target.value))} />
+              <Input label="Total M2 Terreno (Calculado)" type="number" step="any" value={form.totalM2} disabled className="bg-canvas/50 cursor-not-allowed opacity-80" />
               <Input label="Total lotes" type="number" value={form.totalApoles} onChange={(e) => onInput("totalApoles", e.target.value)} />
               <Input label="M2 Áreas Comunes" type="number" step="any" value={form.commonAreasM2} onChange={(e) => onInput("commonAreasM2", e.target.value)} onBlur={(e) => onInput("commonAreasM2", toMaxSixDecimalsString(e.target.value))} />
               <Input label="M2 Áreas Privativas" type="number" step="any" value={form.privateAreasM2} onChange={(e) => onInput("privateAreasM2", e.target.value)} onBlur={(e) => onInput("privateAreasM2", toMaxSixDecimalsString(e.target.value))} />

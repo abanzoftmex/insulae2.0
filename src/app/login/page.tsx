@@ -105,7 +105,6 @@ export default function LoginPage() {
                     required
                     disabled={isPending}
                     autoComplete="email"
-                    defaultValue="admin"
                     className="w-full bg-canvas-2/70 border border-line focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 focus:outline-none transition-standard text-ink text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60"
                   />
                 </div>

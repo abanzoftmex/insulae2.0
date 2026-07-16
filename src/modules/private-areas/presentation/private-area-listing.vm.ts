@@ -214,8 +214,7 @@ export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateArea
     rows: listing.rows.map((row) => {
       const isFapRow = row.hierarchyRole === "CHILD";
 
-      const isParent = row.hierarchyRole === "PARENT";
-      const displayActive = isParent ? false : row.isActive;
+      const displayActive = row.hasActiveChildren ? false : row.isActive;
 
       return {
       id: row.id,

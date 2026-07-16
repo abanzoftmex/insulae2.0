@@ -1028,6 +1028,12 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
     const useTypeLookup = buildUseTypeLookup(landUseCatalogs as LandUseCatalogSnapshot[]);
     const currentOrdinaryYear = new Date().getUTCFullYear() - 1;
 
+    const activeParentIdsWithActiveChildren = new Set(
+      (privateAreas as PrivateAreaSnapshot[])
+        .filter((area) => area.parentPrivateAreaId !== null && area.isActive)
+        .map((area) => area.parentPrivateAreaId)
+    );
+
     const allRows = (privateAreas as PrivateAreaSnapshot[]).map((area) => {
       const resolvedUseType = resolveUseType(area.useType, useTypeLookup);
       const m2Original = decimalToNumber(area.m2Original);
@@ -1276,6 +1282,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         businessStatusLabel: toPrivateAreaStatusLabel(businessStatus),
         isFusionLegacy: area.isFusion,
         isActive: area.isActive,
+        hasActiveChildren: activeParentIdsWithActiveChildren.has(area.id),
         hasRental: hasActiveRental(area.rentals),
         m2Updated,
         m2Original,
@@ -1498,8 +1505,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
     };
 
     const isRowDisplayActive = (row: PrivateAreaListRow): boolean => {
-      const isParent = row.hierarchyRole === "PARENT";
-      return isParent ? false : row.isActive;
+      return row.isActive;
     };
 
     const prefilteredRows = orderedRows.filter((row) => {

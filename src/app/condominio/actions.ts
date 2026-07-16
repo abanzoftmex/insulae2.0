@@ -89,6 +89,10 @@ export async function updateCondominioSettingsAction(
         select: { id: true },
       }));
 
+    const commonAreas = toNullableDecimal(input.commonAreasM2) ?? 0;
+    const privateAreas = toNullableDecimal(input.privateAreasM2) ?? 0;
+    const calculatedTotalM2 = commonAreas + privateAreas;
+
     if (!existingProject) {
       await prisma.project.create({
         data: {
@@ -99,10 +103,10 @@ export async function updateCondominioSettingsAction(
           privacyNoticeText: toNullableString(input.privacyNoticeText),
           startYear: toNullableInt(input.startYear),
           condominiumFormatId: toNullableInt(input.condominiumFormatId),
-          totalM2: toNullableDecimal(input.totalM2),
+          totalM2: calculatedTotalM2,
           totalApoles: toNullableInt(input.totalApoles),
-          commonAreasM2: toNullableDecimal(input.commonAreasM2),
-          privateAreasM2: toNullableDecimal(input.privateAreasM2),
+          commonAreasM2: commonAreas,
+          privateAreasM2: privateAreas,
           developedBy: toNullableString(input.developedBy),
           usesLandUseFormula: input.usesLandUseFormula,
           hasVccc: input.hasVccc,
@@ -125,10 +129,10 @@ export async function updateCondominioSettingsAction(
           privacyNoticeText: toNullableString(input.privacyNoticeText),
           startYear: toNullableInt(input.startYear),
           condominiumFormatId: toNullableInt(input.condominiumFormatId),
-          totalM2: toNullableDecimal(input.totalM2),
+          totalM2: calculatedTotalM2,
           totalApoles: toNullableInt(input.totalApoles),
-          commonAreasM2: toNullableDecimal(input.commonAreasM2),
-          privateAreasM2: toNullableDecimal(input.privateAreasM2),
+          commonAreasM2: commonAreas,
+          privateAreasM2: privateAreas,
           developedBy: toNullableString(input.developedBy),
           usesLandUseFormula: input.usesLandUseFormula,
           hasVccc: input.hasVccc,

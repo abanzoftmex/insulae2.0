@@ -73,8 +73,13 @@ export default async function Home() {
     .filter((m) => m.totalIncome > 0 || m.totalExpenses > 0)
     .map((m) => ({
       month: MONTH_ABBR[(m.month - 1) % 12],
-      ingresos: m.totalIncome,
-      gastos: m.totalExpenses,
+      ordinaryIncome: m.ordinaryIncome,
+      extraordinaryIncome: m.extraordinaryIncome,
+      otherIncome: m.otherIncome,
+      totalIncome: m.totalIncome,
+      ordinaryExpenses: m.ordinaryExpenses,
+      extraordinaryExpenses: m.extraordinaryExpenses,
+      totalExpenses: m.totalExpenses,
     }));
 
   const condominiumName =

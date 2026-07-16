@@ -6,16 +6,16 @@
 @source inline("shadow-{cyan,lime,amber}-{100,200}");
 
 @theme {
-  --color-canvas: #f2f0eb;
-  --color-canvas-2: #edebe9;
+  --color-canvas: #f9e3be;
+  --color-canvas-2: #ebd3ab;
   --color-card: #ffffff;
-  --color-brand: #006241;
-  --color-brand-accent: #00754A;
-  --color-brand-deep: #1E3932;
-  --color-brand-uplift: #2b5148;
-  --color-brand-mint: #d4e9e2;
-  --color-gold: #cba258;
-  --color-gold-soft: #faf6ee;
+  --color-brand: #5d5b35;
+  --color-brand-accent: #922f12;
+  --color-brand-deep: #3d3c22;
+  --color-brand-uplift: #757242;
+  --color-brand-mint: #f1eac1;
+  --color-gold: #922f12;
+  --color-gold-soft: #fdf7ea;
   --color-ink: rgb(0 0 0 / 0.87);
   --color-ink-soft: rgb(0 0 0 / 0.58);
   --color-line: rgb(0 0 0 / 0.06);

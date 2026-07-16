@@ -17,15 +17,42 @@ export function CsvManager() {
 
   const handleDownloadTemplate = () => {
     const headers = [
-      "ID", "Código", "Nombre", "Zona", "Subzona", "Calle", "Tipo Uso", "Nivel", 
-      "Estatus", "M2 Original", "M2 Actual", "M2 Construcción", "M2 Comunes", 
-      "M2 Construcción Hijos", "M2 Comunes Hijos", "M2 Construcción Áreas Comunes", "Indiviso", "VCCC", 
-      "Código Padre", "Es Fusión", "Activo"
+      "ID",
+      "Código",
+      "Ubicación",
+      "Área privativa/ Fracción de área privativa",
+      "Tipo de Apol",
+      "Nivel",
+      "Superficie m2 área privativa actualizado",
+      "Superficie m2 área privativa original",
+      "Indiviso del área privativa",
+      "m2 Áreas comunes del condominio",
+      "m2 Totales área privativa",
+      "m2 construcción áreas comunes",
+      "m2 de construcción AP/FAP",
+      "m2 Áreas comunes subcondominio",
+      "m2 Totales FAP",
+      "% Indiviso FAP",
+      "Indiviso FAP/Condominio",
+      "VCCC",
+      "Uso de suelo",
+      "Saldo actual",
+      "Jul 2026", "Ago 2026", "Sep 2026", "Oct 2026", "Nov 2026", "Dic 2026",
+      "Propietario inicial\n(BLOCKCHAIN) Historia",
+      "Propietario legal\n(Esta columna es para el INIDIVISO)",
+      "Dominio actual\n(Esta columna es para el ESTADO DE CUENTA)",
+      "Dominio pleno",
+      "Arrendatario / Usuario",
+      "Contacto administrativo del arrendamiento",
+      "Contacto operativo del arrendamiento"
     ];
     
     const row = [
-      "", "APOL-001", "Ejemplo APOL", "NORTE", "Sub A", "Calle 1", "COMERCIAL", "PB", 
-      "DELIVERED", 100, 100, 80, 20, 0, 0, 0, 1.5, 500, "", "NO", "SI"
+      "", "APOL-001", "NORTE", "Ejemplo APOL", "Individual", "PB", 
+      100, 100, "1.50%", 20, 120, 0, 80, 0, 0, "", "", "50.00%", "COMERCIAL",
+      "$0.00",
+      "$0.00", "$0.00", "$0.00", "$0.00", "$0.00", "$0.00",
+      "Adolfo Mauricio Blanca Nuñez | Fernando Beltran Rendon", "Juan Perez (juan@example.com)", "Juan Perez", "Pedro Gomez", "Arrendatario Ejemplo", "Contacto Admin (admin@example.com)", "Contacto Operativo"
     ];
 
     const ws = XLSX.utils.aoa_to_sheet([headers, row]);
