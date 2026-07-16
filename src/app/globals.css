@@ -6,8 +6,8 @@
 @source inline("shadow-{cyan,lime,amber}-{100,200}");
 
 @theme {
-  --color-canvas: #f9e3be;
-  --color-canvas-2: #ebd3ab;
+  --color-canvas: #ffffff;
+  --color-canvas-2: #f3f4f6;
   --color-card: #ffffff;
   --color-brand: #5d5b35;
   --color-brand-accent: #922f12;
