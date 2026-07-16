@@ -59,6 +59,7 @@ export async function createFullDirectoryContactAction(data: any) {
         lastNameMaterno: data.lastNameMaterno || null,
         curp: data.curp || null,
         personalPhone: data.personalPhone || null,
+        email: data.personalEmail || null,
         personalEmail: data.personalEmail || null,
         address: data.address || null,
         commercialName: data.commercialName || null,

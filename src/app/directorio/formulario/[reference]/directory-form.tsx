@@ -168,6 +168,7 @@ export function DirectoryForm({
     startTransition(async () => {
       const result = await saveDirectoryContactAction(reference, {
         ...formData,
+        email: formData.personalEmail,
         lastName: `${formData.lastNamePaterno} ${formData.lastNameMaterno}`.trim(),
       } as any);
 
