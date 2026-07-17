@@ -312,7 +312,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           legalName: fullName || displayName,
           userType: user.userType,
           requiresInvoice: requiresInvoiceByUserId.get(user.id) ?? null,
-          email: user.email || user.personalEmail || user.businessEmail,
+          email: (user.email && user.email.includes("@")) ? user.email : (user.personalEmail || user.businessEmail || user.email),
           phone: user.phone || user.personalPhone || user.businessPhone,
           initialRole: user.initialRole,
           roles,
@@ -723,6 +723,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           apolfap: true,
           registrationTypeCode: true,
           idVq: true,
+          email: true,
         },
       });
 
@@ -762,6 +763,15 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
 
       finalIdVq = calculatedIdVq;
 
+      const finalApol = (data.apolfap !== undefined ? data.apolfap : currentUser?.apolfap) || "";
+      const finalRegCode = (data.registrationTypeCode !== undefined ? data.registrationTypeCode : currentUser?.registrationTypeCode) || "";
+      const finalIdVqVal = calculatedIdVq || "";
+      
+      let computedEmail = currentUser?.email || null;
+      if (finalApol && finalIdVqVal && finalRegCode) {
+        computedEmail = `ID-${finalApol.trim()}${finalIdVqVal.trim()}-${finalRegCode.trim()}`;
+      }
+
       const updatedUser = await tx.user.update({
         where: { id },
         data: {
@@ -777,7 +787,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           taxAddress: data.taxAddress,
           userType: data.userType,
           requiresInvoice: data.requiresInvoice,
-          email: data.email,
+          email: computedEmail,
           personalEmail: data.personalEmail,
           businessEmail: data.businessEmail,
           phone: data.phone,
@@ -793,6 +803,42 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           idVq: calculatedIdVq,
         },
       });
+
+      // Update nested child users' idVq and email if parent's apolfap / idVq changed
+      if (currentUser && (data.apolfap !== undefined || calculatedIdVq !== currentUser.idVq)) {
+        const children = await tx.user.findMany({
+          where: { parentId: id, isActive: true },
+          select: { id: true, idVq: true, registrationTypeCode: true, email: true },
+        });
+
+        for (const child of children) {
+          const childApol = finalApol;
+          const childRegCode = child.registrationTypeCode || "8-99";
+          
+          let suffix = "1";
+          if (child.idVq) {
+            const parts = child.idVq.split("-");
+            const lastPart = parts[parts.length - 1];
+            if (!isNaN(parseInt(lastPart, 10))) {
+              suffix = lastPart;
+            }
+          }
+          const newChildIdVq = `${finalIdVqVal}-${childRegCode}-${suffix}`;
+          
+          let computedChildEmail = null;
+          if (childApol && newChildIdVq) {
+            computedChildEmail = `ID-${childApol.trim()}${newChildIdVq.trim()}`;
+          }
+
+          await tx.user.update({
+            where: { id: child.id },
+            data: {
+              idVq: newChildIdVq,
+              email: computedChildEmail,
+            },
+          });
+        }
+      }
 
       if (data.initialRole !== undefined) {
         // Clear all existing UserRole links for this user

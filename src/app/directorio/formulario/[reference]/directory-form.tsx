@@ -168,7 +168,6 @@ export function DirectoryForm({
     startTransition(async () => {
       const result = await saveDirectoryContactAction(reference, {
         ...formData,
-        email: formData.personalEmail,
         lastName: `${formData.lastNamePaterno} ${formData.lastNameMaterno}`.trim(),
       } as any);
 
@@ -218,20 +217,26 @@ export function DirectoryForm({
     });
   };
 
-  const sectionCls = "overflow-hidden rounded-card border border-line/40 bg-white shadow-sm";
-  const sectionHeaderCls = "px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card";
-  const sectionTitleCls = "text-[10px] font-bold uppercase tracking-widest text-white";
-  const sectionBodyCls = "p-5";
-  const fieldCls = "w-full h-9 px-3 rounded-sm border border-line bg-white text-sm text-ink outline-none focus:ring-1 focus:ring-brand transition-colors";
-  const labelCls = "text-[10px] font-bold uppercase tracking-widest text-ink-soft";
+  const [activeTab, setActiveTab] = useState<"general" | "facturacion" | "seguridad">("general");
+
+  const sectionCls = "overflow-hidden rounded-xl border border-line bg-white shadow-sm hover:shadow-md transition-shadow duration-300";
+  const sectionHeaderCls = "px-5 py-4 border-b border-line bg-canvas/30 flex items-center justify-between";
+  const sectionTitleCls = "text-xs font-extrabold uppercase tracking-widest text-brand-deep flex items-center gap-2";
+  const sectionBodyCls = "p-6";
+  const fieldCls = "w-full h-9 px-3 rounded-md border border-line bg-white text-sm text-[#3a2f25] outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all duration-200";
+  const labelCls = "text-[10px] font-extrabold uppercase tracking-widest text-ink-soft/80";
 
   const indiviso = initialData.participationBlocks.find(b => b.title === "Dominio actual")?.totalPercentage.toFixed(4) || "0.0000";
+
+  const computedUserId = formData.apolfap && formData.idVq && formData.registrationTypeCode
+    ? `ID-${formData.apolfap.trim()}${formData.idVq.trim()}-${formData.registrationTypeCode.trim()}`
+    : initialData.email;
 
   return (
     <div className="space-y-4">
 
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-line">
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -272,398 +277,406 @@ export function DirectoryForm({
         </div>
       )}
 
+      {/* Tabs Selector */}
+      <div className="flex border-b border-line gap-2 overflow-x-auto pb-[1px] mb-4">
+        {[
+          { id: "general", label: "Información General", icon: <Users className="w-3.5 h-3.5" /> },
+          { id: "facturacion", label: "Facturación", icon: <Building2 className="w-3.5 h-3.5" /> },
+          { id: "seguridad", label: "Acceso y Seguridad", icon: <Settings className="w-3.5 h-3.5" /> },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id as any)}
+            className={cn(
+              "flex items-center gap-2 px-5 py-3 text-[10px] font-extrabold uppercase tracking-widest border-b-2 -mb-[2px] transition-all duration-200 shrink-0",
+              activeTab === tab.id
+                ? "border-brand text-brand font-black"
+                : "border-transparent text-ink-soft/60 hover:text-brand hover:border-line"
+            )}
+          >
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Main Grid */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-4">
 
-        {/* Left — form sections */}
-        <div className="lg:col-span-2 space-y-4">
+        {/* Left Column: Form Content (col-span-3) */}
+        <div className="lg:col-span-3 space-y-4">
 
-          {/* Configuración */}
-          <div className={sectionCls}>
-            <div className={sectionHeaderCls}>
-              <p className={sectionTitleCls}>Configuración inicial</p>
-            </div>
-            <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-5`}>
-              <div className="space-y-1.5">
-                <label className={labelCls}>Tipo de persona</label>
-                <div className="flex gap-2">
-                  {[
-                    { value: "INDIVIDUAL", label: "Física" },
-                    { value: "LEGAL_ENTITY", label: "Moral" },
-                    { value: "S_A", label: "Sin Actividad" },
-                  ].map((opt) => (
-                    <button
-                      key={opt.value}
-                      type="button"
-                      onClick={() => handleChange("userType", opt.value)}
-                      className={cn(
-                        "flex-1 h-9 px-2 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-colors",
-                        formData.userType === opt.value
-                          ? "bg-brand text-white border-brand"
-                          : "bg-white text-ink-soft border-line hover:border-brand/40"
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
+          {activeTab === "general" && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              {/* Configuración */}
+              <div className={sectionCls}>
+                <div className={sectionHeaderCls}>
+                  <p className={sectionTitleCls}>
+                    <Settings className="w-4 h-4 text-brand" />
+                    Configuración inicial
+                  </p>
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className={labelCls}>Requiere factura</label>
-                <div className="flex gap-2">
-                  {[{ value: true, label: "Sí" }, { value: false, label: "No" }].map((opt) => (
-                    <button
-                      key={String(opt.value)}
-                      type="button"
-                      onClick={() => handleChange("requiresInvoice", opt.value)}
-                      className={cn(
-                        "flex-1 h-9 px-4 rounded-sm text-[10px] font-bold uppercase tracking-widest border transition-colors",
-                        formData.requiresInvoice === opt.value
-                          ? "bg-brand text-white border-brand"
-                          : "bg-white text-ink-soft border-line hover:border-brand/40"
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className={labelCls}>Rol inicial</label>
-                <select
-                  value={formData.initialRole}
-                  onChange={(e) => handleChange("initialRole", e.target.value)}
-                  className={fieldCls}
-                >
-                  <option value="">Seleccionar rol...</option>
-                  {roleOptions.map(role => (
-                    <option key={role.id} value={role.name}>{role.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className={labelCls}>Constancia fiscal (PDF)</label>
-                <div className="flex items-center gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      type="file"
-                      accept="application/pdf"
-                      onChange={handleFileUpload}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                    />
-                    <div className={cn(
-                      "flex items-center justify-between h-9 px-3 rounded-sm border text-sm transition-colors",
-                      isUploading ? "bg-canvas animate-pulse border-line" : "bg-white border-line"
-                    )}>
-                      <span className="text-[11px] text-ink-soft truncate max-w-30">
-                        {formData.taxStatusPdfUrl ? "Archivo cargado" : "Elegir archivo..."}
-                      </span>
-                      <Upload className="w-3.5 h-3.5 text-ink-soft shrink-0" />
+                <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-5`}>
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Tipo de persona</label>
+                    <div className="flex gap-2">
+                      {[
+                        { value: "INDIVIDUAL", label: "Física" },
+                        { value: "LEGAL_ENTITY", label: "Moral" },
+                        { value: "S_A", label: "Sin Actividad" },
+                      ].map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => handleChange("userType", opt.value)}
+                          className={cn(
+                            "flex-1 h-9 px-2 rounded-md text-[10px] font-bold uppercase tracking-widest border transition-colors",
+                            formData.userType === opt.value
+                              ? "bg-brand text-white border-brand"
+                              : "bg-white text-ink-soft border-line hover:border-brand/40"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                  {formData.taxStatusPdfUrl && (
-                    <a
-                      href={formData.taxStatusPdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center w-9 h-9 rounded-sm border border-line bg-white text-brand hover:bg-brand hover:text-white hover:border-brand transition-colors shrink-0"
+
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Requiere factura</label>
+                    <div className="flex gap-2">
+                      {[{ value: true, label: "Sí" }, { value: false, label: "No" }].map((opt) => (
+                        <button
+                          key={String(opt.value)}
+                          type="button"
+                          onClick={() => handleChange("requiresInvoice", opt.value)}
+                          className={cn(
+                            "flex-1 h-9 px-4 rounded-md text-[10px] font-bold uppercase tracking-widest border transition-colors",
+                            formData.requiresInvoice === opt.value
+                              ? "bg-brand text-white border-brand"
+                              : "bg-white text-ink-soft border-line hover:border-brand/40"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Rol inicial</label>
+                    <select
+                      value={formData.initialRole}
+                      onChange={(e) => handleChange("initialRole", e.target.value)}
+                      className={fieldCls}
                     >
-                      <FileText className="w-3.5 h-3.5" />
-                    </a>
-                  )}
+                      <option value="">Seleccionar rol...</option>
+                      {roleOptions.map(role => (
+                        <option key={role.id} value={role.name}>{role.name}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Constancia fiscal (PDF)</label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <input
+                          type="file"
+                          accept="application/pdf"
+                          onChange={handleFileUpload}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className={cn(
+                          "flex items-center justify-between h-9 px-3 rounded-md border text-sm transition-colors",
+                          isUploading ? "bg-canvas animate-pulse border-line" : "bg-white border-line"
+                        )}>
+                          <span className="text-[11px] text-ink-soft truncate max-w-30">
+                            {formData.taxStatusPdfUrl ? "Archivo cargado" : "Elegir archivo..."}
+                          </span>
+                          <Upload className="w-3.5 h-3.5 text-ink-soft shrink-0" />
+                        </div>
+                      </div>
+                      {formData.taxStatusPdfUrl && (
+                        <a
+                          href={formData.taxStatusPdfUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center w-9 h-9 rounded-md border border-line bg-white text-brand hover:bg-brand hover:text-white hover:border-brand transition-colors shrink-0"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>ApolFap a la que pertenece</label>
+                    <select
+                      value={formData.apolfap}
+                      onChange={(e) => handleChange("apolfap", e.target.value)}
+                      className={fieldCls}
+                    >
+                      {uniqueAssignments.length === 0 ? (
+                        <option value="">Sin áreas asignadas</option>
+                      ) : (
+                        uniqueAssignments.map((assignment) => (
+                          <option key={assignment.privateAreaId} value={assignment.privateAreaName}>
+                            {assignment.privateAreaName}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Tipo de registro (Descripción)</label>
+                    <div className="flex gap-2">
+                      <select
+                        value={formData.registrationTypeCode}
+                        onChange={(e) => handleRegTypeChange(e.target.value)}
+                        className={fieldCls}
+                      >
+                        <option value="">Seleccionar tipo...</option>
+                        {registrationTypes.map((type) => (
+                          <option key={type.id} value={type.code}>
+                            {type.description} ({type.code})
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setIsManagerOpen(true)}
+                        className="h-9 px-3 bg-canvas hover:bg-canvas/80 border border-line text-ink rounded-md transition-colors flex items-center justify-center shrink-0"
+                        title="Gestionar tipos"
+                      >
+                        <Settings className="w-4 h-4 text-ink-soft" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Tipo de registro (Código)</label>
+                    <input
+                      type="text"
+                      value={formData.registrationTypeCode}
+                      readOnly
+                      disabled
+                      className={cn(fieldCls, "bg-canvas/50 text-ink-soft cursor-not-allowed")}
+                      placeholder="8-XX"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>ID SDV</label>
+                    <input
+                      type="text"
+                      value={formData.idVq || "Autogenerado al guardar..."}
+                      readOnly
+                      disabled
+                      className={cn(fieldCls, "bg-canvas/50 text-ink-soft cursor-not-allowed font-mono")}
+                      placeholder="SDV#..."
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className={labelCls}>ApolFap a la que pertenece</label>
-                <select
-                  value={formData.apolfap}
-                  onChange={(e) => handleChange("apolfap", e.target.value)}
-                  className={fieldCls}
-                >
-                  {uniqueAssignments.length === 0 ? (
-                    <option value="">Sin áreas asignadas</option>
-                  ) : (
-                    uniqueAssignments.map((assignment) => (
-                      <option key={assignment.privateAreaId} value={assignment.privateAreaName}>
-                        {assignment.privateAreaName}
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
+              {/* Información personal */}
+              <div className={sectionCls}>
+                <div className={sectionHeaderCls}>
+                  <p className={sectionTitleCls}>
+                    <Users className="w-4 h-4 text-brand" />
+                    Información del propietario
+                  </p>
+                </div>
+                <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-3 gap-4`}>
+                  <Input label="Nombre" value={formData.firstName} onChange={(e) => handleChange("firstName", e.target.value)} />
+                  <Input label="Apellido Paterno" value={formData.lastNamePaterno} onChange={(e) => handleChange("lastNamePaterno", e.target.value)} />
+                  <Input label="Apellido Materno" value={formData.lastNameMaterno} onChange={(e) => handleChange("lastNameMaterno", e.target.value)} />
+                  <Input label="CURP" value={formData.curp} onChange={(e) => handleChange("curp", e.target.value)} />
+                  <Input label="Teléfono" value={formData.personalPhone} onChange={(e) => handleChange("personalPhone", e.target.value)} />
+                  <Input label="Email Personal" value={formData.personalEmail} onChange={(e) => handleChange("personalEmail", e.target.value)} />
 
-              <div className="space-y-1.5">
-                <label className={labelCls}>Tipo de registro (Descripción)</label>
-                <div className="flex gap-2">
-                  <select
-                    value={formData.registrationTypeCode}
-                    onChange={(e) => handleRegTypeChange(e.target.value)}
-                    className={fieldCls}
-                  >
-                    <option value="">Seleccionar tipo...</option>
-                    {registrationTypes.map((type) => (
-                      <option key={type.id} value={type.code}>
-                        {type.description} ({type.code})
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() => setIsManagerOpen(true)}
-                    className="h-9 px-3 bg-canvas hover:bg-canvas/80 border border-line text-ink rounded-sm transition-colors flex items-center justify-center shrink-0"
-                    title="Gestionar tipos"
-                  >
-                    <Settings className="w-4 h-4 text-ink-soft" />
-                  </button>
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Fecha de nacimiento</label>
+                    <input
+                      type="date"
+                      value={formData.birthDate}
+                      onChange={(e) => handleChange("birthDate", e.target.value)}
+                      className={fieldCls}
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Género</label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => handleChange("gender", e.target.value)}
+                      className={fieldCls}
+                    >
+                      <option value="">Seleccionar género...</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Femenino">Femenino</option>
+                      <option value="Otro">Otro</option>
+                      <option value="Sin especificar">Sin especificar</option>
+                    </select>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <Input label="Dirección" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} />
+                  </div>
                 </div>
               </div>
+            </div>
+          )}
 
-              <div className="space-y-1.5">
-                <label className={labelCls}>Tipo de registro (Código)</label>
-                <input
-                  type="text"
-                  value={formData.registrationTypeCode}
-                  readOnly
-                  disabled
-                  className={cn(fieldCls, "bg-canvas/50 text-ink-soft cursor-not-allowed")}
-                  placeholder="8-XX"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className={labelCls}>ID VQ</label>
-                <input
-                  type="text"
-                  value={formData.idVq || "Autogenerado al guardar..."}
-                  readOnly
-                  disabled
-                  className={cn(fieldCls, "bg-canvas/50 text-ink-soft cursor-not-allowed font-mono")}
-                  placeholder="VQ#..."
-                />
+          {activeTab === "facturacion" && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              {/* Información de facturación */}
+              <div className={sectionCls}>
+                <div className={sectionHeaderCls}>
+                  <p className={sectionTitleCls}>
+                    <Building2 className="w-4 h-4 text-brand" />
+                    Información de facturación
+                  </p>
+                </div>
+                <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-4`}>
+                  <Input label="Nombre Comercial" value={formData.commercialName} onChange={(e) => handleChange("commercialName", e.target.value)} />
+                  <Input label="Razón Social" value={formData.businessName} onChange={(e) => handleChange("businessName", e.target.value)} />
+                  <Input label="RFC" value={formData.rfc} onChange={(e) => handleChange("rfc", e.target.value)} />
+                  <Input label="Teléfono Empresarial" value={formData.businessPhone} onChange={(e) => handleChange("businessPhone", e.target.value)} />
+                  <Input label="Email Empresarial" value={formData.businessEmail} onChange={(e) => handleChange("businessEmail", e.target.value)} />
+                  <div className="sm:col-span-2">
+                    <Input label="Dirección Fiscal" value={formData.taxAddress} onChange={(e) => handleChange("taxAddress", e.target.value)} />
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Información personal */}
-          <div className={sectionCls}>
-            <div className={sectionHeaderCls}>
-              <p className={sectionTitleCls}>Información del propietario</p>
-            </div>
-            <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-3 gap-4`}>
-              <Input label="Nombre" value={formData.firstName} onChange={(e) => handleChange("firstName", e.target.value)} />
-              <Input label="Apellido Paterno" value={formData.lastNamePaterno} onChange={(e) => handleChange("lastNamePaterno", e.target.value)} />
-              <Input label="Apellido Materno" value={formData.lastNameMaterno} onChange={(e) => handleChange("lastNameMaterno", e.target.value)} />
-              <Input label="CURP" value={formData.curp} onChange={(e) => handleChange("curp", e.target.value)} />
-              <Input label="Teléfono" value={formData.personalPhone} onChange={(e) => handleChange("personalPhone", e.target.value)} />
-              <Input label="Email Personal" value={formData.personalEmail} onChange={(e) => handleChange("personalEmail", e.target.value)} />
-
-              <div className="space-y-1.5">
-                <label className={labelCls}>Fecha de nacimiento</label>
-                <input
-                  type="date"
-                  value={formData.birthDate}
-                  onChange={(e) => handleChange("birthDate", e.target.value)}
-                  className={fieldCls}
-                />
+          {activeTab === "seguridad" && (
+            <div className="space-y-6 animate-in fade-in duration-300">
+              {/* Acceso al sistema */}
+              <div className={sectionCls}>
+                <div className={sectionHeaderCls}>
+                  <p className={sectionTitleCls}>
+                    <Settings className="w-4 h-4 text-brand" />
+                    Acceso al sistema
+                  </p>
+                </div>
+                <div className={sectionBodyCls}>
+                  <div className="space-y-6 max-w-lg">
+                    <div className="space-y-1.5 max-w-sm">
+                      <label className={labelCls}>Usuario</label>
+                      <input 
+                        type="text" 
+                        readOnly 
+                        disabled 
+                        value={computedUserId || "N/D"} 
+                        className={cn(fieldCls, "bg-canvas/50 text-[#3a2f25] cursor-not-allowed font-mono")} 
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className={labelCls}>Nueva Contraseña</label>
+                        <div className="relative w-full">
+                          <input 
+                            type={showPassword ? "text" : "password"} 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            className={fieldCls} 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-sm text-ink-soft/40 hover:text-brand hover:bg-canvas transition-colors"
+                            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                          >
+                            {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className={labelCls}>Confirmar Contraseña</label>
+                        <div className="relative w-full">
+                          <input 
+                            type={showConfirmPassword ? "text" : "password"} 
+                            value={confirmPassword} 
+                            onChange={(e) => setConfirmPassword(e.target.value)} 
+                            className={fieldCls} 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-sm text-ink-soft/40 hover:text-brand hover:bg-canvas transition-colors"
+                            aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                          >
+                            {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button type="button" onClick={handleUpdatePassword} disabled={isPasswordPending} className="h-9 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors disabled:opacity-50">
+                        {isPasswordPending ? "Actualizando..." : "Actualizar contraseña"}
+                      </button>
+                      <button type="button" onClick={handleGenerateTempPassword} disabled={isPasswordPending} className="h-9 px-4 rounded-full bg-white border border-line text-ink text-[10px] font-bold uppercase tracking-widest hover:bg-canvas transition-all disabled:opacity-50">
+                        {isPasswordPending ? "Actualizando..." : "Generar y enviar contraseña provisional"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-
-              <div className="space-y-1.5">
-                <label className={labelCls}>Género</label>
-                <select
-                  value={formData.gender}
-                  onChange={(e) => handleChange("gender", e.target.value)}
-                  className={fieldCls}
-                >
-                  <option value="">Seleccionar género...</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Femenino">Femenino</option>
-                  <option value="Otro">Otro</option>
-                  <option value="Sin especificar">Sin especificar</option>
-                </select>
-              </div>
-              <div className="sm:col-span-3">
-                <Input label="Dirección" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} />
-              </div>
             </div>
-          </div>
-
-          {/* Información de facturación */}
-          <div className={sectionCls}>
-            <div className={sectionHeaderCls}>
-              <p className={sectionTitleCls}>Información de facturación</p>
-            </div>
-            <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-4`}>
-              <Input label="Nombre Comercial" value={formData.commercialName} onChange={(e) => handleChange("commercialName", e.target.value)} />
-              <Input label="Razón Social" value={formData.businessName} onChange={(e) => handleChange("businessName", e.target.value)} />
-              <Input label="RFC" value={formData.rfc} onChange={(e) => handleChange("rfc", e.target.value)} />
-              <Input label="Teléfono Empresarial" value={formData.businessPhone} onChange={(e) => handleChange("businessPhone", e.target.value)} />
-              <Input label="Email Empresarial" value={formData.businessEmail} onChange={(e) => handleChange("businessEmail", e.target.value)} />
-              <div className="sm:col-span-2">
-                <Input label="Dirección Fiscal" value={formData.taxAddress} onChange={(e) => handleChange("taxAddress", e.target.value)} />
-              </div>
-            </div>
-          </div>
+          )}
 
         </div>
 
-        {/* Right sidebar */}
-        <div className="space-y-4">
-
-          {/* Acceso al sistema */}
-          <div className="overflow-hidden rounded-card border border-brand-deep bg-brand-deep shadow-sm">
-            <div className="px-4 py-3 border-b border-white/10">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-white">Acceso al sistema</p>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="space-y-1">
-                <p className="text-[9px] uppercase tracking-widest text-white/40">Usuario</p>
-                <p className="text-[12px] font-medium text-white truncate">{formData.personalEmail || initialData.email || "N/D"}</p>
-              </div>
-              <div className="space-y-3">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 leading-none">Nueva Contraseña</label>
-                  <div className="relative w-full">
-                    <input 
-                      type={showPassword ? "text" : "password"} 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="h-9 w-full rounded-sm border border-white/10 bg-white/5 pl-3 pr-9 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-sm text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-                      aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                    >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-white/50 leading-none">Confirmar Contraseña</label>
-                  <div className="relative w-full">
-                    <input 
-                      type={showConfirmPassword ? "text" : "password"} 
-                      value={confirmPassword} 
-                      onChange={(e) => setConfirmPassword(e.target.value)} 
-                      className="h-9 w-full rounded-sm border border-white/10 bg-white/5 pl-3 pr-9 text-sm text-white placeholder:text-white/20 outline-none focus:ring-1 focus:ring-white/20 transition-colors" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-1.5 top-1/2 -translate-y-1/2 h-6 w-6 grid place-items-center rounded-sm text-white/40 hover:text-white hover:bg-white/10 transition-colors"
-                      aria-label={showConfirmPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                    >
-                      {showConfirmPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <button type="button" onClick={handleUpdatePassword} disabled={isPasswordPending} className="text-[10px] font-bold uppercase tracking-widest text-brand-mint hover:text-white transition-colors disabled:opacity-50">
-                  {isPasswordPending ? "Actualizando..." : "Actualizar contraseña"}
-                </button>
-                <span className="text-white/10 text-xs">|</span>
-                <button type="button" onClick={handleGenerateTempPassword} disabled={isPasswordPending} className="text-[10px] font-bold uppercase tracking-widest text-brand-accent hover:text-white transition-colors disabled:opacity-50">
-                  {isPasswordPending ? "Actualizando..." : "Generar y enviar contraseña provisional"}
-                </button>
-              </div>
-            </div>
-          </div>
-
+        {/* Right Column: Sidebar (col-span-1) */}
+        <div className="lg:col-span-1 space-y-4">
           {/* Participación */}
           <div className={sectionCls}>
             <div className={sectionHeaderCls}>
-              <p className={sectionTitleCls}>Participación</p>
+              <p className={sectionTitleCls}>
+                <Users className="w-4 h-4 text-brand" />
+                Participación
+              </p>
             </div>
             <div className={`${sectionBodyCls} grid grid-cols-2 gap-3`}>
-              <div className="p-3 rounded-sm bg-canvas border border-line space-y-1">
-                <p className="text-[9px] uppercase tracking-widest text-ink-soft">Áreas</p>
-                <p className="text-2xl font-bold text-brand">{initialData.assignments.length}</p>
-                <Users className="w-4 h-4 text-brand/20" />
+              <div className="p-3 rounded-lg bg-canvas border border-line space-y-1 flex flex-col justify-between">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/70">Áreas</p>
+                <p className="text-2xl font-black text-[#3a2f25]">{initialData.assignments.length}</p>
               </div>
-              <div className="p-3 rounded-sm bg-brand-mint/20 border border-brand-mint/30 space-y-1">
-                <p className="text-[9px] uppercase tracking-widest text-brand/60">Indiviso</p>
-                <p className="text-2xl font-bold text-brand">{indiviso}%</p>
-                <Building2 className="w-4 h-4 text-brand/20" />
+              <div className="p-3 rounded-lg bg-brand-mint/10 border border-brand-mint/20 space-y-1 flex flex-col justify-between">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-brand/70">Indiviso</p>
+                <p className="text-2xl font-black text-brand">{indiviso}%</p>
               </div>
             </div>
           </div>
 
           {/* Acciones rápidas */}
-          <div className="space-y-2">
-            <button className="w-full flex items-center justify-between h-10 px-4 rounded-card border border-line bg-white text-[10px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 transition-colors group">
-              <span>Agregar ficha de contacto</span>
-              <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" />
-            </button>
-            <button className="w-full flex items-center justify-between h-10 px-4 rounded-card border border-line bg-white text-[10px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 transition-colors group">
-              <span>Agregar comercio</span>
-              <Building2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-            </button>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Participation Tables */}
-      {initialData.participationBlocks.length > 0 && (
-        <div className="space-y-4 pt-4">
-          <div className="pb-3 border-b border-brand">
-            <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">Participación en el condominio</h2>
-          </div>
-          {initialData.participationBlocks.map((block) => (
-            <div key={block.title} className={sectionCls}>
-              <div className={sectionHeaderCls}>
-                <p className={sectionTitleCls}>{block.title}</p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-canvas border-b border-line">
-                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Tipo de entidad</th>
-                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Área privativa</th>
-                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-right">Porcentaje</th>
-                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-center">Comercios</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-line">
-                    <tr className="bg-brand-mint/10 font-bold">
-                      <td className="px-4 py-2 text-[10px] uppercase tracking-wider text-brand">TOTAL</td>
-                      <td className="px-4 py-2 text-[12px] text-brand">{block.totalAreas}</td>
-                      <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{block.totalPercentage.toFixed(4)}%</td>
-                      <td className="px-4 py-2 text-center text-[10px] text-ink-soft">0</td>
-                    </tr>
-                    {block.rows.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-ink-soft text-[11px]">
-                          Sin registros de participación en este bloque.
-                        </td>
-                      </tr>
-                    ) : (
-                      block.rows.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-canvas/50 transition-colors">
-                          <td className="px-4 py-2 text-[11px] text-ink-soft">{row.entityType}</td>
-                          <td className="px-4 py-2 text-[12px] font-medium text-ink">{row.privateAreaName}</td>
-                          <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{row.percentage.toFixed(4)}%</td>
-                          <td className="px-4 py-2 text-center text-[10px] text-ink-soft">No</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          <div className={sectionCls}>
+            <div className={sectionHeaderCls}>
+              <p className={sectionTitleCls}>Acciones rápidas</p>
             </div>
-          ))}
+            <div className={`${sectionBodyCls} space-y-2`}>
+              <button className="w-full flex items-center justify-between h-10 px-4 rounded-xl border border-line bg-white text-[10px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 hover:border-brand/40 transition-colors group">
+                <span>Agregar ficha de contacto</span>
+                <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" />
+              </button>
+              <button className="w-full flex items-center justify-between h-10 px-4 rounded-xl border border-line bg-white text-[10px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 hover:border-brand/40 transition-colors group">
+                <span>Agregar comercio</span>
+                <Building2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
+              </button>
+            </div>
+          </div>
         </div>
-      )}
+
+      </div>
 
       {/* Nested Users Section */}
       <div className="space-y-4 pt-4">
-        <div className="pb-3 border-b border-brand flex items-center justify-between">
+        <div className="pb-3 border-b border-line flex items-center justify-between">
           <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">Usuarios vinculados / anidados</h2>
           <button
             type="button"
@@ -735,16 +748,68 @@ export function DirectoryForm({
         </div>
       </div>
 
+      {/* Participation Tables */}
+      {initialData.participationBlocks.length > 0 && (
+        <div className="space-y-4 pt-4">
+          <div className="pb-3 border-b border-line">
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">Participación en el condominio</h2>
+          </div>
+          {initialData.participationBlocks.map((block) => (
+            <div key={block.title} className={sectionCls}>
+              <div className={sectionHeaderCls}>
+                <p className={sectionTitleCls}>{block.title}</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-canvas border-b border-line">
+                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Tipo de entidad</th>
+                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Área privativa</th>
+                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-right">Porcentaje</th>
+                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-center">Comercios</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-line">
+                    <tr className="bg-brand-mint/10 font-bold">
+                      <td className="px-4 py-2 text-[10px] uppercase tracking-wider text-brand">TOTAL</td>
+                      <td className="px-4 py-2 text-[12px] text-brand">{block.totalAreas}</td>
+                      <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{block.totalPercentage.toFixed(4)}%</td>
+                      <td className="px-4 py-2 text-center text-[10px] text-ink-soft">0</td>
+                    </tr>
+                    {block.rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-4 py-8 text-center text-ink-soft text-[11px]">
+                          Sin registros de participación en este bloque.
+                        </td>
+                      </tr>
+                    ) : (
+                      block.rows.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-canvas/50 transition-colors">
+                          <td className="px-4 py-2 text-[11px] text-ink-soft">{row.entityType}</td>
+                          <td className="px-4 py-2 text-[12px] font-medium text-ink">{row.privateAreaName}</td>
+                          <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{row.percentage.toFixed(4)}%</td>
+                          <td className="px-4 py-2 text-center text-[10px] text-ink-soft">No</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Modal to manage registration types */}
       {isManagerOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-brand bg-brand flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-white">Gestionar Tipos de Registro</h3>
+            <div className="px-5 py-4 border-b border-line bg-canvas flex items-center justify-between">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-brand-deep">Gestionar Tipos de Registro</h3>
               <button
                 onClick={() => setIsManagerOpen(false)}
-                className="text-white hover:text-white/80 text-xl font-bold leading-none"
+                className="text-ink-soft hover:text-brand text-xl font-bold leading-none"
               >
                 ×
               </button>
@@ -894,12 +959,12 @@ export function DirectoryForm({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-brand bg-brand flex items-center justify-between">
-              <h3 className="text-sm font-bold uppercase tracking-widest text-white">Agregar Usuario Anidado</h3>
+            <div className="px-5 py-4 border-b border-line bg-canvas flex items-center justify-between">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-brand-deep">Agregar Usuario Anidado</h3>
               <button
                 type="button"
                 onClick={() => setIsCreateChildOpen(false)}
-                className="text-white hover:text-white/80 text-xl font-bold leading-none"
+                className="text-ink-soft hover:text-brand text-xl font-bold leading-none"
               >
                 ×
               </button>

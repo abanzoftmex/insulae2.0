@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { prisma } from "@/shared/infrastructure/db/prisma";
 import type { ReactNode } from "react";
 
 import {
@@ -298,6 +299,49 @@ export default async function AreasPrivativasPage(props: PageProps) {
 
   const report = await getCondominiumReportUseCase.execute();
   const reportVm = report ? toCondominiumReportVM(report) : null;
+
+  // Get sum of "Cuotas ordinarias 2025 (mensual)"
+  const condo = await prisma.condominium.findFirst({
+    where: { isActive: true },
+    select: { id: true }
+  });
+  let ordinary2025MonthlySum = 0;
+  if (condo) {
+    const activePrivateAreasWithCharges = await prisma.privateArea.findMany({
+      where: {
+        condominiumId: condo.id,
+        isActive: true,
+      },
+      select: {
+        areaCharges: {
+          where: {
+            isActive: true,
+            chargeGroup: {
+              kind: "ORDINARY",
+            },
+          },
+          select: {
+            amount: true,
+            startsAt: true,
+          },
+        },
+      },
+    });
+
+    for (const area of activePrivateAreasWithCharges) {
+      const ordinaryCharge2025 = area.areaCharges.find((ac) => {
+        return ac.startsAt?.getUTCFullYear() === 2025;
+      });
+      if (ordinaryCharge2025) {
+        ordinary2025MonthlySum += Number(ordinaryCharge2025.amount);
+      }
+    }
+  }
+
+  const formattedSum = new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+  }).format(ordinary2025MonthlySum);
   
   const shortMonths = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   
@@ -310,7 +354,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
   while (curr <= end) {
     const m = curr.getUTCMonth();
     const y = curr.getUTCFullYear();
-    monthLabels.push({ label: `${shortMonths[m]} ${y}`, key: `month_${y}_${m + 1}` });
+    monthLabels.push({ label: `${shortMonths[m]} ${y}`, key: `month_${y}_${String(m + 1).padStart(2, "0")}` });
     curr.setUTCMonth(curr.getUTCMonth() + 1);
   }
 
@@ -409,10 +453,11 @@ export default async function AreasPrivativasPage(props: PageProps) {
       </div>
 
       {/* Comparisons / Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard accent="brand" label="Lotes Totales" value={vm.summary.projectTotalApoles} icon={<Layers className="h-3.5 w-3.5" />} />
         <StatCard accent="cyan" label="M2 Privativos" value={vm.summary.projectTotalM2} icon={<MapPin className="h-3.5 w-3.5" />} />
         <StatCard accent="lime" label="Lotes Construidos" value={vm.summary.legacyBuiltLots} icon={<Home className="h-3.5 w-3.5" />} />
+        <StatCard accent="gold" label="Cuotas Ord. 2025 (Mensual)" value={formattedSum} icon={<Wallet className="h-3.5 w-3.5" />} />
       </div>
 
       {reportVm && (
@@ -508,8 +553,8 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 </h4>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between py-0.5 border-b border-line/30">
-                    <span className="text-ink-soft font-medium">Fracciones de áreas privativas</span>
-                    <span className="font-bold text-ink">{reportVm.activeChildren}</span>
+                    <span className="text-ink-soft font-medium">FAPAs</span>
+                    <span className="font-bold text-ink">{reportVm.areasWithUseType}</span>
                   </div>
                   <div className="flex justify-between py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Fusiones de Áreas / lotes</span>
@@ -614,11 +659,11 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Áreas comunes del condominio</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales área privativa</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 construcción áreas comunes</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 de construcción AP/FAP</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 de construcción AP/FAPA</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Áreas comunes subcondominio</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales FAP</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">% Indiviso FAP</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso FAP/Condominio</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales FAPA</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">% Indiviso FAPA</th>
+                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso FAPA/Condominio</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Uso de suelo</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Cartera vencida 2017-2024</th>
                 <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Pago Anticipado 2024</th>

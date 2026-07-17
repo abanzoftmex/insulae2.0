@@ -153,7 +153,7 @@ function toCell(
 }
 
 function rowToVM(row: FeeReportRow): FeeReportRowVM {
-  const prefix = row.parentId ? "FAP" : "AP";
+  const prefix = row.parentId ? "FAPA" : "AP";
   const areaLabel = `${prefix}: ${row.name}`;
   // User Requirement: "cuando es AP: solo muestra propietario y cuando es FAP: muestra propietario y comercio"
   const hasCommerce = !!row.parentId;
@@ -324,7 +324,7 @@ export function buildExtraordinaryColumnHeaders(
 }
 
 function rowToExtraordinaryVM(row: FeeReportRow): FeeReportExtraordinaryRowVM {
-  const prefix = row.parentId ? "FAP" : "AP";
+  const prefix = row.parentId ? "FAPA" : "AP";
   const areaLabel = `${prefix}: ${row.name}`;
   
   // User Requirement: "cuando es AP: solo muestra propietario y cuando es FAP: muestra propietario y comercio"

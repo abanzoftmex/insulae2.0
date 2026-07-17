@@ -155,11 +155,15 @@ function toDisplayName(name: string, role: "FUSION" | "PARENT" | "CHILD" | "SING
     return name;
   }
 
-  if (/^fap\s*:/i.test(name.trim())) {
+  if (/^fapa\s*:/i.test(name.trim())) {
     return name;
   }
 
-  return `FAP: ${name}`;
+  if (/^fap\s*:/i.test(name.trim())) {
+    return name.replace(/^fap\s*:/i, "FAPA:");
+  }
+
+  return `FAPA: ${name}`;
 }
 
 export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateAreaListingVM {

@@ -111,8 +111,22 @@ export default async function ReporteCondominioPage() {
         </Card>
 
         <div className="grid grid-cols-1 gap-3">
-          <StatCard accent="cyan" label="APoLes (Padres)" value={vm.activeParents} trend={{ value: `Inactivas: ${vm.builtAreas}`, isUp: true }} icon={<Activity className="h-3.5 w-3.5" />} />
-          <StatCard accent="lime" label="FAPs (Hijos)" value={vm.activeChildren} icon={<Layers className="h-3.5 w-3.5" />} />
+          <StatCard
+            accent="cyan"
+            label="APoLes (Padres)"
+            value={vm.activeParents}
+            trend={{
+              value: `Inactivas: ${vm.inactiveParents}`,
+              isUp: Number(vm.inactiveParents) === 0
+            }}
+            icon={<Activity className="h-3.5 w-3.5" />}
+          />
+          <StatCard
+            accent="lime"
+            label="FAPAs (Hijos)"
+            value={vm.areasWithUseType}
+            icon={<Layers className="h-3.5 w-3.5" />}
+          />
         </div>
       </div>
 
@@ -210,8 +224,8 @@ export default async function ReporteCondominioPage() {
                 </h4>
                 <div className="space-y-1.5 text-xs">
                   <div className="flex justify-between py-0.5 border-b border-line/30">
-                    <span className="text-ink-soft font-medium">Fracciones de áreas privativas</span>
-                    <span className="font-bold text-ink">{vm.activeChildren}</span>
+                    <span className="text-ink-soft font-medium">FAPAs</span>
+                    <span className="font-bold text-ink">{vm.areasWithUseType}</span>
                   </div>
                   <div className="flex justify-between py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Fusiones de Áreas / lotes</span>

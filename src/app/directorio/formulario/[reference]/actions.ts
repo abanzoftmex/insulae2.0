@@ -255,7 +255,7 @@ export async function createNestedUserAction(
   try {
     const parent = await prisma.user.findUnique({
       where: { id: parentId },
-      select: { idVq: true, condominiumId: true }
+      select: { idVq: true, apolfap: true, condominiumId: true }
     });
 
     if (!parent) {
@@ -263,6 +263,7 @@ export async function createNestedUserAction(
     }
 
     const parentIdVq = parent.idVq || "#000";
+    const code = data.registrationTypeCode || "8-99";
 
     // Query active siblings (children of this parent)
     const siblings = await prisma.user.findMany({
@@ -270,11 +271,10 @@ export async function createNestedUserAction(
         parentId,
         isActive: true,
       },
-      select: { idVq: true }
+      select: { idVq: true, registrationTypeCode: true }
     });
 
-    // Extract numerical suffixes, e.g. from "#001-1" -> 1
-    const prefix = `${parentIdVq}-`;
+    const prefix = `${parentIdVq}-${code}-`;
     const usedSuffixes = new Set<number>();
     for (const sib of siblings) {
       if (sib.idVq && sib.idVq.startsWith(prefix)) {
@@ -291,7 +291,13 @@ export async function createNestedUserAction(
       nextSuffix++;
     }
 
-    const generatedIdVq = `${parentIdVq}-${nextSuffix}`;
+    const generatedIdVq = `${parentIdVq}-${code}-${nextSuffix}`;
+
+    const parentApol = parent.apolfap || "";
+    let computedChildEmail = null;
+    if (parentApol && generatedIdVq) {
+      computedChildEmail = `ID-${parentApol.trim()}${generatedIdVq.trim()}`;
+    }
 
     const newChild = await prisma.user.create({
       data: {
@@ -303,6 +309,7 @@ export async function createNestedUserAction(
         lastName: data.lastName || null,
         registrationTypeCode: data.registrationTypeCode || null,
         registrationTypeDesc: data.registrationTypeDesc || null,
+        email: computedChildEmail,
         isActive: true,
       }
     });

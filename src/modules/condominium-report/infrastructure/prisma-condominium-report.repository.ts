@@ -212,10 +212,12 @@ export class PrismaCondominiumReportRepository
     // 1. parentAreasCount
     const parentAreasCount = parentAreas.length;
     // 2. parentAreasM2
-    const parentAreasM2 = parentAreas.reduce(
-      (acc, area) => acc + decimalToNumber(area.m2Original),
-      0
-    );
+    const parentAreasM2 = parentAreas.reduce((acc, area) => {
+      const m2Original = decimalToNumber(area.m2Original);
+      const m2Apole = decimalToNumber(area.m2Apole);
+      const m2Updated = m2Apole > 0 ? m2Apole : m2Original;
+      return acc + m2Updated;
+    }, 0);
     // Group active children by parentPrivateAreaId to sum up common area in-memory
     const childAreasByParentId = new Map<string, PrivateAreaSnapshot[]>();
     for (const area of reportableAreas) {
@@ -226,8 +228,7 @@ export class PrismaCondominiumReportRepository
       }
     }
 
-    // 3. parentAreasCommonM2
-    let parentAreasCommonM2 = parentAreas.reduce((acc, parentArea) => {
+    const parentAreasCommonM2 = parentAreas.reduce((acc, parentArea) => {
       const children = childAreasByParentId.get(parentArea.id) ?? [];
       const childrenCommonAreaChildrenM2 = children.reduce(
         (sum, child) => sum + decimalToNumber(child.m2ConstructionCommonArea),
@@ -235,13 +236,6 @@ export class PrismaCondominiumReportRepository
       );
       return acc + childrenCommonAreaChildrenM2;
     }, 0);
-
-    if (parentAreasCommonM2 === 0) {
-      parentAreasCommonM2 = parentAreas.reduce(
-        (acc, area) => acc + decimalToNumber(area.m2CommonArea),
-        0
-      );
-    }
     // 4. activeFusionsCount
     const activeFusionsCount = reportableAreas.filter((area) => area.isFusion).length;
 
@@ -558,7 +552,7 @@ export class PrismaCondominiumReportRepository
       projectName: project?.name ?? null,
       projectTotalApoles: realTotalApoles,
       projectPrivateAreasM2: decimalToNumber(project?.privateAreasM2),
-      projectTotalM2: decimalToNumber(project?.totalM2),
+      projectTotalM2: decimalToNumber(project?.privateAreasM2) + decimalToNumber(project?.commonAreasM2),
       projectCommonAreasM2: decimalToNumber(project?.commonAreasM2),
       totalRegisteredPrivateAreas,
       activePrivateAreas,

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Fragment } from "react";
+import { prisma } from "@/shared/infrastructure/db/prisma";
 import {
   TrendingUp,
   TrendingDown,
@@ -8,6 +9,7 @@ import {
   Calendar,
   Info,
   Plus,
+  Wallet,
 } from "lucide-react";
 
 import {
@@ -19,6 +21,24 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
+
+function renderRowLabel(label: string, isTotal: boolean, textToneClass?: string) {
+  if (isTotal) {
+    return <span className={cn("text-[12px] font-bold uppercase tracking-wider", textToneClass)}>{label}</span>;
+  }
+  const match = label.match(/^([^(]+)\s*\(([^)]+)\)$/);
+  if (match) {
+    const title = match[1].trim();
+    const subtitle = match[2].trim();
+    return (
+      <div className="flex flex-col py-1">
+        <span className="text-[12px] font-bold text-ink leading-snug">{title}</span>
+        <span className="text-[9px] font-bold text-ink-soft/75 uppercase tracking-wider mt-0.5">{subtitle}</span>
+      </div>
+    );
+  }
+  return <span className="text-[12px] font-bold text-ink leading-snug">{label}</span>;
+}
 
 export const metadata: Metadata = {
   title: "Resumen Financiero | Insulae 2.0",
@@ -107,7 +127,10 @@ function CompactFinancialTable({
           <table className="w-full text-left border-collapse min-w-480">
             <thead>
               <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
-                <th className={cn("sticky left-0 z-30 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", tone.headerBg, tone.textTone)}>
+                <th 
+                  style={{ minWidth: "260px", width: "260px" }}
+                  className={cn("sticky left-0 z-30 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", tone.headerBg, tone.textTone)}
+                >
                   {firstColumnLabel}
                 </th>
                 {table.years.map((year) => (
@@ -127,11 +150,14 @@ function CompactFinancialTable({
             <tbody className="divide-y divide-line/30">
               {table.rows.map((row) => (
                 <tr key={row.id} className={cn("h-10 hover:bg-canvas/10 transition-colors", row.isTotal && tone.totalRowBg)}>
-                  <td className={cn(
-                    "sticky left-0 px-4 text-[12px] font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
-                    row.isTotal ? tone.textTone : tone.firstColBg
-                  )}>
-                    {row.label}
+                  <td 
+                    style={{ minWidth: "260px", width: "260px" }}
+                    className={cn(
+                      "sticky left-0 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
+                      row.isTotal ? tone.textTone : tone.firstColBg
+                    )}
+                  >
+                    {renderRowLabel(row.label, row.isTotal, row.isTotal ? tone.textTone : undefined)}
                   </td>
                   {row.yearly.map((yearSlice) => (
                     <Fragment key={`body-${row.id}-${yearSlice.year}`}>
@@ -179,6 +205,44 @@ export default async function ResumenFinancieroPage({
         <p className="text-sm">No se encontró información financiera disponible.</p>
       </div>
     );
+  }
+
+  // Get sum of "Cuotas ordinarias 2025 (mensual)"
+  const condo = await prisma.condominium.findFirst({
+    where: { isActive: true },
+    select: { id: true }
+  });
+  let ordinary2025MonthlySum = 0;
+  if (condo) {
+    const activePrivateAreasWithCharges = await prisma.privateArea.findMany({
+      where: {
+        condominiumId: condo.id,
+        isActive: true,
+      },
+      select: {
+        areaCharges: {
+          where: {
+            isActive: true,
+            chargeGroup: {
+              kind: "ORDINARY",
+            },
+          },
+          select: {
+            amount: true,
+            startsAt: true,
+          },
+        },
+      },
+    });
+
+    for (const area of activePrivateAreasWithCharges) {
+      const ordinaryCharge2025 = area.areaCharges.find((ac) => {
+        return ac.startsAt?.getUTCFullYear() === 2025;
+      });
+      if (ordinaryCharge2025) {
+        ordinary2025MonthlySum += Number(ordinaryCharge2025.amount);
+      }
+    }
   }
 
   // Dynamically extract values from multi-year tables
@@ -307,7 +371,7 @@ export default async function ResumenFinancieroPage({
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
         {showOrdinary ? (
           <StatCard accent="brand" label="Ingresos Ordinarios" value={cardOrdIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} />
         ) : (
@@ -322,6 +386,12 @@ export default async function ResumenFinancieroPage({
           value={cardAnnualBalance}
           icon={<Calendar className="h-3.5 w-3.5" />}
           className={cn(balanceValue >= 0 ? "bg-brand-mint/40" : "bg-danger/10 border-danger/20")}
+        />
+        <StatCard 
+          accent="gold" 
+          label="Cuotas Ord. 2025 (Mensual)" 
+          value={formatCurrency(ordinary2025MonthlySum)} 
+          icon={<Wallet className="h-3.5 w-3.5" />} 
         />
       </div>
 
