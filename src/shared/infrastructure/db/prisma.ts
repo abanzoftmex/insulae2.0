@@ -28,12 +28,6 @@ if (!databaseUrl) {
   throw new Error("DATABASE_URL es requerido para inicializar PrismaClient");
 }
 
-// DIAGNÓSTICO TEMPORAL — solo host/db, nunca credenciales — quitar después.
-try {
-  const u = new URL(databaseUrl);
-  console.log(`[DIAG] DATABASE_URL host=${u.hostname} db=${u.pathname}`);
-} catch {}
-
 const adapter = new PrismaPg({ connectionString: normalizeNeonSslMode(databaseUrl) });
 
 declare global {
