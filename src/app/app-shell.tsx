@@ -417,8 +417,8 @@ export function AppShell({
                 <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-10 object-contain" />
               )}
               <div className="text-center">
-                <span className="font-bold text-brand text-[16px] tracking-tight block">INSULAE</span>
-                <span className="text-[10px] font-medium text-ink-soft/60 tracking-wider block">Sistema condominal</span>
+                <span className="font-bold text-brand text-[16px] tracking-tight block">VAL'QUIRICO</span>
+                <span className="text-[9px] font-bold text-brand-deep uppercase tracking-widest block bg-[#f1eac1] text-[#3d3c22] px-2 py-0.5 rounded-full mt-1 font-sans">Insulae 2.0</span>
               </div>
             </div>
           )}
@@ -565,10 +565,7 @@ export function AppShell({
             <Menu style={{ width: 18, height: 18 }} />
           </button>
           <span className="font-semibold text-brand text-sm truncate">
-            INSULAE
-            {navbarLogoAlt && (
-              <span className="font-normal text-ink-soft/80"> · {navbarLogoAlt}</span>
-            )}
+            VAL'QUIRICO · Insulae 2.0
           </span>
         </div>
 
@@ -604,8 +601,8 @@ export function AppShell({
                 <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-8 object-contain" />
               )}
               <div>
-                <span className="font-bold text-brand text-[16px] block">INSULAE</span>
-                <span className="text-[10px] font-medium text-ink-soft/60 tracking-wider block">Sistema condominal</span>
+                <span className="font-bold text-brand text-[16px] block">VAL'QUIRICO</span>
+                <span className="text-[9px] font-bold text-[#3d3c22] uppercase tracking-widest block bg-[#f1eac1] px-2 py-0.5 rounded-full mt-0.5 font-sans text-center">Insulae 2.0</span>
               </div>
             </div>
             <button

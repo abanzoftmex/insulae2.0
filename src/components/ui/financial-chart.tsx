@@ -113,8 +113,8 @@ export function FinancialChart({ data }: FinancialChartProps) {
               <stop offset="95%" stopColor="#00754A" stopOpacity={0} />
             </linearGradient>
             <linearGradient id="gradGastos" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#c82014" stopOpacity={0.1} />
-              <stop offset="95%" stopColor="#c82014" stopOpacity={0} />
+              <stop offset="5%" stopColor="#1d4ed8" stopOpacity={0.15} />
+              <stop offset="95%" stopColor="#1d4ed8" stopOpacity={0} />
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
@@ -144,11 +144,11 @@ export function FinancialChart({ data }: FinancialChartProps) {
           <Area
             type="monotone"
             dataKey="gastos"
-            stroke="#c82014"
+            stroke="#1d4ed8"
             strokeWidth={1.5}
             fill="url(#gradGastos)"
             dot={false}
-            activeDot={{ r: 4, strokeWidth: 0, fill: "#c82014" }}
+            activeDot={{ r: 4, strokeWidth: 0, fill: "#1d4ed8" }}
           />
         </AreaChart>
       </ResponsiveContainer>

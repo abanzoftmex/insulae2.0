@@ -27,6 +27,12 @@ type ProjectSnapshot = {
   developedBy?: string | null;
   usesLandUseFormula?: boolean | null;
   hasVccc?: boolean | null;
+  cus?: Prisma.Decimal | number | null;
+  cusPermitido?: Prisma.Decimal | number | null;
+  barrios?: number | null;
+  totalConstruccion?: Prisma.Decimal | number | null;
+  cosPrivativo?: Prisma.Decimal | number | null;
+  cosComun?: Prisma.Decimal | number | null;
 };
 
 function decimalToNumber(value: Prisma.Decimal | number | null | undefined): number {
@@ -81,6 +87,12 @@ export class PrismaCondominiumOverviewRepository
               developedBy: true,
               usesLandUseFormula: true,
               hasVccc: true,
+              cus: true,
+              cusPermitido: true,
+              barrios: true,
+              totalConstruccion: true,
+              cosPrivativo: true,
+              cosComun: true,
             },
           },
         },
@@ -119,6 +131,12 @@ export class PrismaCondominiumOverviewRepository
               developedBy: true,
               usesLandUseFormula: true,
               hasVccc: true,
+              cus: true,
+              cusPermitido: true,
+              barrios: true,
+              totalConstruccion: true,
+              cosPrivativo: true,
+              cosComun: true,
             },
           },
         },
@@ -261,7 +279,12 @@ export class PrismaCondominiumOverviewRepository
 
     const activePrivateAreas = activeParentAreas.length;
     const inactivePrivateAreas = inactiveParentAreas.length;
-    const privateAreasWithUseTypeCount = privateAreasWithUseType.length;
+
+    // Only count use-type for parent-level (non-fusion, non-child) areas
+    const privateAreasWithUseTypeParents = activeParentAreas.filter(
+      (area) => area.useType && area.useType.trim().length > 0
+    );
+    const privateAreasWithUseTypeCount = privateAreasWithUseTypeParents.length;
     const totalPrivateAreaM2 = activeParentAreas.reduce(
       (acc, area) => acc + decimalToNumber(area.m2Original),
       0
@@ -291,6 +314,12 @@ export class PrismaCondominiumOverviewRepository
       footerRight: project?.footerRight ?? null,
       usesLandUseFormula: project?.usesLandUseFormula ?? false,
       hasVccc: project?.hasVccc ?? false,
+      cus: project?.cus !== null && project?.cus !== undefined ? decimalToNumber(project.cus) : null,
+      cusPermitido: project?.cusPermitido !== null && project?.cusPermitido !== undefined ? decimalToNumber(project.cusPermitido) : null,
+      barrios: project?.barrios ?? null,
+      totalConstruccion: project?.totalConstruccion !== null && project?.totalConstruccion !== undefined ? decimalToNumber(project.totalConstruccion) : null,
+      cosPrivativo: project?.cosPrivativo !== null && project?.cosPrivativo !== undefined ? decimalToNumber(project.cosPrivativo) : null,
+      cosComun: project?.cosComun !== null && project?.cosComun !== undefined ? decimalToNumber(project.cosComun) : null,
       activePrivateAreas,
       inactivePrivateAreas,
       privateAreasWithUseType: privateAreasWithUseTypeCount,

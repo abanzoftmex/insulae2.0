@@ -33,48 +33,49 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-canvas font-sans">
-      <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[minmax(420px,48%)_1fr]">
+    <div className="min-h-screen w-full bg-[#0e0e0a] font-sans overflow-hidden">
+      <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[minmax(460px,40%)_1fr]">
         {/* Left: Login */}
-        <div className="relative flex flex-col justify-center px-5 py-10 sm:px-10 lg:px-14 bg-linear-to-br from-[#122420] via-brand-deep to-[#2d5249]">
-          {/* subtle texture + glow */}
-          <div className="pointer-events-none absolute inset-0">
-            <div className="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-gold/12 blur-3xl" />
-            <div className="absolute -bottom-24 -right-24 h-72 w-72 rounded-full bg-brand-mint/18 blur-3xl" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_25%,rgba(203,162,88,0.10),transparent_52%),radial-gradient(circle_at_90%_10%,rgba(212,233,226,0.10),transparent_45%)]" />
+        <div className="relative flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 bg-gradient-to-br from-[#0e0e0a] via-[#242416] to-[#32321e]">
+          {/* subtle glow spots */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-32 -left-32 h-[350px] w-[350px] rounded-full bg-brand/10 blur-[100px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-[#b58c42]/5 blur-[120px]" />
+            <div className="absolute -bottom-32 -right-32 h-[350px] w-[350px] rounded-full bg-[#5d5b35]/10 blur-[100px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(181,140,66,0.03),transparent_60%)]" />
           </div>
 
-          <div className="relative mx-auto w-full max-w-[460px]">
-            {/* Logo arriba del login */}
-            <div className="mb-8">
+          <div className="relative mx-auto w-full max-w-[420px] flex flex-col justify-between min-h-[80vh]">
+            {/* Logo */}
+            <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-700">
               <Image
                 src="/brand/valquirico-logo-light.png"
                 alt="Val'Quirico"
                 width={520}
                 height={140}
                 priority
-                className="h-auto w-[240px] sm:w-[280px] object-contain"
+                className="h-auto w-[180px] sm:w-[220px] object-contain brightness-110"
               />
-              <p className="mt-4 text-white/70 text-[13px] leading-relaxed max-w-[40ch]">
-                Accede a la plataforma condominal con tu usuario y contraseña.
+              <p className="mt-4 text-white/50 text-xs font-medium tracking-wide leading-relaxed max-w-[36ch]">
+                Plataforma integrada de administración, finanzas y control operativo.
               </p>
             </div>
 
             {/* Card */}
-            <div className="rounded-[16px] bg-card/85 backdrop-blur-md shadow-layered border border-line p-6 sm:p-8">
+            <div className="rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 sm:p-8 animate-in fade-in zoom-in-95 duration-1000 delay-100">
               <div className="mb-6">
-                <h1 className="text-[30px] leading-[1.05] tracking-tight text-ink font-extrabold">
-                  Bienvenido.
+                <h1 className="text-2xl font-black tracking-tight text-white uppercase">
+                  Acceso Administrativo
                 </h1>
-                <p className="mt-2 text-[13px] text-ink-soft">
-                  Inicia sesión para continuar.
+                <p className="mt-1.5 text-xs text-white/40 font-medium tracking-wide">
+                  Ingresa tus credenciales autorizadas.
                 </p>
               </div>
 
               {error && (
-                <div className="mb-5 rounded-xl border border-red-200/70 bg-red-50 px-3.5 py-3 text-[12px] font-semibold text-red-700 flex items-start gap-2.5">
+                <div className="mb-5 rounded-xl border border-red-500/20 bg-red-950/20 px-3.5 py-3 text-[12px] font-semibold text-red-300 flex items-start gap-2.5 animate-in shake duration-300">
                   <svg
-                    className="w-4 h-4 shrink-0 text-red-600 mt-0.5"
+                    className="w-4 h-4 shrink-0 text-red-400 mt-0.5"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -94,7 +95,7 @@ export default function LoginPage() {
                 <div className="space-y-1.5">
                   <label
                     htmlFor="email"
-                    className="text-ink-soft text-[11px] font-bold uppercase tracking-[0.12em] ml-0.5"
+                    className="text-white/50 text-[10px] font-extrabold uppercase tracking-widest ml-0.5"
                   >
                     Email
                   </label>
@@ -105,14 +106,15 @@ export default function LoginPage() {
                     required
                     disabled={isPending}
                     autoComplete="email"
-                    className="w-full bg-canvas-2/70 border border-line focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 focus:outline-none transition-standard text-ink text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60"
+                    placeholder="correo@ejemplo.com"
+                    className="w-full bg-white/[0.04] border border-white/10 focus:border-[#b58c42]/50 focus:ring-4 focus:ring-[#b58c42]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60"
                   />
                 </div>
 
                 <div className="space-y-1.5">
                   <label
                     htmlFor="password"
-                    className="text-ink-soft text-[11px] font-bold uppercase tracking-[0.12em] ml-0.5"
+                    className="text-white/50 text-[10px] font-extrabold uppercase tracking-widest ml-0.5"
                   >
                     Contraseña
                   </label>
@@ -124,12 +126,13 @@ export default function LoginPage() {
                       required
                       disabled={isPending}
                       autoComplete="current-password"
-                      className="w-full bg-canvas-2/70 border border-line focus:border-brand-accent focus:ring-4 focus:ring-brand-accent/10 focus:outline-none transition-standard text-ink text-[14px] font-semibold h-11 pl-4 pr-11 rounded-xl disabled:opacity-60"
+                      placeholder="••••••••"
+                      className="w-full bg-white/[0.04] border border-white/10 focus:border-[#b58c42]/50 focus:ring-4 focus:ring-[#b58c42]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 pl-4 pr-11 rounded-xl disabled:opacity-60"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 h-9 w-9 grid place-items-center rounded-lg text-ink-soft hover:text-brand transition-standard hover:bg-canvas"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 h-8 w-8 grid place-items-center rounded-lg text-white/30 hover:text-white transition-standard hover:bg-white/5"
                       aria-label={
                         showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
                       }
@@ -146,12 +149,12 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-full mt-5 bg-gold hover:bg-[#bca065] text-white font-extrabold text-[12px] tracking-[0.16em] h-12 rounded-pill transition-standard shadow-layered active-scale disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2"
+                  className="w-full mt-6 bg-[#b58c42] hover:bg-[#a07c39] text-[#0e0e0a] font-black text-xs tracking-widest h-11 rounded-full transition-standard shadow-lg shadow-[#b58c42]/10 active-scale disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {isPending ? (
                     <>
                       <svg
-                        className="animate-spin h-4 w-4 text-white"
+                        className="animate-spin h-4 w-4 text-[#0e0e0a]"
                         fill="none"
                         viewBox="0 0 24 24"
                       >
@@ -178,42 +181,35 @@ export default function LoginPage() {
               </form>
             </div>
 
-            {/* Logos auxiliares debajo (1 a la izq, 2 a la der) */}
-            <div className="mt-7 flex items-center justify-between gap-6">
-              <div className="flex-1 flex items-center justify-end">
-                <Image
-                  src="/brand/abanzoft-logo-light.png"
-                  alt="Abanzoft"
-                  width={220}
-                  height={80}
-                  className="w-[150px] h-auto object-contain opacity-80"
-                />
-              </div>
+            {/* Footer */}
+            <div className="mt-8 flex items-center justify-between border-t border-white/5 pt-6 animate-in fade-in duration-1000 delay-200">
+              <span className="text-[10px] text-white/30 font-bold tracking-widest uppercase">
+                diseñado por
+              </span>
+              <Image
+                src="/brand/abanzoft-logo-light.png"
+                alt="Abanzoft"
+                width={120}
+                height={40}
+                className="w-[90px] h-auto object-contain opacity-40 hover:opacity-75 transition-opacity"
+              />
             </div>
           </div>
         </div>
 
-        {/* Right: Image */}
-        <div className="relative hidden lg:block">
+        {/* Right: Cover Image */}
+        <div className="relative hidden lg:block overflow-hidden">
           <Image
             src="/images/fdo1.jpg"
-            alt="Imagen de fondo"
+            alt="Fondo Val'Quirico"
             fill
             priority
-            sizes="52vw"
-            className="object-cover"
+            sizes="60vw"
+            className="object-cover transition-transform duration-10000 scale-105 hover:scale-100"
           />
-          {/* overlays for readability / luxury tone */}
-          <div className="absolute inset-0 bg-black/45" />
-          <div className="absolute inset-0 bg-linear-to-l from-black/40 via-black/25 to-black/10" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(203,162,88,0.18),transparent_55%)]" />
-          <div className="absolute inset-y-0 left-0 w-px bg-white/20" />
-
-          <div className="absolute inset-x-10 bottom-10">
-            <p className="text-white/92 text-[44px] leading-[0.95] tracking-[-0.02em] drop-shadow-[0_12px_30px_rgba(0,0,0,0.55)] font-bold">
-              Sistema de Gestión Condominal
-            </p>
-          </div>
+          {/* overlay layers */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0e0e0a]/95 via-[#0e0e0a]/30 to-transparent" />
+          <div className="absolute inset-0 bg-black/30" />
         </div>
       </div>
     </div>

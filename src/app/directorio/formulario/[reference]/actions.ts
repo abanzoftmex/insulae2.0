@@ -250,7 +250,18 @@ export async function deleteRegistrationTypeAction(id: string) {
 
 export async function createNestedUserAction(
   parentId: string,
-  data: { firstName: string; lastName: string; registrationTypeCode: string; registrationTypeDesc: string }
+  data: {
+    firstName: string;
+    lastNamePaterno?: string;
+    lastNameMaterno?: string;
+    curp?: string;
+    personalPhone?: string;
+    personalEmail?: string;
+    birthDate?: string;
+    gender?: string;
+    registrationTypeCode: string;
+    registrationTypeDesc: string;
+  }
 ) {
   try {
     const parent = await prisma.user.findUnique({
@@ -306,7 +317,14 @@ export async function createNestedUserAction(
         idVq: generatedIdVq,
         userType: "INDIVIDUAL",
         firstName: data.firstName || null,
-        lastName: data.lastName || null,
+        lastName: `${data.lastNamePaterno || ""} ${data.lastNameMaterno || ""}`.trim() || null,
+        lastNamePaterno: data.lastNamePaterno || null,
+        lastNameMaterno: data.lastNameMaterno || null,
+        curp: data.curp || null,
+        personalPhone: data.personalPhone || null,
+        personalEmail: data.personalEmail || null,
+        birthDate: data.birthDate ? new Date(data.birthDate) : null,
+        gender: data.gender || null,
         registrationTypeCode: data.registrationTypeCode || null,
         registrationTypeDesc: data.registrationTypeDesc || null,
         email: computedChildEmail,

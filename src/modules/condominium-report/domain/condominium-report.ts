@@ -35,6 +35,17 @@ export interface CondominiumReport {
   parentAreasCount: number;
   parentAreasM2: number;
   parentAreasCommonM2: number;
+  /** APOLEs: parent areas WITHOUT m2CommonArea (purely private lots) */
+  apolCount: number;
+  apolAreasM2: number;
+  /** Parent areas that ARE common areas (m2CommonArea > 0) */
+  commonAreaParentCount: number;
+  /** Sum of m2CommonArea for parent areas — direct column value, not derived from children */
+  commonAreasDirectM2: number;
+  /** Children belonging to APOL parents */
+  activeChildrenOfApolAreas: number;
+  /** Children belonging to common-area parents */
+  activeChildrenOfCommonAreas: number;
   activeFusionsCount: number;
   classificationBaseTotal: number;
   classificationBaseLabel: string;
@@ -51,4 +62,10 @@ export interface CondominiumReport {
   lastUpdatedAt: Date;
   lastUpdatedBy: string | null;
   generatedAt: Date;
+  cus: number | null;
+  cusPermitido: number | null;
+  barrios: number | null;
+  totalConstruccion: number | null;
+  cosPrivativo: number | null;
+  cosComun: number | null;
 }

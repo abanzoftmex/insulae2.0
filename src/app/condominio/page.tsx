@@ -50,8 +50,24 @@ export default async function CondominioPage() {
     condominiumImageUrl: "",
     footerLogoUrl: "",
     privacyNoticePdfUrl: "",
+    cus: "",
+    cusPermitido: "",
+    barrios: "",
+    totalConstruccion: "",
+    cosPrivativo: "",
+    cosComun: "",
+    commonAreaHaloVerde: "",
+    commonAreaEquipamiento: "",
+    commonAreaEstacionamiento: "",
+    commonAreaCalles: "",
   };
   let hasLoadError = false;
+  let caDetails = {
+    haloVerde: { m2: "", count: 0 },
+    equipamiento: { m2: "", count: 0 },
+    estacionamiento: { m2: "", count: 0 },
+    calles: { m2: "", count: 0 }
+  };
 
   try {
     const [{ getCondominiumOverviewUseCase }, { toCondominiumOverviewVM }] = await Promise.all([
@@ -62,6 +78,41 @@ export default async function CondominioPage() {
     const response = await getCondominiumOverviewUseCase.execute();
     overview = response ? toCondominiumOverviewVM(response) : null;
     if (response) {
+      const { prisma } = await import("@/shared/infrastructure/db/prisma");
+      const dbCommonAreas = await prisma.privateArea.findMany({
+        where: {
+          condominium: { slug: PROJECT_SCOPE.condominiumCode },
+          isActive: true,
+          parentPrivateAreaId: null,
+          name: {
+            in: ["Halo Verde", "Áreas comunes zona de equipamiento", "Estacionamiento", "Áreas comunes Calles"]
+          }
+        },
+        select: {
+          name: true,
+          m2CommonAreaChildren: true,
+          childPrivateAreas: {
+            where: { isActive: true },
+            select: { id: true }
+          }
+        }
+      });
+
+      const findCA = (name: string) => {
+        const found = dbCommonAreas.find(a => a.name === name);
+        return {
+          m2: found?.m2CommonAreaChildren ? found.m2CommonAreaChildren.toString() : "",
+          count: found?.childPrivateAreas.length ?? 0
+        };
+      };
+
+      caDetails = {
+        haloVerde: findCA("Halo Verde"),
+        equipamiento: findCA("Áreas comunes zona de equipamiento"),
+        estacionamiento: findCA("Estacionamiento"),
+        calles: findCA("Áreas comunes Calles")
+      };
+
       editorInitialValues = {
         projectId: response.projectId ?? "",
         projectName: response.projectName ?? "",
@@ -83,6 +134,16 @@ export default async function CondominioPage() {
         condominiumImageUrl: response.condominiumImageUrl ?? "",
         footerLogoUrl: response.footerLogoUrl ?? "",
         privacyNoticePdfUrl: response.privacyNoticePdfUrl ?? "",
+        cus: response.cus ? response.cus.toString() : "",
+        cusPermitido: response.cusPermitido ? response.cusPermitido.toString() : "",
+        barrios: response.barrios ? response.barrios.toString() : "",
+        totalConstruccion: response.totalConstruccion ? response.totalConstruccion.toString() : "",
+        cosPrivativo: response.cosPrivativo ? response.cosPrivativo.toString() : "",
+        cosComun: response.cosComun ? response.cosComun.toString() : "",
+        commonAreaHaloVerde: caDetails.haloVerde.m2,
+        commonAreaEquipamiento: caDetails.equipamiento.m2,
+        commonAreaEstacionamiento: caDetails.estacionamiento.m2,
+        commonAreaCalles: caDetails.calles.m2,
       };
     }
   } catch (error) {
@@ -90,9 +151,10 @@ export default async function CondominioPage() {
     hasLoadError = true;
   }
 
-  const activeCount = overview ? parseInt(overview.activePrivateAreas.replace(/,/g, "")) : 0;
-  const inactiveCount = overview ? parseInt(overview.inactivePrivateAreas.replace(/,/g, "")) : 0;
-  const totalRegistered = activeCount + inactiveCount;
+  const activeCount = overview ? overview.realActiveParentAreas : 0;
+  const totalCapacity = overview ? overview.totalCapacityApoles : 0;
+  // For display, use configured capacity as denominator; if 0 fall back to active count
+  const displayTotal = totalCapacity > 0 ? totalCapacity : activeCount;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
@@ -130,76 +192,169 @@ export default async function CondominioPage() {
       </div>
 
       {/* Main KPI Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <StatCard accent="cyan" label="APoLes Activos" value={overview?.activePrivateAreas ?? "0"} trend={{ value: `Inactivos: ${overview?.inactivePrivateAreas ?? "0"}`, isUp: true }} icon={<Layers className="h-3.5 w-3.5" />} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <StatCard
+          accent="cyan"
+          label="APoLes Activos"
+          value={overview?.activePrivateAreas ?? "0"}
+          icon={<Layers className="h-3.5 w-3.5" />}
+        />
         <StatCard accent="brand" label="M2 Privativos" value={overview ? `${overview.totalPrivateAreaM2}` : "0"} icon={<MapPin className="h-3.5 w-3.5" />} />
         <StatCard accent="gold" label="Documentos Registrados" value={overview?.projectDocumentCount ?? "0"} icon={<FileText className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="Usuarios Activos" value={overview?.activeUsers ?? "0"} icon={<Users className="h-3.5 w-3.5" />} />
       </div>
 
       {/* Detail Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <div className="lg:col-span-2 space-y-5">
-          {/* General Info Card */}
-          <Card className="shadow-layered border-transparent">
-            <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Datos del Condominio</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                {[
-                  { label: "Nombre Comercial", value: overview?.projectName },
-                  { label: "Nomenclatura", value: overview?.projectInitials },
-                  { label: "Tipo de Condominio", value: overview?.condominiumFormat },
-                  { label: "Año Arranque", value: overview?.startYear },
-                  { label: "Superficie Total", value: overview ? `${overview.totalM2} m2` : null },
-                  { label: "Total Lotes", value: overview?.totalApoles },
-                  { label: "Áreas Comunes", value: overview ? `${overview.commonAreasM2} m2` : null },
-                  { label: "Áreas Privativas", value: overview ? `${overview.privateAreasM2} m2` : null },
-                  { label: "Desarrollado Por", value: overview?.developedBy },
-                  { label: "Fórmula de Suelo", value: overview?.usesLandUseFormula ? "Sí" : "No" },
-                  { label: "Manejo VCCC", value: overview?.hasVccc ? "Sí" : "No" },
-                ].map((f, i) => (
-                  <div key={i} className="p-3 rounded bg-canvas border border-line/50">
-                    <p className="text-[9px] font-bold uppercase text-ink-soft/70 tracking-tight leading-none">{f.label}</p>
-                    <p className="text-[12px] font-bold text-ink mt-1.5 break-words">{f.value || "—"}</p>
-                  </div>
-                ))}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {/* Column 1: Identidad y Formato */}
+        <Card className="shadow-layered border-transparent flex flex-col h-full bg-card">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Identidad del Condominio</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 flex-1 space-y-3.5">
+            {[
+              { label: "Nombre Comercial", value: overview?.projectName },
+              { label: "Nomenclatura", value: overview?.projectInitials },
+              { label: "Tipo de Condominio", value: overview?.condominiumFormat },
+              { label: "Año Arranque", value: overview?.startYear },
+              { label: "Desarrollado Por", value: overview?.developedBy },
+              { label: "Fórmula de Suelo", value: overview?.usesLandUseFormula ? "Sí" : "No" },
+              { label: "Manejo VCCC", value: overview?.hasVccc ? "Sí" : "No" },
+            ].map((f, i) => (
+              <div key={i} className="flex justify-between items-center gap-4 py-2 border-b border-line last:border-0">
+                <span className="text-[10px] font-bold uppercase text-ink-soft/70 tracking-tight">{f.label}</span>
+                <span className="text-xs font-bold text-ink text-right break-all">{f.value || "—"}</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            ))}
+          </CardContent>
+        </Card>
 
-        <div className="space-y-5">
-          {/* Estado del Condominio */}
+        {/* Column 2: Desglose de Superficies */}
+        <Card className="shadow-layered border-transparent flex flex-col h-full bg-card">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Distribución de Superficies</CardTitle>
+          </CardHeader>
+          <CardContent className="p-4 flex-1 space-y-4">
+            <div className="space-y-2.5">
+              {[
+                {
+                  label: "Total Lotes",
+                  value: overview?.totalApoles,
+                  sub: overview && overview.totalCapacityApoles !== overview.realActiveParentAreas
+                    ? `${overview.realActiveParentAreas} registrados en sistema`
+                    : null
+                },
+                { label: "Superficie Privativa", value: overview ? `${overview.privateAreasM2} m2` : null },
+                { label: "Superficie Común", value: overview ? `${overview.commonAreasM2} m2` : null },
+              ].map((f, i) => (
+                <div key={i} className="bg-canvas border border-line/60 rounded-xl p-3">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-[9px] font-extrabold uppercase text-ink-soft/80 tracking-widest">{f.label}</span>
+                    <span className="text-sm font-black text-brand-deep">{f.value || "—"}</span>
+                  </div>
+                  {f.sub && <p className="text-[9px] text-amber-600 font-bold uppercase mt-1 tracking-tight">{f.sub}</p>}
+                </div>
+              ))}
+            </div>
+
+            <div className="border-t border-line/40 pt-3 space-y-2">
+              <p className="text-[9px] font-extrabold uppercase tracking-widest text-brand-deep/60 mb-2">Desglose de Áreas Comunes:</p>
+              {[
+                {
+                  label: "Estacionamiento",
+                  value: caDetails.estacionamiento.m2
+                    ? `${parseFloat(caDetails.estacionamiento.m2).toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 6 })} m2`
+                    : "—",
+                  count: caDetails.estacionamiento.count
+                },
+                {
+                  label: "Calles comunes",
+                  value: caDetails.calles.m2
+                    ? `${parseFloat(caDetails.calles.m2).toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 6 })} m2`
+                    : "—",
+                  count: caDetails.calles.count
+                },
+                {
+                  label: "Halo Verde",
+                  value: caDetails.haloVerde.m2
+                    ? `${parseFloat(caDetails.haloVerde.m2).toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 6 })} m2`
+                    : "—",
+                  count: caDetails.haloVerde.count
+                },
+                {
+                  label: "Equipamiento",
+                  value: caDetails.equipamiento.m2
+                    ? `${parseFloat(caDetails.equipamiento.m2).toLocaleString("es-MX", { minimumFractionDigits: 0, maximumFractionDigits: 6 })} m2`
+                    : "—",
+                  count: caDetails.equipamiento.count
+                },
+              ].map((c, i) => (
+                <div key={i} className="flex justify-between items-center gap-2 text-xs py-1 border-b border-line/30 last:border-0">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-ink-soft">{c.label}</span>
+                    {c.count > 0 && <span className="text-[8px] text-amber-600 font-semibold uppercase">{c.count} fracciones</span>}
+                  </div>
+                  <span className="font-mono font-bold text-brand">{c.value}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Column 3: Coeficientes y Estado */}
+        <div className="flex flex-col gap-5 h-full">
+          {/* Card: Estado del Condominio */}
           <Card className="shadow-layered border-transparent bg-brand-deep text-white">
             <CardHeader className="px-4 py-3 border-b border-white/10">
               <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-brand-mint">Estado del Condominio</CardTitle>
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-4 space-y-3.5">
               <div className="flex flex-col gap-1">
                 <div className="flex items-end justify-between gap-3">
                   <p className="text-[9px] font-bold uppercase text-white/50 tracking-widest">Estado de Lotes</p>
-                  <p className="text-2xl font-bold text-white">{overview ? `${overview.activeRatio.toFixed(1)}%` : "0%"}</p>
+                  <p className="text-2xl font-black text-white">{overview ? `${overview.activeRatio.toFixed(1)}%` : "0%"}</p>
                 </div>
                 {overview && (
                   <p className="text-[9px] text-brand-mint/90 font-bold uppercase tracking-wide mt-0.5">
-                    {overview.activePrivateAreas} activos de {totalRegistered.toLocaleString("es-MX")} áreas totales
+                    {overview.realActiveParentAreas} activos de {displayTotal.toLocaleString("es-MX")} áreas
                   </p>
                 )}
               </div>
               <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
                 <div className="h-full bg-brand-accent transition-all duration-700" style={{ width: `${overview?.activeRatio || 0}%` }} />
               </div>
-              <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-white/60">
-                  <ShieldCheck className="h-3 w-3 text-brand-mint" />
-                  <span>{overview?.privateAreasWithUseType || 0} lotes con uso de suelo definido</span>
+              <div className="flex flex-col gap-2 pt-2.5 border-t border-white/10">
+                <div className="flex items-center gap-2 text-[9px] font-bold text-white/60 uppercase tracking-tight">
+                  <ShieldCheck className="h-3 w-3 text-brand-mint shrink-0" />
+                  <span>{overview?.privateAreasWithUseType || 0} apoles con uso de suelo</span>
                 </div>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-white/60">
-                  <Building className="h-3 w-3 text-brand-mint" />
-                  <span>{overview?.totalApoles || 0} lotes base de condominio (Apoles)</span>
+                <div className="flex items-center gap-2 text-[9px] font-bold text-white/60 uppercase tracking-tight">
+                  <Building className="h-3 w-3 text-brand-mint shrink-0" />
+                  <span>{overview?.totalApoles || 0} apoles configurados</span>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Card: Coeficientes Urbanísticos */}
+          <Card className="shadow-layered border-transparent bg-card flex-1">
+            <CardHeader className="px-4 py-2.5 border-b border-brand/40 bg-brand rounded-t-card">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Coeficientes Urbanísticos (CUS/COS)</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              {[
+                { label: "CUS del Proyecto", value: overview && overview.cus !== "Sin definir" ? overview.cus : null },
+                { label: "CUS Máximo Permitido", value: overview && overview.cusPermitido !== "Sin definir" ? overview.cusPermitido : null },
+                { label: "Superficie de Construcción", value: overview && overview.totalConstruccion !== "Sin definir" ? `${overview.totalConstruccion} m2` : null },
+                { label: "COS Área Privativa", value: overview && overview.cosPrivativo !== "Sin definir" ? overview.cosPrivativo : null },
+                { label: "COS Área Común", value: overview && overview.cosComun !== "Sin definir" ? overview.cosComun : null },
+                { label: "Barrios Configurados", value: overview && overview.barrios !== "Sin definir" ? overview.barrios : null },
+              ].map((f, i) => (
+                <div key={i} className="flex justify-between items-center gap-3 py-1.5 border-b border-line/30 last:border-0">
+                  <span className="text-[9px] font-bold uppercase text-ink-soft/70 tracking-tight">{f.label}</span>
+                  <span className="text-xs font-black text-brand-deep">{f.value || "—"}</span>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>
