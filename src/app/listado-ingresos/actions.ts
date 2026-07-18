@@ -65,6 +65,23 @@ export async function updateIncomeAction(
   },
 ) {
   try {
+    const current = await prisma.income.findUnique({
+      where: { id },
+      select: { externalSource: true, amount: true, date: true },
+    });
+
+    if (current?.externalSource === "LUCA") {
+      const sameAmount = Math.abs(Number(current.amount) - input.amount) < 0.005;
+      const sameDate = current.date.toISOString().slice(0, 10) === input.date.slice(0, 10);
+      if (!sameAmount || !sameDate) {
+        return {
+          success: false,
+          error:
+            "Este ingreso viene de Luca: el monto y la fecha no se pueden modificar aquí. Cualquier corrección debe hacerse en Luca.",
+        };
+      }
+    }
+
     const saveInput: SaveIncomeInput = {
       date: new Date(input.date),
       concept: input.concept,

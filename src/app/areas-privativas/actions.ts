@@ -123,6 +123,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
   const vccc = toNumber(formData.get("vccc"));
   const isFusionValue = toString(formData.get("isFusion")).toLowerCase();
   const isFusion = isTruthyFusion(isFusionValue);
+  const lucaPropertyCode = toString(formData.get("lucaPropertyCode")).trim().toUpperCase();
 
   let resolvedZone: string | null | undefined;
   if (formData.has("zoneId")) {
@@ -228,6 +229,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
       ...(m2ConstructionChildren !== null ? { m2ConstructionChildren } : {}),
       ...(m2CommonAreaChildren !== null ? { m2CommonAreaChildren } : {}),
       ...(vccc !== null ? { vccc } : {}),
+      ...(formData.has("lucaPropertyCode") ? { lucaPropertyCode: lucaPropertyCode.length > 0 ? lucaPropertyCode : null } : {}),
       updatedBy: userName,
     },
   });
@@ -743,6 +745,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
   const landUseId = toString(formData.get("landUseId"));
   const administratorId = toString(formData.get("administratorId"));
   const parentPrivateAreaIdInput = toString(formData.get("parentPrivateAreaId"));
+  const lucaPropertyCode = toString(formData.get("lucaPropertyCode")).trim().toUpperCase();
 
   // Resolver nombre de la zona
   let resolvedZone: string | null = null;
@@ -807,6 +810,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
         isActive: true,
         updatedBy: userName,
         parentPrivateAreaId: parentPrivateAreaIdInput.length > 0 ? parentPrivateAreaIdInput : null,
+        lucaPropertyCode: lucaPropertyCode.length > 0 ? lucaPropertyCode : null,
       },
     });
 

@@ -639,7 +639,8 @@ export class PrismaBudgetRepository implements BudgetRepository {
                 name: concept.name,
                 order: concept.order,
                 type: concept.type,
-                isActive: concept.isActive ?? true
+                isActive: concept.isActive ?? true,
+                lucaAccountCode: concept.lucaAccountCode || null,
               }
             });
           } else {
@@ -680,6 +681,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
                 order: c.order || 0,
                 type: c.type || "N/A",
                 isActive: c.isActive ?? true,
+                lucaAccountCode: c.lucaAccountCode || null,
                 condominiumId,
                 year
               }))

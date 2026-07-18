@@ -304,6 +304,14 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
               />
 
               <Input
+                label="Código Luca (propiedad)"
+                type="text"
+                name="lucaPropertyCode"
+                placeholder="Ej. 4-111-001"
+                defaultValue={area.lucaPropertyCode ?? ""}
+              />
+
+              <Input
                 label="Nivel"
                 type="text"
                 name="level"

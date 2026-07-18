@@ -23,6 +23,7 @@ import {
   Home,
   ChevronDown,
   LogOut,
+  RefreshCw,
   type LucideIcon,
 } from "lucide-react";
 import { useHydratedSidebar } from "@/stores/ui-sidebar.store";
@@ -109,6 +110,7 @@ const NAV_SECTIONS: NavSection[] = [
           { label: "Estructura Presupuestal", href: "/listado-estructura-presupuesto", requiredModule: "Estructura Presupuesto" },
         ],
       },
+      { label: "Sincronización Luca", href: "/sincronizacion-luca", icon: RefreshCw },
       { label: "Cuotas Ordinarias", href: "/reporte-cuotas", icon: ClipboardList },
       { label: "Cuotas Extraordinarias", href: "/reporte-cuotas-extraordinarias", icon: ClipboardList },
       { label: "Sanciones", href: "/sanciones", icon: AlertCircle, requiredModule: "Catálogo de sanciones" },

@@ -52,6 +52,13 @@ model Condominium {
   budgetGroups                 BudgetGroup[]
   expenseConceptGroupMaps      ExpenseConceptGroupMap[]
   registrationTypes            RegistrationType[]
+  lucaTenantId                 String?                                  @unique
+  // Cada condominio (tenant de Insulae) se liga 1 a 1 con un tenant
+  // específico de Luca — su propia URL y secreto de firma, no uno global,
+  // porque puede haber varios condominios compartiendo este deployment.
+  lucaApiBaseUrl                String?
+  lucaWebhookSecret             String?
+  lucaSyncEvents               LucaSyncEvent[]
 }
 
 model User {
@@ -287,6 +294,8 @@ model PrivateArea {
   updatedBy                String?
   level                    String?
   m2ConstructionCommonArea Decimal?             @db.Decimal(16, 6)
+  lucaPropertyId           String?
+  lucaPropertyCode         String?
   areaCharges              AreaCharge[]
   attendances              Attendance[]
   charges                  Charge[]
@@ -306,6 +315,7 @@ model PrivateArea {
   @@index([condominiumId, parentPrivateAreaId, sortOrder])
   @@index([status])
   @@index([isFusion])
+  @@index([condominiumId, lucaPropertyCode])
 }
 
 model PrivateAreaImage {
@@ -601,12 +611,19 @@ model Income {
   miscCatalogId       String?
   privateAreaId       String?
   receiptUrl          String?
+  accountingNote      String?
+  externalSource      String?
+  externalId          String?
+  lockedAt            DateTime?
+  lockedBy            String?
+  reference           String?
   chargeGroup         ChargeGroup?       @relation(fields: [chargeGroupId], references: [id])
   condominium         Condominium        @relation(fields: [condominiumId], references: [id])
   miscCatalog         MiscIncomeCatalog? @relation(fields: [miscCatalogId], references: [id])
   privateArea         PrivateArea?       @relation(fields: [privateAreaId], references: [id])
 
   @@unique([condominiumId, legacyId])
+  @@unique([condominiumId, externalSource, externalId])
   @@index([condominiumId, isActive, date])
   @@index([chargeGroupId])
   @@index([miscCatalogId])
@@ -631,10 +648,17 @@ model Expense {
   budgetConceptId       String?
   projectName           String?
   receiptUrl            String?
+  accountingNote        String?
+  externalSource        String?
+  externalId            String?
+  lockedAt              DateTime?
+  lockedBy              String?
+  reference             String?
   budgetConcept         BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id])
   condominium           Condominium           @relation(fields: [condominiumId], references: [id])
 
   @@unique([condominiumId, legacyId])
+  @@unique([condominiumId, externalSource, externalId])
   @@index([condominiumId, isActive, date])
   @@index([budgetConceptId])
   @@index([condominiumId, legacyBudgetConceptId])
@@ -694,6 +718,8 @@ model BudgetExpenseConcept {
   order                 Int                      @default(0)
   type                  String                   @default("N/A")
   budgetGroup           String                   @default("OTHER") @map("group")
+  lucaAccountId         String?                  @map("luca_account_id")
+  lucaAccountCode       String?                  @map("luca_account_code")
   budgetLines           BudgetLine[]
   expenses              Expense[]
   group                 BudgetGroup?             @relation(fields: [budgetGroupId], references: [id])
@@ -702,6 +728,7 @@ model BudgetExpenseConcept {
   mappings              ExpenseConceptGroupMap[]
 
   @@unique([condominiumId, year, legacyBudgetConceptId])
+  @@unique([condominiumId, year, lucaAccountCode])
   @@index([condominiumId, year, budgetGroup, isActive])
   @@index([condominiumId, year, isActive])
   @@index([condominiumId, year, name])
@@ -1055,6 +1082,31 @@ model MigrationValidationResult {
 
   @@index([runId, layer])
   @@index([runId, severity])
+}
+
+enum LucaSyncStatus {
+  RECEIVED
+  VALIDATED
+  EXECUTED
+  REJECTED
+}
+
+model LucaSyncEvent {
+  id            String         @id @default(uuid())
+  condominiumId String
+  externalId    String
+  entityType    String
+  payload       Json
+  status        LucaSyncStatus @default(RECEIVED)
+  receivedAt    DateTime       @default(now())
+  processedAt   DateTime?
+  errorMessage  String?
+  archivedAt    DateTime?
+  condominium   Condominium    @relation(fields: [condominiumId], references: [id])
+
+  @@unique([condominiumId, externalId])
+  @@index([condominiumId, status])
+  @@index([condominiumId, status, archivedAt])
 }
 
 model SanctionCatalog {

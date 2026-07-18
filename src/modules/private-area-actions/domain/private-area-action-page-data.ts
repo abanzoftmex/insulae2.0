@@ -92,6 +92,7 @@ export interface PrivateAreaActionPageData {
   privateAreaId: string;
   name: string;
   code: string | null;
+  lucaPropertyCode: string | null;
   level: string | null;
   sortOrder: number;
   zone: string | null;

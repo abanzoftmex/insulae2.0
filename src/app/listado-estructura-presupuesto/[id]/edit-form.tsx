@@ -10,6 +10,7 @@ interface Concept {
   order: number;
   type: string;
   isActive?: boolean;
+  lucaAccountCode?: string | null;
 }
 
 interface BudgetGroup {
@@ -163,6 +164,7 @@ export function EditBudgetGroupForm({ initialData, allGroups, chargeGroups }: Ed
                 <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold">Nombre</th>
                 <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold w-32">Orden</th>
                 <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold w-64">Tipo</th>
+                <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold w-40">Código Luca</th>
                 <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold w-32 text-center">Acciones</th>
               </tr>
             </thead>
@@ -202,6 +204,15 @@ export function EditBudgetGroupForm({ initialData, allGroups, chargeGroups }: Ed
                         </label>
                       ))}
                     </div>
+                  </td>
+                  <td className="px-8 py-4">
+                    <input
+                      type="text"
+                      value={concept.lucaAccountCode ?? ""}
+                      onChange={(e) => handleConceptChange(index, "lucaAccountCode", e.target.value.trim().toUpperCase())}
+                      placeholder="Ej. 1-14-005"
+                      className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-lg px-3 py-2 text-[#2f221a] text-sm focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/50"
+                    />
                   </td>
                   <td className="px-8 py-4">
                     <div className="flex justify-center">

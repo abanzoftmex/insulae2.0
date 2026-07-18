@@ -177,6 +177,13 @@ export default async function NuevaAreaPrivativaPage({ searchParams }: PageProps
               />
 
               <Input
+                label="Código Luca (propiedad)"
+                type="text"
+                name="lucaPropertyCode"
+                placeholder="Ej. 4-111-001"
+              />
+
+              <Input
                 label="Número de ordenamiento"
                 type="number"
                 name="sortOrder"
