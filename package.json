@@ -52,6 +52,7 @@
     "migration:migrate-notification-assets": "tsx --tsconfig tsconfig.json src/scripts/migrate-notification-assets-to-firebase.ts"
   },
   "dependencies": {
+    "@abanzoftmex/luca-insulae-contract": "github:abanzoftmex/luca-insulae-contract#main",
     "@prisma/adapter-pg": "^7.6.0",
     "@prisma/client": "^7.6.0",
     "@radix-ui/react-slot": "^1.2.4",
