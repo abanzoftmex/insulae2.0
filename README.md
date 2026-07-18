@@ -1,4 +1,4 @@
-# Insulae 2.0 Valquirico
+# Insulae 2.0 Valquiric
 
 Base técnica para migrar Insulae legacy (PHP/MySQL) a una plataforma moderna con Next.js, PostgreSQL y arquitectura hexagonal.
 
