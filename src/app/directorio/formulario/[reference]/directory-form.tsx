@@ -67,8 +67,15 @@ export function DirectoryForm({
 
   const [children, setChildren] = useState<Array<any>>(initialData.children || []);
   const [isCreateChildOpen, setIsCreateChildOpen] = useState(false);
+  const [viewingChild, setViewingChild] = useState<any | null>(null);
   const [childFirstName, setChildFirstName] = useState("");
-  const [childLastName, setChildLastName] = useState("");
+  const [childLastNamePaterno, setChildLastNamePaterno] = useState("");
+  const [childLastNameMaterno, setChildLastNameMaterno] = useState("");
+  const [childCurp, setChildCurp] = useState("");
+  const [childPersonalPhone, setChildPersonalPhone] = useState("");
+  const [childPersonalEmail, setChildPersonalEmail] = useState("");
+  const [childBirthDate, setChildBirthDate] = useState("");
+  const [childGender, setChildGender] = useState("");
   const [childRegTypeCode, setChildRegTypeCode] = useState("");
   const [isChildPending, startChildTransition] = useTransition();
   const [editingTypeDesc, setEditingTypeDesc] = useState("");
@@ -472,7 +479,9 @@ export function DirectoryForm({
                     <label className={labelCls}>ID SDV</label>
                     <input
                       type="text"
-                      value={formData.idVq || "Autogenerado al guardar..."}
+                      value={formData.apolfap && formData.idVq && formData.registrationTypeCode
+                        ? `${formData.apolfap.trim()}${formData.idVq.trim()}-${formData.registrationTypeCode.trim()}`
+                        : formData.idVq || "Autogenerado al guardar..."}
                       readOnly
                       disabled
                       className={cn(fieldCls, "bg-canvas/50 text-ink-soft cursor-not-allowed font-mono")}
@@ -682,7 +691,13 @@ export function DirectoryForm({
             type="button"
             onClick={() => {
               setChildFirstName("");
-              setChildLastName("");
+              setChildLastNamePaterno("");
+              setChildLastNameMaterno("");
+              setChildCurp("");
+              setChildPersonalPhone("");
+              setChildPersonalEmail("");
+              setChildBirthDate("");
+              setChildGender("");
               setChildRegTypeCode("");
               setIsCreateChildOpen(true);
             }}
@@ -713,7 +728,11 @@ export function DirectoryForm({
                 ) : (
                   children.map((child) => (
                     <tr key={child.id} className="hover:bg-canvas/50 transition-colors">
-                      <td className="px-4 py-2.5 font-mono text-[11px] text-brand-accent">{child.idVq || "-"}</td>
+                      <td className="px-4 py-2.5 font-mono text-[11px] text-brand-accent">
+                        {formData.apolfap && child.idVq
+                          ? `${formData.apolfap.trim()}${child.idVq.trim()}`
+                          : child.idVq || "-"}
+                      </td>
                       <td className="px-4 py-2.5 text-[11px] font-medium text-ink">
                         {`${child.firstName ?? ""} ${child.lastName ?? ""}`.trim() || "-"}
                       </td>
@@ -721,23 +740,33 @@ export function DirectoryForm({
                         {child.registrationTypeDesc || child.registrationTypeCode || "-"}
                       </td>
                       <td className="px-4 py-2.5 text-center">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (confirm(`¿Estás seguro de eliminar a ${child.firstName} ${child.lastName}?`)) {
-                              startChildTransition(async () => {
-                                const res = await deleteNestedUserAction(child.id);
-                                if (res.ok) {
-                                  setChildren((prev) => prev.filter((c) => c.id !== child.id));
-                                }
-                              });
-                            }
-                          }}
-                          className="text-danger hover:text-danger-accent p-1"
-                          title="Eliminar"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setViewingChild(child)}
+                            className="text-brand hover:text-brand-accent p-1"
+                            title="Ver detalles"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`¿Estás seguro de eliminar a ${child.firstName} ${child.lastName}?`)) {
+                                startChildTransition(async () => {
+                                  const res = await deleteNestedUserAction(child.id);
+                                  if (res.ok) {
+                                    setChildren((prev) => prev.filter((c) => c.id !== child.id));
+                                  }
+                                });
+                              }
+                            }}
+                            className="text-danger hover:text-danger-accent p-1"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -957,7 +986,7 @@ export function DirectoryForm({
       {/* Modal to add nested user */}
       {isCreateChildOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+          <div className="w-full max-w-2xl bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
             <div className="px-5 py-4 border-b border-line bg-canvas flex items-center justify-between">
               <h3 className="text-sm font-extrabold uppercase tracking-widest text-brand-deep">Agregar Usuario Anidado</h3>
@@ -975,7 +1004,6 @@ export function DirectoryForm({
               onSubmit={(e) => {
                 e.preventDefault();
                 const firstName = childFirstName.trim();
-                const lastName = childLastName.trim();
                 if (!firstName || !childRegTypeCode) {
                   alert("Nombre y Tipo de registro son requeridos.");
                   return;
@@ -986,7 +1014,13 @@ export function DirectoryForm({
                 startChildTransition(async () => {
                   const res = await createNestedUserAction(initialData.id, {
                     firstName,
-                    lastName,
+                    lastNamePaterno: childLastNamePaterno.trim(),
+                    lastNameMaterno: childLastNameMaterno.trim(),
+                    curp: childCurp.trim(),
+                    personalPhone: childPersonalPhone.trim(),
+                    personalEmail: childPersonalEmail.trim(),
+                    birthDate: childBirthDate || undefined,
+                    gender: childGender || undefined,
                     registrationTypeCode: childRegTypeCode,
                     registrationTypeDesc: regDesc,
                   });
@@ -998,9 +1032,9 @@ export function DirectoryForm({
                   }
                 });
               }}
-              className="p-5 space-y-4"
+              className="p-5 space-y-4 text-left"
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-1.5 col-span-1">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
                     Nombre(s) *
@@ -1011,40 +1045,120 @@ export function DirectoryForm({
                     value={childFirstName}
                     onChange={(e) => setChildFirstName(e.target.value)}
                     placeholder="Ej. Juan"
-                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand"
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
                   />
                 </div>
                 <div className="space-y-1.5 col-span-1">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
-                    Apellidos
+                    Apellido Paterno
                   </label>
                   <input
                     type="text"
-                    value={childLastName}
-                    onChange={(e) => setChildLastName(e.target.value)}
+                    value={childLastNamePaterno}
+                    onChange={(e) => setChildLastNamePaterno(e.target.value)}
                     placeholder="Ej. Pérez"
-                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand"
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
+                  />
+                </div>
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    Apellido Materno
+                  </label>
+                  <input
+                    type="text"
+                    value={childLastNameMaterno}
+                    onChange={(e) => setChildLastNameMaterno(e.target.value)}
+                    placeholder="Ej. Gómez"
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
                   />
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
-                  Tipo de Registro *
-                </label>
-                <select
-                  required
-                  value={childRegTypeCode}
-                  onChange={(e) => setChildRegTypeCode(e.target.value)}
-                  className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
-                >
-                  <option value="">Selecciona tipo...</option>
-                  {registrationTypes.map((t) => (
-                    <option key={t.id} value={t.code}>
-                      {t.description} ({t.code})
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    CURP
+                  </label>
+                  <input
+                    type="text"
+                    value={childCurp}
+                    onChange={(e) => setChildCurp(e.target.value)}
+                    placeholder="Ej. CURP123456"
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
+                  />
+                </div>
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    Teléfono
+                  </label>
+                  <input
+                    type="text"
+                    value={childPersonalPhone}
+                    onChange={(e) => setChildPersonalPhone(e.target.value)}
+                    placeholder="Ej. (55) 1234-5678"
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
+                  />
+                </div>
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    Email Personal
+                  </label>
+                  <input
+                    type="email"
+                    value={childPersonalEmail}
+                    onChange={(e) => setChildPersonalEmail(e.target.value)}
+                    placeholder="Ej. juan@correo.com"
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    Fecha de Nacimiento
+                  </label>
+                  <input
+                    type="date"
+                    value={childBirthDate}
+                    onChange={(e) => setChildBirthDate(e.target.value)}
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
+                  />
+                </div>
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    Género
+                  </label>
+                  <select
+                    value={childGender}
+                    onChange={(e) => setChildGender(e.target.value)}
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
+                  >
+                    <option value="">Seleccionar género...</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Femenino">Femenino</option>
+                    <option value="Otro">Otro</option>
+                    <option value="Sin especificar">Sin especificar</option>
+                  </select>
+                </div>
+                <div className="space-y-1.5 col-span-1">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    Tipo de Registro *
+                  </label>
+                  <select
+                    required
+                    value={childRegTypeCode}
+                    onChange={(e) => setChildRegTypeCode(e.target.value)}
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white"
+                  >
+                    <option value="">Selecciona tipo...</option>
+                    {registrationTypes.map((t) => (
+                      <option key={t.id} value={t.code}>
+                        {t.description} ({t.code})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Modal Footer / Buttons */}
@@ -1065,6 +1179,105 @@ export function DirectoryForm({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Modal to view nested user details */}
+      {viewingChild && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="w-full max-w-2xl bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-line bg-canvas flex items-center justify-between">
+              <h3 className="text-sm font-extrabold uppercase tracking-widest text-brand-deep">Detalles de Usuario Anidado</h3>
+              <button
+                type="button"
+                onClick={() => setViewingChild(null)}
+                className="text-ink-soft hover:text-brand text-xl font-bold leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-6 text-left">
+              {/* Información Personal */}
+              <div className="space-y-4">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-brand border-b border-line pb-1.5">Información General</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">Nombre(s)</span>
+                    <p className="text-sm font-semibold text-ink">{viewingChild.firstName || "-"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">Apellido Paterno</span>
+                    <p className="text-sm font-semibold text-ink">{viewingChild.lastNamePaterno || "-"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">Apellido Materno</span>
+                    <p className="text-sm font-semibold text-ink">{viewingChild.lastNameMaterno || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Documentación e Identidad */}
+              <div className="space-y-4">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-brand border-b border-line pb-1.5">Identidad y Contacto</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">CURP</span>
+                    <p className="text-sm font-mono font-semibold text-ink">{viewingChild.curp || "-"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">Teléfono</span>
+                    <p className="text-sm font-semibold text-ink">{viewingChild.personalPhone || "-"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">Email Personal</span>
+                    <p className="text-sm font-semibold text-ink">{viewingChild.personalEmail || "-"}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Datos de Sistema */}
+              <div className="space-y-4">
+                <h4 className="text-[11px] font-bold uppercase tracking-widest text-brand border-b border-line pb-1.5">Datos del Sistema</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">ID SDV</span>
+                    <p className="text-sm font-mono font-semibold text-brand-accent">
+                      {formData.apolfap && viewingChild.idVq
+                        ? `${formData.apolfap.trim()}${viewingChild.idVq.trim()}`
+                        : viewingChild.idVq || "-"}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">Tipo de Registro</span>
+                    <p className="text-sm font-semibold text-ink">
+                      {viewingChild.registrationTypeDesc || viewingChild.registrationTypeCode || "-"}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">Fecha de Nacimiento</span>
+                    <p className="text-sm font-semibold text-ink">{viewingChild.birthDate || "-"}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft">Género</span>
+                    <p className="text-sm font-semibold text-ink">{viewingChild.gender || "-"}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-4 border-t border-line flex justify-end">
+              <button
+                type="button"
+                onClick={() => setViewingChild(null)}
+                className="h-8 px-5 bg-white border border-line rounded-full text-[10px] font-bold uppercase tracking-widest text-ink hover:bg-canvas transition-colors"
+              >
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}

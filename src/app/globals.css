@@ -10,16 +10,17 @@
   --color-canvas-2: #f3f4f6;
   --color-card: #ffffff;
   --color-brand: #5d5b35;
-  --color-brand-accent: #922f12;
+  --color-brand-accent: #b58c42;
   --color-brand-deep: #3d3c22;
   --color-brand-uplift: #757242;
   --color-brand-mint: #f1eac1;
-  --color-gold: #922f12;
-  --color-gold-soft: #fdf7ea;
+  --color-gold: #b58c42;
+  --color-gold-soft: #fbf8f0;
   --color-ink: rgb(0 0 0 / 0.87);
   --color-ink-soft: rgb(0 0 0 / 0.58);
   --color-line: rgb(0 0 0 / 0.06);
   --color-danger: #c82014;
+  --color-terracotta: #922f12;
 
   --radius-card: 12px;
   --radius-pill: 9999px;

@@ -73,7 +73,7 @@ export function BorrarCuotaDialog({ chargeId }: BorrarCuotaDialogProps) {
                 variant="destructive"
                 disabled={isPending}
                 onClick={handleConfirm}
-                className="h-9 px-5 text-[10px] font-bold uppercase rounded-full gap-1.5 shadow-md shadow-brand-deep/15 bg-red-600 hover:bg-red-700 text-white"
+                className="h-9 px-5 text-[10px] font-bold uppercase rounded-full gap-1.5 shadow-md shadow-stone-800/15 bg-stone-800 hover:bg-stone-900 text-white border-0"
               >
                 {isPending ? (
                   <>

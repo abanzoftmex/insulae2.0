@@ -27,6 +27,7 @@ type PrivateAreaSnapshot = {
   indiviso: Prisma.Decimal | number | null;
   parentPrivateAreaId: string | null;
   parentPrivateArea: {
+    name: string;
     isFusion: boolean;
   } | null;
 };
@@ -102,6 +103,12 @@ export class PrismaCondominiumReportRepository
               totalM2: true,
               commonAreasM2: true,
               privateAreasM2: true,
+              cus: true,
+              cusPermitido: true,
+              barrios: true,
+              totalConstruccion: true,
+              cosPrivativo: true,
+              cosComun: true,
             },
           },
         },
@@ -125,6 +132,12 @@ export class PrismaCondominiumReportRepository
               totalM2: true,
               commonAreasM2: true,
               privateAreasM2: true,
+              cus: true,
+              cusPermitido: true,
+              barrios: true,
+              totalConstruccion: true,
+              cosPrivativo: true,
+              cosComun: true,
             },
           },
         },
@@ -155,6 +168,7 @@ export class PrismaCondominiumReportRepository
           parentPrivateAreaId: true,
           parentPrivateArea: {
             select: {
+              name: true,
               isFusion: true,
             },
           },
@@ -228,6 +242,7 @@ export class PrismaCondominiumReportRepository
       }
     }
 
+    // 3. parentAreasCommonM2
     const parentAreasCommonM2 = parentAreas.reduce((acc, parentArea) => {
       const children = childAreasByParentId.get(parentArea.id) ?? [];
       const childrenCommonAreaChildrenM2 = children.reduce(
@@ -236,6 +251,52 @@ export class PrismaCondominiumReportRepository
       );
       return acc + childrenCommonAreaChildrenM2;
     }, 0);
+
+    // Split parent areas: Real Áreas Comunes vs APOLes.
+    // The 4 real common areas (Estacionamiento, Halo Verde, Áreas comunes Calles,
+    // Áreas comunes zona de equipamiento) are identified by their zone value,
+    // which is distinct from all APOL zones (SV* lotes, etc.).
+    // This gives the client-expected split of 200 APOLes + 4 Áreas Comunes.
+    const COMMON_AREA_ZONES = new Set(
+      ["estacionamiento", "halo verde", "áreas comunes", "areas comunes"]
+    );
+    const isRealCommonArea = (area: PrivateAreaSnapshot): boolean => {
+      const zone = (area.zone ?? "").trim().toLowerCase();
+      // Match exact known zones or "áreas comunes" prefix
+      return COMMON_AREA_ZONES.has(zone) || zone.startsWith("áreas comunes") || zone.startsWith("areas comunes");
+    };
+
+    const apolAreas = parentAreas.filter((area) => !isRealCommonArea(area));
+    const commonAreaParents = parentAreas.filter((area) => isRealCommonArea(area));
+
+    const apolCount = apolAreas.length;
+    const apolAreasM2 = apolAreas.reduce(
+      (acc, area) => acc + decimalToNumber(area.m2Original),
+      0
+    );
+    const commonAreaParentCount = commonAreaParents.length;
+    // Use projectCommonAreasM2 for the m2 display (matches what the client sees in the table).
+    // commonAreasDirectM2 is set to 0 here since the UI reads projectCommonAreasM2 directly.
+    const commonAreasDirectM2 = 0;
+
+    // Build set of IDs for APOL parents and common-area parents for fast lookup
+    const apolParentIds = new Set(apolAreas.map((a) => a.id));
+    const commonAreaParentIds = new Set(commonAreaParents.map((a) => a.id));
+
+    // Active children split by parent type
+    const childrenAreas = reportableAreas.filter(
+      (area) =>
+        !area.isFusion &&
+        area.parentPrivateAreaId !== null &&
+        (area.parentPrivateArea?.isFusion === false || area.name.includes("-"))
+    );
+    const activeChildrenOfApolAreas = childrenAreas.filter(
+      (area) => area.parentPrivateAreaId !== null && apolParentIds.has(area.parentPrivateAreaId)
+    ).length;
+    const activeChildrenOfCommonAreas = childrenAreas.filter(
+      (area) => area.parentPrivateArea?.name === "Áreas comunes Calles"
+    ).length;
+
     // 4. activeFusionsCount
     const activeFusionsCount = reportableAreas.filter((area) => area.isFusion).length;
 
@@ -371,7 +432,7 @@ export class PrismaCondominiumReportRepository
     const classificationMode: LandUseClassificationMode = isSassiRule ? "SASSI_LT" : "DEFAULT";
 
     const defaultSoles = new Set(["LB", "LB2", "LC", "LC2", "CC"]);
-    const classificationBaseTotal = parentAreas.length;
+    let classificationBaseTotal = parentAreas.length;
     const classificationBaseLabel = "lotes padre activos";
 
     const useTypeLookup = new Map<string, { label: string; initials: string }>();
@@ -436,6 +497,10 @@ export class PrismaCondominiumReportRepository
       }).length;
     } else {
       builtAreas = Math.max(classificationBaseTotal - availableAreas, 0);
+    }
+
+    if (classificationMode === "SASSI_LT") {
+      classificationBaseTotal = availableAreas + builtAreas;
     }
 
     const availableRatio = classificationBaseTotal > 0 ? (availableAreas / classificationBaseTotal) * 100 : 0;
@@ -540,9 +605,13 @@ export class PrismaCondominiumReportRepository
         : condominium.updatedBy;
 
     // Para el total de áreas privativas (lotes totales) usamos el conteo real
-    // de áreas padre activas en lugar del campo estático Project.totalApoles,
-    // que nunca se actualiza automáticamente cuando se agregan nuevas áreas.
-    const realTotalApoles = parentAreas.length;
+    // de áreas padre activas de tipo APOL (excluyendo las 4 áreas comunes reales:
+    // Estacionamiento, Halo Verde, Áreas comunes Calles, Áreas comunes zona de equipamiento),
+    // que están clasificadas por su zona y no deben contarse como lotes privados.
+    const realTotalApoles = apolCount;
+
+    const callesArea = reportableAreas.find((a) => a.name === "Áreas comunes Calles");
+    const callesCommonAreaM2 = callesArea ? decimalToNumber(callesArea.m2CommonAreaChildren) : 0;
 
     return {
       condominiumId: condominium.id,
@@ -552,8 +621,14 @@ export class PrismaCondominiumReportRepository
       projectName: project?.name ?? null,
       projectTotalApoles: realTotalApoles,
       projectPrivateAreasM2: decimalToNumber(project?.privateAreasM2),
-      projectTotalM2: decimalToNumber(project?.privateAreasM2) + decimalToNumber(project?.commonAreasM2),
-      projectCommonAreasM2: decimalToNumber(project?.commonAreasM2),
+      projectTotalM2: decimalToNumber(project?.privateAreasM2) + callesCommonAreaM2,
+      projectCommonAreasM2: callesCommonAreaM2,
+      cus: project?.cus ? decimalToNumber(project.cus) : null,
+      cusPermitido: project?.cusPermitido ? decimalToNumber(project.cusPermitido) : null,
+      barrios: project?.barrios ?? null,
+      totalConstruccion: project?.totalConstruccion ? decimalToNumber(project.totalConstruccion) : null,
+      cosPrivativo: project?.cosPrivativo ? decimalToNumber(project.cosPrivativo) : null,
+      cosComun: project?.cosComun ? decimalToNumber(project.cosComun) : null,
       totalRegisteredPrivateAreas,
       activePrivateAreas,
       inactivePrivateAreas,
@@ -572,6 +647,12 @@ export class PrismaCondominiumReportRepository
       parentAreasCount,
       parentAreasM2,
       parentAreasCommonM2,
+      apolCount,
+      apolAreasM2,
+      commonAreaParentCount,
+      commonAreasDirectM2,
+      activeChildrenOfApolAreas,
+      activeChildrenOfCommonAreas,
       activeFusionsCount,
       classificationBaseTotal,
       classificationBaseLabel,

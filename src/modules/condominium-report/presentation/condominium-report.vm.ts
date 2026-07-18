@@ -34,6 +34,15 @@ export interface CondominiumReportVM {
   parentAreasM2: string;
   parentAreasCommonM2: string;
   parentTotalM2: string;
+  /** APOLEs (purely private lots) */
+  apolCount: string;
+  apolAreasM2: string;
+  /** Parent areas that are Common Areas */
+  commonAreaParentCount: string;
+  commonAreasDirectM2: string;
+  /** Children split by parent type */
+  activeChildrenOfApolAreas: string;
+  activeChildrenOfCommonAreas: string;
   activeFusionsCount: string;
   classificationBaseTotal: string;
   classificationBaseLabel: string;
@@ -51,6 +60,12 @@ export interface CondominiumReportVM {
   caveats: string[];
   updatedAtLabel: string;
   generatedAtLabel: string;
+  cus: string;
+  cusPermitido: string;
+  barrios: string;
+  totalConstruccion: string;
+  cosPrivativo: string;
+  cosComun: string;
 }
 
 function formatInteger(value: number): string {
@@ -85,6 +100,23 @@ function formatPercent2(value: number): string {
   })}%`;
 }
 
+function formatDecimalOrDash(value: number | null): string {
+  if (value === null || value === undefined) {
+    return "Sin definir";
+  }
+  return value.toLocaleString("es-MX", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 6,
+  });
+}
+
+function formatIntegerOrDash(value: number | null): string {
+  if (value === null || value === undefined) {
+    return "Sin definir";
+  }
+  return Math.round(value).toString();
+}
+
 export function toCondominiumReportVM(report: CondominiumReport): CondominiumReportVM {
   const classificationModeLabel =
     report.classificationMode === "SASSI_LT"
@@ -99,6 +131,12 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     projectTotalM2: formatNumber4(report.projectTotalM2),
     projectCommonAreasM2: formatNumber4(report.projectCommonAreasM2),
     projectPrivateAreasM2: formatNumber4(report.projectPrivateAreasM2),
+    cus: formatDecimalOrDash(report.cus),
+    cusPermitido: formatDecimalOrDash(report.cusPermitido),
+    barrios: formatIntegerOrDash(report.barrios),
+    totalConstruccion: formatDecimalOrDash(report.totalConstruccion),
+    cosPrivativo: formatDecimalOrDash(report.cosPrivativo),
+    cosComun: formatDecimalOrDash(report.cosComun),
     totalRegisteredPrivateAreas: formatInteger(report.totalRegisteredPrivateAreas),
     activePrivateAreas: formatInteger(report.activePrivateAreas),
     inactivePrivateAreas: formatInteger(report.inactivePrivateAreas),
@@ -118,6 +156,12 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     parentAreasM2: formatNumber4(report.parentAreasM2),
     parentAreasCommonM2: formatNumber4(report.parentAreasCommonM2),
     parentTotalM2: formatNumber4(report.parentAreasM2 + report.parentAreasCommonM2),
+    apolCount: formatInteger(report.apolCount),
+    apolAreasM2: formatNumber4(report.apolAreasM2),
+    commonAreaParentCount: formatInteger(report.commonAreaParentCount),
+    commonAreasDirectM2: formatNumber4(report.commonAreasDirectM2),
+    activeChildrenOfApolAreas: formatInteger(report.activeChildrenOfApolAreas),
+    activeChildrenOfCommonAreas: formatInteger(report.activeChildrenOfCommonAreas),
     activeFusionsCount: formatInteger(report.activeFusionsCount),
     classificationBaseTotal: formatInteger(report.classificationBaseTotal),
     classificationBaseLabel: report.classificationBaseLabel,

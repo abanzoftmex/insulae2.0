@@ -58,6 +58,13 @@ export interface NestedUser {
   id: string;
   firstName: string | null;
   lastName: string | null;
+  lastNamePaterno?: string | null;
+  lastNameMaterno?: string | null;
+  curp?: string | null;
+  personalPhone?: string | null;
+  personalEmail?: string | null;
+  birthDate?: string | null;
+  gender?: string | null;
   registrationTypeCode: string | null;
   registrationTypeDesc: string | null;
   idVq: string | null;

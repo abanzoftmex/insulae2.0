@@ -22,6 +22,12 @@ export interface CondominiumOverview {
   developedBy: string | null;
   usesLandUseFormula: boolean;
   hasVccc: boolean;
+  cus: number | null;
+  cusPermitido: number | null;
+  barrios: number | null;
+  totalConstruccion: number | null;
+  cosPrivativo: number | null;
+  cosComun: number | null;
   activePrivateAreas: number;
   inactivePrivateAreas: number;
   privateAreasWithUseType: number;
