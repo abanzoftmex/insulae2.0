@@ -5,7 +5,7 @@ Base técnica para migrar Insulae legacy (PHP/MySQL) a una plataforma moderna co
 ## Objetivo
 a
 - Migrar datos y procesos críticos del legacy de forma incremental.
-- Mantener alcance exclusivo Valquirico (sin multi-sitio).s
+- Mantener alcance exclusivo Valquirico (sin multi-sitio).sa
 - Estabilizar dominio y casos de uso antes de construir vistas finales.
 
 ## Stack
