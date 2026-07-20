@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { id } = await params;
 
-  let body: { paymentMethod?: string; reference?: string | null };
+  let body: { paymentMethod?: string; reference?: string | null; miscCatalogId?: string | null; chargeGroupId?: string | null };
   try {
     body = await request.json();
   } catch {
@@ -31,6 +31,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
   }
 
+  // Obligatorio: un cobro de Luca no trae categoría ni grupo financiero
+  // propios de Insulae — hay que elegirlos antes de confirmar el registro.
+  if (!body.miscCatalogId || !body.chargeGroupId) {
+    return NextResponse.json(
+      { error: "missing_category_or_group" },
+      { status: 400 },
+    );
+  }
+
   const useCase = new ExecuteSyncRecordUseCase(new PrismaLucaSyncRepository());
   const result = await useCase.execute({
     entityType: "income",
@@ -38,6 +47,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     actor: { userId: session.userId, name: session.name ?? "Usuario Insulae" },
     paymentMethod,
     reference: body.reference ?? null,
+    miscCatalogId: body.miscCatalogId ?? null,
+    chargeGroupId: body.chargeGroupId ?? null,
   });
 
   if (result.outcome === "not_found") {

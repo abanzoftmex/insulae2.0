@@ -34,6 +34,8 @@ type SyncSourceRow = {
   paymentMethod: string | null;
   reference: string | null;
   externalId: string | null;
+  miscCatalogId?: string | null;
+  chargeGroupId?: string | null;
 };
 
 function toRow(r: SyncSourceRow, refLabel: string | null) {
@@ -49,6 +51,8 @@ function toRow(r: SyncSourceRow, refLabel: string | null) {
     paymentMethod: r.paymentMethod,
     reference: r.reference,
     externalId: r.externalId,
+    miscCatalogId: r.miscCatalogId ?? null,
+    chargeGroupId: r.chargeGroupId ?? null,
     refLabel,
   };
 }
@@ -69,10 +73,30 @@ export async function getIncomeRows(condominiumId: string) {
       paymentMethod: true,
       reference: true,
       externalId: true,
+      miscCatalogId: true,
+      chargeGroupId: true,
       privateArea: { select: { name: true, code: true } },
     },
   });
   return incomes.map((i) => toRow(i, i.privateArea ? `${i.privateArea.code ?? ""} ${i.privateArea.name}`.trim() : "—"));
+}
+
+// Catálogo y grupo financiero disponibles para asignar a un cobro de Luca al
+// ejecutarlo — igual que en el alta manual de un ingreso (listado-ingresos).
+export async function getIncomeCatalogsAndGroups(condominiumId: string) {
+  const [catalogs, chargeGroups] = await Promise.all([
+    prisma.miscIncomeCatalog.findMany({
+      where: { condominiumId, isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+    prisma.chargeGroup.findMany({
+      where: { condominiumId, isActive: true },
+      orderBy: { name: "asc" },
+      select: { id: true, name: true },
+    }),
+  ]);
+  return { catalogs, chargeGroups };
 }
 
 export async function getExpenseRows(condominiumId: string) {

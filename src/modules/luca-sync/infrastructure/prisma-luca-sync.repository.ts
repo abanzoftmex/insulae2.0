@@ -239,6 +239,8 @@ export class PrismaLucaSyncRepository implements LucaSyncRepository {
     actor: ExecuteActor,
     paymentMethod: string,
     reference: string | null,
+    miscCatalogId?: string | null,
+    chargeGroupId?: string | null,
   ): Promise<ExecuteResult> {
     const income = await prisma.income.findUnique({
       where: { id },
@@ -256,6 +258,11 @@ export class PrismaLucaSyncRepository implements LucaSyncRepository {
           lockedBy: actor.userId,
           paymentMethod: paymentMethod as Prisma.IncomeUpdateInput["paymentMethod"],
           reference,
+          // Asignados al ejecutar, igual que forma de pago/referencia — un
+          // cobro de Luca llega sin categoría ni grupo financiero propios de
+          // Insulae, así que se eligen aquí antes de confirmarlo.
+          ...(miscCatalogId !== undefined ? { miscCatalogId: miscCatalogId || null } : {}),
+          ...(chargeGroupId !== undefined ? { chargeGroupId: chargeGroupId || null } : {}),
           isConfirmed: true,
           // Ahora sí es visible en listados y estado de cuenta del condómino.
           isActive: true,

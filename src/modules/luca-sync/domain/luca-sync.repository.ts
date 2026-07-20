@@ -35,6 +35,8 @@ export interface LucaSyncRepository {
     actor: ExecuteActor,
     paymentMethod: string,
     reference: string | null,
+    miscCatalogId?: string | null,
+    chargeGroupId?: string | null,
   ): Promise<ExecuteResult>;
   executeExpense(
     id: string,

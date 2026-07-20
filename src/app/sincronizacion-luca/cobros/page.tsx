@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { SyncTable } from "../components/sincronizacion-luca-workbench";
-import { getActiveCondominium, getIncomeRows } from "../_lib/data";
+import { getActiveCondominium, getIncomeRows, getIncomeCatalogsAndGroups } from "../_lib/data";
 
 export const metadata: Metadata = {
   title: "Cobros · Sincronización con Luca | Insulae 2.0",
@@ -23,7 +23,10 @@ export default async function CobrosSincronizacionPage() {
     );
   }
 
-  const incomes = await getIncomeRows(condominium.id);
+  const [incomes, { catalogs, chargeGroups }] = await Promise.all([
+    getIncomeRows(condominium.id),
+    getIncomeCatalogsAndGroups(condominium.id),
+  ]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -40,10 +43,12 @@ export default async function CobrosSincronizacionPage() {
 
       <SyncTable
         title="Cobros"
-        description="Ingresos que Luca ligó a una propiedad. Confirma la forma de pago y ejecuta para que aparezcan en el estado de cuenta del condómino."
+        description="Ingresos que Luca ligó a una propiedad. Confirma la forma de pago, asigna categoría y grupo financiero, y ejecuta para que aparezcan en el estado de cuenta del condómino."
         rows={incomes}
         entityType="incomes"
         refColumnLabel="Propiedad"
+        catalogs={catalogs}
+        chargeGroups={chargeGroups}
       />
     </div>
   );

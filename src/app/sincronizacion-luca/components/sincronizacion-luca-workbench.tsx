@@ -20,8 +20,12 @@ export type SyncRow = {
   paymentMethod: string | null;
   reference: string | null;
   externalId: string | null;
+  miscCatalogId: string | null;
+  chargeGroupId: string | null;
   refLabel: string | null;
 };
+
+export type CatalogOption = { id: string; name: string };
 
 const PAYMENT_METHODS = [
   { value: "TRANSFER", label: "Transferencia" },
@@ -98,16 +102,29 @@ export function SyncTable({
   rows,
   entityType,
   refColumnLabel,
+  catalogs,
+  chargeGroups,
 }: {
   title: string;
   description: string;
   rows: SyncRow[];
   entityType: "incomes" | "expenses";
   refColumnLabel: string;
+  // Solo aplica a "incomes" — categoría y grupo financiero de Insulae para
+  // asignar al cobro antes de ejecutarlo (un cobro de Luca no trae ninguno).
+  catalogs?: CatalogOption[];
+  chargeGroups?: CatalogOption[];
 }) {
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<Record<string, string>>({});
   const [reference, setReference] = useState<Record<string, string>>({});
+  const [miscCatalogId, setMiscCatalogId] = useState<Record<string, string>>(
+    () => Object.fromEntries(rows.filter((r) => r.miscCatalogId).map((r) => [r.id, r.miscCatalogId as string]))
+  );
+  const [chargeGroupId, setChargeGroupId] = useState<Record<string, string>>(
+    () => Object.fromEntries(rows.filter((r) => r.chargeGroupId).map((r) => [r.id, r.chargeGroupId as string]))
+  );
+  const showIncomeAssignment = entityType === "incomes" && !!catalogs && !!chargeGroups;
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errorById, setErrorById] = useState<Record<string, string>>({});
 
@@ -148,7 +165,13 @@ export function SyncTable({
       const res = await fetch(`/api/${entityType}/${row.id}/execute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentMethod: method, reference: reference[row.id] || null }),
+        body: JSON.stringify({
+          paymentMethod: method,
+          reference: reference[row.id] || null,
+          ...(showIncomeAssignment
+            ? { miscCatalogId: miscCatalogId[row.id] || null, chargeGroupId: chargeGroupId[row.id] || null }
+            : {}),
+        }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -195,13 +218,15 @@ export function SyncTable({
                 <th className="py-2 pr-3">Fecha</th>
                 <th className="py-2 pr-3">Forma de pago</th>
                 <th className="py-2 pr-3">Referencia</th>
+                {showIncomeAssignment && <th className="py-2 pr-3">Categoría</th>}
+                {showIncomeAssignment && <th className="py-2 pr-3">Grupo Financiero</th>}
                 <th className="py-2 pr-3"></th>
               </tr>
             </thead>
             <tbody>
               {pending.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="py-6 text-center text-ink-soft/60">
+                  <td colSpan={showIncomeAssignment ? 11 : 9} className="py-6 text-center text-ink-soft/60">
                     {hasActiveFilters
                       ? "Ningún pendiente coincide con el filtro."
                       : "No hay nada pendiente de validar."}
@@ -235,14 +260,55 @@ export function SyncTable({
                       onChange={(e) => setReference((prev) => ({ ...prev, [row.id]: e.target.value }))}
                     />
                   </td>
+                  {showIncomeAssignment && (
+                    <td className="py-2 pr-3">
+                      <select
+                        className="form-input rounded-sm border border-brand/20 bg-white px-2 py-1 text-xs"
+                        value={miscCatalogId[row.id] || ""}
+                        onChange={(e) => setMiscCatalogId((prev) => ({ ...prev, [row.id]: e.target.value }))}
+                      >
+                        <option value="">Sin categoría</option>
+                        {catalogs!.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
+                    </td>
+                  )}
+                  {showIncomeAssignment && (
+                    <td className="py-2 pr-3">
+                      <select
+                        className="form-input rounded-sm border border-brand/20 bg-white px-2 py-1 text-xs"
+                        value={chargeGroupId[row.id] || ""}
+                        onChange={(e) => setChargeGroupId((prev) => ({ ...prev, [row.id]: e.target.value }))}
+                      >
+                        <option value="">Sin grupo</option>
+                        {chargeGroups!.map((g) => (
+                          <option key={g.id} value={g.id}>{g.name}</option>
+                        ))}
+                      </select>
+                    </td>
+                  )}
                   <td className="py-2 pr-3">
-                    <Button
-                      size="sm"
-                      disabled={busyId === row.id}
-                      onClick={() => execute(row)}
-                    >
-                      {busyId === row.id ? "Ejecutando…" : "Ejecutar"}
-                    </Button>
+                    {(() => {
+                      // Categoría y grupo financiero son obligatorios para ejecutar
+                      // un cobro — un ingreso de Luca no trae ninguno propio de
+                      // Insulae, así que hay que elegirlos aquí antes de confirmar.
+                      const missingAssignment = showIncomeAssignment && (!miscCatalogId[row.id] || !chargeGroupId[row.id]);
+                      return (
+                        <>
+                          <Button
+                            size="sm"
+                            disabled={busyId === row.id || missingAssignment}
+                            onClick={() => execute(row)}
+                          >
+                            {busyId === row.id ? "Ejecutando…" : "Ejecutar"}
+                          </Button>
+                          {missingAssignment && (
+                            <p className="mt-1 text-[11px] text-ink-soft/60">Elige categoría y grupo financiero.</p>
+                          )}
+                        </>
+                      );
+                    })()}
                     {errorById[row.id] && (
                       <p className="mt-1 text-[11px] text-danger">{errorById[row.id]}</p>
                     )}

@@ -7,6 +7,10 @@ export interface ExecuteSyncRecordInput {
   actor: { userId: string; name: string };
   paymentMethod: string;
   reference?: string | null;
+  // Solo aplica a income — categoría y grupo financiero de Insulae, elegidos
+  // al ejecutar (un cobro de Luca no trae ninguno propio).
+  miscCatalogId?: string | null;
+  chargeGroupId?: string | null;
 }
 
 export class ExecuteSyncRecordUseCase {
@@ -20,6 +24,8 @@ export class ExecuteSyncRecordUseCase {
             { userId: input.actor.userId },
             input.paymentMethod,
             input.reference ?? null,
+            input.miscCatalogId,
+            input.chargeGroupId,
           )
         : await this.repository.executeExpense(
             input.id,
