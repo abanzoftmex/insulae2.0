@@ -13,7 +13,7 @@ import {
   Loader2,
   Filter
 } from "lucide-react";
-import { createIncomeAction, updateIncomeAction, deleteIncomeAction } from "../actions";
+import { createIncomeAction, updateIncomeAction } from "../actions";
 import { importIncomesAction } from "../import-actions";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
 import { read, utils, writeFile } from "xlsx";
@@ -191,15 +191,6 @@ export function IncomeWorkbench({
     });
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm("¿Eliminar este ingreso?")) return;
-    startTransition(async () => {
-      const res = await deleteIncomeAction(id);
-      if (res.success) window.location.reload();
-      else alert(res.error);
-    });
-  };
-
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -358,13 +349,6 @@ export function IncomeWorkbench({
             title="Editar"
           >
             <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
-            title="Eliminar"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       )

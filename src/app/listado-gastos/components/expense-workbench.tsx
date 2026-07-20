@@ -15,7 +15,7 @@ import {
   FileText,
   Briefcase
 } from "lucide-react";
-import { createExpenseAction, updateExpenseAction, deleteExpenseAction } from "../actions";
+import { createExpenseAction, updateExpenseAction } from "../actions";
 import { importExpensesAction } from "../import-actions";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
 import { read, utils } from "xlsx";
@@ -151,15 +151,6 @@ export function ExpenseWorkbench({
     });
   };
 
-  const handleDelete = (id: string) => {
-    if (!confirm("¿Eliminar este egreso?")) return;
-    startTransition(async () => {
-      const res = await deleteExpenseAction(id);
-      if (res.success) window.location.reload();
-      else alert(res.error);
-    });
-  };
-
   const columns: DataTableColumn<ExpenseRecord>[] = [
     {
       header: "Concepto / Categoría",
@@ -233,13 +224,6 @@ export function ExpenseWorkbench({
             title="Editar"
           >
             <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
-            title="Eliminar"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
       )
