@@ -31,6 +31,7 @@ interface ConceptFormState {
   name: string;
   order: number;
   type: string;
+  lucaAccountCode: string;
 }
 
 interface BudgetGroupFormProps {
@@ -62,7 +63,8 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
       id: c.id,
       name: c.name,
       order: c.order ?? 0,
-      type: c.type ?? "N/A"
+      type: c.type ?? "N/A",
+      lucaAccountCode: c.lucaAccountCode ?? ""
     })) || []
   );
 
@@ -78,7 +80,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
 
   const handleAddConcept = () => {
     const newOrder = formConcepts.length > 0 ? Math.max(...formConcepts.map(c => c.order)) + 1 : 1;
-    setFormConcepts([...formConcepts, { id: "", name: "", order: newOrder, type: "N/A" }]);
+    setFormConcepts([...formConcepts, { id: "", name: "", order: newOrder, type: "N/A", lucaAccountCode: "" }]);
   };
 
   const handleRemoveConcept = (index: number) => {
@@ -112,11 +114,12 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
         order: Number(formOrder),
         startsAt: formStartsAt ? new Date(`${formStartsAt}-01T00:00:00Z`) : null,
         endsAt: formEndsAt ? new Date(`${formEndsAt}-01T00:00:00Z`) : null,
-        concepts: formConcepts.map(c => ({ 
-          id: c.id || undefined, 
+        concepts: formConcepts.map(c => ({
+          id: c.id || undefined,
           name: c.name,
           order: Number(c.order),
-          type: c.type
+          type: c.type,
+          lucaAccountCode: c.lucaAccountCode.trim().toUpperCase() || null
         }))
       });
 
@@ -264,6 +267,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                 <div className="flex-1">Nombre</div>
                 <div className="w-24 text-center">Orden</div>
                 <div className="w-64">Tipo</div>
+                <div className="w-32">Código Luca</div>
                 <div className="w-9"></div>
               </div>
             )}
@@ -316,6 +320,17 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                         </label>
                       ))}
                     </div>
+                  </div>
+
+                  <div className="w-full md:w-32">
+                    <label className="md:hidden text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 mb-1 block">Código Luca</label>
+                    <input
+                      type="text"
+                      value={concept.lucaAccountCode}
+                      onChange={(e) => handleConceptChange(idx, "lucaAccountCode", e.target.value.trim().toUpperCase())}
+                      placeholder="Ej. 5-100-001"
+                      className="h-9 w-full bg-card border border-line rounded px-3 text-[13px] font-medium focus:border-brand-accent outline-none transition-colors"
+                    />
                   </div>
 
                   <div className="w-full md:w-9 flex justify-end md:justify-center mt-2 md:mt-0">
