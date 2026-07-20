@@ -627,6 +627,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
             startsAt: rest.startsAt ?? null,
             endsAt: rest.endsAt ?? null,
             isActive: rest.isActive ?? true,
+            lucaAccountCode: rest.lucaAccountCode || null,
           }
         });
 
@@ -640,7 +641,6 @@ export class PrismaBudgetRepository implements BudgetRepository {
                 order: concept.order,
                 type: concept.type,
                 isActive: concept.isActive ?? true,
-                lucaAccountCode: concept.lucaAccountCode || null,
               }
             });
           } else {
@@ -673,6 +673,7 @@ export class PrismaBudgetRepository implements BudgetRepository {
             isActive: rest.isActive ?? true,
             startsAt: rest.startsAt,
             endsAt: rest.endsAt,
+            lucaAccountCode: rest.lucaAccountCode || null,
             condominium: { connect: { id: condominiumId } },
             budget: { connect: { condominiumId_year: { condominiumId, year } } },
             concepts: {
@@ -681,7 +682,6 @@ export class PrismaBudgetRepository implements BudgetRepository {
                 order: c.order || 0,
                 type: c.type || "N/A",
                 isActive: c.isActive ?? true,
-                lucaAccountCode: c.lucaAccountCode || null,
                 condominiumId,
                 year
               }))

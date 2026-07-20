@@ -661,13 +661,19 @@ model Expense {
   projectName           String?
   paymentMethod         PaymentMethod?
   notes                 String?
+  // Grupo presupuestal que Luca vinculó al recibir el gasto (por
+  // BudgetGroup.lucaAccountCode) — se ubica al recibir, y la partida
+  // específica (budgetConceptId) se elige después, al ejecutar.
+  budgetGroupId         String?
   budgetConcept         BudgetExpenseConcept? @relation(fields: [budgetConceptId], references: [id])
+  budgetGroup           BudgetGroup?          @relation(fields: [budgetGroupId], references: [id])
   condominium           Condominium           @relation(fields: [condominiumId], references: [id])
 
   @@unique([condominiumId, legacyId])
   @@unique([condominiumId, externalSource, externalId])
   @@index([condominiumId, isActive, date])
   @@index([budgetConceptId])
+  @@index([budgetGroupId])
   @@index([condominiumId, legacyBudgetConceptId])
 }
 
@@ -700,13 +706,21 @@ model BudgetGroup {
   category      String                 @default("OTHER")
   startsAt      DateTime?              @map("starts_at")
   endsAt        DateTime?              @map("ends_at")
+  // Integración Luca <-> Insulae (egresos): el grupo completo (no cada
+  // partida) se vincula a UNA cuenta de Pasivo/Egresos de Luca. Al recibir
+  // un gasto de esa cuenta, Insulae ubica el grupo aquí y pide elegir la
+  // partida específica antes de ejecutar (ver Expense.budgetGroupId).
+  lucaAccountId   String?              @map("luca_account_id")
+  lucaAccountCode String?              @map("luca_account_code")
   concepts      BudgetExpenseConcept[]
+  expenses      Expense[]
   condominium   Condominium            @relation(fields: [condominiumId], references: [id])
   budget        Budget                 @relation(fields: [condominiumId, year], references: [condominiumId, year])
   parent        BudgetGroup?           @relation("BudgetGroupToParent", fields: [parentId], references: [id])
   children      BudgetGroup[]          @relation("BudgetGroupToParent")
 
   @@unique([condominiumId, year, legacyId])
+  @@unique([condominiumId, year, lucaAccountCode])
   @@index([condominiumId, year, isActive])
   @@map("budget_group")
 }

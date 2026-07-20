@@ -128,13 +128,16 @@ export class PrismaLucaSyncRepository implements LucaSyncRepository {
           },
         });
 
-        const budgetConcept = await tx.budgetExpenseConcept.findFirst({
+        // El GRUPO (no la partida) es lo que se vincula a la cuenta de Luca —
+        // la partida específica se elige después, al ejecutar (ver
+        // executeExpense), igual que categoría/grupo financiero en cobros.
+        const budgetGroup = await tx.budgetGroup.findFirst({
           where: { condominiumId, year, lucaAccountCode: payload.budgetAccountExternalCode },
           select: { id: true },
         });
 
-        if (!budgetConcept) {
-          const reason = `Partida presupuestal no mapeada: ${payload.budgetAccountExternalCode} (año ${year})`;
+        if (!budgetGroup) {
+          const reason = `Grupo presupuestal no mapeado: ${payload.budgetAccountExternalCode} (año ${year})`;
           await tx.lucaSyncEvent.update({
             where: { condominiumId_externalId: { condominiumId, externalId: payload.externalId } },
             data: { status: "REJECTED", errorMessage: reason, processedAt: new Date() },
@@ -150,7 +153,7 @@ export class PrismaLucaSyncRepository implements LucaSyncRepository {
             amount: new Prisma.Decimal(payload.amount),
             notes: payload.internalNote ?? null,
             accountingNote: payload.accountingNote ?? null,
-            budgetConceptId: budgetConcept.id,
+            budgetGroupId: budgetGroup.id,
             externalSource: "LUCA",
             externalId: payload.externalId,
             // Ver el comentario equivalente en receiveIncome: false hasta ejecutar.
@@ -292,6 +295,7 @@ export class PrismaLucaSyncRepository implements LucaSyncRepository {
     actor: ExecuteActor,
     paymentMethod: string,
     reference: string | null,
+    budgetConceptId?: string | null,
   ): Promise<ExecuteResult> {
     const expense = await prisma.expense.findUnique({
       where: { id },
@@ -309,6 +313,10 @@ export class PrismaLucaSyncRepository implements LucaSyncRepository {
           lockedBy: actor.userId,
           paymentMethod: paymentMethod as Prisma.ExpenseUpdateInput["paymentMethod"],
           reference,
+          // Elegida al ejecutar — el grupo llegó ya vinculado desde Luca
+          // (ver receiveExpense), pero la partida específica dentro de ese
+          // grupo se elige aquí, igual que categoría/grupo financiero en cobros.
+          ...(budgetConceptId !== undefined ? { budgetConceptId: budgetConceptId || null } : {}),
           // Ahora sí es visible en listados y estado de cuenta del condómino.
           isActive: true,
         },

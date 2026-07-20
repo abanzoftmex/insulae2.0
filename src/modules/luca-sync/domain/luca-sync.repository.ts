@@ -43,6 +43,7 @@ export interface LucaSyncRepository {
     actor: ExecuteActor,
     paymentMethod: string,
     reference: string | null,
+    budgetConceptId?: string | null,
   ): Promise<ExecuteResult>;
   recordCallbackFailure(entityType: "income" | "expense", id: string, error: string): Promise<void>;
 }

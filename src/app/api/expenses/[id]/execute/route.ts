@@ -16,7 +16,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   const { id } = await params;
 
-  let body: { paymentMethod?: string; reference?: string | null };
+  let body: { paymentMethod?: string; reference?: string | null; budgetConceptId?: string | null };
   try {
     body = await request.json();
   } catch {
@@ -31,6 +31,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     );
   }
 
+  // Obligatorio: el gasto recibido de Luca sólo trae el grupo presupuestal
+  // (por lucaAccountCode) — la partida/concepto específica dentro de ese
+  // grupo hay que elegirla antes de confirmar el registro.
+  if (!body.budgetConceptId) {
+    return NextResponse.json(
+      { error: "missing_budget_concept" },
+      { status: 400 },
+    );
+  }
+
   const useCase = new ExecuteSyncRecordUseCase(new PrismaLucaSyncRepository());
   const result = await useCase.execute({
     entityType: "expense",
@@ -38,6 +48,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     actor: { userId: session.userId, name: session.name ?? "Usuario Insulae" },
     paymentMethod,
     reference: body.reference ?? null,
+    budgetConceptId: body.budgetConceptId ?? null,
   });
 
   if (result.outcome === "not_found") {

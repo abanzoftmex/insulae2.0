@@ -36,6 +36,8 @@ type SyncSourceRow = {
   externalId: string | null;
   miscCatalogId?: string | null;
   chargeGroupId?: string | null;
+  budgetGroupId?: string | null;
+  budgetGroupName?: string | null;
 };
 
 function toRow(r: SyncSourceRow, refLabel: string | null) {
@@ -53,6 +55,8 @@ function toRow(r: SyncSourceRow, refLabel: string | null) {
     externalId: r.externalId,
     miscCatalogId: r.miscCatalogId ?? null,
     chargeGroupId: r.chargeGroupId ?? null,
+    budgetGroupId: r.budgetGroupId ?? null,
+    budgetGroupName: r.budgetGroupName ?? null,
     refLabel,
   };
 }
@@ -115,10 +119,29 @@ export async function getExpenseRows(condominiumId: string) {
       paymentMethod: true,
       reference: true,
       externalId: true,
+      budgetGroupId: true,
       budgetConcept: { select: { name: true } },
+      budgetGroup: { select: { name: true } },
     },
   });
-  return expenses.map((e) => toRow(e, e.budgetConcept?.name ?? "—"));
+  return expenses.map((e) =>
+    toRow(
+      { ...e, budgetGroupName: e.budgetGroup?.name ?? null },
+      e.budgetConcept?.name ?? e.budgetGroup?.name ?? "—",
+    ),
+  );
+}
+
+// Partidas (BudgetExpenseConcept) del grupo presupuestal vinculado a cada
+// gasto de Luca — para elegir la partida específica antes de ejecutar, igual
+// que en cobros se elige categoría y grupo financiero al ejecutar.
+export async function getExpenseGroupConcepts(condominiumId: string) {
+  const concepts = await prisma.budgetExpenseConcept.findMany({
+    where: { condominiumId, isActive: true, budgetGroupId: { not: null } },
+    orderBy: { name: "asc" },
+    select: { id: true, name: true, budgetGroupId: true },
+  });
+  return concepts;
 }
 
 function toRejectedRow(e: {

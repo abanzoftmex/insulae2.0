@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { SyncTable } from "../components/sincronizacion-luca-workbench";
-import { getActiveCondominium, getExpenseRows } from "../_lib/data";
+import { getActiveCondominium, getExpenseRows, getExpenseGroupConcepts } from "../_lib/data";
 
 export const metadata: Metadata = {
   title: "Gastos · Sincronización con Luca | Insulae 2.0",
-  description: "Egresos que Luca ligó a una partida presupuestal, pendientes de validar o ejecutar.",
+  description: "Egresos que Luca vinculó a un grupo presupuestal, pendientes de validar o ejecutar.",
 };
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,10 @@ export default async function GastosSincronizacionPage() {
     );
   }
 
-  const expenses = await getExpenseRows(condominium.id);
+  const [expenses, budgetConcepts] = await Promise.all([
+    getExpenseRows(condominium.id),
+    getExpenseGroupConcepts(condominium.id),
+  ]);
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -40,10 +43,11 @@ export default async function GastosSincronizacionPage() {
 
       <SyncTable
         title="Gastos"
-        description="Egresos que Luca ligó a una partida presupuestal. Revisa y ejecuta con un clic."
+        description="Egresos que Luca vinculó a un grupo presupuestal. Elige la partida específica y ejecuta para registrarlos."
         rows={expenses}
         entityType="expenses"
-        refColumnLabel="Partida"
+        refColumnLabel="Grupo"
+        budgetConcepts={budgetConcepts}
       />
     </div>
   );

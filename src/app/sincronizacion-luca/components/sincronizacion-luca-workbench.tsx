@@ -22,10 +22,13 @@ export type SyncRow = {
   externalId: string | null;
   miscCatalogId: string | null;
   chargeGroupId: string | null;
+  budgetGroupId: string | null;
+  budgetGroupName: string | null;
   refLabel: string | null;
 };
 
 export type CatalogOption = { id: string; name: string };
+export type BudgetConceptOption = { id: string; name: string; budgetGroupId: string | null };
 
 const PAYMENT_METHODS = [
   { value: "TRANSFER", label: "Transferencia" },
@@ -104,6 +107,7 @@ export function SyncTable({
   refColumnLabel,
   catalogs,
   chargeGroups,
+  budgetConcepts,
 }: {
   title: string;
   description: string;
@@ -114,6 +118,10 @@ export function SyncTable({
   // asignar al cobro antes de ejecutarlo (un cobro de Luca no trae ninguno).
   catalogs?: CatalogOption[];
   chargeGroups?: CatalogOption[];
+  // Solo aplica a "expenses" — partidas del grupo presupuestal que Luca ya
+  // vinculó al recibir el gasto; hay que elegir la partida específica antes
+  // de ejecutar.
+  budgetConcepts?: BudgetConceptOption[];
 }) {
   const router = useRouter();
   const [paymentMethod, setPaymentMethod] = useState<Record<string, string>>({});
@@ -124,7 +132,9 @@ export function SyncTable({
   const [chargeGroupId, setChargeGroupId] = useState<Record<string, string>>(
     () => Object.fromEntries(rows.filter((r) => r.chargeGroupId).map((r) => [r.id, r.chargeGroupId as string]))
   );
+  const [budgetConceptId, setBudgetConceptId] = useState<Record<string, string>>({});
   const showIncomeAssignment = entityType === "incomes" && !!catalogs && !!chargeGroups;
+  const showExpenseAssignment = entityType === "expenses" && !!budgetConcepts;
   const [busyId, setBusyId] = useState<string | null>(null);
   const [errorById, setErrorById] = useState<Record<string, string>>({});
 
@@ -171,6 +181,7 @@ export function SyncTable({
           ...(showIncomeAssignment
             ? { miscCatalogId: miscCatalogId[row.id] || null, chargeGroupId: chargeGroupId[row.id] || null }
             : {}),
+          ...(showExpenseAssignment ? { budgetConceptId: budgetConceptId[row.id] || null } : {}),
         }),
       });
       const data = await res.json().catch(() => ({}));
@@ -220,13 +231,14 @@ export function SyncTable({
                 <th className="py-2 pr-3">Referencia</th>
                 {showIncomeAssignment && <th className="py-2 pr-3">Categoría</th>}
                 {showIncomeAssignment && <th className="py-2 pr-3">Grupo Financiero</th>}
+                {showExpenseAssignment && <th className="py-2 pr-3">Partida</th>}
                 <th className="py-2 pr-3"></th>
               </tr>
             </thead>
             <tbody>
               {pending.length === 0 && (
                 <tr>
-                  <td colSpan={showIncomeAssignment ? 11 : 9} className="py-6 text-center text-ink-soft/60">
+                  <td colSpan={9 + (showIncomeAssignment ? 2 : 0) + (showExpenseAssignment ? 1 : 0)} className="py-6 text-center text-ink-soft/60">
                     {hasActiveFilters
                       ? "Ningún pendiente coincide con el filtro."
                       : "No hay nada pendiente de validar."}
@@ -288,12 +300,34 @@ export function SyncTable({
                       </select>
                     </td>
                   )}
+                  {showExpenseAssignment && (() => {
+                    const options = budgetConcepts!.filter((c) => c.budgetGroupId === row.budgetGroupId);
+                    return (
+                      <td className="py-2 pr-3">
+                        <select
+                          className="form-input rounded-sm border border-brand/20 bg-white px-2 py-1 text-xs"
+                          value={budgetConceptId[row.id] || ""}
+                          onChange={(e) => setBudgetConceptId((prev) => ({ ...prev, [row.id]: e.target.value }))}
+                          disabled={options.length === 0}
+                        >
+                          <option value="">{options.length === 0 ? "Sin partidas en el grupo" : "Elige partida"}</option>
+                          {options.map((c) => (
+                            <option key={c.id} value={c.id}>{c.name}</option>
+                          ))}
+                        </select>
+                      </td>
+                    );
+                  })()}
                   <td className="py-2 pr-3">
                     {(() => {
                       // Categoría y grupo financiero son obligatorios para ejecutar
                       // un cobro — un ingreso de Luca no trae ninguno propio de
                       // Insulae, así que hay que elegirlos aquí antes de confirmar.
-                      const missingAssignment = showIncomeAssignment && (!miscCatalogId[row.id] || !chargeGroupId[row.id]);
+                      // Para un gasto, la partida específica dentro del grupo
+                      // vinculado también es obligatoria antes de ejecutar.
+                      const missingAssignment =
+                        (showIncomeAssignment && (!miscCatalogId[row.id] || !chargeGroupId[row.id])) ||
+                        (showExpenseAssignment && !budgetConceptId[row.id]);
                       return (
                         <>
                           <Button
@@ -304,7 +338,9 @@ export function SyncTable({
                             {busyId === row.id ? "Ejecutando…" : "Ejecutar"}
                           </Button>
                           {missingAssignment && (
-                            <p className="mt-1 text-[11px] text-ink-soft/60">Elige categoría y grupo financiero.</p>
+                            <p className="mt-1 text-[11px] text-ink-soft/60">
+                              {showExpenseAssignment ? "Elige la partida." : "Elige categoría y grupo financiero."}
+                            </p>
                           )}
                         </>
                       );

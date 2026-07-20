@@ -31,7 +31,6 @@ interface ConceptFormState {
   name: string;
   order: number;
   type: string;
-  lucaAccountCode: string;
 }
 
 interface BudgetGroupFormProps {
@@ -47,6 +46,10 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
   const [formName, setFormName] = useState(initialData?.name || "");
   const [formCategory, setFormCategory] = useState(initialData?.category || "Gastos de mantenimiento");
   const [formOrder, setFormOrder] = useState<number>(initialData?.order ?? 0);
+  // El grupo completo (no cada partida) es lo que se vincula a una cuenta de
+  // Luca (Pasivo/Egresos) — al recibir un gasto de esa cuenta, Insulae ubica
+  // el grupo y pide elegir la partida específica antes de ejecutar.
+  const [formLucaAccountCode, setFormLucaAccountCode] = useState(initialData?.lucaAccountCode ?? "");
 
   
   const toInputMonth = (d: Date | null) => {
@@ -63,8 +66,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
       id: c.id,
       name: c.name,
       order: c.order ?? 0,
-      type: c.type ?? "N/A",
-      lucaAccountCode: c.lucaAccountCode ?? ""
+      type: c.type ?? "N/A"
     })) || []
   );
 
@@ -80,7 +82,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
 
   const handleAddConcept = () => {
     const newOrder = formConcepts.length > 0 ? Math.max(...formConcepts.map(c => c.order)) + 1 : 1;
-    setFormConcepts([...formConcepts, { id: "", name: "", order: newOrder, type: "N/A", lucaAccountCode: "" }]);
+    setFormConcepts([...formConcepts, { id: "", name: "", order: newOrder, type: "N/A" }]);
   };
 
   const handleRemoveConcept = (index: number) => {
@@ -114,12 +116,12 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
         order: Number(formOrder),
         startsAt: formStartsAt ? new Date(`${formStartsAt}-01T00:00:00Z`) : null,
         endsAt: formEndsAt ? new Date(`${formEndsAt}-01T00:00:00Z`) : null,
+        lucaAccountCode: formLucaAccountCode.trim().toUpperCase() || null,
         concepts: formConcepts.map(c => ({
           id: c.id || undefined,
           name: c.name,
           order: Number(c.order),
-          type: c.type,
-          lucaAccountCode: c.lucaAccountCode.trim().toUpperCase() || null
+          type: c.type
         }))
       });
 
@@ -148,7 +150,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-line">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 pb-6 border-b border-line">
             <Input label="Nombre del Grupo" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Ej. Gastos de Limpieza" />
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
@@ -191,6 +193,17 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                 className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none text-center"
               />
               <p className="text-[9px] text-ink-soft/40 font-bold uppercase tracking-wide">1 = primero en la lista</p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Código Luca</label>
+              <input
+                type="text"
+                value={formLucaAccountCode}
+                onChange={(e) => setFormLucaAccountCode(e.target.value)}
+                placeholder="Ej. 5-100-001"
+                className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+              />
+              <p className="text-[9px] text-ink-soft/40 font-bold uppercase tracking-wide">Cuenta de Pasivo/Egresos que se vincula a este grupo</p>
             </div>
           </div>
 
@@ -267,7 +280,6 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                 <div className="flex-1">Nombre</div>
                 <div className="w-24 text-center">Orden</div>
                 <div className="w-64">Tipo</div>
-                <div className="w-32">Código Luca</div>
                 <div className="w-9"></div>
               </div>
             )}
@@ -320,17 +332,6 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                         </label>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="w-full md:w-32">
-                    <label className="md:hidden text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 mb-1 block">Código Luca</label>
-                    <input
-                      type="text"
-                      value={concept.lucaAccountCode}
-                      onChange={(e) => handleConceptChange(idx, "lucaAccountCode", e.target.value.trim().toUpperCase())}
-                      placeholder="Ej. 5-100-001"
-                      className="h-9 w-full bg-card border border-line rounded px-3 text-[13px] font-medium focus:border-brand-accent outline-none transition-colors"
-                    />
                   </div>
 
                   <div className="w-full md:w-9 flex justify-end md:justify-center mt-2 md:mt-0">

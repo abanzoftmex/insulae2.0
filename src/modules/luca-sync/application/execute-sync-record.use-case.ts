@@ -11,6 +11,10 @@ export interface ExecuteSyncRecordInput {
   // al ejecutar (un cobro de Luca no trae ninguno propio).
   miscCatalogId?: string | null;
   chargeGroupId?: string | null;
+  // Solo aplica a expense — el gasto recibido de Luca ya está vinculado a un
+  // BudgetGroup (por lucaAccountCode), pero la partida/concepto específica
+  // dentro de ese grupo se elige al ejecutar.
+  budgetConceptId?: string | null;
 }
 
 export class ExecuteSyncRecordUseCase {
@@ -32,6 +36,7 @@ export class ExecuteSyncRecordUseCase {
             { userId: input.actor.userId },
             input.paymentMethod,
             input.reference ?? null,
+            input.budgetConceptId,
           );
 
     if (result.outcome !== "executed") {
