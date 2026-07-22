@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   AlertCircle,
   ArrowDown,
@@ -14,9 +15,10 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
-import type { KpiDetail, KpiDetailRow, KpiKey } from "@/modules/statistics";
+import type { KpiDetail, KpiDetailRow } from "@/modules/statistics";
 import { cn } from "@/shared/utils/cn";
 import { HorizontalBars } from "./stats-charts";
+import { ACCENT_STYLES, KPI_ICONS, type KpiCardData } from "./kpi-grid";
 
 const PAGE_SIZE = 50;
 const numberFormat = new Intl.NumberFormat("es-MX");
@@ -27,11 +29,11 @@ function cellText(value: string | number | undefined): string {
 }
 
 export function KpiDetailModal({
-  kpiKey,
+  kpi,
   filters,
   onClose,
 }: {
-  kpiKey: KpiKey;
+  kpi: KpiCardData;
   filters: { zone: string | null; useType: string | null };
   onClose: () => void;
 }) {
@@ -40,13 +42,15 @@ export function KpiDetailModal({
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [sort, setSort] = useState<{ key: string; dir: "asc" | "desc" } | null>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const reduceMotion = useReducedMotion();
 
-  // Carga del detalle
+  const Icon = KPI_ICONS[kpi.key];
+  const tone = ACCENT_STYLES[kpi.accent ?? "plain"];
+
   useEffect(() => {
     const controller = new AbortController();
-    const params = new URLSearchParams({ kpi: kpiKey });
+    const params = new URLSearchParams({ kpi: kpi.key });
     if (filters.zone) params.set("zona", filters.zone);
     if (filters.useType) params.set("uso", filters.useType);
 
@@ -67,9 +71,8 @@ export function KpiDetailModal({
       });
 
     return () => controller.abort();
-  }, [kpiKey, filters.zone, filters.useType]);
+  }, [kpi.key, filters.zone, filters.useType]);
 
-  // Escape para cerrar + bloqueo de scroll de fondo
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
@@ -77,10 +80,11 @@ export function KpiDetailModal({
     document.addEventListener("keydown", handler);
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    closeButtonRef.current?.focus();
+    const focusTimer = window.setTimeout(() => closeButtonRef.current?.focus(), 260);
     return () => {
       document.removeEventListener("keydown", handler);
       document.body.style.overflow = previousOverflow;
+      window.clearTimeout(focusTimer);
     };
   }, [onClose]);
 
@@ -128,31 +132,75 @@ export function KpiDetailModal({
     XLSX.writeFile(workbook, `${detail.tableTitle.replace(/[^\w]+/g, "_")}_${stamp}.xlsx`);
   }, [detail, filteredRows]);
 
-  return (
-    <div
-      className="fixed inset-0 z-[60] flex items-center justify-center p-0 sm:p-3 md:p-4 animate-overlay-in"
-      role="dialog"
-      aria-modal="true"
-      aria-label={detail?.title ?? "Detalle del indicador"}
-    >
-      <div className="absolute inset-0 bg-brand-deep/45 backdrop-blur-sm" onClick={onClose} aria-hidden />
+  // El contenido entra cuando el panel ya casi terminó de expandirse, para que
+  // no se deforme durante el crecimiento de la tarjeta.
+  const contentMotion = reduceMotion
+    ? {}
+    : {
+        initial: { opacity: 0, y: 8 },
+        animate: { opacity: 1, y: 0, transition: { delay: 0.16, duration: 0.22 } },
+        exit: { opacity: 0, transition: { duration: 0.08 } },
+      };
 
-      <div
-        ref={panelRef}
-        className={cn(
-          "relative bg-card w-full h-full sm:rounded-2xl overflow-hidden flex flex-col",
-          "shadow-[0_24px_60px_rgba(0,0,0,0.28)] animate-panel-zoom-in",
-        )}
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-0 sm:p-3 md:p-4" role="dialog" aria-modal="true">
+      <motion.div
+        className="absolute inset-0 bg-brand-deep/45 backdrop-blur-sm"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+        onClick={onClose}
+        aria-hidden
+      />
+
+      <motion.div
+        // Mismo layoutId que la tarjeta: Framer interpola posición y tamaño,
+        // así que la tarjeta parece estirarse hasta llenar la pantalla.
+        layoutId={reduceMotion ? undefined : `kpi-shell-${kpi.key}`}
+        style={{ borderRadius: 16, backgroundColor: "#ffffff" }}
+        initial={reduceMotion ? { opacity: 0 } : undefined}
+        animate={reduceMotion ? { opacity: 1 } : undefined}
+        exit={reduceMotion ? { opacity: 0 } : undefined}
+        transition={{ type: "spring", stiffness: 300, damping: 34, mass: 0.9 }}
+        className="relative w-full h-full overflow-hidden flex flex-col shadow-[0_24px_60px_rgba(0,0,0,0.28)]"
       >
-        {/* Encabezado */}
-        <header className="shrink-0 border-b border-line px-4 sm:px-6 py-3.5 flex items-start justify-between gap-4 bg-card">
-          <div className="min-w-0">
-            <h2 className="text-[17px] font-bold text-ink leading-tight truncate">
-              {detail?.title ?? "Cargando detalle…"}
-            </h2>
-            {detail && <p className="text-[12px] text-ink-soft mt-0.5 line-clamp-2">{detail.subtitle}</p>}
+        {/* La superficie es lo que viaja desde la tarjeta; su contenido entra con fundido */}
+        <header className="shrink-0 border-b border-line px-4 sm:px-6 py-3.5 flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3.5 min-w-0">
+            <motion.span
+              className="p-2.5 rounded-xl shrink-0"
+              style={{ backgroundColor: tone.icon }}
+              initial={reduceMotion ? undefined : { opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1, transition: { delay: 0.08, duration: 0.2 } }}
+            >
+              <Icon className="w-5 h-5" style={{ color: tone.card }} />
+            </motion.span>
+            <div className="min-w-0">
+              <motion.p
+                className="text-[10px] font-bold uppercase tracking-wider"
+                style={{ color: tone.label }}
+                initial={reduceMotion ? undefined : { opacity: 0 }}
+                animate={{ opacity: 1, transition: { delay: 0.1, duration: 0.18 } }}
+              >
+                {kpi.label}
+              </motion.p>
+              <div className="flex items-baseline gap-2.5 mt-0.5">
+                <motion.span
+                  className="text-[26px] font-bold leading-none tracking-tight"
+                  style={{ color: tone.value }}
+                  initial={reduceMotion ? undefined : { opacity: 0 }}
+                  animate={{ opacity: 1, transition: { delay: 0.1, duration: 0.18 } }}
+                >
+                  {kpi.value}
+                </motion.span>
+                <motion.h2 {...contentMotion} className="text-[13px] text-ink-soft truncate">
+                  {detail?.subtitle ?? "Cargando detalle…"}
+                </motion.h2>
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <motion.div {...contentMotion} className="flex items-center gap-2 shrink-0">
             {detail && (
               <button
                 type="button"
@@ -172,11 +220,10 @@ export function KpiDetailModal({
             >
               <X className="w-4.5 h-4.5" />
             </button>
-          </div>
+          </motion.div>
         </header>
 
-        {/* Cuerpo */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
+        <motion.div {...contentMotion} className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
           {!detail && !error && (
             <div className="h-full min-h-[320px] flex flex-col items-center justify-center gap-3 text-ink-soft">
               <Loader2 className="w-6 h-6 animate-spin text-brand" />
@@ -194,7 +241,6 @@ export function KpiDetailModal({
 
           {detail && (
             <div className="space-y-5">
-              {/* Indicadores del KPI */}
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
                 {detail.headline.map((stat) => (
                   <div key={stat.label} className="rounded-xl border border-line bg-canvas-2/60 px-3.5 py-3">
@@ -205,12 +251,10 @@ export function KpiDetailModal({
                 ))}
               </div>
 
-              {/* Gráficas del KPI — items-start evita que una gráfica de pocas
-                  barras se estire al alto de su vecina */}
               {detail.charts.length > 0 && (
-                <div className="grid lg:grid-cols-2 gap-4 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                   {detail.charts.map((chart) => (
-                    <div key={chart.title} className="rounded-xl border border-line p-4">
+                    <div key={chart.title} className="rounded-xl border border-line p-4 min-w-0">
                       <p className="text-[13px] font-bold text-ink mb-3">{chart.title}</p>
                       {chart.data.length > 0 ? (
                         <HorizontalBars data={chart.data} suffix={chart.suffix ?? ""} />
@@ -222,7 +266,6 @@ export function KpiDetailModal({
                 </div>
               )}
 
-              {/* Tabla de detalle */}
               <div className="rounded-xl border border-line overflow-hidden">
                 <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-line bg-canvas-2/40">
                   <div>
@@ -366,8 +409,8 @@ export function KpiDetailModal({
               )}
             </div>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
