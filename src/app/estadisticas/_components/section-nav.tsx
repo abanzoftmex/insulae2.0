@@ -46,7 +46,10 @@ export function SectionNav({ sections }: { sections: SectionLink[] }) {
   };
 
   return (
-    <nav className="flex items-center gap-1 overflow-x-auto" aria-label="Secciones del dashboard">
+    <nav
+      className="flex items-center gap-1 overflow-x-auto min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      aria-label="Secciones del dashboard"
+    >
       {sections.map((section) => {
         const isActive = activeId === section.id;
         return (

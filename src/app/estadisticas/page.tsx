@@ -220,9 +220,9 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
 
         {/* ── Navegación + filtros (siempre visibles) ────────────────── */}
         <div className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-[#faf9f6]/92 backdrop-blur-sm">
-          <div className="bg-card rounded-card border border-line/80 shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3 py-2 flex flex-col xl:flex-row xl:items-center gap-2 xl:gap-4">
+          <div className="bg-card rounded-card border border-line/80 shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3 py-2 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3 min-w-0">
             <SectionNav sections={sections} />
-            <div className="xl:ml-auto xl:border-l xl:border-line xl:pl-4">
+            <div className="lg:ml-auto lg:border-l lg:border-line lg:pl-3 shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <StatsFilters
                 zones={vm.availableZones}
                 useTypes={vm.availableUseTypes}
@@ -252,7 +252,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Cómo se reparten los inmuebles entre barrios, clasificaciones y usos de suelo."
             accent="#0891b2"
           />
-          <div className="grid lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
             <ChartCard
               title="Clasificación de inmuebles"
               subtitle="Derivada del uso de suelo registrado"
@@ -269,7 +269,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               <ZoneCategoryHeatmap rows={vm.zoneCategoryMatrix} categories={vm.categoryOrder} />
             </ChartCard>
           </div>
-          <div className="grid lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
             <ChartCard
               title="Usos de suelo"
               subtitle="Área proporcional al número de inmuebles"
@@ -296,7 +296,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Un inmueble cuenta como ocupado cuando tiene residente asignado o un negocio activo."
             accent="#b8860b"
           />
-          <div className="grid lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
             <ChartCard title="Ocupación general" className="lg:col-span-2">
               <OccupancyMeter
                 rate={vm.occupancy.rate}
@@ -330,7 +330,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Composición del comercio dentro del condominio y su evolución."
             accent="#b5451f"
           />
-          <div className="grid lg:grid-cols-2 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
             <ChartCard
               title="Distribución por giro"
               subtitle="Participación de cada giro sobre los negocios clasificados"
@@ -356,7 +356,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               )}
             </ChartCard>
           </div>
-          <div className="grid lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
             <ChartCard
               title="Aperturas de negocios por año"
               subtitle="Altas registradas con fecha de inicio válida"
@@ -391,7 +391,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Cómo se distribuye la propiedad y qué tan localizable es el padrón."
             accent="#b0509f"
           />
-          <div className="grid lg:grid-cols-3 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
             <ChartCard title="Figura de propiedad" subtitle="Asignaciones activas por rol">
               <HorizontalBars data={vm.ownershipByRole} labelWidth={148} />
             </ChartCard>
@@ -448,7 +448,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Actividad de pagos registrada y estado de los tickets."
             accent="#2563eb"
           />
-          <div className="grid lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
             <ChartCard
               title="Cobranza mensual"
               subtitle="Monto cobrado en los últimos 24 meses"

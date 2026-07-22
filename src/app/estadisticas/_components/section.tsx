@@ -57,7 +57,9 @@ export function ChartCard({
   return (
     <section
       className={cn(
-        "bg-card rounded-card border border-line/80 shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-4 flex flex-col",
+        // min-w-0 evita que el contenido ancho (tablas, treemaps) estire la
+        // tarjeta más allá de su columna y provoque scroll horizontal.
+        "bg-card rounded-card border border-line/80 shadow-[0_1px_2px_rgba(0,0,0,0.04)] p-4 flex flex-col min-w-0 overflow-hidden",
         className,
       )}
     >
