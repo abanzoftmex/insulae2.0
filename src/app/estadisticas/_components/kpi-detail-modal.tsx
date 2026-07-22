@@ -17,7 +17,7 @@ import * as XLSX from "xlsx";
 
 import type { KpiDetail, KpiDetailRow } from "@/modules/statistics";
 import { cn } from "@/shared/utils/cn";
-import { HorizontalBars } from "./stats-charts";
+import { DetailChart } from "./detail-charts";
 import { ACCENT_STYLES, KPI_ICONS, type KpiCardData } from "./kpi-grid";
 
 const PAGE_SIZE = 50;
@@ -223,7 +223,7 @@ export function KpiDetailModal({
           </motion.div>
         </header>
 
-        <motion.div {...contentMotion} className="flex-1 overflow-y-auto px-4 sm:px-6 py-5">
+        <motion.div {...contentMotion} className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 bg-[#faf9f6]">
           {!detail && !error && (
             <div className="h-full min-h-[320px] flex flex-col items-center justify-center gap-3 text-ink-soft">
               <Loader2 className="w-6 h-6 animate-spin text-brand" />
@@ -242,32 +242,54 @@ export function KpiDetailModal({
           {detail && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-                {detail.headline.map((stat) => (
-                  <div key={stat.label} className="rounded-xl border border-line bg-canvas-2/60 px-3.5 py-3">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">{stat.label}</p>
-                    <p className="text-[22px] font-bold text-brand leading-none mt-1.5">{stat.value}</p>
+                {detail.headline.map((stat, index) => (
+                  <div
+                    key={stat.label}
+                    className="rounded-xl border border-line/80 bg-card px-3.5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] relative overflow-hidden"
+                  >
+                    {/* El primer dato es el que da nombre al panel: se marca con el acento del KPI */}
+                    {index === 0 && (
+                      <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: tone.value }} />
+                    )}
+                    <p className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70">{stat.label}</p>
+                    <p
+                      className="text-[23px] font-bold leading-none mt-1.5 tracking-tight"
+                      style={{ color: index === 0 ? tone.value : "rgba(0,0,0,0.87)" }}
+                    >
+                      {stat.value}
+                    </p>
                     {stat.hint && <p className="text-[10.5px] text-ink-soft/80 mt-1 leading-tight">{stat.hint}</p>}
                   </div>
                 ))}
               </div>
 
               {detail.charts.length > 0 && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {detail.charts.map((chart) => (
-                    <div key={chart.title} className="rounded-xl border border-line p-4 min-w-0">
-                      <p className="text-[13px] font-bold text-ink mb-3">{chart.title}</p>
-                      {chart.data.length > 0 ? (
-                        <HorizontalBars data={chart.data} suffix={chart.suffix ?? ""} />
-                      ) : (
-                        <p className="text-[12px] text-ink-soft">Sin datos para este corte.</p>
+                    <section
+                      key={chart.title}
+                      className={cn(
+                        "rounded-xl border border-line/80 bg-card p-4 min-w-0 overflow-hidden flex flex-col",
+                        "shadow-[0_1px_2px_rgba(0,0,0,0.04)]",
+                        chart.wide && "lg:col-span-2",
                       )}
-                    </div>
+                    >
+                      <header className="mb-3.5">
+                        <h3 className="text-[13px] font-bold text-ink leading-tight">{chart.title}</h3>
+                        {chart.subtitle && (
+                          <p className="text-[11px] text-ink-soft/85 mt-0.5 leading-snug">{chart.subtitle}</p>
+                        )}
+                      </header>
+                      <div className="flex-1 flex flex-col justify-center min-w-0">
+                        <DetailChart chart={chart} />
+                      </div>
+                    </section>
                   ))}
                 </div>
               )}
 
-              <div className="rounded-xl border border-line overflow-hidden">
-                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-line bg-canvas-2/40">
+              <div className="rounded-xl border border-line/80 bg-card overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-line bg-canvas-2/50">
                   <div>
                     <p className="text-[13px] font-bold text-ink">{detail.tableTitle}</p>
                     <p className="text-[11px] text-ink-soft mt-0.5">
@@ -401,11 +423,16 @@ export function KpiDetailModal({
               </div>
 
               {detail.notes.length > 0 && (
-                <ul className="space-y-1 text-[11px] text-ink-soft list-disc pl-4">
-                  {detail.notes.map((note) => (
-                    <li key={note}>{note}</li>
-                  ))}
-                </ul>
+                <div className="rounded-xl border border-gold/25 bg-gold-soft px-4 py-3">
+                  <p className="text-[9.5px] font-bold uppercase tracking-[0.14em] text-ink-soft/80 mb-1.5">
+                    Cómo leer estas cifras
+                  </p>
+                  <ul className="space-y-1 text-[11px] text-ink-soft list-disc pl-4 leading-relaxed">
+                    {detail.notes.map((note) => (
+                      <li key={note}>{note}</li>
+                    ))}
+                  </ul>
+                </div>
               )}
             </div>
           )}

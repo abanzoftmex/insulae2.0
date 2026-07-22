@@ -25,6 +25,14 @@ function fmtM2(value: number): string {
   return `${decimalFormat.format(value)} m²`;
 }
 
+/** Acorta los nombres del catálogo de usos: quitan paréntesis y clave final */
+function shortUse(name: string): string {
+  const noParens = name.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+  const noCode = noParens.replace(/\s+[A-Z]{1,2}[0-9-]*$/, "").trim();
+  const clean = (noCode || noParens || name).replace(/\s{2,}/g, " ");
+  return clean.length > 32 ? `${clean.slice(0, 31)}…` : clean;
+}
+
 function toNameCounts(map: Map<string, number>, limit?: number): NameCount[] {
   const rows = [...map.entries()]
     .map(([name, value]) => ({ name, value }))
@@ -290,13 +298,13 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
 function chartByZone(areas: EnrichedArea[], title: string): KpiDetailChart {
   const map = new Map<string, number>();
   for (const area of areas) bump(map, area.zone);
-  return { title, data: toNameCounts(map) };
+  return { title, data: toNameCounts(map), kind: "bars", palette: "series" };
 }
 
 function chartByUseType(areas: EnrichedArea[], title: string, limit = 10): KpiDetailChart {
   const map = new Map<string, number>();
-  for (const area of areas) bump(map, area.useType);
-  return { title, data: toNameCounts(map, limit) };
+  for (const area of areas) bump(map, shortUse(area.useType));
+  return { title, data: toNameCounts(map, limit), kind: "bars", palette: "series" };
 }
 
 function areaColumns(extra: KpiDetailColumn[] = []): KpiDetailColumn[] {
@@ -371,9 +379,29 @@ export async function loadKpiDetail(
           { label: "Con correo registrado", value: owners.length ? `${((withEmail / owners.length) * 100).toFixed(0)}%` : "0%", hint: `${fmt(withEmail)} propietarios` },
         ],
         charts: [
-          { title: "Propietarios por número de inmuebles", data: [...buckets.entries()].map(([name, value]) => ({ name, value })) },
-          { title: "Propietarios con presencia en cada barrio", data: toNameCounts(byZone) },
-          { title: "Figura de propiedad", data: toNameCounts(byRole) },
+          {
+            title: "Concentración de la propiedad",
+            subtitle: "Cuántos inmuebles tiene cada propietario",
+            data: [...buckets.entries()].map(([name, value]) => ({ name, value })),
+            kind: "donut",
+            palette: "sequential",
+            centerLabel: "propietarios",
+          },
+          {
+            title: "Figura de propiedad",
+            subtitle: "Rol con el que aparecen asignados",
+            data: toNameCounts(byRole),
+            kind: "donut",
+            palette: "category",
+            centerLabel: "asignaciones",
+          },
+          {
+            title: "Presencia por barrio",
+            subtitle: "Propietarios con al menos un inmueble en cada barrio",
+            data: toNameCounts(byZone),
+            kind: "bars",
+            wide: true,
+          },
         ],
         columns: [
           { key: "propietario", label: "Propietario", width: "w-[220px]" },
@@ -420,9 +448,27 @@ export async function loadKpiDetail(
           { label: "Con propietario", value: fmt(areas.filter((a) => a.ownerNames.length > 0).length) },
         ],
         charts: [
-          chartByZone(areas, "Inmuebles por barrio"),
-          chartByUseType(areas, "Top usos de suelo"),
-          { title: "Clasificación", data: toNameCounts(byCategory) },
+          {
+            title: "Clasificación",
+            subtitle: "Derivada del uso de suelo",
+            data: toNameCounts(byCategory),
+            kind: "donut",
+            palette: "category",
+            centerLabel: "inmuebles",
+          },
+          {
+            title: "Estructura del inventario",
+            subtitle: "Predios frente a unidades dentro de un predio",
+            data: [
+              { name: "Predios", value: parents },
+              { name: "Unidades en predio", value: areas.length - parents },
+            ],
+            kind: "donut",
+            palette: "sequential",
+            centerLabel: "inmuebles",
+          },
+          { ...chartByZone(areas, "Inmuebles por barrio"), wide: true },
+          { ...chartByUseType(areas, "Top usos de suelo"), wide: true },
         ],
         columns: areaColumns([
           { key: "categoria", label: "Clasificación" },
@@ -475,11 +521,35 @@ export async function loadKpiDetail(
           { label: "Inmuebles con negocio", value: fmt(areas.filter((a) => a.hasActiveBusiness).length) },
         ],
         charts: [
-          { title: "Negocios por giro", data: toNameCounts(byLine) },
-          { title: "Top categorías comerciales", data: toNameCounts(byCategory, 10) },
-          { title: "Negocios por barrio", data: toNameCounts(byZone) },
-          { title: "Aperturas por año", data: openings },
-          ...(byClass.size ? [{ title: "Clase de comercio", data: toNameCounts(byClass) }] : []),
+          {
+            title: "Negocios por giro",
+            subtitle: "Participación sobre los negocios clasificados",
+            data: toNameCounts(byLine),
+            kind: "donut",
+            palette: "business",
+            centerLabel: "clasificados",
+          },
+          ...(byClass.size
+            ? [
+                {
+                  title: "Clase de comercio",
+                  subtitle: "Clasificación del registro comercial",
+                  data: toNameCounts(byClass),
+                  kind: "donut" as const,
+                  palette: "sequential" as const,
+                  centerLabel: "negocios",
+                },
+              ]
+            : []),
+          {
+            title: "Aperturas por año",
+            subtitle: "Altas con fecha de inicio válida",
+            data: openings,
+            kind: "columns",
+            wide: true,
+          },
+          { title: "Top categorías comerciales", data: toNameCounts(byCategory, 10), kind: "bars", wide: true },
+          { title: "Negocios por barrio", data: toNameCounts(byZone), kind: "bars", wide: true },
         ],
         columns: [
           { key: "negocio", label: "Negocio", width: "w-[220px]" },
@@ -542,9 +612,43 @@ export async function loadKpiDetail(
           { label: "Por negocio", value: fmt(areas.filter((a) => a.hasActiveBusiness).length) },
         ],
         charts: [
-          { title: "Ocupación por barrio (%)", data: toNameCounts(occupancyPct), suffix: "%" },
-          { title: "Motivo de ocupación", data: toNameCounts(byReason) },
-          ...(vacant.length ? [{ title: "Inmuebles sin ocupar por barrio", data: toNameCounts(vacantByZone) }] : []),
+          {
+            title: "Estado general",
+            subtitle: "Reparto entre ocupados y sin ocupar",
+            data: [
+              { name: "Ocupados", value: occupied.length },
+              { name: "Sin ocupar", value: vacant.length },
+            ],
+            kind: "donut",
+            palette: "sequential",
+            centerLabel: "inmuebles",
+          },
+          {
+            title: "Motivo de ocupación",
+            subtitle: "Qué hace que un inmueble cuente como ocupado",
+            data: toNameCounts(byReason),
+            kind: "donut",
+            palette: "category",
+            centerLabel: "ocupados",
+          },
+          {
+            title: "Ocupación por barrio",
+            subtitle: "Porcentaje ocupado sobre el total de cada barrio",
+            data: toNameCounts(occupancyPct),
+            suffix: "%",
+            kind: "progress",
+            wide: true,
+          },
+          ...(vacant.length
+            ? [
+                {
+                  title: "Inmuebles sin ocupar por barrio",
+                  data: toNameCounts(vacantByZone),
+                  kind: "bars" as const,
+                  wide: true,
+                },
+              ]
+            : []),
         ],
         columns: areaColumns([
           { key: "estado", label: "Estado" },
@@ -601,27 +705,60 @@ export async function loadKpiDetail(
         },
       };
 
+      const useTypeMap = new Map<string, number>();
+      for (const area of subset) bump(useTypeMap, shortUse(area.useType));
+
+      // El primer bloque es la composición interna (dona) y el segundo el
+      // reparto territorial (barras): dos preguntas distintas, dos formas.
       const charts: KpiDetailChart[] = [
-        chartByUseType(subset, "Por uso de suelo"),
-        chartByZone(subset, "Por barrio"),
+        {
+          title: "Composición por uso de suelo",
+          subtitle: "Participación de cada uso dentro de esta clasificación",
+          data: toNameCounts(useTypeMap, 7),
+          kind: "donut",
+          palette: "sequential",
+          centerLabel: "inmuebles",
+        },
       ];
+
       if (key === "commercial") {
         const withBusiness = new Map<string, number>();
         for (const area of subset) {
           bump(withBusiness, area.hasActiveBusiness ? "Con negocio activo" : "Sin negocio activo");
         }
-        charts.push({ title: "Actividad comercial", data: toNameCounts(withBusiness) });
+        charts.push({
+          title: "Actividad comercial",
+          subtitle: "Locales con arrendamiento vigente",
+          data: toNameCounts(withBusiness),
+          kind: "donut",
+          palette: "category",
+          centerLabel: "locales",
+        });
       } else if (key === "land") {
         const buildStatus = new Map<string, number>();
         for (const area of subset) {
           bump(buildStatus, area.m2Construction > 0 ? "Con construcción" : "Sin construir");
         }
-        charts.push({ title: "Estado de construcción", data: toNameCounts(buildStatus) });
+        charts.push({
+          title: "Estado de construcción",
+          data: toNameCounts(buildStatus),
+          kind: "donut",
+          palette: "category",
+          centerLabel: "lotes",
+        });
       } else {
         const occupancyStatus = new Map<string, number>();
         for (const area of subset) bump(occupancyStatus, area.occupied ? "Ocupada" : "Sin ocupar");
-        charts.push({ title: "Ocupación", data: toNameCounts(occupancyStatus) });
+        charts.push({
+          title: "Ocupación",
+          data: toNameCounts(occupancyStatus),
+          kind: "donut",
+          palette: "category",
+          centerLabel: "viviendas",
+        });
       }
+
+      charts.push({ ...chartByZone(subset, "Distribución por barrio"), wide: true });
 
       return {
         key,
@@ -693,9 +830,23 @@ export async function loadKpiDetail(
           { label: "Construcción mayor", value: fmtM2(largest) },
         ],
         charts: [
-          { title: "Superficie construida por barrio", data: toNameCounts(m2ByZone), suffix: " m²" },
-          { title: "Superficie construida por clasificación", data: toNameCounts(m2ByCategory), suffix: " m²" },
-          { title: "Distribución por tamaño", data: [...sizeBuckets.entries()].map(([name, value]) => ({ name, value })) },
+          {
+            title: "Distribución por tamaño",
+            subtitle: "Inmuebles agrupados por metros construidos",
+            data: [...sizeBuckets.entries()].map(([name, value]) => ({ name, value })),
+            kind: "donut",
+            palette: "sequential",
+            centerLabel: "inmuebles",
+          },
+          {
+            title: "Superficie por clasificación",
+            data: toNameCounts(m2ByCategory),
+            suffix: " m²",
+            kind: "donut",
+            palette: "category",
+            centerLabel: "m² totales",
+          },
+          { title: "Superficie construida por barrio", data: toNameCounts(m2ByZone), suffix: " m²", kind: "bars", wide: true },
         ],
         columns: areaColumns([
           { key: "categoria", label: "Clasificación" },

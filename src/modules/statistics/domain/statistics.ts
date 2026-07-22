@@ -169,11 +169,25 @@ export interface KpiDetailColumn {
   nowrap?: boolean;
 }
 
+/** Forma con la que se dibuja cada bloque del detalle */
+export type KpiChartKind = "bars" | "donut" | "columns" | "progress";
+
+/** De dónde toma el color: identidad por clasificación/giro, magnitud, o serie única */
+export type KpiChartPalette = "category" | "business" | "sequential" | "series";
+
 export interface KpiDetailChart {
   title: string;
   data: NameCount[];
   /** Sufijo de unidad para las etiquetas (p. ej. " m²") */
   suffix?: string;
+  kind?: KpiChartKind;
+  palette?: KpiChartPalette;
+  /** Ocupa el ancho completo de la rejilla del modal */
+  wide?: boolean;
+  /** Texto de apoyo bajo el título */
+  subtitle?: string;
+  /** Etiqueta del centro de la dona */
+  centerLabel?: string;
 }
 
 export type KpiDetailRow = Record<string, string | number>;
