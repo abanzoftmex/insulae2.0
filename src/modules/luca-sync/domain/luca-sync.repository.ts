@@ -19,7 +19,14 @@ export type ExecuteResult =
   | { outcome: "executed"; externalId: string; lucaApiBaseUrl: string | null; lucaWebhookSecret: string | null }
   | { outcome: "already_locked" }
   | { outcome: "not_found" }
-  | { outcome: "not_synced" };
+  | { outcome: "not_synced" }
+  // La categoría/grupo financiero (cobros) o la partida (gastos) elegidos no
+  // pertenecen al condominio/grupo del registro que se está ejecutando, o ya
+  // no están activos — se detecta en el servidor porque el filtro que ve el
+  // usuario en el navegador (dropdown scoped al condominio/grupo) no es
+  // suficiente por sí solo: un llamado directo a la API podría mandar
+  // cualquier id existente.
+  | { outcome: "invalid_assignment" };
 
 export interface ExecuteActor {
   userId: string;

@@ -60,5 +60,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (result.outcome === "already_locked") {
     return NextResponse.json({ status: "already_locked" }, { status: 409 });
   }
+  if (result.outcome === "invalid_assignment") {
+    return NextResponse.json({ status: "invalid_assignment" }, { status: 400 });
+  }
   return NextResponse.json({ status: "executed" }, { status: 200 });
 }

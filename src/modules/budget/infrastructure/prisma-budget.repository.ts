@@ -733,6 +733,21 @@ export class PrismaBudgetRepository implements BudgetRepository {
   }
 
   async deleteBudgetGroup(groupId: string): Promise<void> {
+    // Un gasto de Luca pendiente (recibido, aún no ejecutado) sólo trae
+    // budgetGroupId — la partida específica se elige hasta ejecutar. Si el
+    // grupo se desactiva antes de eso, el selector de Partida del gasto se
+    // queda sin opciones para siempre (getExpenseGroupConcepts sólo devuelve
+    // conceptos isActive), dejándolo atorado sin forma de recuperarlo desde
+    // la UI. Se bloquea la desactivación mientras eso exista.
+    const pendingLucaExpenses = await prisma.expense.count({
+      where: { budgetGroupId: groupId, externalSource: "LUCA", lockedAt: null },
+    });
+    if (pendingLucaExpenses > 0) {
+      throw new Error(
+        `No se puede desactivar: hay ${pendingLucaExpenses} gasto(s) de Luca pendientes de ejecutar vinculados a este grupo. Ejecútalos o descártalos primero.`,
+      );
+    }
+
     await prisma.$transaction([
       prisma.budgetGroup.update({
         where: { id: groupId },
@@ -746,6 +761,29 @@ export class PrismaBudgetRepository implements BudgetRepository {
   }
 
   async deleteBudgetConcept(conceptId: string): Promise<void> {
+    // Misma razón que en deleteBudgetGroup: si esta es la última partida
+    // activa de su grupo y ese grupo tiene gastos de Luca pendientes de
+    // ejecutar, desactivarla los dejaría sin ninguna opción elegible.
+    const concept = await prisma.budgetExpenseConcept.findUnique({
+      where: { id: conceptId },
+      select: { budgetGroupId: true },
+    });
+    if (concept?.budgetGroupId) {
+      const [otherActiveConcepts, pendingLucaExpenses] = await Promise.all([
+        prisma.budgetExpenseConcept.count({
+          where: { budgetGroupId: concept.budgetGroupId, isActive: true, id: { not: conceptId } },
+        }),
+        prisma.expense.count({
+          where: { budgetGroupId: concept.budgetGroupId, externalSource: "LUCA", lockedAt: null },
+        }),
+      ]);
+      if (otherActiveConcepts === 0 && pendingLucaExpenses > 0) {
+        throw new Error(
+          `No se puede desactivar: es la última partida activa del grupo y hay ${pendingLucaExpenses} gasto(s) de Luca pendientes de ejecutar vinculados a él. Agrega otra partida o resuelve esos gastos primero.`,
+        );
+      }
+    }
+
     await prisma.budgetExpenseConcept.update({
       where: { id: conceptId },
       data: { isActive: false }

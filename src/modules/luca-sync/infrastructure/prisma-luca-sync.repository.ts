@@ -253,6 +253,28 @@ export class PrismaLucaSyncRepository implements LucaSyncRepository {
     if (!income.externalId || income.externalSource !== "LUCA") return { outcome: "not_synced" };
     if (income.lockedAt) return { outcome: "already_locked" };
 
+    // Defensa en el servidor: el dropdown del navegador ya filtra por
+    // condominio activo, pero eso no impide un llamado directo a la API con
+    // un id de otro condominio o de una categoría/grupo ya desactivados.
+    if (miscCatalogId) {
+      const catalog = await prisma.miscIncomeCatalog.findUnique({
+        where: { id: miscCatalogId },
+        select: { condominiumId: true, isActive: true },
+      });
+      if (!catalog || catalog.condominiumId !== income.condominiumId || !catalog.isActive) {
+        return { outcome: "invalid_assignment" };
+      }
+    }
+    if (chargeGroupId) {
+      const group = await prisma.chargeGroup.findUnique({
+        where: { id: chargeGroupId },
+        select: { condominiumId: true, isActive: true },
+      });
+      if (!group || group.condominiumId !== income.condominiumId || !group.isActive) {
+        return { outcome: "invalid_assignment" };
+      }
+    }
+
     await prisma.$transaction([
       prisma.income.update({
         where: { id },
@@ -299,11 +321,29 @@ export class PrismaLucaSyncRepository implements LucaSyncRepository {
   ): Promise<ExecuteResult> {
     const expense = await prisma.expense.findUnique({
       where: { id },
-      select: { id: true, condominiumId: true, externalSource: true, externalId: true, lockedAt: true },
+      select: { id: true, condominiumId: true, budgetGroupId: true, externalSource: true, externalId: true, lockedAt: true },
     });
     if (!expense) return { outcome: "not_found" };
     if (!expense.externalId || expense.externalSource !== "LUCA") return { outcome: "not_synced" };
     if (expense.lockedAt) return { outcome: "already_locked" };
+
+    // Defensa en el servidor: el dropdown de Partida ya filtra por el grupo
+    // de esta fila, pero eso no impide un llamado directo a la API con un id
+    // de concepto de otro grupo, otro año o incluso otro condominio.
+    if (budgetConceptId) {
+      const concept = await prisma.budgetExpenseConcept.findUnique({
+        where: { id: budgetConceptId },
+        select: { condominiumId: true, budgetGroupId: true, isActive: true },
+      });
+      if (
+        !concept ||
+        concept.condominiumId !== expense.condominiumId ||
+        concept.budgetGroupId !== expense.budgetGroupId ||
+        !concept.isActive
+      ) {
+        return { outcome: "invalid_assignment" };
+      }
+    }
 
     await prisma.$transaction([
       prisma.expense.update({
