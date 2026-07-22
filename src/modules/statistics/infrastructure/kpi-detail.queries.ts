@@ -91,6 +91,7 @@ interface DetailDataset {
     phone: string;
     roles: Set<string>;
     zones: Set<string>;
+    areaIds: Set<string>;
     areaLabels: string[];
   }[];
   businesses: {
@@ -221,10 +222,12 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
           phone: assignment.user.phone?.trim() || assignment.user.personalPhone?.trim() || "—",
           roles: new Set<string>(),
           zones: new Set<string>(),
+          areaIds: new Set<string>(),
           areaLabels: [] as string[],
         };
       owner.roles.add(role);
       owner.zones.add(zone);
+      owner.areaIds.add(area.id);
       if (!owner.areaLabels.includes(label)) owner.areaLabels.push(label);
       if (!existing) ownersById.set(assignment.user.id, owner);
     }
@@ -287,7 +290,7 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
   }
 
   const owners = [...ownersById.values()].sort(
-    (a, b) => b.areaLabels.length - a.areaLabels.length || a.name.localeCompare(b.name),
+    (a, b) => b.areaIds.size - a.areaIds.size || a.name.localeCompare(b.name),
   );
 
   return { areas, owners, businesses, totalRentals };
@@ -355,7 +358,7 @@ export async function loadKpiDetail(
       let totalAreas = 0;
       let maxAreas = 0;
       for (const owner of owners) {
-        const count = owner.areaLabels.length;
+        const count = owner.areaIds.size;
         totalAreas += count;
         maxAreas = Math.max(maxAreas, count);
         if (count > 1) multi += 1;
@@ -414,7 +417,7 @@ export async function loadKpiDetail(
         ],
         rows: owners.map((owner) => ({
           propietario: owner.name,
-          inmuebles: owner.areaLabels.length,
+          inmuebles: owner.areaIds.size,
           barrios: [...owner.zones].sort().join(", "),
           figura: [...owner.roles].sort().join(", "),
           detalle: owner.areaLabels.join(", "),
