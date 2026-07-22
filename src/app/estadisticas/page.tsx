@@ -12,7 +12,7 @@ import {
   OpeningsChart,
   PaymentsChart,
   ShareBar,
-  UseTypeTreemap,
+  UseTypeDonut,
   ZoneCategoryHeatmap,
 } from "./_components/stats-charts";
 import { ChartCard, MiniStat, SectionHeader } from "./_components/section";
@@ -184,6 +184,22 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
     vm.classifiedBusinesses !== null && vm.activeBusinesses > 0
       ? (vm.classifiedBusinesses / vm.activeBusinesses) * 100
       : null;
+  // La dona admite ~7 clases de color: los seis usos mayores y el resto agrupado
+  const TOP_USE_TYPES = 6;
+  const rankedUseTypes = vm.areasByUseTypeCategorized;
+  const useTypeSlices = [
+    ...rankedUseTypes.slice(0, TOP_USE_TYPES),
+    ...(rankedUseTypes.length > TOP_USE_TYPES
+      ? [
+          {
+            name: "Otros usos",
+            value: rankedUseTypes.slice(TOP_USE_TYPES).reduce((sum, row) => sum + row.value, 0),
+            category: "Sin clasificar",
+          },
+        ]
+      : []),
+  ];
+
   const sections: SectionLink[] = [
     { id: "panorama", label: "Panorama", accent: "#5d5b35" },
     { id: "patrimonio", label: "Patrimonio", accent: "#0891b2" },
@@ -252,13 +268,19 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Cómo se reparten los inmuebles entre barrios, clasificaciones y usos de suelo."
             accent="#0891b2"
           />
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard
               title="Clasificación de inmuebles"
               subtitle="Derivada del uso de suelo registrado"
               className="lg:col-span-2"
+              bodyClassName="justify-between gap-4"
             >
               <CompositionDonut data={vm.areasByCategory} totalLabel="inmuebles" />
+              <div className="grid grid-cols-3 gap-2.5">
+                <MiniStat label="Predios" value={formatInt(vm.parentPrivateAreas)} />
+                <MiniStat label="Unidades" value={formatInt(vm.childPrivateAreas)} />
+                <MiniStat label="Construidos" value={formatInt(vm.builtAreas)} />
+              </div>
             </ChartCard>
             <ChartCard
               title="Barrio × clasificación"
@@ -269,21 +291,43 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               <ZoneCategoryHeatmap rows={vm.zoneCategoryMatrix} categories={vm.categoryOrder} />
             </ChartCard>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard
               title="Usos de suelo"
-              subtitle="Área proporcional al número de inmuebles"
-              className="lg:col-span-3"
+              subtitle="Participación de cada uso sobre el total de inmuebles"
+              className="lg:col-span-2"
             >
-              <UseTypeTreemap data={vm.areasByUseTypeCategorized.slice(0, 12)} height={272} />
+              <UseTypeDonut data={useTypeSlices} />
             </ChartCard>
             <ChartCard
               title="Superficie construida"
               subtitle="Metros cuadrados por barrio"
               hint={`${formatInt(vm.totalBuiltM2)} m² totales`}
-              className="lg:col-span-2"
+              className="lg:col-span-3"
+              bodyClassName="justify-between gap-4"
             >
               <HorizontalBars data={vm.builtM2ByZone} suffix=" m²" labelWidth={118} />
+              <div className="grid grid-cols-3 gap-2.5">
+                <MiniStat
+                  label="Promedio construido"
+                  value={`${formatInt(vm.builtAreas ? vm.totalBuiltM2 / vm.builtAreas : 0)} m²`}
+                  hint="Por inmueble con construcción"
+                />
+                <MiniStat
+                  label="Concentración"
+                  value={
+                    vm.builtM2ByZone.length && vm.totalBuiltM2
+                      ? formatPct((vm.builtM2ByZone[0].value / vm.totalBuiltM2) * 100, 0)
+                      : "—"
+                  }
+                  hint={vm.builtM2ByZone.length ? `en ${vm.builtM2ByZone[0].name}` : undefined}
+                />
+                <MiniStat
+                  label="Barrios con obra"
+                  value={formatInt(vm.builtM2ByZone.length)}
+                  hint={`de ${formatInt(vm.availableZones.length)} barrios`}
+                />
+              </div>
             </ChartCard>
           </div>
         </section>
@@ -296,8 +340,8 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Un inmueble cuenta como ocupado cuando tiene residente asignado o un negocio activo."
             accent="#b8860b"
           />
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
-            <ChartCard title="Ocupación general" className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+            <ChartCard title="Ocupación general" className="lg:col-span-2" bodyClassName="justify-between">
               <OccupancyMeter
                 rate={vm.occupancy.rate}
                 occupied={vm.occupancy.occupied}
@@ -310,6 +354,16 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
                   hint="Inmuebles con actividad comercial"
                 />
                 <MiniStat label="Con adeudo" value={formatInt(vm.areasWithDebt)} hint="Cargos abiertos o parciales" />
+                <MiniStat
+                  label="Sin ocupar"
+                  value={formatInt(vm.occupancy.unoccupied)}
+                  hint="Sin residente ni negocio"
+                />
+                <MiniStat
+                  label="Barrios al 100%"
+                  value={formatInt(vm.occupancyByZone.filter((z) => z.rate >= 100).length)}
+                  hint={`de ${formatInt(vm.occupancyByZone.length)} barrios`}
+                />
               </div>
             </ChartCard>
             <ChartCard
@@ -330,14 +384,30 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Composición del comercio dentro del condominio y su evolución."
             accent="#b5451f"
           />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ChartCard
               title="Distribución por giro"
               subtitle="Participación de cada giro sobre los negocios clasificados"
               hint={businessCoverage !== null ? `${businessCoverage.toFixed(0)}% clasificados` : undefined}
+              bodyClassName="justify-between"
             >
               {vm.businessesByLine && vm.businessesByLine.length > 0 ? (
-                <BusinessLineDonut data={vm.businessesByLine} total={vm.classifiedBusinesses ?? 0} />
+                <>
+                  <BusinessLineDonut data={vm.businessesByLine} total={vm.classifiedBusinesses ?? 0} />
+                  <div className="grid grid-cols-3 gap-2.5 mt-4">
+                    <MiniStat label="Giros" value={formatInt(vm.businessLinesCount ?? 0)} hint="En el catálogo" />
+                    <MiniStat
+                      label="Clasificados"
+                      value={formatInt(vm.classifiedBusinesses ?? 0)}
+                      hint="Negocios con giro"
+                    />
+                    <MiniStat
+                      label="Sin giro"
+                      value={formatInt(vm.activeBusinesses - (vm.classifiedBusinesses ?? 0))}
+                      hint="Pendientes de capturar"
+                    />
+                  </div>
+                </>
               ) : (
                 <div className="flex items-start gap-2 text-[12px] text-ink-soft bg-canvas-2 rounded-lg p-4">
                   <Info className="w-4 h-4 shrink-0 mt-0.5 text-brand" />
@@ -350,13 +420,13 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             </ChartCard>
             <ChartCard title="Categorías con mayor presencia" subtitle="Las diez con más establecimientos">
               {vm.businessesByCategoryTop && vm.businessesByCategoryTop.length > 0 ? (
-                <HorizontalBars data={vm.businessesByCategoryTop} labelWidth={132} />
+                <HorizontalBars data={vm.businessesByCategoryTop} labelWidth={132} fill />
               ) : (
                 <p className="text-[12px] text-ink-soft">Disponible al migrar el catálogo de giros.</p>
               )}
             </ChartCard>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard
               title="Aperturas de negocios por año"
               subtitle="Altas registradas con fecha de inicio válida"
@@ -375,7 +445,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               className="lg:col-span-2"
             >
               {vm.businessesByZone.length > 0 ? (
-                <HorizontalBars data={vm.businessesByZone} labelWidth={118} />
+                <HorizontalBars data={vm.businessesByZone} labelWidth={118} fill />
               ) : (
                 <p className="text-[12px] text-ink-soft">Sin negocios activos en el filtro actual.</p>
               )}
@@ -391,12 +461,12 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Cómo se distribuye la propiedad y qué tan localizable es el padrón."
             accent="#b0509f"
           />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <ChartCard title="Figura de propiedad" subtitle="Asignaciones activas por rol">
-              <HorizontalBars data={vm.ownershipByRole} labelWidth={148} />
+              <HorizontalBars data={vm.ownershipByRole} labelWidth={148} fill />
             </ChartCard>
             <ChartCard title="Concentración de propiedad" subtitle="Propietarios según cuántos inmuebles tienen">
-              <HorizontalBars data={vm.ownersByAreaCount} labelWidth={126} useRamp />
+              <HorizontalBars data={vm.ownersByAreaCount} labelWidth={126} useRamp fill />
             </ChartCard>
             <ChartCard
               title="Localización del padrón"
@@ -448,7 +518,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             description="Actividad de pagos registrada y estado de los tickets."
             accent="#2563eb"
           />
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard
               title="Cobranza mensual"
               subtitle="Monto cobrado en los últimos 24 meses"

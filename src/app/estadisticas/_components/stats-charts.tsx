@@ -12,7 +12,6 @@ import {
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  Treemap,
   XAxis,
   YAxis,
 } from "recharts";
@@ -118,6 +117,8 @@ export function HorizontalBars({
   colorByName,
   /** Aplica la rampa secuencial según la magnitud (solo para escalas ordenadas) */
   useRamp = false,
+  /** Ocupa toda la altura disponible de la tarjeta en vez de calcularla por nº de barras */
+  fill = false,
 }: {
   data: NameValue[];
   height?: number;
@@ -126,11 +127,12 @@ export function HorizontalBars({
   labelWidth?: number;
   colorByName?: Record<string, string>;
   useRamp?: boolean;
+  fill?: boolean;
 }) {
   const chartHeight = height ?? Math.max(110, data.length * 32 + 16);
   const max = Math.max(...data.map((d) => d.value), 0);
   return (
-    <ResponsiveContainer width="100%" height={chartHeight}>
+    <ResponsiveContainer width="100%" height={fill ? "100%" : chartHeight} minHeight={fill ? chartHeight : undefined}>
       <BarChart data={data} layout="vertical" margin={{ top: 0, right: 48, bottom: 0, left: 4 }} barCategoryGap="26%">
         <CartesianGrid horizontal={false} stroke={GRID} strokeWidth={1} />
         <XAxis type="number" hide />
@@ -246,16 +248,16 @@ export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; tota
   const total = data.reduce((sum, row) => sum + row.value, 0);
   return (
     <div className="flex items-center gap-5">
-      <div className="relative w-[168px] h-[168px] shrink-0">
-        <PieChart width={168} height={168}>
+      <div className="relative w-[236px] h-[236px] shrink-0">
+        <PieChart width={236} height={236}>
           <Pie
             data={data}
             dataKey="value"
             nameKey="name"
-            cx={83}
-            cy={83}
-            innerRadius={50}
-            outerRadius={80}
+            cx={117}
+            cy={117}
+            innerRadius={72}
+            outerRadius={114}
             paddingAngle={2}
             stroke={SURFACE}
             strokeWidth={2}
@@ -274,11 +276,11 @@ export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; tota
           />
         </PieChart>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[24px] font-bold text-ink leading-none">{numberFormat.format(total)}</span>
-          <span className="text-[9px] font-bold uppercase tracking-wider text-ink-soft/70 mt-1">{totalLabel}</span>
+          <span className="text-[30px] font-bold text-ink leading-none">{numberFormat.format(total)}</span>
+          <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70 mt-1">{totalLabel}</span>
         </div>
       </div>
-      <ul className="flex-1 space-y-2.5">
+      <ul className="flex-1 space-y-3.5">
         {data.map((entry, index) => (
           <li key={entry.name} className="flex items-baseline gap-2 text-[12px]">
             <span
@@ -297,84 +299,77 @@ export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; tota
   );
 }
 
-// ─── Treemap de composición (muchas categorías, magnitud relativa) ────────────
+// ─── Dona de usos de suelo ────────────────────────────────────────────────────
 
-interface TreemapNode {
-  name?: string;
-  size?: number;
-  category?: string;
-  index?: number;
-  depth?: number;
-  x?: number;
-  y?: number;
-  width?: number;
-  height?: number;
-  root?: { children?: { size: number }[] };
+/** Acorta el nombre del catálogo: quita la coletilla entre paréntesis y la clave final */
+export function shortUseType(name: string): string {
+  const withoutParens = name.replace(/\s*\([^)]*\)\s*/g, " ").trim();
+  const withoutCode = withoutParens.replace(/\s+[A-Z]{1,2}[0-9-]*$/, "").trim();
+  const clean = (withoutCode || withoutParens || name).replace(/\s{2,}/g, " ");
+  return clean.length > 30 ? `${clean.slice(0, 29)}…` : clean;
 }
 
-function TreemapCell(props: TreemapNode) {
-  const { x = 0, y = 0, width = 0, height = 0, name = "", size = 0, category } = props;
-  // El área ya codifica la cantidad; el color se reserva para la clasificación,
-  // así el treemap informa dos dimensiones en lugar de repetir una.
-  const fill = CATEGORY_COLORS[category ?? ""] ?? BRAND;
-  // Sólo se etiqueta cuando el texto cabe completo: se calcula cuántos
-  // caracteres entran en el ancho real del rectángulo (~5.6px por carácter a 11px)
-  const padding = 16;
-  const maxChars = Math.floor((width - padding) / 5.6);
-  const showLabel = width > 70 && height > 34 && maxChars >= 6;
-  const showValue = width > 70 && height > 52;
-  const short = name.length > maxChars ? `${name.slice(0, Math.max(3, maxChars - 1))}…` : name;
-  return (
-    <g>
-      <rect x={x} y={y} width={width} height={height} fill={fill} stroke={SURFACE} strokeWidth={2} rx={3} />
-      {showLabel && (
-        <text x={x + 8} y={y + 18} fontSize={11} fontWeight={600} fill="#ffffff">
-          {short}
-        </text>
-      )}
-      {showValue && (
-        <text x={x + 8} y={y + 35} fontSize={13} fontWeight={700} fill="rgba(255,255,255,0.88)">
-          {numberFormat.format(size)}
-        </text>
-      )}
-    </g>
-  );
-}
-
-export function UseTypeTreemap({
+export function UseTypeDonut({
   data,
-  height = 260,
+  totalLabel = "inmuebles",
 }: {
   data: { name: string; value: number; category: string }[];
-  height?: number;
+  totalLabel?: string;
 }) {
-  const treeData = data.map((row) => ({ name: row.name, size: row.value, category: row.category }));
-  const legend = [...new Set(data.map((row) => row.category))];
+  const total = data.reduce((sum, row) => sum + row.value, 0);
+  const rows = data.map((row, index) => ({
+    ...row,
+    label: row.name === "Otros usos" ? row.name : shortUseType(row.name),
+    color: row.name === "Otros usos" ? "#9ca3af" : CATEGORICAL_ORDER[index % CATEGORICAL_ORDER.length],
+    share: total > 0 ? (row.value / total) * 100 : 0,
+  }));
+
   return (
-    <div>
-      <ResponsiveContainer width="100%" height={height}>
-        <Treemap
-          data={treeData}
-          dataKey="size"
-          nameKey="name"
-          stroke={SURFACE}
-          isAnimationActive={false}
-          content={<TreemapCell />}
-        >
-          <Tooltip content={<SimpleTooltip format={(v) => `${numberFormat.format(v)} inmuebles`} />} />
-        </Treemap>
-      </ResponsiveContainer>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3">
-        {legend.map((category) => (
-          <span key={category} className="flex items-center gap-1.5 text-[11px] text-ink-soft">
-            <span
-              className="w-2.5 h-2.5 rounded-sm"
-              style={{ backgroundColor: CATEGORY_COLORS[category] ?? BRAND }}
-            />
-            {category}
-          </span>
-        ))}
+    <div className="flex flex-col items-center gap-4 h-full justify-center">
+      <div className="relative w-[188px] h-[188px] shrink-0">
+        <PieChart width={188} height={188}>
+          <Pie
+            data={rows}
+            dataKey="value"
+            nameKey="label"
+            cx={93}
+            cy={93}
+            innerRadius={56}
+            outerRadius={90}
+            paddingAngle={2}
+            stroke={SURFACE}
+            strokeWidth={2}
+            isAnimationActive={false}
+          >
+            {rows.map((row) => (
+              <Cell key={row.name} fill={row.color} />
+            ))}
+          </Pie>
+          <Tooltip
+            content={
+              <SimpleTooltip
+                format={(v, row) =>
+                  `${numberFormat.format(v)} inmuebles · ${decimalFormat.format((row?.share as number) ?? 0)}%`
+                }
+              />
+            }
+          />
+        </PieChart>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span className="text-[30px] font-bold text-ink leading-none">{numberFormat.format(total)}</span>
+          <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70 mt-1">{totalLabel}</span>
+        </div>
       </div>
+      <ul className="w-full space-y-1.5">
+        {rows.map((row) => (
+          <li key={row.name} className="flex items-center gap-2 text-[11.5px]" title={row.name}>
+            <span className="inline-block w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: row.color }} />
+            <span className="text-ink font-medium flex-1 truncate">{row.label}</span>
+            <span className="text-ink font-semibold tabular-nums">{numberFormat.format(row.value)}</span>
+            <span className="text-ink-soft/70 tabular-nums w-10 text-right">{decimalFormat.format(row.share)}%</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -551,7 +546,7 @@ export function OpeningsChart({ data, height = 210 }: { data: { label: string; v
 
 export function PaymentsChart({ data }: { data: { label: string; count: number; amount: number }[] }) {
   return (
-    <ResponsiveContainer width="100%" height={230}>
+    <ResponsiveContainer width="100%" height="100%" minHeight={230}>
       <AreaChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 4 }}>
         <defs>
           <linearGradient id="paymentsFill" x1="0" y1="0" x2="0" y2="1">
@@ -617,7 +612,7 @@ export function OccupancyMeter({
           {numberFormat.format(unoccupied)} sin ocupar
         </span>
       </div>
-      <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ backgroundColor: MUTED }}>
+      <div className="w-full h-3 rounded-full overflow-hidden" style={{ backgroundColor: MUTED }}>
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${Math.min(100, Math.max(0, rate))}%`, backgroundColor: BRAND_DEEP }}

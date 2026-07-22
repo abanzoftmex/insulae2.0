@@ -45,6 +45,7 @@ export function ChartCard({
   hint,
   children,
   className,
+  bodyClassName,
   footer,
 }: {
   title: string;
@@ -52,6 +53,8 @@ export function ChartCard({
   hint?: string;
   children: ReactNode;
   className?: string;
+  /** Permite centrar o estirar el contenido cuando la tarjeta es más alta que su gráfica */
+  bodyClassName?: string;
   footer?: ReactNode;
 }) {
   return (
@@ -74,7 +77,7 @@ export function ChartCard({
           </span>
         )}
       </header>
-      <div className="flex-1 min-w-0">{children}</div>
+      <div className={cn("flex-1 min-w-0 flex flex-col justify-center", bodyClassName)}>{children}</div>
       {footer && <div className="mt-3 pt-3 border-t border-line text-[11px] text-ink-soft">{footer}</div>}
     </section>
   );
@@ -93,7 +96,7 @@ export function MiniStat({
   accent?: string;
 }) {
   return (
-    <div className="rounded-lg bg-canvas-2/70 px-3 py-2.5">
+    <div className="rounded-lg bg-canvas-2/70 px-3 py-3">
       <p className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70">{label}</p>
       <p className="text-[18px] font-bold leading-none mt-1.5" style={{ color: accent ?? "rgba(0,0,0,0.87)" }}>
         {value}
