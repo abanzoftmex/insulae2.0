@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "@/shared/utils/cn";
 import { Card } from "./card";
 
-type StatCardAccent = "cyan" | "brand" | "lime" | "gold";
+type StatCardAccent = "cyan" | "brand" | "lime" | "gold" | "emerald";
 
 const accentMap: Record<StatCardAccent, { card: string; icon: string; label: string; value: string }> = {
   cyan: {
@@ -28,6 +28,12 @@ const accentMap: Record<StatCardAccent, { card: string; icon: string; label: str
     icon: "bg-amber-900 text-amber-200",
     label: "text-amber-600",
     value: "text-amber-700",
+  },
+  emerald: {
+    card: "bg-emerald-50/70 border-emerald-200/60",
+    icon: "bg-emerald-900 text-emerald-100",
+    label: "text-emerald-700",
+    value: "text-emerald-700",
   },
 };
 

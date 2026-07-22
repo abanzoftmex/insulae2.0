@@ -1397,6 +1397,17 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             amount,
           );
         }
+
+        const ordinaryRowConfig = ordinaryReceivableRowByKind.get(incomeKind);
+        if (ordinaryRowConfig) {
+          const month = getMonth(income.date);
+          const amount = decimalToNumber(income.amount);
+          addAmountToSeries(
+            ordinaryIncomeByRowAndYear[ordinaryRowConfig.id][year],
+            month,
+            amount,
+          );
+        }
       }
 
       const month = getMonth(income.date);

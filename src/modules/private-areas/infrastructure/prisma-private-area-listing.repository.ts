@@ -401,7 +401,68 @@ function toPublicPartyContact(contact: PartyContact): Omit<PartyContact, "id"> {
 }
 
 function emptyFinancialSplit(): PrivateAreaFinancialSplit {
-  return { owner: 0, commerce: 0 };
+  return { owner: 0, commerce: 0, isPaid: false };
+}
+
+function splitMonthlyCharges(
+  charges: PrivateAreaSnapshot["charges"],
+  year: number,
+  month: number,
+  inMemoryAllocationsByChargeId: Map<string, number>,
+  currentOrdinaryYear: number,
+): PrivateAreaFinancialSplit {
+  const split: PrivateAreaFinancialSplit = { owner: 0, commerce: 0, isPaid: false };
+
+  const matchingCharges = charges.filter(
+    (charge) =>
+      charge.isCollectible &&
+      isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
+      charge.periodYear === year &&
+      charge.periodMonth === month,
+  );
+
+  if (matchingCharges.length === 0) {
+    return split;
+  }
+
+  let totalPending = 0;
+  let totalPaid = 0;
+
+  for (const charge of matchingCharges) {
+    const amount = decimalToNumber(charge.amount);
+    const dbPaid =
+      charge.allocations?.reduce(
+        (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+        0,
+      ) ?? decimalToNumber(charge.paidAmount);
+    const inMem = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
+    const paid = dbPaid + inMem;
+    const interest = decimalToNumber(charge.interestAmount);
+    const discount = decimalToNumber(charge.discountAmount);
+    const pending = Math.max(0, amount - paid - discount + interest);
+
+    totalPaid += paid;
+    totalPending += pending;
+
+    const val =
+      pending <= 0.005 && paid > 0
+        ? amount
+        : year > currentOrdinaryYear && paid === 0
+          ? 0
+          : pending;
+
+    if (charge.responsibility === "COMMERCE") {
+      split.commerce += val;
+    } else {
+      split.owner += val;
+    }
+  }
+
+  if (totalPending <= 0.005 && totalPaid > 0) {
+    split.isPaid = true;
+  }
+
+  return split;
 }
 
 function toPendingAmount(
@@ -623,14 +684,12 @@ function buildFinancialCells(
 
   for (const year of yearsToCompute) {
     for (let month = 1; month <= 12; month += 1) {
-      cells[withMonthlyKey(year, month)] = splitCharges(
+      cells[withMonthlyKey(year, month)] = splitMonthlyCharges(
         charges,
-        (charge) =>
-          charge.isCollectible &&
-          isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
-          charge.periodYear === year &&
-          charge.periodMonth === month,
-        (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+        year,
+        month,
+        inMemoryAllocationsByChargeId,
+        currentOrdinaryYear,
       );
     }
   }
@@ -672,8 +731,8 @@ function matchesQuery(row: PrivateAreaListRow, query: string): boolean {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9+]/g, " ")
     .split(/\s+/)
-    .map((w) => w.replace(/[^a-z0-9+]/g, ""))
     .filter((w) => w.length > 0);
 
   if (queryWords.length === 0) {
@@ -991,6 +1050,13 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               date: true,
               amount: true,
               chargeGroupId: true,
+              chargeGroup: {
+                select: {
+                  name: true,
+                  chargeType: true,
+                  kind: true,
+                },
+              },
             },
           },
         },
@@ -1059,45 +1125,56 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       const inMemoryAllocationsByChargeId = new Map<string, number>();
 
       const calculateAllocationsForArea = (charges: any[], incomes: any[]) => {
-        const sortedCharges = [...charges].sort((a, b) => {
-          if (a.periodYear !== b.periodYear) {
-            return a.periodYear - b.periodYear;
-          }
-          return a.periodMonth - b.periodMonth;
-        });
+        const sortedCharges = [...charges]
+          .filter((c) => c.isCollectible)
+          .sort((a, b) => {
+            if (a.periodYear !== b.periodYear) {
+              return a.periodYear - b.periodYear;
+            }
+            return a.periodMonth - b.periodMonth;
+          });
 
         const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
 
         // Build a set of legacyIds of payments that already have allocations in the database
-        const allocatedLegacyIds = new Set<number>();
+        const allocatedLegacyIds = new Set<string>();
         for (const charge of charges) {
           for (const alloc of charge.allocations) {
             if (alloc.payment?.legacyId !== null && alloc.payment?.legacyId !== undefined) {
-              allocatedLegacyIds.add(alloc.payment.legacyId);
+              allocatedLegacyIds.add(String(alloc.payment.legacyId));
             }
           }
         }
 
         for (const income of sortedIncomes) {
-          if (income.legacyId !== null && income.legacyId !== undefined && allocatedLegacyIds.has(income.legacyId)) {
+          if (
+            income.legacyId !== null &&
+            income.legacyId !== undefined &&
+            allocatedLegacyIds.has(String(income.legacyId))
+          ) {
             // This income is already represented as a Payment with allocations in the database.
             // Skip simulating it in memory to prevent double-allocation!
             continue;
           }
 
-          const chargeGroupId = income.chargeGroupId;
-          if (!chargeGroupId) continue;
+          const chargeGroup = income.chargeGroup;
+          if (!chargeGroup) continue;
+
+          const incomeKind = resolveChargeGroupKind(chargeGroup);
 
           let remainingIncome = decimalToNumber(income.amount);
-          const groupCharges = sortedCharges.filter((c) => c.chargeGroupId === chargeGroupId);
+          const groupCharges = sortedCharges.filter((c) => {
+            return resolveChargeGroupKind(c.chargeGroup) === incomeKind;
+          });
 
           for (const charge of groupCharges) {
             if (remainingIncome <= 0.005) break;
 
-            const dbPaid = charge.allocations?.reduce(
-              (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
-              0,
-            ) ?? decimalToNumber(charge.paidAmount);
+            const dbPaid =
+              charge.allocations?.reduce(
+                (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+                0,
+              ) ?? decimalToNumber(charge.paidAmount);
             const prevAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
             const currentPaid = dbPaid + prevAllocated;
 

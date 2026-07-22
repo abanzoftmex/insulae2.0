@@ -125,7 +125,8 @@ function renderFinancialCards(
   ownerAmount: string,
   commerceAmount: string,
   showCommerce: boolean,
-  paymentStatusColor?: "green" | "red" | "yellow"
+  paymentStatusColor?: "green" | "red" | "yellow",
+  isPaid?: boolean,
 ): ReactNode {
   const isZeroOrMuted = (amount: string) => {
     const clean = amount.trim();
@@ -137,7 +138,7 @@ function renderFinancialCards(
   };
 
   const getCardStyle = (amount: string, isOwner: boolean) => {
-    if (isZeroOrMuted(amount)) {
+    if (isPaid || isZeroOrMuted(amount)) {
       return {
         bgClass: "bg-emerald-50 border-emerald-100",
         labelClass: "text-emerald-600/60",
@@ -705,7 +706,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 const empty = "$0.00";
                 const f = (k: string) => {
                   const s = row.financialCells[k as keyof typeof row.financialCells];
-                  return renderFinancialCards(s?.owner ?? empty, s?.commerce ?? empty, hasCom, row.paymentStatusColor);
+                  return renderFinancialCards(s?.owner ?? empty, s?.commerce ?? empty, hasCom, row.paymentStatusColor, s?.isPaid);
                 };
 
                 const isParent = row.hierarchyLabel === "Padre";

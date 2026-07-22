@@ -177,12 +177,12 @@ export default async function Home() {
             className={isSassi ? "bg-white border-lime-200/60 shadow-sm" : ""}
           />
           <StatCard
-            accent="gold"
+            accent="emerald"
             label={`Cobranza Anual (${reportYear})`}
             value={`$${stats.collections.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
             icon={<DollarSign className="h-3.5 w-3.5" />}
             trend={{ value: "Total Recaudado", isUp: true }}
-            className={isSassi ? "bg-white border-gold/30 shadow-sm" : ""}
+            className={isSassi ? "bg-white border-emerald-200/60 shadow-sm" : ""}
           />
           <StatCard
             accent="cyan"

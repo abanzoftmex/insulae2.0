@@ -28,6 +28,7 @@ export interface PrivateAreaPartyContact {
 export interface PrivateAreaFinancialSplit {
   owner: number;
   commerce: number;
+  isPaid?: boolean;
 }
 
 export type PrivateAreaFinancialCellKey =

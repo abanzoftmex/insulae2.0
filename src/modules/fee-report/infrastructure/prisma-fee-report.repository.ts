@@ -419,20 +419,12 @@ export class PrismaFeeReportRepository implements FeeReportRepository {
       const totalCommerceBalance = pastDueCommerce + (primaryYC?.commerceBalance ?? 0) + elapsedSecCommerce;
       const totalCurrentBalance  = totalOwnerBalance + totalCommerceBalance;
 
-      // ── Pagos mensuales (24 celdas) — solo dentro del rango del reporte ────
-      const reportStart = new Date(`${previousYear}-01-01T00:00:00`);
-      const reportEnd   = new Date(`${secondaryYear}-12-31T23:59:59`);
-      const rangeAllocs = monthlyRaw.filter((a) => {
-        const d = a.payment.paidAt;
-        return d >= reportStart && d <= reportEnd;
-      });
-
+      // ── Pagos mensuales (24 celdas) — mapeados por periodo del cargo (periodYear y periodMonth) ────
       const monthlyPayments: FeeReportMonthlyCell[] = years.flatMap((year) =>
         Array.from({ length: 12 }, (_, i) => {
           const month = i + 1;
-          const monthAllocs = rangeAllocs.filter((a) => {
-            const d = a.payment.paidAt;
-            return d.getFullYear() === year && d.getMonth() + 1 === month;
+          const monthAllocs = monthlyRaw.filter((a) => {
+            return a.charge.periodYear === year && a.charge.periodMonth === month;
           });
           return {
             month,
