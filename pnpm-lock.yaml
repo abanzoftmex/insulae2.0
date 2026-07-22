@@ -47,6 +47,9 @@ importers:
       firebase:
         specifier: ^12.11.0
         version: 12.14.0
+      framer-motion:
+        specifier: ^12.42.2
+        version: 12.42.2(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       jspdf:
         specifier: ^4.2.1
         version: 4.2.1
@@ -121,7 +124,7 @@ importers:
 packages:
 
   '@abanzoftmex/luca-insulae-contract@0.1.0':
-    resolution: {integrity: sha512-EJICE1f9q7b1YY6d2BFyNl4P65lv0JHCZ2PMshiTeKkj5zvor5MaYJmqvzOiNPkYj39qAEp8ay0Y6f7JQrHexQ==, tarball: https://npm.pkg.github.com/download/@abanzoftmex/luca-insulae-contract/0.1.0/0a0e4ee15dab8bcbf3101842198268e1a574a97f}
+    resolution: {integrity: sha512-EJICE1f9q7b1YY6d2BFyNl4P65lv0JHCZ2PMshiTeKkj5zvor5MaYJmqvzOiNPkYj39qAEp8ay0Y6f7JQrHexQ==}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -2222,6 +2225,15 @@ packages:
 
   firebase@12.14.0:
     resolution: {integrity: sha512-aEZ/lniDR1hOCYpx/x/V8Nrrqq9pepKDNkqP/4WGZFC69gTv6F59Z4/54W/SUP4L/hFlrRNmWj35aweQq+IHow==}
+
+  framer-motion@12.42.2:
+    resolution: {integrity: sha512-Y3Y6B44G/G3j19iV+kLVD3h82zU326mC1R/6p5S1aMhS5l8P60xX/G3/r1mS16a5z7/PqN8n/X43fM5u4Q14+q3xV/p00}
+    peerDependencies:
+      react: '^18.0.0 || ^19.0.0'
+      react-dom: '^18.0.0 || ^19.0.0'
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
 
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
@@ -5845,6 +5857,10 @@ snapshots:
       '@firebase/util': 1.15.1
     transitivePeerDependencies:
       - '@react-native-async-storage/async-storage'
+
+  framer-motion@12.42.2(@types/react-dom@19.2.3(@types/react@19.2.16))(@types/react@19.2.16)(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+    dependencies:
+      tslib: 2.8.1
 
   flat-cache@4.0.1:
     dependencies:
