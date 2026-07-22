@@ -1,0 +1,6 @@
+{"id_dcat_giros": 1, "nombre": "Alimento & Bebidas", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "id_proyectos": 1, "clave": "1"}
+{"id_dcat_giros": 2, "nombre": "Educación", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "id_proyectos": 1, "clave": "2"}
+{"id_dcat_giros": 3, "nombre": "Experiencia", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "id_proyectos": 1, "clave": "3"}
+{"id_dcat_giros": 4, "nombre": "Hospedaje", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "id_proyectos": 1, "clave": "4"}
+{"id_dcat_giros": 5, "nombre": "Servicios", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "id_proyectos": 1, "clave": "5"}
+{"id_dcat_giros": 6, "nombre": "Tiendas", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "id_proyectos": 1, "clave": "6"}

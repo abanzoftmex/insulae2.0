@@ -52,6 +52,10 @@ model Condominium {
   budgetGroups                 BudgetGroup[]
   expenseConceptGroupMaps      ExpenseConceptGroupMap[]
   registrationTypes            RegistrationType[]
+  businessLineCatalogs         BusinessLineCatalog[]
+  businessCategoryCatalogs     BusinessCategoryCatalog[]
+  businessSubcategoryCatalogs  BusinessSubcategoryCatalog[]
+  rentalBusinessLines          RentalBusinessLine[]
   lucaTenantId                 String?                                  @unique
   // Cada condominio (tenant de Insulae) se liga 1 a 1 con un tenant
   // específico de Luca — su propia URL y secreto de firma, no uno global,
@@ -358,8 +362,9 @@ model ResidentAssignment {
 }
 
 model Rental {
-  id                          String      @id @default(uuid())
+  id                          String               @id @default(uuid())
   condominiumId               String
+  legacyId                    Int?
   privateAreaId               String
   commerceId                  String?
   tenantName                  String?
@@ -368,19 +373,109 @@ model Rental {
   startsAt                    DateTime?
   endsAt                      DateTime?
   status                      String?
+  // Clase de comercio legacy (DCAT_CLASES_COMERCIOS): "A" | "B"
+  businessClass               String?
   notes                       String?
   charges                     Charge[]
-  administrativeContactUser   User?       @relation("RentalAdministrativeContact", fields: [administrativeContactUserId], references: [id])
-  commerce                    Commerce?   @relation(fields: [commerceId], references: [id])
-  condominium                 Condominium @relation(fields: [condominiumId], references: [id])
-  operativeContactUser        User?       @relation("RentalOperativeContact", fields: [operativeContactUserId], references: [id])
-  privateArea                 PrivateArea @relation(fields: [privateAreaId], references: [id])
+  businessLines               RentalBusinessLine[]
+  administrativeContactUser   User?                @relation("RentalAdministrativeContact", fields: [administrativeContactUserId], references: [id])
+  commerce                    Commerce?            @relation(fields: [commerceId], references: [id])
+  condominium                 Condominium          @relation(fields: [condominiumId], references: [id])
+  operativeContactUser        User?                @relation("RentalOperativeContact", fields: [operativeContactUserId], references: [id])
+  privateArea                 PrivateArea          @relation(fields: [privateAreaId], references: [id])
 
+  @@unique([condominiumId, legacyId])
   @@index([condominiumId])
   @@index([privateAreaId])
   @@index([commerceId])
   @@index([administrativeContactUserId])
   @@index([operativeContactUserId])
+}
+
+// Catálogo de giros comerciales (legacy DCAT_GIROS)
+model BusinessLineCatalog {
+  id            String                       @id @default(uuid())
+  condominiumId String
+  legacyId      Int?
+  name          String
+  code          String?
+  isActive      Boolean                      @default(true)
+  createdAt     DateTime                     @default(now())
+  updatedAt     DateTime                     @updatedAt
+  condominium   Condominium                  @relation(fields: [condominiumId], references: [id])
+  categories    BusinessCategoryCatalog[]
+  subcategories BusinessSubcategoryCatalog[]
+  rentalLines   RentalBusinessLine[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([condominiumId, isActive])
+}
+
+// Categorías comerciales por giro (legacy DCAT_CATEGORIAS_COMERCIAL)
+model BusinessCategoryCatalog {
+  id             String                       @id @default(uuid())
+  condominiumId  String
+  legacyId       Int?
+  businessLineId String
+  name           String
+  code           String?
+  isActive       Boolean                      @default(true)
+  createdAt      DateTime                     @default(now())
+  updatedAt      DateTime                     @updatedAt
+  condominium    Condominium                  @relation(fields: [condominiumId], references: [id])
+  businessLine   BusinessLineCatalog          @relation(fields: [businessLineId], references: [id])
+  subcategories  BusinessSubcategoryCatalog[]
+  rentalLines    RentalBusinessLine[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([businessLineId])
+  @@index([condominiumId, isActive])
+}
+
+// Subcategorías comerciales (legacy DCAT_SUBCATEGORIAS_COMERCIAL)
+model BusinessSubcategoryCatalog {
+  id             String                  @id @default(uuid())
+  condominiumId  String
+  legacyId       Int?
+  categoryId     String
+  businessLineId String
+  name           String
+  code           String?
+  isActive       Boolean                 @default(true)
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  condominium    Condominium             @relation(fields: [condominiumId], references: [id])
+  category       BusinessCategoryCatalog @relation(fields: [categoryId], references: [id])
+  businessLine   BusinessLineCatalog     @relation(fields: [businessLineId], references: [id])
+  rentalLines    RentalBusinessLine[]
+
+  @@unique([condominiumId, legacyId])
+  @@index([categoryId])
+  @@index([condominiumId, isActive])
+}
+
+// Giros asignados a cada arrendamiento; el legacy permite hasta 4 slots
+// (id_dcat_giros0..3) por negocio, cada uno con categoría/subcategoría.
+model RentalBusinessLine {
+  id             String                      @id @default(uuid())
+  condominiumId  String
+  rentalId       String
+  slot           Int                         @default(0)
+  businessLineId String
+  categoryId     String?
+  subcategoryId  String?
+  createdAt      DateTime                    @default(now())
+  updatedAt      DateTime                    @updatedAt
+  condominium    Condominium                 @relation(fields: [condominiumId], references: [id])
+  rental         Rental                      @relation(fields: [rentalId], references: [id], onDelete: Cascade)
+  businessLine   BusinessLineCatalog         @relation(fields: [businessLineId], references: [id])
+  category       BusinessCategoryCatalog?    @relation(fields: [categoryId], references: [id])
+  subcategory    BusinessSubcategoryCatalog? @relation(fields: [subcategoryId], references: [id])
+
+  @@unique([rentalId, slot])
+  @@index([condominiumId])
+  @@index([businessLineId])
+  @@index([categoryId])
 }
 
 model ChargeGroup {

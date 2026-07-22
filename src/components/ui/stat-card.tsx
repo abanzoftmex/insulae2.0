@@ -38,11 +38,13 @@ interface StatCardProps extends React.HTMLAttributes<HTMLDivElement> {
     value: string;
     isUp: boolean;
   };
+  /** Texto informativo sin flecha de tendencia */
+  hint?: string;
   icon?: React.ReactNode;
   accent?: StatCardAccent;
 }
 
-export function StatCard({ label, value, trend, icon, accent, className, ...props }: StatCardProps) {
+export function StatCard({ label, value, trend, hint, icon, accent, className, ...props }: StatCardProps) {
   const colors = accent ? accentMap[accent] : null;
 
   return (
@@ -69,6 +71,11 @@ export function StatCard({ label, value, trend, icon, accent, className, ...prop
               : "bg-danger/10 text-danger"
           )}>
             {trend.isUp ? "↑" : "↓"} {trend.value}
+          </span>
+        )}
+        {!trend && hint && (
+          <span className="text-[10px] font-semibold text-ink-soft/70 text-right leading-tight max-w-[55%]">
+            {hint}
           </span>
         )}
       </div>

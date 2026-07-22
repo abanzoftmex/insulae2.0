@@ -1,0 +1,23 @@
+{"id_dcat_categorias_comercial": 1, "id_dcat_giros": 1, "nombre": "Bares", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "2"}
+{"id_dcat_categorias_comercial": 2, "id_dcat_giros": 1, "nombre": "Cafeterías", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "3"}
+{"id_dcat_categorias_comercial": 3, "id_dcat_giros": 1, "nombre": "Dulcerías", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "5"}
+{"id_dcat_categorias_comercial": 4, "id_dcat_giros": 2, "nombre": "Universidades", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "1"}
+{"id_dcat_categorias_comercial": 5, "id_dcat_giros": 1, "nombre": "Repostería", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "4"}
+{"id_dcat_categorias_comercial": 6, "id_dcat_giros": 1, "nombre": "Restaurante", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "1"}
+{"id_dcat_categorias_comercial": 7, "id_dcat_giros": 1, "nombre": "Rodantes", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "6"}
+{"id_dcat_categorias_comercial": 8, "id_dcat_giros": 2, "nombre": "Restaurantera", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "2"}
+{"id_dcat_categorias_comercial": 9, "id_dcat_giros": 2, "nombre": "Arte", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "3"}
+{"id_dcat_categorias_comercial": 10, "id_dcat_giros": 3, "nombre": "Recreativos", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "1"}
+{"id_dcat_categorias_comercial": 11, "id_dcat_giros": 3, "nombre": "Esparcimiento", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "2"}
+{"id_dcat_categorias_comercial": 12, "id_dcat_giros": 4, "nombre": "Departamentos", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "1"}
+{"id_dcat_categorias_comercial": 13, "id_dcat_giros": 4, "nombre": "Hoteles", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": ""}
+{"id_dcat_categorias_comercial": 14, "id_dcat_giros": 4, "nombre": "Lofts", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": ""}
+{"id_dcat_categorias_comercial": 15, "id_dcat_giros": 5, "nombre": "Auxiliares", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "1"}
+{"id_dcat_categorias_comercial": 16, "id_dcat_giros": 5, "nombre": "Agencia", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "2"}
+{"id_dcat_categorias_comercial": 17, "id_dcat_giros": 5, "nombre": "Bienestar, salud y belleza", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "3"}
+{"id_dcat_categorias_comercial": 18, "id_dcat_giros": 5, "nombre": "Clinica Veterinaria", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "4"}
+{"id_dcat_categorias_comercial": 19, "id_dcat_giros": 6, "nombre": "Accesorios", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "1"}
+{"id_dcat_categorias_comercial": 20, "id_dcat_giros": 6, "nombre": "Boutique", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "2"}
+{"id_dcat_categorias_comercial": 21, "id_dcat_giros": 6, "nombre": "Misceláneos", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "4"}
+{"id_dcat_categorias_comercial": 22, "id_dcat_giros": 6, "nombre": "Agencia", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "5"}
+{"id_dcat_categorias_comercial": 23, "id_dcat_giros": 6, "nombre": "Rodantes", "activo": 1, "created_at": null, "updated_at": null, "deleted_at": null, "clave": "6"}

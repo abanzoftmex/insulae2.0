@@ -22,6 +22,7 @@
     "migration:backfill-project": "tsx --tsconfig tsconfig.json src/scripts/backfill-project-legacy-fields.ts",
     "migration:backfill-contacts": "tsx --tsconfig tsconfig.json src/scripts/backfill-contacts-from-full-dump.ts",
     "migration:backfill-resident-assignments": "tsx --tsconfig tsconfig.json src/scripts/backfill-resident-assignments-from-legacy.ts",
+    "migration:backfill-business-lines": "tsx --tsconfig tsconfig.json src/scripts/backfill-business-lines-from-legacy.ts",
     "migration:backfill-private-area-sort-order": "tsx --tsconfig tsconfig.json src/scripts/backfill-private-area-sort-order.ts",
     "migration:backfill-payment-legacy-context": "tsx --tsconfig tsconfig.json src/scripts/backfill-payment-legacy-context.ts",
     "migration:backfill-income-legacy-context": "tsx --tsconfig tsconfig.json src/scripts/backfill-income-legacy-context.ts",
