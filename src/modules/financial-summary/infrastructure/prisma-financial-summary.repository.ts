@@ -550,38 +550,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       return null;
     }
 
-    const range = toUtcYearRange(requestedYear);
-    const nextYear = requestedYear + 1;
-    const visibleYears = [requestedYear, nextYear];
-    const ordinaryExpenseYears = [requestedYear, nextYear] as const;
-    const ordinaryExpenseComparisonRange = {
-      from: new Date(Date.UTC(requestedYear, 0, 1, 0, 0, 0, 0)),
-      to: new Date(Date.UTC(nextYear + 1, 0, 1, 0, 0, 0, 0)),
-    };
-    const minLegacyYear = Math.min(...visibleYears);
-    const maxLegacyYear = Math.max(...visibleYears);
-    const legacyRange = {
-      from: new Date(Date.UTC(minLegacyYear, 0, 1, 0, 0, 0, 0)),
-      to: new Date(Date.UTC(maxLegacyYear + 1, 0, 1, 0, 0, 0, 0)),
-    };
-
     const [
       chargeGroups,
       miscIncomeCatalogs,
-      paymentDetails,
-      paymentDetailsForLegacyYears,
-      incomes,
-      incomesForLegacyYears,
-      expenses,
-      expensesForOrdinaryExpenseYears,
-      expensesForLegacyYears,
-      extraordinaryBudgetConcepts,
-      paymentBounds,
-      incomeBounds,
-      expenseBounds,
-      chargesForOrdinaryLedger,
-      currentBudget,
-      nextBudget,
     ] = await Promise.all([
       prisma.chargeGroup.findMany({
         where: {
@@ -618,6 +589,51 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           },
         },
       }),
+    ]);
+
+    const range = toUtcYearRange(requestedYear);
+    const nextYear = requestedYear + 1;
+
+    const visibleYearsSet = new Set<number>([requestedYear, nextYear]);
+    for (const catalog of miscIncomeCatalogs) {
+      if (catalog.quotaPeriodStart) {
+        const startY = catalog.quotaPeriodStart.getUTCFullYear();
+        const endY = catalog.quotaPeriodEnd ? catalog.quotaPeriodEnd.getUTCFullYear() : startY;
+        for (let y = startY; y <= endY; y++) {
+          visibleYearsSet.add(y);
+        }
+      }
+    }
+
+    const visibleYears = Array.from(visibleYearsSet).sort((a, b) => a - b);
+    const ordinaryExpenseYears = [requestedYear, nextYear] as const;
+    const ordinaryExpenseComparisonRange = {
+      from: new Date(Date.UTC(requestedYear, 0, 1, 0, 0, 0, 0)),
+      to: new Date(Date.UTC(nextYear + 1, 0, 1, 0, 0, 0, 0)),
+    };
+    const minLegacyYear = Math.min(...visibleYears);
+    const maxLegacyYear = Math.max(...visibleYears);
+    const legacyRange = {
+      from: new Date(Date.UTC(minLegacyYear, 0, 1, 0, 0, 0, 0)),
+      to: new Date(Date.UTC(maxLegacyYear + 1, 0, 1, 0, 0, 0, 0)),
+    };
+
+    const [
+      paymentDetails,
+      paymentDetailsForLegacyYears,
+      incomes,
+      incomesForLegacyYears,
+      expenses,
+      expensesForOrdinaryExpenseYears,
+      expensesForLegacyYears,
+      extraordinaryBudgetConcepts,
+      paymentBounds,
+      incomeBounds,
+      expenseBounds,
+      chargesForOrdinaryLedger,
+      currentBudget,
+      nextBudget,
+    ] = await Promise.all([
       prisma.paymentDetail.findMany({
         where: {
           condominiumId: condominium.id,
@@ -1729,6 +1745,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
     const availableYears = buildAvailableYears(
       [
+        ...visibleYears,
         yearFromDate(paymentDateBounds._min.paidAt),
         yearFromDate(paymentDateBounds._max.paidAt),
         yearFromDate(incomeBounds._min?.date),

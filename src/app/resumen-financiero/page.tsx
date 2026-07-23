@@ -205,19 +205,20 @@ export default async function ResumenFinancieroPage({
     );
   }
 
-  // Get sum of "Cuotas ordinarias 2025 (anual)"
+  // Get sum of "Cuotas ordinarias (anual)"
   const privateAreaListing = await getPrivateAreaListingUseCase.execute({
     page: 1,
     pageSize: 10000,
     paginateByTopLevel: false,
   });
 
-  let ordinary2025AnnualSum = 0;
+  let ordinaryAnnualSum = 0;
   if (privateAreaListing) {
     for (const row of privateAreaListing.rows) {
-      const annualCell = row.financialCells.ordinary_2025_annual;
+      const key = `ordinary_${selectedYear}_annual` as keyof typeof row.financialCells;
+      const annualCell = row.financialCells[key] ?? (selectedYear === 2025 ? row.financialCells.ordinary_2025_annual : null);
       if (annualCell) {
-        ordinary2025AnnualSum += (annualCell.owner || 0) + (annualCell.commerce || 0);
+        ordinaryAnnualSum += (annualCell.owner || 0) + (annualCell.commerce || 0);
       }
     }
   }
@@ -363,12 +364,21 @@ export default async function ResumenFinancieroPage({
           value={cardAnnualBalance}
           icon={<Calendar className="h-3.5 w-3.5" />}
         />
-        <StatCard 
-          accent="emerald" 
-          label="Cuotas Ord. 2025 (Anual)" 
-          value={formatCurrency(ordinary2025AnnualSum)} 
-          icon={<Wallet className="h-3.5 w-3.5" />} 
-        />
+        {showOrdinary ? (
+          <StatCard 
+            accent="emerald" 
+            label={`Cuotas Ord. ${vm.selectedYear} (Anual)`} 
+            value={formatCurrency(ordinaryAnnualSum > 0 ? ordinaryAnnualSum : ordIncomeValue)} 
+            icon={<Wallet className="h-3.5 w-3.5" />} 
+          />
+        ) : (
+          <StatCard 
+            accent="emerald" 
+            label={`Cuotas Extr. ${vm.selectedYear} (Anual)`} 
+            value={extIncomeLabel} 
+            icon={<Wallet className="h-3.5 w-3.5" />} 
+          />
+        )}
       </div>
 
       {/* Context Info */}
