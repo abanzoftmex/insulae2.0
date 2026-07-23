@@ -124,6 +124,7 @@ export interface FeeReportCellVM {
 export interface FeeReportRowVM {
   id: string;
   areaLabel: string;       // "AP: VQ01A" o "FAP: VQ01A-010"
+  zone: string;
   statusLabel: string;
   statusCss: string;
   isChild: boolean;        // true si es FAP (tiene parentId)
@@ -176,6 +177,7 @@ function rowToVM(row: FeeReportRow): FeeReportRowVM {
   return {
     id: row.id,
     areaLabel,
+    zone: row.zone || "Centro",
     statusLabel: row.status,
     statusCss: row.statusCss,
     isChild: row.parentId !== null,
@@ -199,12 +201,13 @@ function totalsToVM(totals: FeeReportTotals): FeeReportRowVM {
   }));
 
   const monthlyCells = totals.monthlyCells.map((mc) =>
-    toCell(mc.ownerAmount, mc.commerceAmount, mc.commerceAmount > 0)
+    toCell(mc.ownerAmount, mc.commerceAmount, hasCommerce)
   );
 
   return {
-    id: "__totals__",
-    areaLabel: "TOTALES",
+    id: "totals",
+    areaLabel: "Totales",
+    zone: "—",
     statusLabel: "",
     statusCss: "",
     isChild: false,
@@ -270,6 +273,7 @@ export function toFeeReportListingVM(listing: FeeReportListing): FeeReportListin
 export interface FeeReportExtraordinaryRowVM {
   id: string;
   areaLabel: string;
+  zone: string;
   statusLabel: string;
   statusCss: string;
   isChild: boolean;
@@ -336,6 +340,7 @@ function rowToExtraordinaryVM(row: FeeReportRow): FeeReportExtraordinaryRowVM {
   return {
     id: row.id,
     areaLabel: areaLabel,
+    zone: row.zone || "Centro",
     statusLabel: row.status,
     statusCss: row.statusCss,
     isChild: !!row.parentId,
@@ -364,6 +369,7 @@ function totalsToExtraordinaryVM(totals: FeeReportTotals): FeeReportExtraordinar
   return {
     id: "totals-row",
     areaLabel: "Total general",
+    zone: "—",
     statusLabel: "",
     statusCss: "",
     isChild: false,

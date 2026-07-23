@@ -19,6 +19,8 @@ interface EditarCuotaDialogProps {
     dueDate: Date | null;
     periodYear: number;
     periodMonth: number;
+    interestAmount?: number;
+    discountAmount?: number;
   };
   chargeGroups: ChargeGroupOption[];
 }
@@ -178,6 +180,42 @@ export function EditarCuotaDialog({
                     required
                     disabled={isPending}
                     defaultValue={charge.amount}
+                    className="h-9 w-full rounded-lg border border-[#c8b8a0] bg-white px-3 text-xs font-semibold text-[#2b1e12] outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-[#5a4838] leading-none flex items-center gap-1">
+                    <DollarSign className="h-3 w-3 text-brand/70" />
+                    Intereses moratorios
+                  </label>
+                  <input
+                    type="number"
+                    name="interestAmount"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    disabled={isPending}
+                    defaultValue={charge.interestAmount ?? 0}
+                    className="h-9 w-full rounded-lg border border-[#c8b8a0] bg-white px-3 text-xs font-semibold text-[#2b1e12] outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-[#5a4838] leading-none flex items-center gap-1">
+                    <DollarSign className="h-3 w-3 text-brand/70" />
+                    Descuento
+                  </label>
+                  <input
+                    type="number"
+                    name="discountAmount"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    disabled={isPending}
+                    defaultValue={charge.discountAmount ?? 0}
                     className="h-9 w-full rounded-lg border border-[#c8b8a0] bg-white px-3 text-xs font-semibold text-[#2b1e12] outline-none focus:ring-2 focus:ring-brand/30 focus:border-brand transition-all disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>

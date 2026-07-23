@@ -138,12 +138,26 @@ function renderFinancialCards(
   };
 
   const getCardStyle = (amount: string, isOwner: boolean) => {
-    if (isPaid || isZeroOrMuted(amount)) {
+    if (isPaid) {
       return {
         bgClass: "bg-emerald-50 border-emerald-100",
         labelClass: "text-emerald-600/60",
         valueClass: "text-[#16a34a] font-bold"
       };
+    }
+
+    if (isZeroOrMuted(amount)) {
+      return isOwner
+        ? {
+            bgClass: "bg-[#faf6f0] border-[#c8b8a0]/30",
+            labelClass: "text-[#7a5e44]/60",
+            valueClass: "text-[#5a4838] font-medium"
+          }
+        : {
+            bgClass: "bg-[#fdf6fa] border-[#f5e0eb]",
+            labelClass: "text-[#8f1a3d]/60",
+            valueClass: "text-[#35202a] font-medium"
+          };
     }
 
     if (paymentStatusColor === "red") {

@@ -42,6 +42,7 @@ export interface FeeReportRow {
   id: string;
   code: string | null;
   name: string;
+  zone: string | null;
   status: string;
   statusCss: string;
   sortOrder: number;

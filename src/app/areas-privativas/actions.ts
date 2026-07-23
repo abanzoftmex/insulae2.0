@@ -667,6 +667,8 @@ export async function updatePrivateAreaChargeAction(formData: FormData): Promise
   const concept = toString(formData.get("concept"));
   const dueDate = toDate(formData.get("dueDate"));
   const chargeDate = toDate(formData.get("chargeDate"));
+  const interestAmount = toNumber(formData.get("interestAmount"));
+  const discountAmount = toNumber(formData.get("discountAmount"));
   
   const periodYear = chargeDate?.getUTCFullYear();
   const periodMonth = chargeDate ? chargeDate.getUTCMonth() + 1 : undefined;
@@ -682,6 +684,8 @@ export async function updatePrivateAreaChargeAction(formData: FormData): Promise
       amount,
       concept: concept.length > 0 ? concept : null,
       dueDate,
+      ...(interestAmount !== null && interestAmount >= 0 ? { interestAmount } : {}),
+      ...(discountAmount !== null && discountAmount >= 0 ? { discountAmount } : {}),
       ...(periodYear ? { periodYear } : {}),
       ...(periodMonth ? { periodMonth } : {}),
     },

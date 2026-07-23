@@ -354,33 +354,33 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                     <td className="px-3 py-1.5">Saldo inicial:</td>
                     <td className="px-3 py-1.5 text-right font-bold">$0.00</td>
                   </tr>
-                  <tr className={`border-b border-[#e5d5b5] ${ordinariasBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                  <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Cuotas ordinarias:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(ordinariasBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${ordinariasBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(ordinariasBalance)}</td>
                   </tr>
-                  <tr className={`border-b border-[#e5d5b5] ${extraordinariasCondominosBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                  <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Cuotas extraordinarias - Condóminos:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(extraordinariasCondominosBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${extraordinariasCondominosBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(extraordinariasCondominosBalance)}</td>
                   </tr>
-                  <tr className={`border-b border-[#e5d5b5] ${stcBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                  <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Cuotas STC:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(stcBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${stcBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(stcBalance)}</td>
                   </tr>
-                  <tr className={`border-b border-[#e5d5b5] ${sancionBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                  <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Sanción:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(sancionBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${sancionBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(sancionBalance)}</td>
                   </tr>
-                  <tr className={`border-b border-[#e5d5b5] ${extraordinariaComerciosBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                  <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Cuota extraordinaria - Comercios:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(extraordinariaComerciosBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${extraordinariaComerciosBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(extraordinariaComerciosBalance)}</td>
                   </tr>
-                  <tr className={`border-b border-[#e5d5b5] ${comodatoBalance > 0 ? "bg-[#ffecd6]" : ""}`}>
+                  <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Comodato:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(comodatoBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${comodatoBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(comodatoBalance)}</td>
                   </tr>
-                  <tr className={`border-b border-[#e5d5b5] ${totalInterestsDueToday > 0 ? "bg-[#ffecd6]" : ""}`}>
+                  <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Intereses moratorios:</td>
-                    <td className="px-3 py-1.5 text-right font-bold">{formatCurrency(totalInterestsDueToday)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${totalInterestsDueToday > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(totalInterestsDueToday)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -525,9 +525,10 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                   </tr>
                 ) : (
                   visibleChargeLines.map((charge, i) => {
-                    const rowBg = charge.balanceAmount > 0 ? "bg-[#ffecd6]" : (i % 2 === 0 ? "bg-white" : "bg-[#fbfbfb]");
+                    const rowBg = i % 2 === 0 ? "bg-white" : "bg-[#fcfaf7]";
+                    const hasDebt = charge.balanceAmount > 0;
                     return (
-                      <tr key={charge.id} className={`border-b border-[#e1ebf6] ${rowBg}`}>
+                      <tr key={charge.id} className={`border-b border-[#e1ebf6] transition-colors hover:bg-[#faf6f0] ${rowBg}`}>
                         <td className="py-2 px-3 text-center">
                           <div className="flex items-center justify-center gap-1">
                             <EditarCuotaDialog charge={charge} chargeGroups={chargeGroups} />
@@ -543,7 +544,17 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                         <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.paidAmount)}</td>
                         <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.interestAmount)}</td>
                         <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.discountAmount)}</td>
-                        <td className="py-2 px-3 text-right font-bold text-[#b58b4f]">{formatCurrency(charge.balanceAmount)}</td>
+                        <td className="py-2 px-3 text-right">
+                          {hasDebt ? (
+                            <span className="inline-block font-bold text-[#b58b4f] bg-[#fff5ea] border border-[#f5d0b0] px-2 py-0.5 rounded text-[11px] tabular-nums">
+                              {formatCurrency(charge.balanceAmount)}
+                            </span>
+                          ) : (
+                            <span className="inline-block text-[#16a34a] font-medium px-2 py-0.5 rounded text-[11px] tabular-nums">
+                              $0.00
+                            </span>
+                          )}
+                        </td>
                         <td className="py-2 px-3 text-center">
                           <input type="text" className="border border-[#ddd0be] rounded px-2 py-0.5 w-32 text-[10px]" />
                         </td>

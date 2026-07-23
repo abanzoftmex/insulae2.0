@@ -477,7 +477,17 @@ export class PrismaPrivateAreaActionPageDataRepository
         if (a.periodYear !== b.periodYear) {
           return a.periodYear - b.periodYear;
         }
-        return a.periodMonth - b.periodMonth;
+        if (a.periodMonth !== b.periodMonth) {
+          return a.periodMonth - b.periodMonth;
+        }
+        const aDue = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+        const bDue = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+        if (aDue !== bDue) {
+          return aDue - bDue;
+        }
+        const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aCreated - bCreated;
       });
 
       const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -499,13 +509,10 @@ export class PrismaPrivateAreaActionPageDataRepository
           continue;
         }
 
-        const chargeGroupId = income.chargeGroupId;
         let remainingIncome = decimalToNumber(income.amount);
-        const groupCharges = chargeGroupId
-          ? sortedCharges.filter((c) => c.chargeGroupId === chargeGroupId)
-          : sortedCharges;
 
-        for (const charge of groupCharges) {
+        // Always allocate to the oldest pending charge first (FIFO)
+        for (const charge of sortedCharges) {
           if (remainingIncome <= 0.005) break;
 
           const dbPaid = charge.allocations.reduce(

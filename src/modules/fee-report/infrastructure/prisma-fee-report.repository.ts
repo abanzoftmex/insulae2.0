@@ -75,6 +75,7 @@ type AreaMeta = {
   id: string;
   code: string | null;
   name: string;
+  zone: string | null;
   status: string;
   sortOrder: number;
   parentPrivateAreaId: string | null;
@@ -190,6 +191,7 @@ export class PrismaFeeReportRepository implements FeeReportRepository {
         id: true,
         code: true,
         name: true,
+        zone: true,
         status: true,
         sortOrder: true,
         parentPrivateAreaId: true,
@@ -440,6 +442,7 @@ export class PrismaFeeReportRepository implements FeeReportRepository {
         id: area.id,
         code: area.code,
         name: area.name,
+        zone: area.zone,
         status: label,
         statusCss: css,
         sortOrder: area.sortOrder,
