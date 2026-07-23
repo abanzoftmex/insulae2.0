@@ -315,48 +315,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
   const report = await getCondominiumReportUseCase.execute();
   const reportVm = report ? toCondominiumReportVM(report) : null;
 
-  // Get sum of "Cuotas ordinarias 2025 (mensual)"
-  const condo = await prisma.condominium.findFirst({
-    where: { isActive: true },
-    select: { id: true }
-  });
-  let ordinary2025MonthlySum = 0;
-  if (condo) {
-    const activePrivateAreasWithCharges = await prisma.privateArea.findMany({
-      where: {
-        condominiumId: condo.id,
-        isActive: true,
-      },
-      select: {
-        areaCharges: {
-          where: {
-            isActive: true,
-            chargeGroup: {
-              kind: "ORDINARY",
-            },
-          },
-          select: {
-            amount: true,
-            startsAt: true,
-          },
-        },
-      },
-    });
-
-    for (const area of activePrivateAreasWithCharges) {
-      const ordinaryCharge2025 = area.areaCharges.find((ac) => {
-        return ac.startsAt?.getUTCFullYear() === 2025;
-      });
-      if (ordinaryCharge2025) {
-        ordinary2025MonthlySum += Number(ordinaryCharge2025.amount);
-      }
-    }
-  }
-
-  const formattedSum = new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-  }).format(ordinary2025MonthlySum);
+  const formattedAnnualSum = vm.summary.estimatedAnnualOrdinaryIncome;
   
   const shortMonths = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
   
@@ -472,7 +431,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
         <StatCard accent="brand" label="Lotes Totales" value={vm.summary.projectTotalApoles} icon={<Layers className="h-3.5 w-3.5" />} />
         <StatCard accent="cyan" label="M2 Privativos" value={vm.summary.projectTotalM2} icon={<MapPin className="h-3.5 w-3.5" />} />
         <StatCard accent="lime" label="Lotes Construidos" value={vm.summary.legacyBuiltLots} icon={<Home className="h-3.5 w-3.5" />} />
-        <StatCard accent="gold" label="Cuotas Ord. 2025 (Mensual)" value={formattedSum} icon={<Wallet className="h-3.5 w-3.5" />} />
+        <StatCard accent="gold" label="Cuotas Ord. 2025 (Anual)" value={formattedAnnualSum} icon={<Wallet className="h-3.5 w-3.5" />} />
       </div>
 
       {reportVm && (

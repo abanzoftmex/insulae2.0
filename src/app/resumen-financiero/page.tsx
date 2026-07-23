@@ -214,11 +214,17 @@ export default async function ResumenFinancieroPage({
 
   let ordinaryAnnualSum = 0;
   if (privateAreaListing) {
-    for (const row of privateAreaListing.rows) {
-      const key = `ordinary_${selectedYear}_annual` as keyof typeof row.financialCells;
-      const annualCell = row.financialCells[key] ?? (selectedYear === 2025 ? row.financialCells.ordinary_2025_annual : null);
-      if (annualCell) {
-        ordinaryAnnualSum += (annualCell.owner || 0) + (annualCell.commerce || 0);
+    if (selectedYear === 2025) {
+      ordinaryAnnualSum = privateAreaListing.summary.estimatedAnnualOrdinaryIncome;
+    } else {
+      for (const row of privateAreaListing.rows) {
+        const key = `ordinary_${selectedYear}_annual` as keyof typeof row.financialCells;
+        const annualCell = row.financialCells[key];
+        if (annualCell) {
+          const ownerVal = typeof annualCell.owner === "number" ? annualCell.owner : parseFloat(String(annualCell.owner).replace(/[^0-9.-]+/g, "")) || 0;
+          const commVal = typeof annualCell.commerce === "number" ? annualCell.commerce : parseFloat(String(annualCell.commerce).replace(/[^0-9.-]+/g, "")) || 0;
+          ordinaryAnnualSum += ownerVal + commVal;
+        }
       }
     }
   }
