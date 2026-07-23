@@ -16,6 +16,7 @@ import {
   getFinancialSummaryUseCase,
   toFinancialSummaryVM,
 } from "@/modules/financial-summary";
+import { getPrivateAreaListingUseCase } from "@/modules/private-areas";
 import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -79,19 +80,19 @@ const TABLE_TONE = {
     headerBg: "bg-brand-mint/50",
     firstColBg: "bg-brand-mint/20",
     totalRowBg: "bg-brand-mint/40",
-    textTone: "text-brand",
+    textTone: "text-ink font-bold",
   },
   expense: {
-    headerBg: "bg-danger/10",
-    firstColBg: "bg-danger/[0.03]",
-    totalRowBg: "bg-danger/10",
-    textTone: "text-danger",
+    headerBg: "bg-amber-500/10",
+    firstColBg: "bg-amber-500/[0.03]",
+    totalRowBg: "bg-amber-500/10",
+    textTone: "text-ink font-bold",
   },
   balance: {
     headerBg: "bg-gold-soft",
     firstColBg: "bg-gold-soft/30",
     totalRowBg: "bg-gold-soft",
-    textTone: "text-gold",
+    textTone: "text-ink font-bold",
   },
 } as const;
 
@@ -161,10 +162,7 @@ function CompactFinancialTable({
                   </td>
                   {row.yearly.map((yearSlice) => (
                     <Fragment key={`body-${row.id}-${yearSlice.year}`}>
-                      <td className={cn(
-                        "px-4 text-right text-[12px] font-bold border-r border-line",
-                        yearSlice.annualTotalValue >= 0 ? "text-brand" : "text-danger"
-                      )}>
+                      <td className="px-4 text-right text-[12px] font-bold border-r border-line text-ink">
                         {yearSlice.annualTotal}
                       </td>
                       {yearSlice.months.map((val, idx) => (
@@ -207,40 +205,19 @@ export default async function ResumenFinancieroPage({
     );
   }
 
-  // Get sum of "Cuotas ordinarias 2025 (mensual)"
-  const condo = await prisma.condominium.findFirst({
-    where: { isActive: true },
-    select: { id: true }
+  // Get sum of "Cuotas ordinarias 2025 (anual)"
+  const privateAreaListing = await getPrivateAreaListingUseCase.execute({
+    page: 1,
+    pageSize: 10000,
+    paginateByTopLevel: false,
   });
-  let ordinary2025MonthlySum = 0;
-  if (condo) {
-    const activePrivateAreasWithCharges = await prisma.privateArea.findMany({
-      where: {
-        condominiumId: condo.id,
-        isActive: true,
-      },
-      select: {
-        areaCharges: {
-          where: {
-            isActive: true,
-            chargeGroup: {
-              kind: "ORDINARY",
-            },
-          },
-          select: {
-            amount: true,
-            startsAt: true,
-          },
-        },
-      },
-    });
 
-    for (const area of activePrivateAreasWithCharges) {
-      const ordinaryCharge2025 = area.areaCharges.find((ac) => {
-        return ac.startsAt?.getUTCFullYear() === 2025;
-      });
-      if (ordinaryCharge2025) {
-        ordinary2025MonthlySum += Number(ordinaryCharge2025.amount);
+  let ordinary2025AnnualSum = 0;
+  if (privateAreaListing) {
+    for (const row of privateAreaListing.rows) {
+      const annualCell = row.financialCells.ordinary_2025_annual;
+      if (annualCell) {
+        ordinary2025AnnualSum += (annualCell.owner || 0) + (annualCell.commerce || 0);
       }
     }
   }
@@ -378,19 +355,18 @@ export default async function ResumenFinancieroPage({
           <StatCard accent="cyan" label="Extraordinarios" value={cardExtIncome} icon={<DollarSign className="h-3.5 w-3.5" />} />
         )}
         <StatCard accent="lime" label="Otros Ingresos" value={cardOtherIncome} icon={<Plus className="h-3.5 w-3.5" />} />
-        <StatCard accent="brand" label="Ingresos Totales" value={cardTotalIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} className="bg-brand-mint/20 border-brand-mint" />
+        <StatCard accent="brand" label="Ingresos Totales" value={cardTotalIncome} icon={<TrendingUp className="h-3.5 w-3.5" />} />
         <StatCard accent="gold" label="Egresos Totales" value={cardTotalExpenses} icon={<TrendingDown className="h-3.5 w-3.5" />} />
         <StatCard
-          accent={balanceValue >= 0 ? "brand" : "gold"}
+          accent={balanceValue >= 0 ? "emerald" : "gold"}
           label="Balance Anual"
           value={cardAnnualBalance}
           icon={<Calendar className="h-3.5 w-3.5" />}
-          className={cn(balanceValue >= 0 ? "bg-brand-mint/40" : "bg-danger/10 border-danger/20")}
         />
         <StatCard 
-          accent="gold" 
-          label="Cuotas Ord. 2025 (Mensual)" 
-          value={formatCurrency(ordinary2025MonthlySum)} 
+          accent="emerald" 
+          label="Cuotas Ord. 2025 (Anual)" 
+          value={formatCurrency(ordinary2025AnnualSum)} 
           icon={<Wallet className="h-3.5 w-3.5" />} 
         />
       </div>
@@ -409,8 +385,8 @@ export default async function ResumenFinancieroPage({
           <>
             <CompactFinancialTable
               title="Balance Mensual"
-              subtitle="Cuotas Ordinarias"
-              firstColumnLabel="Tipo de Ingreso"
+              subtitle="Cuotas a Áreas Privativas (Cobranza Condominal)"
+              firstColumnLabel="Tipo de Cobro"
               annualLabelPrefix="Ingreso Anual"
               table={vm.ordinaryIncomeMultiYearTable}
               monthLabels={vm.ordinaryMonthLabels}
@@ -419,8 +395,8 @@ export default async function ResumenFinancieroPage({
 
             <CompactFinancialTable
               title="Balance Mensual"
-              subtitle="Otros Ingresos Ordinarios"
-              firstColumnLabel="Tipo de Ingreso"
+              subtitle="Otros Ingresos (Catálogo de Ingresos Diversos)"
+              firstColumnLabel="Concepto de Ingreso"
               annualLabelPrefix="Ingreso Anual"
               table={vm.ordinaryOtherIncomeMultiYearTable}
               monthLabels={vm.ordinaryMonthLabels}

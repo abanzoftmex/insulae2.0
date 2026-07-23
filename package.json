@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "postinstall": "prisma generate",
-    "prisma:generate": "prisma generate",
+    "postinstall": "npx prisma generate",
+    "prisma:generate": "npx prisma generate",
     "predev": "npm run prisma:generate",
     "prebuild": "npm run prisma:generate",
     "dev": "next dev",

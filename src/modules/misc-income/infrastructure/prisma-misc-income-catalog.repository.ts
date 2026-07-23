@@ -7,6 +7,43 @@ import {
 
 export class PrismaMiscIncomeCatalogRepository implements MiscIncomeCatalogRepository {
   async findAll(condominiumId: string): Promise<MiscIncomeConcept[]> {
+    // Ensure base receivable concepts exist so users can edit their quotaPeriod
+    const ordinaryGroup = await prisma.chargeGroup.findFirst({
+      where: { condominiumId, kind: "ORDINARY", isActive: true },
+    });
+
+    if (ordinaryGroup) {
+      const baseReceivables = [
+        { name: "Cuotas ordinarias", order: 1 },
+        { name: "Cuotas STC", order: 2 },
+        { name: "Sancion", order: 3 },
+        { name: "Comodato", order: 4 },
+      ];
+
+      for (const item of baseReceivables) {
+        const existing = await prisma.miscIncomeCatalog.findFirst({
+          where: {
+            condominiumId,
+            isActive: true,
+            name: { equals: item.name, mode: "insensitive" },
+          },
+        });
+        if (!existing) {
+          await prisma.miscIncomeCatalog.create({
+            data: {
+              condominiumId,
+              name: item.name,
+              chargeGroupId: ordinaryGroup.id,
+              quotaPeriodStart: new Date("2025-01-01T00:00:00.000Z"),
+              quotaPeriodEnd: new Date("2026-12-31T23:59:59.999Z"),
+              order: item.order,
+              isActive: true,
+            },
+          });
+        }
+      }
+    }
+
     const items = await prisma.miscIncomeCatalog.findMany({
       where: {
         condominiumId,

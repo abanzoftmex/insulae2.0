@@ -6,34 +6,34 @@ type StatCardAccent = "cyan" | "brand" | "lime" | "gold" | "emerald";
 
 const accentMap: Record<StatCardAccent, { card: string; icon: string; label: string; value: string }> = {
   cyan: {
-    card: "bg-cyan-50/70 border-cyan-200/60",
+    card: "bg-canvas border-line/40",
     icon: "bg-cyan-950 text-cyan-200",
-    label: "text-cyan-600",
-    value: "text-cyan-700",
+    label: "text-ink-soft/75",
+    value: "text-ink",
   },
   brand: {
-    card: "bg-brand/5 border-brand/20",
+    card: "bg-canvas border-line/40",
     icon: "bg-brand-deep text-brand-mint",
-    label: "text-brand",
-    value: "text-brand",
+    label: "text-ink-soft/75",
+    value: "text-ink",
   },
   lime: {
-    card: "bg-lime-50/70 border-lime-200/60",
+    card: "bg-canvas border-line/40",
     icon: "bg-lime-900 text-lime-200",
-    label: "text-lime-700",
-    value: "text-lime-700",
+    label: "text-ink-soft/75",
+    value: "text-ink",
   },
   gold: {
-    card: "bg-gold-soft border-gold/30",
+    card: "bg-canvas border-line/40",
     icon: "bg-amber-900 text-amber-200",
-    label: "text-amber-600",
-    value: "text-amber-700",
+    label: "text-ink-soft/75",
+    value: "text-ink",
   },
   emerald: {
-    card: "bg-emerald-50/70 border-emerald-200/60",
+    card: "bg-canvas border-line/40",
     icon: "bg-emerald-900 text-emerald-100",
-    label: "text-emerald-700",
-    value: "text-emerald-700",
+    label: "text-ink-soft/75",
+    value: "text-ink",
   },
 };
 
@@ -54,33 +54,33 @@ export function StatCard({ label, value, trend, hint, icon, accent, className, .
   const colors = accent ? accentMap[accent] : null;
 
   return (
-    <Card className={cn("p-4 flex flex-col justify-between min-h-25 shadow-sm", colors?.card, className)} {...props}>
-      <div className="flex items-start justify-between">
-        <p className={cn("text-[10px] font-bold uppercase tracking-wider", colors ? colors.label : "text-ink-soft/70")}>
+    <Card className={cn("p-3.5 sm:p-4 flex flex-col justify-between min-h-24 shadow-sm bg-canvas border-line/40", colors?.card, className)} {...props}>
+      <div className="flex items-start justify-between gap-2">
+        <p className={cn("text-[10px] font-bold uppercase tracking-wider text-ink-soft/75", colors?.label)}>
           {label}
         </p>
         {icon && (
-          <div className={cn("p-1.5 rounded-md", colors ? colors.icon : "text-brand-accent/40 bg-canvas")}>
+          <div className={cn("p-1.5 rounded-md shrink-0", colors ? colors.icon : "text-brand-accent/40 bg-canvas")}>
             {icon}
           </div>
         )}
       </div>
-      <div className="flex items-end justify-between">
-        <h3 className={cn("text-xl font-bold leading-none", colors ? colors.value : "text-brand")}>
+      <div className="flex items-end justify-between gap-2 mt-2">
+        <h3 className={cn("text-lg sm:text-xl font-bold leading-tight tracking-tight text-ink", colors?.value)}>
           {value}
         </h3>
         {trend && (
           <span className={cn(
-            "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold",
+            "inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold shrink-0",
             trend.isUp
-              ? "bg-brand-mint/50 text-brand"
-              : "bg-danger/10 text-danger"
+              ? "bg-emerald-100 text-emerald-800"
+              : "bg-amber-100 text-amber-800"
           )}>
             {trend.isUp ? "↑" : "↓"} {trend.value}
           </span>
         )}
-        {!trend && hint && (
-          <span className="text-[10px] font-semibold text-ink-soft/70 text-right leading-tight max-w-[55%]">
+        {hint && !trend && (
+          <span className="text-[10px] font-semibold text-ink-soft/70 text-right leading-tight max-w-[58%]">
             {hint}
           </span>
         )}

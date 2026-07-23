@@ -1003,6 +1003,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
             select: {
               amount: true,
               startsAt: true,
+              endsAt: true,
               chargeGroup: {
                 select: {
                   name: true,
@@ -1202,19 +1203,48 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       );
 
       if (condominium.slug === "valquirico") {
-        const ordinaryCharge2025 = area.areaCharges.find((ac) => {
-          const isOrdinary = ac.chargeGroup.kind === "ORDINARY";
-          const isYear2025 = ac.startsAt?.getUTCFullYear() === 2025;
-          return isOrdinary && isYear2025;
-        });
-        const amount2025 = ordinaryCharge2025 ? decimalToNumber(ordinaryCharge2025.amount) : 0;
+        const year2025Start = new Date("2025-01-01T00:00:00.000Z");
+        const year2025End = new Date("2025-12-31T23:59:59.999Z");
+        const year2026Start = new Date("2026-01-01T00:00:00.000Z");
+        const year2026End = new Date("2026-12-31T23:59:59.999Z");
 
-        const ordinaryCharge2026 = area.areaCharges.find((ac) => {
-          const isOrdinary = ac.chargeGroup.kind === "ORDINARY";
-          const isYear2026 = ac.startsAt?.getUTCFullYear() === 2026;
-          return isOrdinary && isYear2026;
+        let ordinaryCharge2025 = area.areaCharges.find((ac: any) => {
+          if (resolveChargeGroupKind(ac.chargeGroup) !== "ORDINARY") return false;
+          const startOk = !ac.startsAt || ac.startsAt <= year2025End;
+          const endOk = !ac.endsAt || ac.endsAt >= year2025Start;
+          return startOk && endOk;
+        }) || area.areaCharges.find((ac: any) => resolveChargeGroupKind(ac.chargeGroup) === "ORDINARY");
+
+        let amount2025 = ordinaryCharge2025 ? decimalToNumber(ordinaryCharge2025.amount) : 0;
+        if (amount2025 === 0) {
+          const monthlyCharges2025 = area.charges.filter(
+            (c: any) => resolveChargeGroupKind(c.chargeGroup) === "ORDINARY" && c.periodYear === 2025
+          );
+          if (monthlyCharges2025.length > 0) {
+            const sum = monthlyCharges2025.reduce((acc: number, c: any) => acc + decimalToNumber(c.amount), 0);
+            amount2025 = sum / monthlyCharges2025.length;
+          }
+        }
+
+        let ordinaryCharge2026 = area.areaCharges.find((ac: any) => {
+          if (resolveChargeGroupKind(ac.chargeGroup) !== "ORDINARY") return false;
+          const startOk = !ac.startsAt || ac.startsAt <= year2026End;
+          const endOk = !ac.endsAt || ac.endsAt >= year2026Start;
+          return startOk && endOk;
         });
-        const amount2026 = ordinaryCharge2026 ? decimalToNumber(ordinaryCharge2026.amount) : 0;
+
+        let amount2026 = ordinaryCharge2026 ? decimalToNumber(ordinaryCharge2026.amount) : 0;
+        if (amount2026 === 0) {
+          const monthlyCharges2026 = area.charges.filter(
+            (c: any) => resolveChargeGroupKind(c.chargeGroup) === "ORDINARY" && c.periodYear === 2026
+          );
+          if (monthlyCharges2026.length > 0) {
+            const sum = monthlyCharges2026.reduce((acc: number, c: any) => acc + decimalToNumber(c.amount), 0);
+            amount2026 = sum / monthlyCharges2026.length;
+          } else {
+            amount2026 = amount2025;
+          }
+        }
 
         financialCells.ordinary_2025_annual = {
           owner: amount2025 * 12,
