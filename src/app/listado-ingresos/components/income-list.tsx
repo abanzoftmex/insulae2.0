@@ -202,6 +202,16 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
     e.preventDefault();
     setSaving(true);
 
+    let areaIdToUse = formAreaId;
+    if (!areaIdToUse && areaSearch.trim()) {
+      const match = areas.find(
+        (a) => a.name.trim().toLowerCase() === areaSearch.trim().toLowerCase(),
+      );
+      if (match) {
+        areaIdToUse = match.id;
+      }
+    }
+
     const input = {
       date: formDate,
       concept: formConcept,
@@ -210,7 +220,7 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
       notes: formNotes || undefined,
       miscCatalogId: formCatalogId || undefined,
       chargeGroupId: formChargeGroupId || undefined,
-      privateAreaId: formAreaId || undefined,
+      privateAreaId: areaIdToUse || undefined,
     };
 
     try {

@@ -199,6 +199,16 @@ export function IncomeWorkbench({
 
   const handleSave = () => {
     startTransition(async () => {
+      let areaIdToUse = formAreaId;
+      if (!areaIdToUse && areaSearch.trim()) {
+        const match = areas.find(
+          (a) => a.name.trim().toLowerCase() === areaSearch.trim().toLowerCase(),
+        );
+        if (match) {
+          areaIdToUse = match.id;
+        }
+      }
+
       const payload = {
         date: formDate,
         concept: formConcept,
@@ -207,8 +217,8 @@ export function IncomeWorkbench({
         notes: formNotes || undefined,
         miscCatalogId: formCatalogId || undefined,
         chargeGroupId: formChargeGroupId || undefined,
-        privateAreaId: formAreaId || undefined,
-        receiptUrl: receiptUrl || undefined
+        privateAreaId: areaIdToUse || undefined,
+        receiptUrl: receiptUrl || undefined,
       };
 
       const res = editingId

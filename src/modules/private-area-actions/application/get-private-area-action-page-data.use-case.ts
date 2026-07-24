@@ -34,7 +34,7 @@ function toVisiblePaymentMovements(
   opc: "1" | "2",
 ): PrivateAreaActionPageData["payments"] {
   const targetResponsibility = opc === "2" ? "OWNER" : "COMMERCE";
-  return payments.filter((payment) => payment.responsibility === targetResponsibility);
+  return payments.filter((payment) => !payment.responsibility || payment.responsibility === targetResponsibility);
 }
 
 export class GetPrivateAreaActionPageDataUseCase

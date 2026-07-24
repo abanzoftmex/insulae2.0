@@ -282,6 +282,11 @@ export class PrismaPrivateAreaActionPageDataRepository
                 chargeType: true,
               },
             },
+            miscCatalog: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
         charges: {
@@ -536,13 +541,13 @@ export class PrismaPrivateAreaActionPageDataRepository
               inMemoryAllocationDatesByChargeId.set(charge.id, new Set<string>());
             }
             const date = income.date;
-            const day = date.getDate().toString().padStart(2, "0");
+            const day = date.getUTCDate().toString().padStart(2, "0");
             const monthNames = [
               "ene", "feb", "mar", "abr", "may", "jun",
               "jul", "ago", "sep", "oct", "nov", "dic"
             ];
-            const month = monthNames[date.getMonth()];
-            const year = date.getFullYear();
+            const month = monthNames[date.getUTCMonth()];
+            const year = date.getUTCFullYear();
             inMemoryAllocationDatesByChargeId.get(charge.id)!.add(`${day} ${month} ${year}`);
           }
         }
@@ -572,7 +577,7 @@ export class PrismaPrivateAreaActionPageDataRepository
             .filter((alloc) => alloc.payment.isVisibleInFinancialSummary !== false)
             .map((alloc) => {
               const date = alloc.payment.paidAt;
-              const day = date.getDate().toString().padStart(2, "0");
+              const day = date.getUTCDate().toString().padStart(2, "0");
               const monthNames = [
                 "ene",
                 "feb",
@@ -587,8 +592,8 @@ export class PrismaPrivateAreaActionPageDataRepository
                 "nov",
                 "dic",
               ];
-              const month = monthNames[date.getMonth()];
-              const year = date.getFullYear();
+              const month = monthNames[date.getUTCMonth()];
+              const year = date.getUTCFullYear();
               return `${day} ${month} ${year}`;
             }),
           ...inMemoryDates,
@@ -655,9 +660,17 @@ export class PrismaPrivateAreaActionPageDataRepository
         continue;
       }
       if (!paymentMovementsById.has(income.id)) {
-        const isComercio = income.chargeGroup?.name
-          ? income.chargeGroup.name.toLowerCase().includes("comercio") || income.chargeGroup.name.toLowerCase().includes("comercios")
-          : false;
+        const cgName = income.chargeGroup?.name || "";
+        const mcName = (income as any).miscCatalog?.name || "";
+        const cgType = (income.chargeGroup as any)?.chargeType || "";
+
+        const isComercio =
+          cgName.toLowerCase().includes("comercio") ||
+          cgName.toLowerCase().includes("comercios") ||
+          mcName.toLowerCase().includes("comercio") ||
+          mcName.toLowerCase().includes("comercios") ||
+          cgType === "EXTRA_COMMERCE";
+
         const responsibility = isComercio ? "COMMERCE" : "OWNER";
 
         paymentMovementsById.set(income.id, {
