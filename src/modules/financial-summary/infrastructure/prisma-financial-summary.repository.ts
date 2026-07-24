@@ -1359,6 +1359,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       if (income.legacyId !== null && income.legacyId <= 10000000) {
         continue;
       }
+      if (income.chargeGroupId !== null && income.miscCatalogId === null) {
+        continue;
+      }
       const month = getMonth(income.date);
       const row = monthly[month - 1];
       const amount = decimalToNumber(income.amount);
@@ -1390,6 +1393,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
     for (const income of incomesForLegacyYears as IncomeSnapshot[]) {
       if (income.legacyId !== null && income.legacyId <= 10000000) {
+        continue;
+      }
+      if (income.chargeGroupId !== null && income.miscCatalogId === null) {
         continue;
       }
       const year = income.date.getUTCFullYear();

@@ -95,7 +95,18 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
     }
 
     if (filterCatalog) {
-      result = result.filter((i) => i.miscCatalogId === filterCatalog);
+      const selectedCategory = catalogs.find((c) => c.id === filterCatalog) || chargeGroups.find((cg) => cg.id === filterCatalog);
+      const selectedName = selectedCategory?.name.toLowerCase().trim();
+      result = result.filter(
+        (i) =>
+          i.miscCatalogId === filterCatalog ||
+          i.chargeGroupId === filterCatalog ||
+          (selectedName !== undefined && selectedName !== "" && (
+            (i.miscCatalogName && i.miscCatalogName.toLowerCase().trim() === selectedName) ||
+            (i.chargeGroupName && i.chargeGroupName.toLowerCase().trim() === selectedName) ||
+            (i.concept && i.concept.toLowerCase().includes(selectedName))
+          ))
+      );
     }
 
     if (filterMethod) {

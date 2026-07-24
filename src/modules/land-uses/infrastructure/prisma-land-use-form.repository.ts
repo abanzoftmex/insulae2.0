@@ -606,7 +606,6 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
               in: targetAreaIds,
             },
             chargeGroupId,
-            startsAt,
           },
           select: {
             id: true,
@@ -614,7 +613,13 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
           },
         });
 
-        const existingByAreaId = new Map(existingCharges.map((item) => [item.privateAreaId, item.id]));
+        const existingByAreaId = new Map<string, string[]>();
+        for (const item of existingCharges) {
+          const list = existingByAreaId.get(item.privateAreaId) ?? [];
+          list.push(item.id);
+          existingByAreaId.set(item.privateAreaId, list);
+        }
+
         const operations: Prisma.PrismaPromise<unknown>[] = [];
 
         for (const areaId of targetAreaIds) {
@@ -628,18 +633,21 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
               ? roundCurrency(chargeInput.amount * resolveAreaM2(area))
               : roundCurrency(chargeInput.amount);
 
-          const existingId = existingByAreaId.get(areaId);
-          if (existingId) {
-            operations.push(
-              prisma.areaCharge.update({
-                where: { id: existingId },
-                data: {
-                  amount,
-                  endsAt,
-                  isActive: true,
-                },
-              }),
-            );
+          const existingIds = existingByAreaId.get(areaId) ?? [];
+          if (existingIds.length > 0) {
+            for (const existingId of existingIds) {
+              operations.push(
+                prisma.areaCharge.update({
+                  where: { id: existingId },
+                  data: {
+                    amount,
+                    startsAt,
+                    endsAt,
+                    isActive: true,
+                  },
+                }),
+              );
+            }
           } else {
             operations.push(
               prisma.areaCharge.create({
@@ -656,6 +664,21 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
             );
           }
         }
+
+        operations.push(
+          prisma.charge.updateMany({
+            where: {
+              condominiumId: condominium.id,
+              privateAreaId: { in: targetAreaIds },
+              chargeGroupId,
+              periodYear: chargeInput.year,
+              status: { not: "PAID" },
+            },
+            data: {
+              amount: chargeInput.amount,
+            },
+          }),
+        );
 
         if (operations.length > 0) {
           await prisma.$transaction(operations);

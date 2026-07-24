@@ -113,19 +113,52 @@ export function IncomeWorkbench({
   // Import State
   const [importing, setImporting] = useState(false);
 
+  const allCategories = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    catalogs.forEach(c => {
+      const key = c.name.toLowerCase().trim();
+      if (!map.has(key)) {
+        map.set(key, c);
+      }
+    });
+    chargeGroups.forEach(cg => {
+      const key = cg.name.toLowerCase().trim();
+      if (!map.has(key)) {
+        map.set(key, { id: cg.id, name: cg.name });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [catalogs, chargeGroups]);
+
   const filteredIncomes = useMemo(() => {
     const term = search.toLowerCase().trim();
+    const selectedCategory = allCategories.find(c => c.id === filterCatalog);
+    const selectedName = selectedCategory?.name.toLowerCase().trim();
+
     return initialIncomes.filter(i => {
-      const byCatalog = filterCatalog === "all" || i.miscCatalogId === filterCatalog;
+      let byCatalog = filterCatalog === "all" || filterCatalog === "";
+      if (!byCatalog) {
+        byCatalog =
+          i.miscCatalogId === filterCatalog ||
+          i.chargeGroupId === filterCatalog ||
+          Boolean(
+            selectedName !== undefined && selectedName !== "" && (
+              (i.miscCatalogName && i.miscCatalogName.toLowerCase().trim() === selectedName) ||
+              (i.chargeGroupName && i.chargeGroupName.toLowerCase().trim() === selectedName) ||
+              (i.concept && i.concept.toLowerCase().includes(selectedName))
+            )
+          );
+      }
       const bySearch = !term || [
         i.concept,
         i.miscCatalogName || "",
+        i.chargeGroupName || "",
         i.privateAreaName || "",
         i.notes || ""
       ].some(f => f.toLowerCase().includes(term));
       return byCatalog && bySearch;
     });
-  }, [initialIncomes, search, filterCatalog]);
+  }, [initialIncomes, search, filterCatalog, allCategories]);
 
   const totalAmount = useMemo(() => filteredIncomes.reduce((sum, i) => sum + i.amount, 0), [filteredIncomes]);
 
@@ -377,7 +410,7 @@ export function IncomeWorkbench({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard accent="brand" label="Total Registros" value={filteredIncomes.length} icon={<Layers className="h-3.5 w-3.5" />} />
         <StatCard accent="lime" label="Monto Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} />
-        <StatCard accent="cyan" label="Categorías" value={catalogs.length} icon={<Filter className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="Categorías" value={allCategories.length} icon={<Filter className="h-3.5 w-3.5" />} />
       </div>
 
       <div className="flex items-center justify-between gap-4 mt-2">
@@ -388,7 +421,7 @@ export function IncomeWorkbench({
             className="h-7 px-2 rounded bg-card border border-line text-[10px] font-bold uppercase outline-none focus:ring-1 focus:ring-brand-accent/30"
           >
             <option value="all">Todas las Categorías</option>
-            {catalogs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {allCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <Badge variant="brand">{initialIncomes.length} Total</Badge>
         </div>
