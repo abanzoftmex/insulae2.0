@@ -249,7 +249,7 @@ export function IncomeWorkbench({
     setImporting(true);
     try {
       const buffer = await file.arrayBuffer();
-      const wb = read(buffer);
+      const wb = read(buffer, { cellDates: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const raw: unknown[][] = utils.sheet_to_json(ws, { header: 1 });
       const rows = raw
@@ -259,7 +259,8 @@ export function IncomeWorkbench({
           const row = r as any[];
           // Mapper to match legacy order and names
           // Headers: fecha, monto, id_categoria, id_tipo_cuota, id_forma_pago, comentarios
-          const date = String(row[0] ?? "");
+          const rawDate = row[0];
+          const date = rawDate instanceof Date ? rawDate.toISOString() : String(rawDate ?? "");
           const amount = parseFloat(String(row[1] ?? "0"));
           const miscCatalogId = String(row[2] ?? "").trim() || undefined;
           const chargeGroupId = String(row[3] ?? "").trim() || undefined;
@@ -268,12 +269,12 @@ export function IncomeWorkbench({
 
           // Map legacy numeric payment methods or string ones based on screenshot/legacy
           const methodMap: Record<string, string> = {
-            "1": "OTHER",    // N/A
-            "2": "CASH",     // Efectivo
-            "3": "TRANSFER", // Transferencia
-            "4": "CARD",     // Tarjeta
-            "5": "CHECK",    // Cheque
-            "6": "OTHER",    // Otro
+            "1": "CASH",        // Efectivo
+            "2": "TRANSFER",    // Transferencia
+            "3": "CARD",        // Tarjeta
+            "4": "CHECK",       // Cheque
+            "5": "OTHER",       // Otro
+            "6": "OTHER",       // Otro
             "EFECTIVO": "CASH",
             "TRANSFERENCIA": "TRANSFER",
             "TARJETA": "CARD",

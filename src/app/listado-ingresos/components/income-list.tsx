@@ -175,18 +175,44 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
     setImportResult(null);
     try {
       const buffer = await file.arrayBuffer();
-      const wb = read(buffer);
+      const wb = read(buffer, { cellDates: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const raw: any[][] = utils.sheet_to_json(ws, { header: 1 });
-      const rows = raw.slice(1).filter((r) => r.some((c: any) => c != null && c !== "")).map((r) => ({
-        miscCatalogId: String(r[0] ?? "").trim() || undefined,
-        chargeGroupId: String(r[1] ?? "").trim() || undefined,
-        date: String(r[2] ?? ""),
-        amount: parseFloat(String(r[3] ?? "0")),
-        paymentMethod: String(r[4] ?? "CASH"),
-        concept: String(r[5] ?? ""),
-        notes: String(r[6] ?? "") || undefined,
-      }));
+      const rows = raw.slice(1).filter((r) => r.some((c: any) => c != null && c !== "")).map((r) => {
+        const rawDate = r[0];
+        const date = rawDate instanceof Date ? rawDate.toISOString() : String(rawDate ?? "");
+        const amount = parseFloat(String(r[1] ?? "0"));
+        const miscCatalogId = String(r[2] ?? "").trim() || undefined;
+        const chargeGroupId = String(r[3] ?? "").trim() || undefined;
+        const methodInput = String(r[4] ?? "1");
+        const concept = String(r[5] ?? "");
+
+        const methodMap: Record<string, string> = {
+          "1": "CASH",        // Efectivo
+          "2": "TRANSFER",    // Transferencia
+          "3": "CARD",        // Tarjeta
+          "4": "CHECK",       // Cheque
+          "5": "OTHER",       // Otro
+          "6": "OTHER",       // Otro
+          "EFECTIVO": "CASH",
+          "TRANSFERENCIA": "TRANSFER",
+          "TARJETA": "CARD",
+          "CHEQUE": "CHECK",
+          "OTRO": "OTHER",
+        };
+
+        const paymentMethod = methodMap[methodInput.toUpperCase()] || "OTHER";
+
+        return {
+          date,
+          amount,
+          miscCatalogId,
+          chargeGroupId,
+          paymentMethod,
+          concept: concept || "Importación masiva",
+          notes: `Importado de Excel - ${new Date().toLocaleDateString()}`,
+        };
+      });
       const res = await importIncomesAction(rows);
       if (res.success) {
         setImportResult({ imported: res.imported ?? 0, errors: res.errors ?? [] });

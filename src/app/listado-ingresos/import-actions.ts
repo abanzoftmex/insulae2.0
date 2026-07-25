@@ -15,6 +15,67 @@ interface ImportRow {
 
 const VALID_METHODS = new Set(["CASH", "TRANSFER", "CARD", "CHECK", "OTHER"]);
 
+function parseExcelDate(val: any): Date | null {
+  if (val == null || val === "") return null;
+  if (val instanceof Date && !isNaN(val.getTime())) return val;
+
+  // Handle Excel serial number (e.g., 45650)
+  if (typeof val === "number" || (typeof val === "string" && /^\d{5}(\.\d+)?$/.test(val.trim()))) {
+    const num = typeof val === "number" ? val : parseFloat(val.trim());
+    const date = new Date(Math.round((num - 25569) * 86400 * 1000));
+    if (!isNaN(date.getTime())) return date;
+  }
+
+  const str = String(val).trim();
+  if (!str) return null;
+
+  // Try standard Date parsing
+  const dStandard = new Date(str);
+  if (!isNaN(dStandard.getTime())) return dStandard;
+
+  // Try DD-MMM-YY / DD-MMM-YYYY (e.g., "24-Dec-24", "24-Dec-2024")
+  const monthMap: Record<string, number> = {
+    jan: 0, ene: 0,
+    feb: 1,
+    mar: 2,
+    apr: 3, abr: 3,
+    may: 4,
+    jun: 5,
+    jul: 6,
+    aug: 7, ago: 7,
+    sep: 8,
+    oct: 9,
+    nov: 10,
+    dec: 11, dic: 11,
+  };
+
+  const regexDmmmyy = /^(\d{1,2})[-/]([a-zA-Z]{3})[-/](\d{2,4})$/;
+  const matchDmmmyy = str.match(regexDmmmyy);
+  if (matchDmmmyy) {
+    const day = parseInt(matchDmmmyy[1], 10);
+    const mStr = matchDmmmyy[2].toLowerCase();
+    let year = parseInt(matchDmmmyy[3], 10);
+    if (year < 100) year += 2000;
+    const month = monthMap[mStr];
+    if (month !== undefined) {
+      return new Date(Date.UTC(year, month, day));
+    }
+  }
+
+  // Try DD/MM/YYYY or DD-MM-YYYY
+  const regexDmy = /^(\d{1,2})[-/](\d{1,2})[-/](\d{2,4})$/;
+  const matchDmy = str.match(regexDmy);
+  if (matchDmy) {
+    const day = parseInt(matchDmy[1], 10);
+    const month = parseInt(matchDmy[2], 10) - 1;
+    let year = parseInt(matchDmy[3], 10);
+    if (year < 100) year += 2000;
+    return new Date(Date.UTC(year, month, day));
+  }
+
+  return null;
+}
+
 export async function importIncomesAction(rows: ImportRow[]) {
   try {
     const condo = await prisma.condominium.findFirst({
@@ -65,8 +126,9 @@ export async function importIncomesAction(rows: ImportRow[]) {
       const row = rows[i];
       const lineNum = i + 2; // header is line 1
 
-      if (!row.date || isNaN(Date.parse(row.date))) {
-        errors.push(`Fila ${lineNum}: Fecha inválida`);
+      const parsedDate = parseExcelDate(row.date);
+      if (!parsedDate) {
+        errors.push(`Fila ${lineNum}: Fecha inválida "${row.date}"`);
         continue;
       }
 
@@ -104,7 +166,7 @@ export async function importIncomesAction(rows: ImportRow[]) {
 
       validRows.push({
         condominiumId: condo.id,
-        date: new Date(row.date),
+        date: parsedDate,
         amount: row.amount,
         concept: row.concept.trim(),
         paymentMethod: method as any,
@@ -121,6 +183,7 @@ export async function importIncomesAction(rows: ImportRow[]) {
     }
 
     revalidatePath("/listado-ingresos");
+    revalidatePath("/resumen-financiero");
 
     return {
       success: true,

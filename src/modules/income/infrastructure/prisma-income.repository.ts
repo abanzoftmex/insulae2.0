@@ -69,12 +69,26 @@ export class PrismaIncomeRepository implements IncomeRepository {
 
     if (filter.search && filter.search.trim().length > 0) {
       const term = filter.search.trim();
+      const cleanNumStr = term.replace(/[\$,\s]/g, "");
+      const numVal = parseFloat(cleanNumStr);
+      const isNumeric = !isNaN(numVal) && cleanNumStr.length > 0;
+
       where.OR = [
         { concept: { contains: term, mode: "insensitive" } },
         { notes: { contains: term, mode: "insensitive" } },
         { miscCatalog: { name: { contains: term, mode: "insensitive" } } },
+        { chargeGroup: { name: { contains: term, mode: "insensitive" } } },
         { privateArea: { name: { contains: term, mode: "insensitive" } } },
       ];
+
+      if (isNumeric) {
+        where.OR.push({
+          amount: {
+            gte: numVal - 0.009,
+            lte: numVal + 0.009,
+          },
+        });
+      }
     }
 
     const rows = await prisma.income.findMany({

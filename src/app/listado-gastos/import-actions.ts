@@ -123,6 +123,7 @@ export async function importExpensesAction(rows: ImportRow[]) {
     }
 
     revalidatePath("/listado-gastos");
+    revalidatePath("/resumen-financiero");
 
     return { 
       success: true, 

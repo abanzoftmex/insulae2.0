@@ -229,6 +229,18 @@ export default async function ResumenFinancieroPage({
     }
   }
 
+  const extraordinaryChargesAggregate = await prisma.charge.aggregate({
+    where: {
+      periodYear: { gte: 2024 },
+      status: { not: "CANCELED" },
+      chargeGroup: {
+        kind: { in: ["EXTRA_CONDO", "EXTRA_COMMERCE"] },
+      },
+    },
+    _sum: { amount: true },
+  });
+  const extChargesTotalVal = Number(extraordinaryChargesAggregate._sum.amount ?? 0);
+
   // Dynamically extract values from multi-year tables
   const ordIncomeTotalRow = vm.ordinaryIncomeMultiYearTable.rows.find((r) => r.isTotal);
   const ordIncomeTotalSlice = ordIncomeTotalRow?.yearly.find((s) => s.year === vm.selectedYear);
@@ -295,6 +307,14 @@ export default async function ResumenFinancieroPage({
     balanceValue = totalIncomeVal - extExpensesValue;
     cardAnnualBalance = formatCurrency(balanceValue);
   }
+
+  const extIncomeAccumulatedSum = extIncomeTotalRow?.yearly
+    .filter((s) => s.year >= 2024)
+    .reduce((sum, s) => sum + s.annualTotalValue, 0) ?? 0;
+
+  const ordIncomeAccumulatedSum = ordIncomeTotalRow?.yearly
+    .filter((s) => s.year >= 2024)
+    .reduce((sum, s) => sum + s.annualTotalValue, 0) ?? 0;
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
@@ -380,8 +400,8 @@ export default async function ResumenFinancieroPage({
         ) : (
           <StatCard 
             accent="emerald" 
-            label={`Cuotas Extr. ${vm.selectedYear} (Anual)`} 
-            value={extIncomeLabel} 
+            label="Cuotas Extr. Cargadas (Desde 2024)" 
+            value={formatCurrency(extChargesTotalVal > 0 ? extChargesTotalVal : extIncomeAccumulatedSum)} 
             icon={<Wallet className="h-3.5 w-3.5" />} 
           />
         )}
