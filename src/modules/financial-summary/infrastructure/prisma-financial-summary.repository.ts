@@ -1300,6 +1300,20 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       visibleYears.map((year) => [year, createZeroSeries()]),
     );
 
+    const incomeChargeGroupYears = new Set<string>();
+    for (const inc of incomes) {
+      if (inc.chargeGroupId) {
+        const year = inc.date.getUTCFullYear();
+        incomeChargeGroupYears.add(`${inc.chargeGroupId}:${year}`);
+      }
+    }
+    for (const inc of incomesForLegacyYears as IncomeSnapshot[]) {
+      if (inc.chargeGroupId) {
+        const year = inc.date.getUTCFullYear();
+        incomeChargeGroupYears.add(`${inc.chargeGroupId}:${year}`);
+      }
+    }
+
     const monthly = initMonthlyRows();
 
     for (const detail of paymentDetails as PaymentDetailSnapshot[]) {
@@ -1356,30 +1370,24 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       const month = getMonth(detail.payment.paidAt);
       const amount = decimalToNumber(detail.amount);
 
-      const extraordinaryRow = extraordinaryIncomeRowByKind.get(chargeGroupKind);
-      if (extraordinaryRow) {
-        addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year], month, amount);
-      }
+      if (!incomeChargeGroupYears.has(`${detail.chargeGroupId}:${year}`)) {
+        const extraordinaryRow = extraordinaryIncomeRowByKind.get(chargeGroupKind);
+        if (extraordinaryRow) {
+          addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year], month, amount);
+        }
 
-      const rowConfig = ordinaryReceivableRowByKind.get(chargeGroupKind);
-      if (!rowConfig) {
-        continue;
+        const rowConfig = ordinaryReceivableRowByKind.get(chargeGroupKind);
+        if (rowConfig) {
+          addAmountToSeries(ordinaryIncomeByRowAndYear[rowConfig.id][year], month, amount);
+        }
       }
-
-      addAmountToSeries(ordinaryIncomeByRowAndYear[rowConfig.id][year], month, amount);
     }
 
     for (const income of incomes) {
-      if (income.legacyId !== null && income.legacyId <= 10000000) {
-        continue;
-      }
-      if (income.chargeGroupId !== null && income.miscCatalogId === null) {
-        continue;
-      }
       const month = getMonth(income.date);
       const row = monthly[month - 1];
       const amount = decimalToNumber(income.amount);
-      const kind = income.chargeGroupId !== null && income.miscCatalogId === null
+      const kind = income.chargeGroupId !== null
         ? (chargeGroupKindById.get(income.chargeGroupId) ?? CHARGE_GROUP_KIND.OTHER)
         : CHARGE_GROUP_KIND.OTHER;
       const extendedKind = resolveExtendedKind(kind);
@@ -1403,23 +1411,32 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           addAmountToSeries(ordinaryUnclassifiedOtherIncomeSeries, month, amount);
         }
       }
+
+      const extraordinaryRow = extraordinaryIncomeRowByKind.get(kind);
+      if (extraordinaryRow) {
+        addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][requestedYear], month, amount);
+      }
+
+      const ordinaryRow = ordinaryReceivableRowByKind.get(kind);
+      if (ordinaryRow) {
+        addAmountToSeries(ordinaryIncomeByRowAndYear[ordinaryRow.id][requestedYear], month, amount);
+      }
     }
 
     for (const income of incomesForLegacyYears as IncomeSnapshot[]) {
-      if (income.legacyId !== null && income.legacyId <= 10000000) {
-        continue;
-      }
-      if (income.chargeGroupId !== null && income.miscCatalogId === null) {
-        continue;
-      }
       const year = income.date.getUTCFullYear();
+
+      // Skip requestedYear — already handled by the primary incomes loop
+      if (year === requestedYear) {
+        continue;
+      }
 
       if (!visibleYears.includes(year as number)) {
         continue;
       }
 
       const incomeKind =
-        income.chargeGroupId !== null && income.miscCatalogId === null
+        income.chargeGroupId !== null
           ? (chargeGroupKindById.get(income.chargeGroupId) ?? null)
           : null;
       if (incomeKind !== null) {
