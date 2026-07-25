@@ -35,7 +35,7 @@ export interface PrivateAreaRowVM {
   annualOrdinaryFee: string;
   monthlyOrdinaryFee: string;
   outstandingBalance: string;
-  financialCells: Partial<Record<PrivateAreaFinancialCellKey, { owner: string; commerce: string }>>;
+  financialCells: Partial<Record<PrivateAreaFinancialCellKey, { owner: string; commerce: string; isPaid?: boolean }>>;
   ownerInitialHistory: Array<{ name: string; email: string | null; phone: string | null }>;
   ownerLegal: Array<{ name: string; email: string | null; phone: string | null }>;
   domainCurrent: Array<{ name: string; email: string | null; phone: string | null }>;
@@ -256,6 +256,7 @@ export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateArea
           {
             owner: formatCurrency(value?.owner ?? 0),
             commerce: formatCurrency(value?.commerce ?? 0),
+            isPaid: value?.isPaid,
           },
         ]),
       ),

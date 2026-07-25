@@ -43,13 +43,27 @@ export class PrismaExpenseRepository implements ExpenseRepository {
       isActive: true, // Only show active expenses
     };
 
-    if (filter.search) {
+    if (filter.search && filter.search.trim().length > 0) {
+      const term = filter.search.trim();
+      const cleanNumStr = term.replace(/[\$,\s]/g, "");
+      const numVal = parseFloat(cleanNumStr);
+      const isNumeric = !isNaN(numVal) && cleanNumStr.length > 0;
+
       where.OR = [
-        { concept: { contains: filter.search, mode: "insensitive" } },
-        { projectName: { contains: filter.search, mode: "insensitive" } },
-        { legacyProjectName: { contains: filter.search, mode: "insensitive" } },
-        { notes: { contains: filter.search, mode: "insensitive" } },
+        { concept: { contains: term, mode: "insensitive" } },
+        { projectName: { contains: term, mode: "insensitive" } },
+        { legacyProjectName: { contains: term, mode: "insensitive" } },
+        { notes: { contains: term, mode: "insensitive" } },
       ];
+
+      if (isNumeric) {
+        where.OR.push({
+          amount: {
+            gte: numVal - 0.009,
+            lte: numVal + 0.009,
+          },
+        });
+      }
     }
 
     if (filter.budgetConceptId) {

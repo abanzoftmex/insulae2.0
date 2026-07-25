@@ -550,38 +550,9 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       return null;
     }
 
-    const range = toUtcYearRange(requestedYear);
-    const nextYear = requestedYear + 1;
-    const visibleYears = [requestedYear, nextYear];
-    const ordinaryExpenseYears = [requestedYear, nextYear] as const;
-    const ordinaryExpenseComparisonRange = {
-      from: new Date(Date.UTC(requestedYear, 0, 1, 0, 0, 0, 0)),
-      to: new Date(Date.UTC(nextYear + 1, 0, 1, 0, 0, 0, 0)),
-    };
-    const minLegacyYear = Math.min(...visibleYears);
-    const maxLegacyYear = Math.max(...visibleYears);
-    const legacyRange = {
-      from: new Date(Date.UTC(minLegacyYear, 0, 1, 0, 0, 0, 0)),
-      to: new Date(Date.UTC(maxLegacyYear + 1, 0, 1, 0, 0, 0, 0)),
-    };
-
     const [
       chargeGroups,
       miscIncomeCatalogs,
-      paymentDetails,
-      paymentDetailsForLegacyYears,
-      incomes,
-      incomesForLegacyYears,
-      expenses,
-      expensesForOrdinaryExpenseYears,
-      expensesForLegacyYears,
-      extraordinaryBudgetConcepts,
-      paymentBounds,
-      incomeBounds,
-      expenseBounds,
-      chargesForOrdinaryLedger,
-      currentBudget,
-      nextBudget,
     ] = await Promise.all([
       prisma.chargeGroup.findMany({
         where: {
@@ -618,6 +589,51 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           },
         },
       }),
+    ]);
+
+    const range = toUtcYearRange(requestedYear);
+    const nextYear = requestedYear + 1;
+
+    const visibleYearsSet = new Set<number>([requestedYear, nextYear]);
+    for (const catalog of miscIncomeCatalogs) {
+      if (catalog.quotaPeriodStart) {
+        const startY = catalog.quotaPeriodStart.getUTCFullYear();
+        const endY = catalog.quotaPeriodEnd ? catalog.quotaPeriodEnd.getUTCFullYear() : startY;
+        for (let y = startY; y <= endY; y++) {
+          visibleYearsSet.add(y);
+        }
+      }
+    }
+
+    const visibleYears = Array.from(visibleYearsSet).sort((a, b) => a - b);
+    const ordinaryExpenseYears = [requestedYear, nextYear] as const;
+    const ordinaryExpenseComparisonRange = {
+      from: new Date(Date.UTC(requestedYear, 0, 1, 0, 0, 0, 0)),
+      to: new Date(Date.UTC(nextYear + 1, 0, 1, 0, 0, 0, 0)),
+    };
+    const minLegacyYear = Math.min(...visibleYears);
+    const maxLegacyYear = Math.max(...visibleYears);
+    const legacyRange = {
+      from: new Date(Date.UTC(minLegacyYear, 0, 1, 0, 0, 0, 0)),
+      to: new Date(Date.UTC(maxLegacyYear + 1, 0, 1, 0, 0, 0, 0)),
+    };
+
+    const [
+      paymentDetails,
+      paymentDetailsForLegacyYears,
+      incomes,
+      incomesForLegacyYears,
+      expenses,
+      expensesForOrdinaryExpenseYears,
+      expensesForLegacyYears,
+      extraordinaryBudgetConcepts,
+      paymentBounds,
+      incomeBounds,
+      expenseBounds,
+      chargesForOrdinaryLedger,
+      currentBudget,
+      nextBudget,
+    ] = await Promise.all([
       prisma.paymentDetail.findMany({
         where: {
           condominiumId: condominium.id,
@@ -1117,8 +1133,22 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     };
 
 
+    const EXCLUDED_CONDO_CATALOG_NAMES = new Set([
+      "cuotas ordinarias",
+      "cuotas stc",
+      "cuota única stc",
+      "sancion",
+      "sanción",
+      "comodato",
+      "cuotas extraordinarias - condóminos",
+      "cuota extraordinaria - comercios",
+    ]);
+
     const ordinaryOtherCatalogRows = (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
-      .filter((catalog) => catalog.chargeGroup?.kind === CHARGE_GROUP_KIND.ORDINARY)
+      .filter((catalog) => {
+        if (EXCLUDED_CONDO_CATALOG_NAMES.has(catalog.name.trim().toLowerCase())) return false;
+        return catalog.chargeGroup?.kind === CHARGE_GROUP_KIND.ORDINARY;
+      })
       .map((catalog) => {
         const period = formatPeriod(catalog.quotaPeriodStart, catalog.quotaPeriodEnd);
         const label = catalog.name + (period ? ` (${period})` : "");
@@ -1270,6 +1300,20 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       visibleYears.map((year) => [year, createZeroSeries()]),
     );
 
+    const incomeChargeGroupYears = new Set<string>();
+    for (const inc of incomes) {
+      if (inc.chargeGroupId) {
+        const year = inc.date.getUTCFullYear();
+        incomeChargeGroupYears.add(`${inc.chargeGroupId}:${year}`);
+      }
+    }
+    for (const inc of incomesForLegacyYears as IncomeSnapshot[]) {
+      if (inc.chargeGroupId) {
+        const year = inc.date.getUTCFullYear();
+        incomeChargeGroupYears.add(`${inc.chargeGroupId}:${year}`);
+      }
+    }
+
     const monthly = initMonthlyRows();
 
     for (const detail of paymentDetails as PaymentDetailSnapshot[]) {
@@ -1326,27 +1370,24 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       const month = getMonth(detail.payment.paidAt);
       const amount = decimalToNumber(detail.amount);
 
-      const extraordinaryRow = extraordinaryIncomeRowByKind.get(chargeGroupKind);
-      if (extraordinaryRow) {
-        addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year], month, amount);
-      }
+      if (!incomeChargeGroupYears.has(`${detail.chargeGroupId}:${year}`)) {
+        const extraordinaryRow = extraordinaryIncomeRowByKind.get(chargeGroupKind);
+        if (extraordinaryRow) {
+          addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year], month, amount);
+        }
 
-      const rowConfig = ordinaryReceivableRowByKind.get(chargeGroupKind);
-      if (!rowConfig) {
-        continue;
+        const rowConfig = ordinaryReceivableRowByKind.get(chargeGroupKind);
+        if (rowConfig) {
+          addAmountToSeries(ordinaryIncomeByRowAndYear[rowConfig.id][year], month, amount);
+        }
       }
-
-      addAmountToSeries(ordinaryIncomeByRowAndYear[rowConfig.id][year], month, amount);
     }
 
     for (const income of incomes) {
-      if (income.legacyId !== null && income.legacyId <= 10000000) {
-        continue;
-      }
       const month = getMonth(income.date);
       const row = monthly[month - 1];
       const amount = decimalToNumber(income.amount);
-      const kind = income.chargeGroupId !== null && income.miscCatalogId === null
+      const kind = income.chargeGroupId !== null
         ? (chargeGroupKindById.get(income.chargeGroupId) ?? CHARGE_GROUP_KIND.OTHER)
         : CHARGE_GROUP_KIND.OTHER;
       const extendedKind = resolveExtendedKind(kind);
@@ -1370,20 +1411,32 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           addAmountToSeries(ordinaryUnclassifiedOtherIncomeSeries, month, amount);
         }
       }
+
+      const extraordinaryRow = extraordinaryIncomeRowByKind.get(kind);
+      if (extraordinaryRow) {
+        addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][requestedYear], month, amount);
+      }
+
+      const ordinaryRow = ordinaryReceivableRowByKind.get(kind);
+      if (ordinaryRow) {
+        addAmountToSeries(ordinaryIncomeByRowAndYear[ordinaryRow.id][requestedYear], month, amount);
+      }
     }
 
     for (const income of incomesForLegacyYears as IncomeSnapshot[]) {
-      if (income.legacyId !== null && income.legacyId <= 10000000) {
+      const year = income.date.getUTCFullYear();
+
+      // Skip requestedYear — already handled by the primary incomes loop
+      if (year === requestedYear) {
         continue;
       }
-      const year = income.date.getUTCFullYear();
 
       if (!visibleYears.includes(year as number)) {
         continue;
       }
 
       const incomeKind =
-        income.chargeGroupId !== null && income.miscCatalogId === null
+        income.chargeGroupId !== null
           ? (chargeGroupKindById.get(income.chargeGroupId) ?? null)
           : null;
       if (incomeKind !== null) {
@@ -1393,6 +1446,17 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           const amount = decimalToNumber(income.amount);
           addAmountToSeries(
             extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year],
+            month,
+            amount,
+          );
+        }
+
+        const ordinaryRowConfig = ordinaryReceivableRowByKind.get(incomeKind);
+        if (ordinaryRowConfig) {
+          const month = getMonth(income.date);
+          const amount = decimalToNumber(income.amount);
+          addAmountToSeries(
+            ordinaryIncomeByRowAndYear[ordinaryRowConfig.id][year],
             month,
             amount,
           );
@@ -1718,6 +1782,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
     const availableYears = buildAvailableYears(
       [
+        ...visibleYears,
         yearFromDate(paymentDateBounds._min.paidAt),
         yearFromDate(paymentDateBounds._max.paidAt),
         yearFromDate(incomeBounds._min?.date),
@@ -2191,7 +2256,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       ],
     };
 
-    const extraordinaryBalanceByYear = new Map<number, number[]>(
+    const extraordinaryTotalIncomeByYear = new Map<number, number[]>(
       visibleYears.map((year) => {
         const extraordinaryIncomeForYear = sumSeries(
           EXTRAORDINARY_INCOME_ROWS.map((row) => extraordinaryIncomeByRowAndYear[row.id][year]),
@@ -2201,19 +2266,26 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             (row) => extraordinaryOtherIncomeByRowAndYear.get(row.id)?.[year] ?? createZeroSeries(),
           ),
         );
+        return [year, sumSeries([extraordinaryIncomeForYear, extraordinaryOtherIncomeForYear])];
+      }),
+    );
+
+    const extraordinaryTotalExpenseByYear = new Map<number, number[]>(
+      visibleYears.map((year) => {
         const extraordinaryExpenseForYear = sumSeries(
           extraordinaryExpenseConceptRows.map(
             (row) => extraordinaryExpenseByRowAndYear.get(row.id)?.[year] ?? createZeroSeries(),
           ),
         );
+        return [year, extraordinaryExpenseForYear];
+      }),
+    );
 
-        return [
-          year,
-          subtractSeries(
-            sumSeries([extraordinaryIncomeForYear, extraordinaryOtherIncomeForYear]),
-            extraordinaryExpenseForYear,
-          ),
-        ];
+    const extraordinaryBalanceByYear = new Map<number, number[]>(
+      visibleYears.map((year) => {
+        const inc = extraordinaryTotalIncomeByYear.get(year) ?? createZeroSeries();
+        const exp = extraordinaryTotalExpenseByYear.get(year) ?? createZeroSeries();
+        return [year, subtractSeries(inc, exp)];
       }),
     );
     const extraordinaryBanksCashByYear = new Map<number, number[]>(
@@ -2234,6 +2306,20 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         extraordinaryActiveMonths,
       ),
       rows: [
+        {
+          id: "extraordinary-balance-income",
+          label: "Ingresos",
+          yearly: visibleYears.map((year) =>
+            toYearSlice(year, extraordinaryTotalIncomeByYear.get(year) ?? createZeroSeries()),
+          ),
+        },
+        {
+          id: "extraordinary-balance-expense",
+          label: "Egresos",
+          yearly: visibleYears.map((year) =>
+            toYearSlice(year, extraordinaryTotalExpenseByYear.get(year) ?? createZeroSeries()),
+          ),
+        },
         {
           id: "extraordinary-balance-total",
           label: "Total",

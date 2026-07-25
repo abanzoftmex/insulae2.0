@@ -43,11 +43,18 @@ export async function createIncomeAction(input: {
       privateAreaId: input.privateAreaId || null,
     };
     const result = await createIncomeUseCase.execute(condoId, saveInput);
-    revalidatePath("/listado-ingresos");
+    revalidateIncomePaths();
     return { success: true, data: result };
   } catch (err: any) {
     return { success: false, error: err.message };
   }
+}
+
+function revalidateIncomePaths() {
+  revalidatePath("/listado-ingresos");
+  revalidatePath("/areas-privativas");
+  revalidatePath("/areas-privativas/listado-pagos");
+  revalidatePath("/resumen-financiero");
 }
 
 export async function updateIncomeAction(
@@ -94,7 +101,7 @@ export async function updateIncomeAction(
       privateAreaId: input.privateAreaId || null,
     };
     const result = await updateIncomeUseCase.execute(id, saveInput);
-    revalidatePath("/listado-ingresos");
+    revalidateIncomePaths();
     return { success: true, data: result };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -104,7 +111,7 @@ export async function updateIncomeAction(
 export async function deleteIncomeAction(id: string) {
   try {
     await deleteIncomeUseCase.execute(id);
-    revalidatePath("/listado-ingresos");
+    revalidateIncomePaths();
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };

@@ -113,19 +113,52 @@ export function IncomeWorkbench({
   // Import State
   const [importing, setImporting] = useState(false);
 
+  const allCategories = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+    catalogs.forEach(c => {
+      const key = c.name.toLowerCase().trim();
+      if (!map.has(key)) {
+        map.set(key, c);
+      }
+    });
+    chargeGroups.forEach(cg => {
+      const key = cg.name.toLowerCase().trim();
+      if (!map.has(key)) {
+        map.set(key, { id: cg.id, name: cg.name });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }, [catalogs, chargeGroups]);
+
   const filteredIncomes = useMemo(() => {
     const term = search.toLowerCase().trim();
+    const selectedCategory = allCategories.find(c => c.id === filterCatalog);
+    const selectedName = selectedCategory?.name.toLowerCase().trim();
+
     return initialIncomes.filter(i => {
-      const byCatalog = filterCatalog === "all" || i.miscCatalogId === filterCatalog;
+      let byCatalog = filterCatalog === "all" || filterCatalog === "";
+      if (!byCatalog) {
+        byCatalog =
+          i.miscCatalogId === filterCatalog ||
+          i.chargeGroupId === filterCatalog ||
+          Boolean(
+            selectedName !== undefined && selectedName !== "" && (
+              (i.miscCatalogName && i.miscCatalogName.toLowerCase().trim() === selectedName) ||
+              (i.chargeGroupName && i.chargeGroupName.toLowerCase().trim() === selectedName) ||
+              (i.concept && i.concept.toLowerCase().includes(selectedName))
+            )
+          );
+      }
       const bySearch = !term || [
         i.concept,
         i.miscCatalogName || "",
+        i.chargeGroupName || "",
         i.privateAreaName || "",
         i.notes || ""
       ].some(f => f.toLowerCase().includes(term));
       return byCatalog && bySearch;
     });
-  }, [initialIncomes, search, filterCatalog]);
+  }, [initialIncomes, search, filterCatalog, allCategories]);
 
   const totalAmount = useMemo(() => filteredIncomes.reduce((sum, i) => sum + i.amount, 0), [filteredIncomes]);
 
@@ -166,6 +199,16 @@ export function IncomeWorkbench({
 
   const handleSave = () => {
     startTransition(async () => {
+      let areaIdToUse = formAreaId;
+      if (!areaIdToUse && areaSearch.trim()) {
+        const match = areas.find(
+          (a) => a.name.trim().toLowerCase() === areaSearch.trim().toLowerCase(),
+        );
+        if (match) {
+          areaIdToUse = match.id;
+        }
+      }
+
       const payload = {
         date: formDate,
         concept: formConcept,
@@ -174,8 +217,8 @@ export function IncomeWorkbench({
         notes: formNotes || undefined,
         miscCatalogId: formCatalogId || undefined,
         chargeGroupId: formChargeGroupId || undefined,
-        privateAreaId: formAreaId || undefined,
-        receiptUrl: receiptUrl || undefined
+        privateAreaId: areaIdToUse || undefined,
+        receiptUrl: receiptUrl || undefined,
       };
 
       const res = editingId
@@ -197,7 +240,7 @@ export function IncomeWorkbench({
     setImporting(true);
     try {
       const buffer = await file.arrayBuffer();
-      const wb = read(buffer);
+      const wb = read(buffer, { cellDates: true });
       const ws = wb.Sheets[wb.SheetNames[0]];
       const raw: unknown[][] = utils.sheet_to_json(ws, { header: 1 });
       const rows = raw
@@ -207,7 +250,8 @@ export function IncomeWorkbench({
           const row = r as any[];
           // Mapper to match legacy order and names
           // Headers: fecha, monto, id_categoria, id_tipo_cuota, id_forma_pago, comentarios
-          const date = String(row[0] ?? "");
+          const rawDate = row[0];
+          const date = rawDate instanceof Date ? rawDate.toISOString() : String(rawDate ?? "");
           const amount = parseFloat(String(row[1] ?? "0"));
           const miscCatalogId = String(row[2] ?? "").trim() || undefined;
           const chargeGroupId = String(row[3] ?? "").trim() || undefined;
@@ -216,12 +260,12 @@ export function IncomeWorkbench({
 
           // Map legacy numeric payment methods or string ones based on screenshot/legacy
           const methodMap: Record<string, string> = {
-            "1": "OTHER",    // N/A
-            "2": "CASH",     // Efectivo
-            "3": "TRANSFER", // Transferencia
-            "4": "CARD",     // Tarjeta
-            "5": "CHECK",    // Cheque
-            "6": "OTHER",    // Otro
+            "1": "CASH",        // Efectivo
+            "2": "TRANSFER",    // Transferencia
+            "3": "CARD",        // Tarjeta
+            "4": "CHECK",       // Cheque
+            "5": "OTHER",       // Otro
+            "6": "OTHER",       // Otro
             "EFECTIVO": "CASH",
             "TRANSFERENCIA": "TRANSFER",
             "TARJETA": "CARD",
@@ -361,7 +405,7 @@ export function IncomeWorkbench({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard accent="brand" label="Total Registros" value={filteredIncomes.length} icon={<Layers className="h-3.5 w-3.5" />} />
         <StatCard accent="lime" label="Monto Acumulado" value={new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalAmount)} icon={<DollarSign className="h-3.5 w-3.5" />} />
-        <StatCard accent="cyan" label="Categorías" value={catalogs.length} icon={<Filter className="h-3.5 w-3.5" />} />
+        <StatCard accent="cyan" label="Categorías" value={allCategories.length} icon={<Filter className="h-3.5 w-3.5" />} />
       </div>
 
       <div className="flex items-center justify-between gap-4 mt-2">
@@ -372,7 +416,7 @@ export function IncomeWorkbench({
             className="h-7 px-2 rounded bg-card border border-line text-[10px] font-bold uppercase outline-none focus:ring-1 focus:ring-brand-accent/30"
           >
             <option value="all">Todas las Categorías</option>
-            {catalogs.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            {allCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <Badge variant="brand">{initialIncomes.length} Total</Badge>
         </div>

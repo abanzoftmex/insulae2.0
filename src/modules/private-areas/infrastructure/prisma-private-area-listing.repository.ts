@@ -127,6 +127,7 @@ type PrivateAreaSnapshot = {
     interestAmount: Prisma.Decimal | number;
     discountAmount: Prisma.Decimal | number;
     isCollectible: boolean;
+    dueDate?: Date | null;
     periodYear: number;
     periodMonth: number;
     responsibility: "OWNER" | "COMMERCE";
@@ -137,6 +138,10 @@ type PrivateAreaSnapshot = {
     };
     allocations: Array<{
       amount: Prisma.Decimal | number;
+      payment?: {
+        legacyId?: number | null;
+        paidAt?: Date | null;
+      } | null;
     }>;
   }>;
   incomes: Array<{
@@ -401,7 +406,58 @@ function toPublicPartyContact(contact: PartyContact): Omit<PartyContact, "id"> {
 }
 
 function emptyFinancialSplit(): PrivateAreaFinancialSplit {
-  return { owner: 0, commerce: 0 };
+  return { owner: 0, commerce: 0, isPaid: false };
+}
+
+function splitMonthlyCharges(
+  charges: PrivateAreaSnapshot["charges"],
+  year: number,
+  month: number,
+  inMemoryAllocationsByChargeId: Map<string, number>,
+  currentOrdinaryYear: number,
+  isCommerceArea?: boolean,
+): PrivateAreaFinancialSplit {
+  const split: PrivateAreaFinancialSplit = { owner: 0, commerce: 0, isPaid: false };
+
+  const ordinaryCharges = charges.filter(
+    (charge) =>
+      charge.isCollectible &&
+      isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY),
+  );
+
+  for (const charge of ordinaryCharges) {
+    // Sum database allocations paid IN THIS MONTH (paidAt matches year & month)
+    const paidInMonthFromDb = (charge.allocations ?? []).reduce((sum: number, alloc: any) => {
+      const rawDate = alloc.payment?.paidAt ?? alloc.createdAt;
+      if (!rawDate) return sum;
+      const paidDate = new Date(rawDate);
+      const allocYear = paidDate.getFullYear();
+      const allocMonth = paidDate.getMonth() + 1;
+      if (allocYear === year && allocMonth === month) {
+        return sum + decimalToNumber(alloc.amount);
+      }
+      return sum;
+    }, 0);
+
+    let inMem = 0;
+    if (charge.periodYear === year && charge.periodMonth === month) {
+      inMem = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
+    }
+
+    const paidInMonth = paidInMonthFromDb + inMem;
+
+    if (charge.responsibility === "COMMERCE" || isCommerceArea) {
+      split.commerce += paidInMonth;
+    } else {
+      split.owner += paidInMonth;
+    }
+  }
+
+  if (split.commerce > 0 || split.owner > 0) {
+    split.isPaid = true;
+  }
+
+  return split;
 }
 
 function toPendingAmount(
@@ -426,8 +482,9 @@ function addToFinancialSplit(
   split: PrivateAreaFinancialSplit,
   responsibility: "OWNER" | "COMMERCE",
   value: number,
+  isCommerceArea?: boolean,
 ): void {
-  if (responsibility === "COMMERCE") {
+  if (responsibility === "COMMERCE" || isCommerceArea) {
     split.commerce += value;
     return;
   }
@@ -446,6 +503,7 @@ function splitCharges(
   charges: PrivateAreaSnapshot["charges"],
   predicate: (charge: PrivateAreaSnapshot["charges"][number]) => boolean,
   amountSelector: (charge: PrivateAreaSnapshot["charges"][number]) => number,
+  isCommerceArea?: boolean,
 ): PrivateAreaFinancialSplit {
   const split = emptyFinancialSplit();
 
@@ -454,7 +512,7 @@ function splitCharges(
       continue;
     }
 
-    addToFinancialSplit(split, charge.responsibility, amountSelector(charge));
+    addToFinancialSplit(split, charge.responsibility, amountSelector(charge), isCommerceArea);
   }
 
   return split;
@@ -467,11 +525,18 @@ function withMonthlyKey(year: number, month: number): PrivateAreaFinancialCellKe
 function buildFinancialCells(
   charges: PrivateAreaSnapshot["charges"],
   currentOrdinaryYear: number,
-  ordinaryCatalog: { quotaPeriodStart: Date | null, quotaPeriodEnd: Date | null } | null,
+  ordinaryCatalog: { quotaPeriodStart: Date | null; quotaPeriodEnd: Date | null } | null,
   inMemoryAllocationsByChargeId: Map<string, number>,
+  isCommerceArea?: boolean,
 ): Partial<Record<PrivateAreaFinancialCellKey, PrivateAreaFinancialSplit>> {
   const nextOrdinaryYear = currentOrdinaryYear + 1;
   const previousOrdinaryYear = currentOrdinaryYear - 1;
+  const today = new Date();
+
+  const isDueToday = (charge: PrivateAreaSnapshot["charges"][number]) => {
+    if (!charge.dueDate) return true;
+    return new Date(charge.dueDate) <= today;
+  };
 
   const ordinaryCurrentAnnual = splitCharges(
     charges,
@@ -479,15 +544,18 @@ function buildFinancialCells(
       isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
       charge.periodYear === currentOrdinaryYear,
     (charge) => decimalToNumber(charge.amount),
+    isCommerceArea,
   );
 
   const ordinaryCurrentOutstanding = splitCharges(
     charges,
     (charge) =>
       charge.isCollectible &&
+      isDueToday(charge) &&
       isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
       charge.periodYear === currentOrdinaryYear,
     (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+    isCommerceArea,
   );
 
   const ordinaryNextAnnual = splitCharges(
@@ -496,21 +564,25 @@ function buildFinancialCells(
       isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
       charge.periodYear === nextOrdinaryYear,
     (charge) => decimalToNumber(charge.amount),
+    isCommerceArea,
   );
 
   const ordinaryNextOutstanding = splitCharges(
     charges,
     (charge) =>
       charge.isCollectible &&
+      isDueToday(charge) &&
       isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
       charge.periodYear === nextOrdinaryYear,
     (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+    isCommerceArea,
   );
 
   const totalOutstanding = splitCharges(
     charges,
-    (charge) => charge.isCollectible,
+    (charge) => charge.isCollectible && isDueToday(charge),
     (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+    isCommerceArea,
   );
 
   const cells: Partial<Record<PrivateAreaFinancialCellKey, PrivateAreaFinancialSplit>> = {
@@ -518,9 +590,11 @@ function buildFinancialCells(
       charges,
       (charge) =>
         charge.isCollectible &&
+        isDueToday(charge) &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
         charge.periodYear <= previousOrdinaryYear,
       (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+      isCommerceArea,
     ),
     advance_2024: splitCharges(
       charges,
@@ -528,6 +602,7 @@ function buildFinancialCells(
         isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
         charge.periodYear === previousOrdinaryYear,
       (charge) => decimalToNumber(charge.paidAmount),
+      isCommerceArea,
     ),
     ordinary_2025_annual: ordinaryCurrentAnnual,
     ordinary_2025_monthly: {
@@ -548,15 +623,18 @@ function buildFinancialCells(
         charge.periodYear >= previousOrdinaryYear &&
         charge.periodYear <= currentOrdinaryYear,
       (charge) => decimalToNumber(charge.amount),
+      isCommerceArea,
     ),
     extra_condo_2024_2025_outstanding: splitCharges(
       charges,
       (charge) =>
         charge.isCollectible &&
+        isDueToday(charge) &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.EXTRA_CONDO) &&
         charge.periodYear >= previousOrdinaryYear &&
         charge.periodYear <= currentOrdinaryYear,
       (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+      isCommerceArea,
     ),
     extra_commerce_2024_2025: splitCharges(
       charges,
@@ -565,49 +643,60 @@ function buildFinancialCells(
         charge.periodYear >= previousOrdinaryYear &&
         charge.periodYear <= currentOrdinaryYear,
       (charge) => decimalToNumber(charge.amount),
+      isCommerceArea,
     ),
     extra_commerce_2024_2025_outstanding: splitCharges(
       charges,
       (charge) =>
         charge.isCollectible &&
+        isDueToday(charge) &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.EXTRA_COMMERCE) &&
         charge.periodYear >= previousOrdinaryYear &&
         charge.periodYear <= currentOrdinaryYear,
       (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+      isCommerceArea,
     ),
     stc: splitCharges(
       charges,
       (charge) => isChargeGroup(charge, CHARGE_GROUP_KIND.STC),
       (charge) => decimalToNumber(charge.amount),
+      isCommerceArea,
     ),
     stc_outstanding: splitCharges(
       charges,
-      (charge) => charge.isCollectible && isChargeGroup(charge, CHARGE_GROUP_KIND.STC),
+      (charge) => charge.isCollectible && isDueToday(charge) && isChargeGroup(charge, CHARGE_GROUP_KIND.STC),
       (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+      isCommerceArea,
     ),
     sancion: splitCharges(
       charges,
       (charge) => isChargeGroup(charge, CHARGE_GROUP_KIND.SANCTION),
       (charge) => decimalToNumber(charge.amount),
+      isCommerceArea,
     ),
     sancion_outstanding: splitCharges(
       charges,
       (charge) =>
         charge.isCollectible &&
+        isDueToday(charge) &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.SANCTION),
       (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+      isCommerceArea,
     ),
     comodato: splitCharges(
       charges,
       (charge) => isChargeGroup(charge, CHARGE_GROUP_KIND.COMODATO),
       (charge) => decimalToNumber(charge.amount),
+      isCommerceArea,
     ),
     comodato_outstanding: splitCharges(
       charges,
       (charge) =>
         charge.isCollectible &&
+        isDueToday(charge) &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.COMODATO),
       (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+      isCommerceArea,
     ),
     total_outstanding: totalOutstanding,
   };
@@ -623,14 +712,13 @@ function buildFinancialCells(
 
   for (const year of yearsToCompute) {
     for (let month = 1; month <= 12; month += 1) {
-      cells[withMonthlyKey(year, month)] = splitCharges(
+      cells[withMonthlyKey(year, month)] = splitMonthlyCharges(
         charges,
-        (charge) =>
-          charge.isCollectible &&
-          isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
-          charge.periodYear === year &&
-          charge.periodMonth === month,
-        (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
+        year,
+        month,
+        inMemoryAllocationsByChargeId,
+        currentOrdinaryYear,
+        isCommerceArea,
       );
     }
   }
@@ -672,8 +760,8 @@ function matchesQuery(row: PrivateAreaListRow, query: string): boolean {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9+]/g, " ")
     .split(/\s+/)
-    .map((w) => w.replace(/[^a-z0-9+]/g, ""))
     .filter((w) => w.length > 0);
 
   if (queryWords.length === 0) {
@@ -944,6 +1032,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
             select: {
               amount: true,
               startsAt: true,
+              endsAt: true,
               chargeGroup: {
                 select: {
                   name: true,
@@ -961,6 +1050,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               interestAmount: true,
               discountAmount: true,
               isCollectible: true,
+              dueDate: true,
               periodYear: true,
               periodMonth: true,
               responsibility: true,
@@ -977,6 +1067,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
                   payment: {
                     select: {
                       legacyId: true,
+                      paidAt: true,
                     },
                   },
                 },
@@ -991,6 +1082,13 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               date: true,
               amount: true,
               chargeGroupId: true,
+              chargeGroup: {
+                select: {
+                  name: true,
+                  chargeType: true,
+                  kind: true,
+                },
+              },
             },
           },
         },
@@ -1059,45 +1157,58 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       const inMemoryAllocationsByChargeId = new Map<string, number>();
 
       const calculateAllocationsForArea = (charges: any[], incomes: any[]) => {
-        const sortedCharges = [...charges].sort((a, b) => {
-          if (a.periodYear !== b.periodYear) {
-            return a.periodYear - b.periodYear;
-          }
-          return a.periodMonth - b.periodMonth;
-        });
+        const sortedCharges = [...charges]
+          .filter((c) => c.isCollectible)
+          .sort((a, b) => {
+            if (a.periodYear !== b.periodYear) {
+              return a.periodYear - b.periodYear;
+            }
+            if (a.periodMonth !== b.periodMonth) {
+              return a.periodMonth - b.periodMonth;
+            }
+            const aDue = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+            const bDue = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+            if (aDue !== bDue) {
+              return aDue - bDue;
+            }
+            const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return aCreated - bCreated;
+          });
 
         const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
 
         // Build a set of legacyIds of payments that already have allocations in the database
-        const allocatedLegacyIds = new Set<number>();
+        const allocatedLegacyIds = new Set<string>();
         for (const charge of charges) {
           for (const alloc of charge.allocations) {
             if (alloc.payment?.legacyId !== null && alloc.payment?.legacyId !== undefined) {
-              allocatedLegacyIds.add(alloc.payment.legacyId);
+              allocatedLegacyIds.add(String(alloc.payment.legacyId));
             }
           }
         }
 
         for (const income of sortedIncomes) {
-          if (income.legacyId !== null && income.legacyId !== undefined && allocatedLegacyIds.has(income.legacyId)) {
+          if (
+            income.legacyId !== null &&
+            income.legacyId !== undefined &&
+            allocatedLegacyIds.has(String(income.legacyId))
+          ) {
             // This income is already represented as a Payment with allocations in the database.
             // Skip simulating it in memory to prevent double-allocation!
             continue;
           }
 
-          const chargeGroupId = income.chargeGroupId;
-          if (!chargeGroupId) continue;
-
           let remainingIncome = decimalToNumber(income.amount);
-          const groupCharges = sortedCharges.filter((c) => c.chargeGroupId === chargeGroupId);
 
-          for (const charge of groupCharges) {
+          for (const charge of sortedCharges) {
             if (remainingIncome <= 0.005) break;
 
-            const dbPaid = charge.allocations?.reduce(
-              (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
-              0,
-            ) ?? decimalToNumber(charge.paidAmount);
+            const dbPaid =
+              charge.allocations?.reduce(
+                (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+                0,
+              ) ?? decimalToNumber(charge.paidAmount);
             const prevAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
             const currentPaid = dbPaid + prevAllocated;
 
@@ -1117,43 +1228,87 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
 
       calculateAllocationsForArea(area.charges, area.incomes);
 
+      const isCommerceArea =
+        area.parentPrivateAreaId !== null ||
+        (area.rentals ?? []).some((r: any) => r.status === "ACTIVE") ||
+        area.charges.some((c: any) => c.responsibility === "COMMERCE");
+
       const financialCells = buildFinancialCells(
         area.charges,
         currentOrdinaryYear,
         ordinaryCatalog as { quotaPeriodStart: Date | null; quotaPeriodEnd: Date | null } | null,
         inMemoryAllocationsByChargeId,
+        isCommerceArea,
       );
 
       if (condominium.slug === "valquirico") {
-        const ordinaryCharge2025 = area.areaCharges.find((ac) => {
-          const isOrdinary = ac.chargeGroup.kind === "ORDINARY";
-          const isYear2025 = ac.startsAt?.getUTCFullYear() === 2025;
-          return isOrdinary && isYear2025;
-        });
-        const amount2025 = ordinaryCharge2025 ? decimalToNumber(ordinaryCharge2025.amount) : 0;
+        const isNoLandUse =
+          resolvedUseType.initials.toUpperCase() === "SUDS" ||
+          normalizeKey(resolvedUseType.label) === normalizeKey("Sin uso de suelo");
 
-        const ordinaryCharge2026 = area.areaCharges.find((ac) => {
-          const isOrdinary = ac.chargeGroup.kind === "ORDINARY";
-          const isYear2026 = ac.startsAt?.getUTCFullYear() === 2026;
-          return isOrdinary && isYear2026;
-        });
-        const amount2026 = ordinaryCharge2026 ? decimalToNumber(ordinaryCharge2026.amount) : 0;
+        const year2025Start = new Date("2025-01-01T00:00:00.000Z");
+        const year2025End = new Date("2025-12-31T23:59:59.999Z");
+        const year2026Start = new Date("2026-01-01T00:00:00.000Z");
+        const year2026End = new Date("2026-12-31T23:59:59.999Z");
+
+        let amount2025 = 0;
+        let amount2026 = 0;
+
+        if (!isNoLandUse) {
+          let ordinaryCharge2025 = area.areaCharges.find((ac: any) => {
+            if (resolveChargeGroupKind(ac.chargeGroup) !== "ORDINARY") return false;
+            const startOk = !ac.startsAt || ac.startsAt <= year2025End;
+            const endOk = !ac.endsAt || ac.endsAt >= year2025Start;
+            return startOk && endOk;
+          }) || area.areaCharges.find((ac: any) => resolveChargeGroupKind(ac.chargeGroup) === "ORDINARY");
+
+          amount2025 = ordinaryCharge2025 ? decimalToNumber(ordinaryCharge2025.amount) : 0;
+          if (amount2025 === 0) {
+            const monthlyCharges2025 = area.charges.filter(
+              (c: any) => resolveChargeGroupKind(c.chargeGroup) === "ORDINARY" && c.periodYear === 2025
+            );
+            if (monthlyCharges2025.length > 0) {
+              const sum = monthlyCharges2025.reduce((acc: number, c: any) => acc + decimalToNumber(c.amount), 0);
+              amount2025 = sum / monthlyCharges2025.length;
+            }
+          }
+
+          let ordinaryCharge2026 = area.areaCharges.find((ac: any) => {
+            if (resolveChargeGroupKind(ac.chargeGroup) !== "ORDINARY") return false;
+            const startOk = !ac.startsAt || ac.startsAt <= year2026End;
+            const endOk = !ac.endsAt || ac.endsAt >= year2026Start;
+            return startOk && endOk;
+          });
+
+          amount2026 = ordinaryCharge2026 ? decimalToNumber(ordinaryCharge2026.amount) : 0;
+          if (amount2026 === 0) {
+            const monthlyCharges2026 = area.charges.filter(
+              (c: any) => resolveChargeGroupKind(c.chargeGroup) === "ORDINARY" && c.periodYear === 2026
+            );
+            if (monthlyCharges2026.length > 0) {
+              const sum = monthlyCharges2026.reduce((acc: number, c: any) => acc + decimalToNumber(c.amount), 0);
+              amount2026 = sum / monthlyCharges2026.length;
+            } else {
+              amount2026 = amount2025;
+            }
+          }
+        }
 
         financialCells.ordinary_2025_annual = {
-          owner: amount2025 * 12,
-          commerce: 0,
+          owner: isCommerceArea ? 0 : amount2025 * 12,
+          commerce: isCommerceArea ? amount2025 * 12 : 0,
         };
         financialCells.ordinary_2025_monthly = {
-          owner: amount2025,
-          commerce: 0,
+          owner: isCommerceArea ? 0 : amount2025,
+          commerce: isCommerceArea ? amount2025 : 0,
         };
         financialCells.ordinary_2026_annual = {
-          owner: amount2026 * 12,
-          commerce: 0,
+          owner: isCommerceArea ? 0 : amount2026 * 12,
+          commerce: isCommerceArea ? amount2026 * 12 : 0,
         };
         financialCells.ordinary_2026_monthly = {
-          owner: amount2026,
-          commerce: 0,
+          owner: isCommerceArea ? 0 : amount2026,
+          commerce: isCommerceArea ? amount2026 : 0,
         };
       }
 
@@ -1165,7 +1320,12 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       const outstandingBalance = outstandingCell.owner + outstandingCell.commerce;
       const m2ConstructionRaw = area.m2Construction !== null ? decimalToNumber(area.m2Construction) : null;
 
-      const collectibleCharges = area.charges.filter((c) => c.isCollectible);
+      const today = new Date();
+      const collectibleCharges = area.charges.filter((c) => {
+        if (!c.isCollectible) return false;
+        if (!c.dueDate) return true;
+        return new Date(c.dueDate) <= today;
+      });
       let totalPending = 0;
       let hasOlderThanOneMonth = false;
 
@@ -1474,36 +1634,6 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         (childRowsByParentId.get(row.id)?.length ?? 0) > 0,
     ).length;
 
-    const activeRows = orderedRows.filter((row) => row.isActive);
-    const availableAreas = activeRows.filter((row) => isAvailableUseType(row.useTypeInitials)).length;
-    const builtAreas = Math.max(0, activeRows.length - availableAreas);
-
-    const summary = {
-      projectTotalApoles: project?.totalApoles ?? 0,
-      projectTotalM2,
-      projectCommonAreasM2,
-      legacyLots,
-      legacyLotsM2,
-      legacyAvailableLots,
-      legacyBuiltLots,
-      legacyFractions,
-      legacyFusionLots,
-      registeredAreas: orderedRows.length,
-      activeAreas: activeRows.length,
-      inactiveAreas: orderedRows.length - activeRows.length,
-      availableAreas,
-      builtAreas,
-      availableRatio: activeRows.length > 0 ? (availableAreas / activeRows.length) * 100 : 0,
-      builtRatio: activeRows.length > 0 ? (builtAreas / activeRows.length) * 100 : 0,
-      areasWithUseType: activeRows.filter((row) => normalizeKey(row.useType) !== normalizeKey("Sin uso de suelo")).length,
-      areasWithoutUseType: activeRows.filter((row) => normalizeKey(row.useType) === normalizeKey("Sin uso de suelo")).length,
-      totalOriginalM2: orderedRows.reduce((acc, row) => acc + row.m2Original, 0),
-      totalUpdatedM2: orderedRows.reduce((acc, row) => acc + row.m2Updated, 0),
-      estimatedAnnualOrdinaryIncome: activeRows.reduce((acc, row) => acc + row.annualOrdinaryFee, 0),
-      estimatedMonthlyOrdinaryIncome: activeRows.reduce((acc, row) => acc + row.monthlyOrdinaryFee, 0),
-      estimatedOutstandingBalance: orderedRows.reduce((acc, row) => acc + row.outstandingBalance, 0),
-    };
-
     const isRowDisplayActive = (row: PrivateAreaListRow): boolean => {
       return row.isActive;
     };
@@ -1518,6 +1648,36 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       }
       return true;
     });
+
+    const activeRows = prefilteredRows.filter((row) => row.isActive);
+    const availableAreas = activeRows.filter((row) => isAvailableUseType(row.useTypeInitials)).length;
+    const builtAreas = Math.max(0, activeRows.length - availableAreas);
+
+    const summary = {
+      projectTotalApoles: project?.totalApoles ?? 0,
+      projectTotalM2,
+      projectCommonAreasM2,
+      legacyLots,
+      legacyLotsM2,
+      legacyAvailableLots,
+      legacyBuiltLots,
+      legacyFractions,
+      legacyFusionLots,
+      registeredAreas: prefilteredRows.length,
+      activeAreas: activeRows.length,
+      inactiveAreas: prefilteredRows.length - activeRows.length,
+      availableAreas,
+      builtAreas,
+      availableRatio: activeRows.length > 0 ? (availableAreas / activeRows.length) * 100 : 0,
+      builtRatio: activeRows.length > 0 ? (builtAreas / activeRows.length) * 100 : 0,
+      areasWithUseType: activeRows.filter((row) => normalizeKey(row.useType) !== normalizeKey("Sin uso de suelo")).length,
+      areasWithoutUseType: activeRows.filter((row) => normalizeKey(row.useType) === normalizeKey("Sin uso de suelo")).length,
+      totalOriginalM2: prefilteredRows.reduce((acc, row) => acc + row.m2Original, 0),
+      totalUpdatedM2: prefilteredRows.reduce((acc, row) => acc + row.m2Updated, 0),
+      estimatedAnnualOrdinaryIncome: activeRows.reduce((acc, row) => acc + row.annualOrdinaryFee, 0),
+      estimatedMonthlyOrdinaryIncome: activeRows.reduce((acc, row) => acc + row.monthlyOrdinaryFee, 0),
+      estimatedOutstandingBalance: prefilteredRows.reduce((acc, row) => acc + row.outstandingBalance, 0),
+    };
 
     const filteredRows = prefilteredRows
       .filter((row) => {

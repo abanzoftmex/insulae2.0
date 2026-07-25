@@ -7,7 +7,7 @@ import {
   PRIVATE_AREA_STATUS,
 } from "@/shared/domain/private-area-status";
 
-import type { LandUseListing } from "../domain/land-use-listing";
+import type { LandUseApplicationMode, LandUseListing } from "../domain/land-use-listing";
 import type { LandUseListingRepository } from "../domain/land-use-listing.repository";
 import {
   buildChargeColumns,
@@ -300,37 +300,9 @@ export class PrismaLandUseListingRepository implements LandUseListingRepository 
           const chargeGroup = chargeGroups.find((group) => group.id === column.chargeGroupId) ?? null;
           const chargeGroupKind = chargeGroup ? resolveChargeGroupKind(chargeGroup) : CHARGE_GROUP_KIND.OTHER;
 
-          let selected = configuredRepresentative;
-
-          // Legacy parity: cuotas ordinarias salen del ledger (PAGOS migrado),
-          // pero si existe un valor configurado no-cero en AreaCharge, se respeta.
-          if (chargeGroupKind === CHARGE_GROUP_KIND.ORDINARY) {
-            if (configuredRepresentative.amount > 0) {
-              selected = configuredRepresentative;
-            } else if (ledgerValues.length > 0) {
-              const rawUnique = countRoundedUnique(ledgerValues, 2);
-              const perMeterUnique = countRoundedUnique(ledgerPerMeterValues, 4);
-
-              selected =
-                ledgerPerMeterValues.length > 0 &&
-                ledgerPerMeterRepresentative.amount > 0 &&
-                perMeterUnique > 0 &&
-                perMeterUnique < rawUnique
-                  ? {
-                      amount: ledgerPerMeterRepresentative.amount,
-                      applicationMode: "PER_METER",
-                    }
-                  : ledgerRepresentative;
-            } else {
-              selected = configuredRepresentative;
-            }
-          }
-
-          // Legacy parity: extraordinarias-condominos se muestran como base cero
-          // salvo que el cargo exista de forma extendida en la operacion de ese uso.
-          if (chargeGroupKind === CHARGE_GROUP_KIND.EXTRA_CONDO) {
-            selected = coverageRatio >= 0.65 ? ledgerRepresentative : { amount: 0, applicationMode: "ONE_TIME" };
-          }
+          let selected = configuredValues.length > 0
+            ? configuredRepresentative
+            : (ledgerValues.length > 0 ? ledgerRepresentative : { amount: 0, applicationMode: "ONE_TIME" });
 
           return {
             key: column.key,
@@ -338,7 +310,7 @@ export class PrismaLandUseListingRepository implements LandUseListingRepository 
             chargeGroupId: column.chargeGroupId,
             chargeGroupName: column.chargeGroupName,
             amount: selected.amount,
-            applicationMode: selected.applicationMode,
+            applicationMode: selected.applicationMode as LandUseApplicationMode,
           };
         });
 

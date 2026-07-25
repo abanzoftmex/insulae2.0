@@ -42,6 +42,7 @@ export async function createExpenseAction(input: {
     };
     const result = await createExpenseUseCase.execute(condoId, saveInput);
     revalidatePath("/listado-gastos");
+    revalidatePath("/resumen-financiero");
     return { success: true, data: result };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -91,6 +92,7 @@ export async function updateExpenseAction(
     };
     const result = await updateExpenseUseCase.execute(id, saveInput);
     revalidatePath("/listado-gastos");
+    revalidatePath("/resumen-financiero");
     return { success: true, data: result };
   } catch (err: any) {
     return { success: false, error: err.message };
@@ -101,6 +103,7 @@ export async function deleteExpenseAction(id: string) {
   try {
     await deleteExpenseUseCase.execute(id);
     revalidatePath("/listado-gastos");
+    revalidatePath("/resumen-financiero");
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message };

@@ -282,6 +282,11 @@ export class PrismaPrivateAreaActionPageDataRepository
                 chargeType: true,
               },
             },
+            miscCatalog: {
+              select: {
+                name: true,
+              },
+            },
           },
         },
         charges: {
@@ -477,7 +482,17 @@ export class PrismaPrivateAreaActionPageDataRepository
         if (a.periodYear !== b.periodYear) {
           return a.periodYear - b.periodYear;
         }
-        return a.periodMonth - b.periodMonth;
+        if (a.periodMonth !== b.periodMonth) {
+          return a.periodMonth - b.periodMonth;
+        }
+        const aDue = a.dueDate ? new Date(a.dueDate).getTime() : 0;
+        const bDue = b.dueDate ? new Date(b.dueDate).getTime() : 0;
+        if (aDue !== bDue) {
+          return aDue - bDue;
+        }
+        const aCreated = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bCreated = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aCreated - bCreated;
       });
 
       const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -499,13 +514,10 @@ export class PrismaPrivateAreaActionPageDataRepository
           continue;
         }
 
-        const chargeGroupId = income.chargeGroupId;
         let remainingIncome = decimalToNumber(income.amount);
-        const groupCharges = chargeGroupId
-          ? sortedCharges.filter((c) => c.chargeGroupId === chargeGroupId)
-          : sortedCharges;
 
-        for (const charge of groupCharges) {
+        // Always allocate to the oldest pending charge first (FIFO)
+        for (const charge of sortedCharges) {
           if (remainingIncome <= 0.005) break;
 
           const dbPaid = charge.allocations.reduce(
@@ -529,13 +541,13 @@ export class PrismaPrivateAreaActionPageDataRepository
               inMemoryAllocationDatesByChargeId.set(charge.id, new Set<string>());
             }
             const date = income.date;
-            const day = date.getDate().toString().padStart(2, "0");
+            const day = date.getUTCDate().toString().padStart(2, "0");
             const monthNames = [
               "ene", "feb", "mar", "abr", "may", "jun",
               "jul", "ago", "sep", "oct", "nov", "dic"
             ];
-            const month = monthNames[date.getMonth()];
-            const year = date.getFullYear();
+            const month = monthNames[date.getUTCMonth()];
+            const year = date.getUTCFullYear();
             inMemoryAllocationDatesByChargeId.get(charge.id)!.add(`${day} ${month} ${year}`);
           }
         }
@@ -565,7 +577,7 @@ export class PrismaPrivateAreaActionPageDataRepository
             .filter((alloc) => alloc.payment.isVisibleInFinancialSummary !== false)
             .map((alloc) => {
               const date = alloc.payment.paidAt;
-              const day = date.getDate().toString().padStart(2, "0");
+              const day = date.getUTCDate().toString().padStart(2, "0");
               const monthNames = [
                 "ene",
                 "feb",
@@ -580,8 +592,8 @@ export class PrismaPrivateAreaActionPageDataRepository
                 "nov",
                 "dic",
               ];
-              const month = monthNames[date.getMonth()];
-              const year = date.getFullYear();
+              const month = monthNames[date.getUTCMonth()];
+              const year = date.getUTCFullYear();
               return `${day} ${month} ${year}`;
             }),
           ...inMemoryDates,
@@ -648,9 +660,17 @@ export class PrismaPrivateAreaActionPageDataRepository
         continue;
       }
       if (!paymentMovementsById.has(income.id)) {
-        const isComercio = income.chargeGroup?.name
-          ? income.chargeGroup.name.toLowerCase().includes("comercio") || income.chargeGroup.name.toLowerCase().includes("comercios")
-          : false;
+        const cgName = income.chargeGroup?.name || "";
+        const mcName = (income as any).miscCatalog?.name || "";
+        const cgType = (income.chargeGroup as any)?.chargeType || "";
+
+        const isComercio =
+          cgName.toLowerCase().includes("comercio") ||
+          cgName.toLowerCase().includes("comercios") ||
+          mcName.toLowerCase().includes("comercio") ||
+          mcName.toLowerCase().includes("comercios") ||
+          cgType === "EXTRA_COMMERCE";
+
         const responsibility = isComercio ? "COMMERCE" : "OWNER";
 
         paymentMovementsById.set(income.id, {

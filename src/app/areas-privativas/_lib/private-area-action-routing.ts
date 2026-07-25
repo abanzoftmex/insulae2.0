@@ -93,7 +93,7 @@ export function formatDate(value: Date | null): string {
     return "-";
   }
 
-  const day = value.getDate().toString().padStart(2, "0");
+  const day = value.getUTCDate().toString().padStart(2, "0");
   const monthNames = [
     "ene",
     "feb",
@@ -108,8 +108,8 @@ export function formatDate(value: Date | null): string {
     "nov",
     "dic",
   ];
-  const month = monthNames[value.getMonth()];
-  const year = value.getFullYear();
+  const month = monthNames[value.getUTCMonth()];
+  const year = value.getUTCFullYear();
   return `${day} ${month} ${year}`;
 }
 

@@ -7,6 +7,13 @@ import type {
   SaveIncomeInput,
 } from "../domain/income.repository";
 
+function toIsoDateString(val: any): string {
+  if (!val) return "";
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
 function decimalToNumber(value: Prisma.Decimal | number | null | undefined): number {
   if (value === null || value === undefined) return 0;
   if (typeof value === "number") return value;
@@ -62,12 +69,26 @@ export class PrismaIncomeRepository implements IncomeRepository {
 
     if (filter.search && filter.search.trim().length > 0) {
       const term = filter.search.trim();
+      const cleanNumStr = term.replace(/[\$,\s]/g, "");
+      const numVal = parseFloat(cleanNumStr);
+      const isNumeric = !isNaN(numVal) && cleanNumStr.length > 0;
+
       where.OR = [
         { concept: { contains: term, mode: "insensitive" } },
         { notes: { contains: term, mode: "insensitive" } },
         { miscCatalog: { name: { contains: term, mode: "insensitive" } } },
+        { chargeGroup: { name: { contains: term, mode: "insensitive" } } },
         { privateArea: { name: { contains: term, mode: "insensitive" } } },
       ];
+
+      if (isNumeric) {
+        where.OR.push({
+          amount: {
+            gte: numVal - 0.009,
+            lte: numVal + 0.009,
+          },
+        });
+      }
     }
 
     const rows = await prisma.income.findMany({
@@ -82,8 +103,8 @@ export class PrismaIncomeRepository implements IncomeRepository {
     // at 06:00 UTC (timezone offset). Prisma's date DESC treats these as different, breaking
     // the expected order. We normalize to YYYY-MM-DD for comparison.
     records.sort((a, b) => {
-      const dayA = new Date(a.date).toISOString().slice(0, 10);
-      const dayB = new Date(b.date).toISOString().slice(0, 10);
+      const dayA = toIsoDateString(a.date);
+      const dayB = toIsoDateString(b.date);
       if (dayA !== dayB) return dayB.localeCompare(dayA); // desc
       // Within same date, sort by legacyId asc (legacy insertion order)
       const idA = a.legacyId ?? Number.MAX_SAFE_INTEGER;

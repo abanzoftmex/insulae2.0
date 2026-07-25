@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type ElementType } from "react";
 import {
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   Menu,
@@ -49,11 +50,12 @@ const NAV_SECTIONS: NavSection[] = [
     title: "Gestión",
     items: [
       { label: "Inicio", href: "/", icon: Home },
+      { label: "Estadísticas", href: "/estadisticas", icon: BarChart3, requiredModule: "Reporte condominio" },
       {
         label: "Condominio",
         icon: Settings,
         items: [
-          { label: "Estadística", href: "/reporte-condominio", requiredModule: "Reporte condominio" },
+          { label: "Reporte Territorial", href: "/reporte-condominio", requiredModule: "Reporte condominio" },
           { label: "Configuración", href: "/condominio", requiredModule: "Condominio" },
           { label: "Estructura Condominal", href: "/estructura-condominal", requiredModule: "Estructura condominal" },
         ],
@@ -244,14 +246,16 @@ export function AppShell({
 
   // ─── Nav item renderer ───────────────────────────────────────────────────────
 
-  const renderNavItem = (item: NavItem) => {
+  // `collapsed` se parametriza porque el drawer móvil siempre renderiza
+  // expandido, sin importar la preferencia de colapso del sidebar desktop.
+  const renderNavItem = (item: NavItem, collapsed: boolean = isCollapsed) => {
     const isActive = item.href ? currentPath === normalizePath(item.href) : false;
     const hasSubmenu = !!item.items?.length;
     const isOpen = openMenus.includes(item.label);
     const Icon = item.icon;
 
     // Expanded submenu
-    if (hasSubmenu && !isCollapsed) {
+    if (hasSubmenu && !collapsed) {
       return (
         <div key={item.label}>
           <button
@@ -305,20 +309,19 @@ export function AppShell({
       );
     }
 
-    // Collapsed submenu — icon + tooltip
-    if (hasSubmenu && isCollapsed) {
+    // Collapsed submenu — icon only. El título nativo sustituye a los tooltips
+    // personalizados: el overflow-hidden del aside los recortaba por completo.
+    if (hasSubmenu && collapsed) {
       return (
-        <div key={item.label} className="relative group/tip">
+        <div key={item.label}>
           <button
             onClick={() => toggleMenu(item.label)}
             className="w-full flex items-center justify-center h-10 rounded-lg text-ink-soft hover:bg-[#f5f4f0] hover:text-ink transition-standard"
             aria-label={item.label}
+            title={item.label}
           >
             <Icon style={{ width: 17, height: 17 }} strokeWidth={1.5} />
           </button>
-          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-brand-deep text-white text-[12px] font-medium rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover/tip:opacity-100 transition-opacity z-50">
-            {item.label}
-          </div>
         </div>
       );
     }
@@ -326,50 +329,47 @@ export function AppShell({
     // Regular link
     if (item.href === "/logout") {
       return (
-        <div key={item.label} className={cn("relative", isCollapsed && "group/tip")}>
+        <div key={item.label} className="relative">
           <button
             onClick={() => {
               window.location.href = "/logout";
             }}
             className={cn(
               "w-full flex items-center h-10 rounded-lg transition-standard",
-              isCollapsed ? "justify-center px-0" : "px-3",
+              collapsed ? "justify-center px-0" : "px-3",
               "text-ink hover:bg-[#f5f4f0]"
             )}
-            aria-label={isCollapsed ? item.label : undefined}
+            aria-label={collapsed ? item.label : undefined}
+            title={collapsed ? item.label : undefined}
           >
             <Icon
               className="shrink-0 transition-standard text-ink-soft"
               style={{ width: 17, height: 17 }}
               strokeWidth={1.5}
             />
-            {!isCollapsed && (
+            {!collapsed && (
               <span className="ml-2.5 text-[14px] truncate">{item.label}</span>
             )}
           </button>
-          {isCollapsed && (
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-brand-deep text-white text-[12px] font-medium rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover/tip:opacity-100 transition-opacity z-50">
-              {item.label}
-            </div>
-          )}
         </div>
       );
     }
 
     return (
-      <div key={item.label} className={cn("relative", isCollapsed && "group/tip")}>
+      <div key={item.label} className="relative">
         <Link
           href={item.href || "#"}
           className={cn(
             "flex items-center h-10 rounded-lg transition-standard",
-            isCollapsed ? "justify-center px-0" : "px-3",
+            collapsed ? "justify-center px-0" : "px-3",
             isActive
               ? "bg-[#f2f0eb] text-brand font-semibold"
               : "text-ink hover:bg-[#f5f4f0]"
           )}
-          aria-label={isCollapsed ? item.label : undefined}
+          aria-label={collapsed ? item.label : undefined}
+          title={collapsed ? item.label : undefined}
         >
-          {isActive && !isCollapsed && (
+          {isActive && !collapsed && (
             <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-brand-accent rounded-full" />
           )}
           <Icon
@@ -380,15 +380,10 @@ export function AppShell({
             style={{ width: 17, height: 17 }}
             strokeWidth={1.5}
           />
-          {!isCollapsed && (
+          {!collapsed && (
             <span className="ml-2.5 text-[14px] truncate">{item.label}</span>
           )}
         </Link>
-        {isCollapsed && (
-          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-brand-deep text-white text-[12px] font-medium rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover/tip:opacity-100 transition-opacity z-50">
-            {item.label}
-          </div>
-        )}
       </div>
     );
   };
@@ -397,14 +392,14 @@ export function AppShell({
 
   const sidebarContent = (
     <>
-      {/* Brand */}
+      {/* Brand + collapse toggle */}
       <div
         className={cn(
-          "flex items-center border-b border-line shrink-0",
-          isCollapsed ? "h-[52px] justify-center" : "px-4 py-3"
+          "relative border-b border-line shrink-0",
+          isCollapsed ? "flex flex-col items-center py-2 gap-1" : "flex items-center px-4 py-3"
         )}
       >
-        <Link href="/" className="flex items-center min-w-0">
+        <Link href="/" className="flex items-center justify-center min-w-0 flex-1">
           {isCollapsed ? (
             navbarLogoUrl ? (
               <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-8 w-8 object-contain" />
@@ -414,7 +409,7 @@ export function AppShell({
           ) : (
             <div className="flex flex-col items-center gap-1.5 w-full">
               {navbarLogoUrl && (
-                <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-10 object-contain" />
+                <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-10 max-w-[180px] object-contain" />
               )}
               <div className="text-center">
                 <span className="font-bold text-brand text-[16px] tracking-tight block">VAL'QUIRICO</span>
@@ -423,6 +418,22 @@ export function AppShell({
             </div>
           )}
         </Link>
+        <button
+          onClick={toggleCollapsed}
+          className={cn(
+            "flex items-center justify-center rounded-md text-ink-soft/70 hover:text-ink hover:bg-[#f5f4f0] transition-standard active-scale",
+            isCollapsed ? "w-10 h-7 mt-1" : "absolute top-2 right-2 w-7 h-7"
+          )}
+          aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
+          aria-expanded={!isCollapsed}
+          title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
+        >
+          {isCollapsed ? (
+            <ChevronRight style={{ width: 15, height: 15 }} />
+          ) : (
+            <ChevronLeft style={{ width: 15, height: 15 }} />
+          )}
+        </button>
       </div>
 
       {/* Nav */}
@@ -483,11 +494,11 @@ export function AppShell({
       {/* User profile */}
       {isCollapsed ? (
         <div className="shrink-0 border-t border-line p-2 flex justify-center bg-canvas/20">
-          <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0 group/tip relative">
+          <div
+            className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0"
+            title={currentUserName}
+          >
             {userInitials}
-            <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 bg-brand-deep text-white text-[12px] font-medium rounded-md whitespace-nowrap opacity-0 pointer-events-none group-hover/tip:opacity-100 transition-opacity z-50">
-              {currentUserName}
-            </div>
           </div>
         </div>
       ) : (
@@ -508,20 +519,6 @@ export function AppShell({
         </div>
       )}
 
-      {/* Collapse toggle */}
-      <div className="shrink-0 border-t border-line p-2">
-        <button
-          onClick={toggleCollapsed}
-          className="w-full h-8 flex items-center justify-center rounded-lg hover:bg-[#f5f4f0] text-ink-soft transition-standard active-scale"
-          aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
-        >
-          {isCollapsed ? (
-            <ChevronRight style={{ width: 14, height: 14 }} />
-          ) : (
-            <ChevronLeft style={{ width: 14, height: 14 }} />
-          )}
-        </button>
-      </div>
     </>
   );
 
@@ -529,6 +526,8 @@ export function AppShell({
 
   const isLoginPage = currentPath === "/login";
   const isPrintPage = currentPath.endsWith("/imprimir");
+  // Rutas que aprovechan todo el ancho disponible (sin tope centrado de 1440px)
+  const isFullWidthPage = currentPath === "/estadisticas";
 
   if (isLoginPage || isPrintPage) {
     return <>{children}</>;
@@ -569,7 +568,12 @@ export function AppShell({
           </span>
         </div>
 
-        <main className="flex-1 p-4 md:p-6 lg:py-8 lg:px-10 max-w-[1440px] w-full mx-auto">
+        <main
+          className={cn(
+            "flex-1 p-4 md:p-6 lg:py-8 lg:px-10 w-full",
+            !isFullWidthPage && "max-w-[1440px] mx-auto"
+          )}
+        >
           {children}
         </main>
       </div>
@@ -633,7 +637,8 @@ export function AppShell({
                     {s.title}
                   </p>
                   <div className="space-y-0.5">
-                    {visibleItems.map((item) => renderNavItem(item))}
+                    {/* El drawer móvil siempre se muestra expandido */}
+                    {visibleItems.map((item) => renderNavItem(item, false))}
                   </div>
                 </div>
               );
