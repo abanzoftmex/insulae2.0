@@ -277,6 +277,7 @@ export async function createNestedUserAction(
     gender?: string;
     registrationTypeCode: string;
     registrationTypeDesc: string;
+    apolfap?: string;
   }
 ) {
   try {
@@ -320,10 +321,10 @@ export async function createNestedUserAction(
 
     const generatedIdVq = `${parentIdVq}-${code}-${nextSuffix}`;
 
-    const parentApol = parent.apolfap || "";
+    const targetApol = (data.apolfap || parent.apolfap || "").trim();
     let computedChildEmail = null;
-    if (parentApol && generatedIdVq) {
-      computedChildEmail = `ID-${parentApol.trim()}${generatedIdVq.trim()}`;
+    if (targetApol && generatedIdVq) {
+      computedChildEmail = `ID-${targetApol}${generatedIdVq.trim()}`;
     }
 
     const newChild = await prisma.user.create({
@@ -331,6 +332,7 @@ export async function createNestedUserAction(
         condominiumId: parent.condominiumId,
         parentId,
         idVq: generatedIdVq,
+        apolfap: targetApol || null,
         userType: "INDIVIDUAL",
         firstName: data.firstName || null,
         lastName: `${data.lastNamePaterno || ""} ${data.lastNameMaterno || ""}`.trim() || null,

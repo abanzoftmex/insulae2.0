@@ -77,6 +77,7 @@ export function DirectoryForm({
   const [childBirthDate, setChildBirthDate] = useState("");
   const [childGender, setChildGender] = useState("");
   const [childRegTypeCode, setChildRegTypeCode] = useState("");
+  const [childApolfap, setChildApolfap] = useState("");
   const [isChildPending, startChildTransition] = useTransition();
   const [editingTypeDesc, setEditingTypeDesc] = useState("");
 
@@ -104,10 +105,10 @@ export function DirectoryForm({
     initialRole: initialData.initialRole || "",
     birthDate: initialData.birthDate || "",
     gender: initialData.gender || "",
-    apolfap: initialData.apolfap || (uniqueAssignments.length > 0 ? uniqueAssignments[0].privateAreaName : ""),
-    registrationTypeCode: initialData.registrationTypeCode || "",
-    registrationTypeDesc: initialData.registrationTypeDesc || "",
+    registrationTypeCode: initialData.registrationTypeCode || "8-01",
+    registrationTypeDesc: initialData.registrationTypeDesc || "Condómino",
     idVq: initialData.idVq || "",
+    apolfap: initialData.apolfap || (uniqueAssignments.length > 0 ? uniqueAssignments[0].privateAreaName : ""),
   });
 
   useEffect(() => {
@@ -517,114 +518,129 @@ export function DirectoryForm({
                 </div>
               </div>
 
-              {/* Cards de Usuarios Anidados justo debajo de Configuración Inicial */}
-              {children.length > 0 && (
-                <div className="space-y-3 pt-1 animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-4 h-4 text-green-700" />
-                      <h3 className="text-xs font-extrabold uppercase tracking-widest text-green-800">
-                        Usuarios Anidados Vinculados ({children.length})
-                      </h3>
+              {/* Cards de Usuarios Anidados pertenecientes a la ApolFap seleccionada */}
+              {(() => {
+                const currentArea = formData.apolfap;
+                const activeAreaChildren = children.filter((child) =>
+                  child.apolfap ? child.apolfap === currentArea : !currentArea || currentArea === initialData.apolfap
+                );
+
+                return (
+                  <div className="space-y-3 pt-1 animate-in fade-in duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-green-700" />
+                        <h3 className="text-xs font-extrabold uppercase tracking-widest text-green-800">
+                          Usuarios Anidados Vinculados {currentArea ? `(${currentArea})` : ""} ({activeAreaChildren.length})
+                        </h3>
+                      </div>
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    {children.map((child) => {
-                      const fullChildName = [
-                        child.firstName,
-                        child.lastNamePaterno || child.lastName,
-                        child.lastNameMaterno
-                      ].filter(Boolean).join(" ").trim() || "Sin nombre";
 
-                      const fullSdvId = formData.apolfap && child.idVq
-                        ? `${formData.apolfap.trim()}${child.idVq.trim()}`
-                        : child.idVq || "-";
+                    {activeAreaChildren.length === 0 ? (
+                      <div className="p-4 rounded-xl bg-canvas/40 border border-dashed border-line text-center text-ink-soft text-xs">
+                        No hay usuarios anidados vinculados a la área <span className="font-bold text-ink">{currentArea || "seleccionada"}</span>.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {activeAreaChildren.map((child) => {
+                          const fullChildName = [
+                            child.firstName,
+                            child.lastNamePaterno || child.lastName,
+                            child.lastNameMaterno
+                          ].filter(Boolean).join(" ").trim() || "Sin nombre";
 
-                      return (
-                        <div 
-                          key={child.id}
-                          className="p-5 rounded-2xl bg-[#f0e6d6]/60 border-l-4 border-green-600 border border-line/70 hover:bg-[#f0e6d6]/90 transition-all shadow-sm space-y-4"
-                        >
-                          {/* Header row */}
-                          <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-line/40">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="text-green-700 font-bold text-sm">└─</span>
-                                <h4 className="text-base font-extrabold text-ink">
-                                  {fullChildName}
-                                </h4>
-                              </div>
-                              <div className="pl-5 flex items-center gap-2">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">ID SDV:</span>
-                                <span className="font-mono text-xs font-bold text-brand-accent bg-white/70 px-2 py-0.5 rounded border border-line/40">
-                                  {fullSdvId}
-                                </span>
-                              </div>
-                            </div>
+                          const childApol = child.apolfap || currentArea || "";
+                          const fullSdvId = childApol && child.idVq
+                            ? `${childApol.trim()}${child.idVq.trim()}`
+                            : child.idVq || "-";
 
-                            <div className="flex items-center gap-3">
-                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300 shadow-xs">
-                                {child.registrationTypeDesc || child.registrationTypeCode || "Anidado"}
-                              </span>
-                              <div className="flex items-center gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() => setViewingChild(child)}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-line text-brand hover:bg-brand hover:text-white transition-all text-xs font-bold shadow-xs"
-                                  title="Ver detalles"
-                                >
-                                  <Eye className="w-3.5 h-3.5" />
-                                  <span>Ver detalles</span>
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    if (confirm(`¿Estás seguro de eliminar a ${fullChildName}?`)) {
-                                      startChildTransition(async () => {
-                                        const res = await deleteNestedUserAction(child.id);
-                                        if (res.ok) {
-                                          setChildren((prev) => prev.filter((c) => c.id !== child.id));
+                          return (
+                            <div 
+                              key={child.id}
+                              className="p-5 rounded-2xl bg-[#f0e6d6]/60 border-l-4 border-green-600 border border-line/70 hover:bg-[#f0e6d6]/90 transition-all shadow-sm space-y-4"
+                            >
+                              {/* Header row */}
+                              <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-line/40">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-green-700 font-bold text-sm">└─</span>
+                                    <h4 className="text-base font-extrabold text-ink">
+                                      {fullChildName}
+                                    </h4>
+                                  </div>
+                                  <div className="pl-5 flex items-center gap-2">
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">ID SDV:</span>
+                                    <span className="font-mono text-xs font-bold text-brand-accent bg-white/70 px-2 py-0.5 rounded border border-line/40">
+                                      {fullSdvId}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-3">
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300 shadow-xs">
+                                    {child.registrationTypeDesc || child.registrationTypeCode || "Anidado"}
+                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => setViewingChild(child)}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-line text-brand hover:bg-brand hover:text-white transition-all text-xs font-bold shadow-xs"
+                                      title="Ver detalles"
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                      <span>Ver detalles</span>
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (confirm(`¿Estás seguro de eliminar a ${fullChildName}?`)) {
+                                          startChildTransition(async () => {
+                                            const res = await deleteNestedUserAction(child.id);
+                                            if (res.ok) {
+                                              setChildren((prev) => prev.filter((c) => c.id !== child.id));
+                                            }
+                                          });
                                         }
-                                      });
-                                    }
-                                  }}
-                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-danger/30 text-danger hover:bg-danger hover:text-white transition-all text-xs font-bold shadow-xs"
-                                  title="Eliminar"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                  <span>Eliminar</span>
-                                </button>
+                                      }}
+                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-danger/30 text-danger hover:bg-danger hover:text-white transition-all text-xs font-bold shadow-xs"
+                                      title="Eliminar"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                      <span>Eliminar</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Data Grid */}
+                              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs pl-5">
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Email Personal</span>
+                                  <p className="font-semibold text-ink break-all">{child.personalEmail || "-"}</p>
+                                </div>
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Teléfono Personal</span>
+                                  <p className="font-semibold text-ink">{child.personalPhone || "-"}</p>
+                                </div>
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">CURP</span>
+                                  <p className="font-mono font-semibold text-ink">{child.curp || "-"}</p>
+                                </div>
+                                <div className="space-y-0.5">
+                                  <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Fecha Nac. / Género</span>
+                                  <p className="font-semibold text-ink">
+                                    {[child.birthDate, child.gender].filter(Boolean).join(" · ") || "-"}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                          </div>
-
-                          {/* Data Grid */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs pl-5">
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Email Personal</span>
-                              <p className="font-semibold text-ink break-all">{child.personalEmail || "-"}</p>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Teléfono Personal</span>
-                              <p className="font-semibold text-ink">{child.personalPhone || "-"}</p>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">CURP</span>
-                              <p className="font-mono font-semibold text-ink">{child.curp || "-"}</p>
-                            </div>
-                            <div className="space-y-0.5">
-                              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Fecha Nac. / Género</span>
-                              <p className="font-semibold text-ink">
-                                {[child.birthDate, child.gender].filter(Boolean).join(" · ") || "-"}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Información personal */}
               <div className={sectionCls}>
@@ -1064,6 +1080,7 @@ export function DirectoryForm({
                     gender: childGender || undefined,
                     registrationTypeCode: childRegTypeCode,
                     registrationTypeDesc: regDesc,
+                    apolfap: childApolfap || formData.apolfap,
                   });
                   if (res.ok && res.data) {
                     setChildren((prev) => [...prev, res.data]);
@@ -1076,6 +1093,30 @@ export function DirectoryForm({
               className="p-5 space-y-4 text-left"
             >
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5 col-span-1 sm:col-span-3">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
+                    ApolFap a la que pertenece *
+                  </label>
+                  <select
+                    required
+                    value={childApolfap || formData.apolfap || ""}
+                    onChange={(e) => setChildApolfap(e.target.value)}
+                    className="w-full h-9 px-3 text-sm border border-line rounded-sm outline-none focus:border-brand bg-white font-medium"
+                  >
+                    {uniqueAssignments.length === 0 ? (
+                      <option value={formData.apolfap || ""}>
+                        {formData.apolfap || "Sin área específica"}
+                      </option>
+                    ) : (
+                      uniqueAssignments.map((assignment) => (
+                        <option key={assignment.privateAreaId} value={assignment.privateAreaName}>
+                          {assignment.privateAreaName}
+                        </option>
+                      ))
+                    )}
+                  </select>
+                </div>
+
                 <div className="space-y-1.5 col-span-1">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft leading-none">
                     Nombre(s) *
