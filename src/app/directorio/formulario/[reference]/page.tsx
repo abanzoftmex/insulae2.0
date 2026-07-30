@@ -27,9 +27,23 @@ function pickParam(value: SearchParamValue): string {
   return value ?? "";
 }
 
+function extractUserId(reference: string): string {
+  let decoded = reference.trim();
+  try {
+    decoded = decodeURIComponent(decoded);
+  } catch {
+    // ignore
+  }
+  if (decoded.includes(":commerce:")) {
+    return decoded.split(":commerce:")[0] ?? decoded;
+  }
+  return decoded.split(":")[0] ?? decoded;
+}
+
 function isUuidReference(reference: string): boolean {
+  const userId = extractUserId(reference);
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    reference.trim(),
+    userId,
   );
 }
 

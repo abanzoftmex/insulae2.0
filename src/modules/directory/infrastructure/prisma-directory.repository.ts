@@ -56,12 +56,19 @@ function uniqueSorted(values: string[]): string[] {
 }
 
 function resolveReferenceWhere(reference: string): Prisma.UserWhereInput | null {
-  const trimmed = reference.trim();
-  if (!trimmed) {
+  let decoded = reference.trim();
+  try {
+    decoded = decodeURIComponent(decoded);
+  } catch {
+    // ignore
+  }
+
+  if (!decoded) {
     return null;
   }
 
-  return { id: trimmed };
+  const userId = decoded.includes(":commerce:") ? decoded.split(":commerce:")[0] : decoded.split(":")[0];
+  return { id: userId };
 }
 
 type DirectorySchemaCapabilities = {
@@ -285,6 +292,17 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
             },
           },
         },
+        children: {
+          where: { isActive: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            registrationTypeCode: true,
+            registrationTypeDesc: true,
+            idVq: true,
+          },
+        },
       },
     });
 
@@ -319,6 +337,14 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           assignmentRoles,
           assignedAreas,
           assignmentCount: user.assignments.length,
+          children: user.children.map((c) => ({
+            id: c.id,
+            firstName: c.firstName,
+            lastName: c.lastName,
+            registrationTypeCode: c.registrationTypeCode,
+            registrationTypeDesc: c.registrationTypeDesc,
+            idVq: c.idVq,
+          })),
         };
 
         if (commerces.length === 0) {
@@ -503,6 +529,16 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
                 m2CommonArea: true,
                 m2Construction: true,
                 m2Original: true,
+                rentals: {
+                  select: {
+                    tenantName: true,
+                    commerce: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
                 parentPrivateArea: {
                   select: {
                     id: true,
@@ -638,11 +674,26 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
             entityType = "Propietario Inicial";
           }
 
+          const rentalCommerceNames = uniqueSorted(
+            (area.rentals ?? [])
+              .map((r) => r.commerce?.name || r.tenantName || "")
+              .filter(Boolean)
+          );
+
+          const userCommerceNames = uniqueSorted(
+            user.commerces.map((c) => c.commerceName).filter(Boolean)
+          );
+
+          const commerceNames = rentalCommerceNames.length > 0
+            ? rentalCommerceNames
+            : userCommerceNames;
+
           rows.push({
             entityType,
             privateAreaName: area.name,
             percentage,
-            hasCommerces: false,
+            hasCommerces: commerceNames.length > 0,
+            commerceNames,
           });
         }
       }
@@ -728,10 +779,17 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
   }
 
   async updateContact(id: string, data: Partial<DirectoryContactParticipation>): Promise<{ idVq: string | null }> {
+    let decoded = id.trim();
+    try {
+      decoded = decodeURIComponent(decoded);
+    } catch {
+      // ignore
+    }
+    const targetId = decoded.includes(":commerce:") ? decoded.split(":commerce:")[0] : decoded.split(":")[0];
     let finalIdVq: string | null = null;
     await prisma.$transaction(async (tx) => {
       const currentUser = await tx.user.findUnique({
-        where: { id },
+        where: { id: targetId },
         select: {
           condominiumId: true,
           apolfap: true,
@@ -787,7 +845,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       }
 
       const updatedUser = await tx.user.update({
-        where: { id },
+        where: { id: targetId },
         data: {
           firstName: data.firstName,
           lastName: data.lastName,
@@ -821,7 +879,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       // Update nested child users' idVq and email if parent's apolfap / idVq changed
       if (currentUser && (data.apolfap !== undefined || calculatedIdVq !== currentUser.idVq)) {
         const children = await tx.user.findMany({
-          where: { parentId: id, isActive: true },
+          where: { parentId: targetId, isActive: true },
           select: { id: true, idVq: true, registrationTypeCode: true, email: true },
         });
 

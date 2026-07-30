@@ -21,6 +21,8 @@ interface ProjectDocumentCapabilities {
   hasDocumentType: boolean;
   hasIsActive: boolean;
   hasUploadedBy: boolean;
+  hasMimeType: boolean;
+  hasSizeBytes: boolean;
 }
 
 async function getProjectDocumentCapabilities(): Promise<ProjectDocumentCapabilities> {
@@ -29,7 +31,7 @@ async function getProjectDocumentCapabilities(): Promise<ProjectDocumentCapabili
     FROM information_schema.columns
     WHERE table_schema = 'public'
       AND lower(table_name) = lower('ProjectDocument')
-      AND lower(column_name) IN ('documenttype', 'isactive', 'uploadedby')
+      AND lower(column_name) IN ('documenttype', 'isactive', 'uploadedby', 'mimetype', 'sizebytes')
   `;
 
   const set = new Set(rows.map((row) => row.column_name));
@@ -38,6 +40,8 @@ async function getProjectDocumentCapabilities(): Promise<ProjectDocumentCapabili
     hasDocumentType: set.has("documenttype"),
     hasIsActive: set.has("isactive"),
     hasUploadedBy: set.has("uploadedby"),
+    hasMimeType: set.has("mimetype"),
+    hasSizeBytes: set.has("sizebytes"),
   };
 }
 
@@ -133,6 +137,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
     const capabilities = await getProjectDocumentCapabilities();
 
     const uploadedByCol = capabilities.hasUploadedBy ? Prisma.raw('"uploadedBy"') : Prisma.raw('NULL AS "uploadedBy"');
+    const mimeTypeCol = capabilities.hasMimeType ? Prisma.raw('"mimeType"') : Prisma.raw('NULL AS "mimeType"');
+    const sizeBytesCol = capabilities.hasSizeBytes ? Prisma.raw('"sizeBytes"') : Prisma.raw('NULL AS "sizeBytes"');
 
     const documents = capabilities.hasDocumentType && capabilities.hasIsActive
       ? await prisma.$queryRaw<
@@ -143,6 +149,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
             documentType: string;
             storageBucket: string;
             storagePath: string;
+            mimeType: string | null;
+            sizeBytes: number | null;
             uploadedAt: Date;
             uploadedBy: string | null;
           }>
@@ -154,6 +162,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
             "documentType"::text AS "documentType",
             "storageBucket",
             "storagePath",
+            ${mimeTypeCol},
+            ${sizeBytesCol},
             "uploadedAt",
             ${uploadedByCol}
           FROM "ProjectDocument"
@@ -169,6 +179,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
             documentType: string;
             storageBucket: string;
             storagePath: string;
+            mimeType: string | null;
+            sizeBytes: number | null;
             uploadedAt: Date;
             uploadedBy: string | null;
           }>
@@ -180,6 +192,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
             'REGULATION'::text AS "documentType",
             "storageBucket",
             "storagePath",
+            ${mimeTypeCol},
+            ${sizeBytesCol},
             "uploadedAt",
             ${uploadedByCol}
           FROM "ProjectDocument"
@@ -199,6 +213,8 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
         name: document.fileName,
         documentType: document.documentType === "INTERNAL_DOCUMENT" ? "INTERNAL_DOCUMENT" : "REGULATION",
         publicUrl: resolvePublicUrl(document.storageBucket, document.storagePath),
+        mimeType: document.mimeType || null,
+        sizeBytes: document.sizeBytes ? Number(document.sizeBytes) : null,
         uploadedAt: new Date(document.uploadedAt),
         uploadedBy: document.uploadedBy || null,
       })),
@@ -220,7 +236,7 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
     if (!name || !fileUrl) {
       return {
         ok: false,
-        message: "Nombre y archivo PDF son obligatorios.",
+        message: "Nombre y archivo son obligatorios.",
       };
     }
 

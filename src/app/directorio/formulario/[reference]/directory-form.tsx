@@ -233,7 +233,11 @@ export function DirectoryForm({
   const fieldCls = "w-full h-9 px-3 rounded-md border border-line bg-white text-sm text-[#3a2f25] outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all duration-200";
   const labelCls = "text-[10px] font-extrabold uppercase tracking-widest text-ink-soft/80";
 
-  const indiviso = initialData.participationBlocks.find(b => b.title === "Dominio actual")?.totalPercentage.toFixed(4) || "0.0000";
+  const legalBlock = initialData.participationBlocks.find(
+    (b) => b.title.toLowerCase().includes("propietario legal") || b.title.toLowerCase().includes("legal")
+  );
+  const legalTotalAreas = legalBlock ? legalBlock.totalAreas : 0;
+  const legalIndiviso = legalBlock ? legalBlock.totalPercentage.toFixed(4) : "0.0000";
 
   const computedUserId = formData.apolfap && formData.idVq && formData.registrationTypeCode
     ? `ID-${formData.apolfap.trim()}${formData.idVq.trim()}-${formData.registrationTypeCode.trim()}`
@@ -318,11 +322,33 @@ export function DirectoryForm({
             <div className="space-y-6 animate-in fade-in duration-300">
               {/* Configuración */}
               <div className={sectionCls}>
-                <div className={sectionHeaderCls}>
+                <div className={cn(sectionHeaderCls, "flex items-center justify-between")}>
                   <p className={sectionTitleCls}>
                     <Settings className="w-4 h-4 text-brand" />
                     Configuración inicial
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChildFirstName("");
+                      setChildLastNamePaterno("");
+                      setChildLastNameMaterno("");
+                      setChildCurp("");
+                      setChildPersonalPhone("");
+                      setChildPersonalEmail("");
+                      setChildBirthDate("");
+                      setChildGender("");
+                      setChildRegTypeCode("");
+                      setIsCreateChildOpen(true);
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-green-600 border border-green-700 text-white text-[10px] font-extrabold uppercase tracking-wider hover:bg-green-700 hover:border-green-800 transition-all shadow-sm active:scale-95 group shrink-0"
+                    title="Agregar usuario anidado"
+                  >
+                    <div className="h-3.5 w-3.5 rounded bg-white/20 flex items-center justify-center shrink-0">
+                      <Plus className="w-3 h-3 text-white stroke-[3]" />
+                    </div>
+                    <span>Agregar usuario anidado</span>
+                  </button>
                 </div>
                 <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-5`}>
                   <div className="space-y-1.5">
@@ -491,6 +517,115 @@ export function DirectoryForm({
                 </div>
               </div>
 
+              {/* Cards de Usuarios Anidados justo debajo de Configuración Inicial */}
+              {children.length > 0 && (
+                <div className="space-y-3 pt-1 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-green-700" />
+                      <h3 className="text-xs font-extrabold uppercase tracking-widest text-green-800">
+                        Usuarios Anidados Vinculados ({children.length})
+                      </h3>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {children.map((child) => {
+                      const fullChildName = [
+                        child.firstName,
+                        child.lastNamePaterno || child.lastName,
+                        child.lastNameMaterno
+                      ].filter(Boolean).join(" ").trim() || "Sin nombre";
+
+                      const fullSdvId = formData.apolfap && child.idVq
+                        ? `${formData.apolfap.trim()}${child.idVq.trim()}`
+                        : child.idVq || "-";
+
+                      return (
+                        <div 
+                          key={child.id}
+                          className="p-5 rounded-2xl bg-[#f0e6d6]/60 border-l-4 border-green-600 border border-line/70 hover:bg-[#f0e6d6]/90 transition-all shadow-sm space-y-4"
+                        >
+                          {/* Header row */}
+                          <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-line/40">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="text-green-700 font-bold text-sm">└─</span>
+                                <h4 className="text-base font-extrabold text-ink">
+                                  {fullChildName}
+                                </h4>
+                              </div>
+                              <div className="pl-5 flex items-center gap-2">
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">ID SDV:</span>
+                                <span className="font-mono text-xs font-bold text-brand-accent bg-white/70 px-2 py-0.5 rounded border border-line/40">
+                                  {fullSdvId}
+                                </span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300 shadow-xs">
+                                {child.registrationTypeDesc || child.registrationTypeCode || "Anidado"}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingChild(child)}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-line text-brand hover:bg-brand hover:text-white transition-all text-xs font-bold shadow-xs"
+                                  title="Ver detalles"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                  <span>Ver detalles</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (confirm(`¿Estás seguro de eliminar a ${fullChildName}?`)) {
+                                      startChildTransition(async () => {
+                                        const res = await deleteNestedUserAction(child.id);
+                                        if (res.ok) {
+                                          setChildren((prev) => prev.filter((c) => c.id !== child.id));
+                                        }
+                                      });
+                                    }
+                                  }}
+                                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-danger/30 text-danger hover:bg-danger hover:text-white transition-all text-xs font-bold shadow-xs"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                  <span>Eliminar</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Data Grid */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs pl-5">
+                            <div className="space-y-0.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Email Personal</span>
+                              <p className="font-semibold text-ink break-all">{child.personalEmail || "-"}</p>
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Teléfono Personal</span>
+                              <p className="font-semibold text-ink">{child.personalPhone || "-"}</p>
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">CURP</span>
+                              <p className="font-mono font-semibold text-ink">{child.curp || "-"}</p>
+                            </div>
+                            <div className="space-y-0.5">
+                              <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">Fecha Nac. / Género</span>
+                              <p className="font-semibold text-ink">
+                                {[child.birthDate, child.gender].filter(Boolean).join(" · ") || "-"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Información personal */}
               <div className={sectionCls}>
                 <div className={sectionHeaderCls}>
@@ -654,128 +789,20 @@ export function DirectoryForm({
             <div className={`${sectionBodyCls} grid grid-cols-2 gap-3`}>
               <div className="p-3 rounded-lg bg-canvas border border-line space-y-1 flex flex-col justify-between">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/70">Áreas</p>
-                <p className="text-2xl font-black text-[#3a2f25]">{initialData.assignments.length}</p>
+                <p className="text-2xl font-black text-[#3a2f25]">{legalTotalAreas}</p>
               </div>
               <div className="p-3 rounded-lg bg-brand-mint/10 border border-brand-mint/20 space-y-1 flex flex-col justify-between">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-brand/70">Indiviso</p>
-                <p className="text-2xl font-black text-brand">{indiviso}%</p>
+                <p className="text-lg sm:text-xl font-black text-brand tracking-tight">{legalIndiviso}%</p>
               </div>
             </div>
           </div>
 
-          {/* Acciones rápidas */}
-          <div className={sectionCls}>
-            <div className={sectionHeaderCls}>
-              <p className={sectionTitleCls}>Acciones rápidas</p>
-            </div>
-            <div className={`${sectionBodyCls} space-y-2`}>
-              <button className="w-full flex items-center justify-between h-10 px-4 rounded-xl border border-line bg-white text-[10px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 hover:border-brand/40 transition-colors group">
-                <span>Agregar ficha de contacto</span>
-                <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" />
-              </button>
-              <button className="w-full flex items-center justify-between h-10 px-4 rounded-xl border border-line bg-white text-[10px] font-bold uppercase tracking-widest text-brand hover:bg-brand/5 hover:border-brand/40 transition-colors group">
-                <span>Agregar comercio</span>
-                <Building2 className="w-3.5 h-3.5 group-hover:scale-110 transition-transform" />
-              </button>
-            </div>
-          </div>
+
         </div>
 
       </div>
 
-      {/* Nested Users Section */}
-      <div className="space-y-4 pt-4">
-        <div className="pb-3 border-b border-line flex items-center justify-between">
-          <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">Usuarios vinculados / anidados</h2>
-          <button
-            type="button"
-            onClick={() => {
-              setChildFirstName("");
-              setChildLastNamePaterno("");
-              setChildLastNameMaterno("");
-              setChildCurp("");
-              setChildPersonalPhone("");
-              setChildPersonalEmail("");
-              setChildBirthDate("");
-              setChildGender("");
-              setChildRegTypeCode("");
-              setIsCreateChildOpen(true);
-            }}
-            className="flex items-center gap-1.5 h-7 px-3 rounded-full bg-brand text-white text-[9px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors animate-in fade-in duration-150"
-          >
-            <Plus className="w-3 h-3" />
-            Agregar usuario anidado
-          </button>
-        </div>
-        <div className={sectionCls}>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-canvas border-b border-line">
-                  <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">ID SDV</th>
-                  <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Nombre</th>
-                  <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Tipo de registro</th>
-                  <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-center">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-line">
-                {children.length === 0 ? (
-                  <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-ink-soft text-[11px]">
-                      Sin usuarios anidados vinculados.
-                    </td>
-                  </tr>
-                ) : (
-                  children.map((child) => (
-                    <tr key={child.id} className="hover:bg-canvas/50 transition-colors">
-                      <td className="px-4 py-2.5 font-mono text-[11px] text-brand-accent">
-                        {formData.apolfap && child.idVq
-                          ? `${formData.apolfap.trim()}${child.idVq.trim()}`
-                          : child.idVq || "-"}
-                      </td>
-                      <td className="px-4 py-2.5 text-[11px] font-medium text-ink">
-                        {`${child.firstName ?? ""} ${child.lastName ?? ""}`.trim() || "-"}
-                      </td>
-                      <td className="px-4 py-2.5 text-[11px] text-ink-soft">
-                        {child.registrationTypeDesc || child.registrationTypeCode || "-"}
-                      </td>
-                      <td className="px-4 py-2.5 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setViewingChild(child)}
-                            className="text-brand hover:text-brand-accent p-1"
-                            title="Ver detalles"
-                          >
-                            <Eye className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              if (confirm(`¿Estás seguro de eliminar a ${child.firstName} ${child.lastName}?`)) {
-                                startChildTransition(async () => {
-                                  const res = await deleteNestedUserAction(child.id);
-                                  if (res.ok) {
-                                    setChildren((prev) => prev.filter((c) => c.id !== child.id));
-                                  }
-                                });
-                              }
-                            }}
-                            className="text-danger hover:text-danger-accent p-1"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
 
       {/* Participation Tables */}
       {initialData.participationBlocks.length > 0 && (
@@ -803,7 +830,9 @@ export function DirectoryForm({
                       <td className="px-4 py-2 text-[10px] uppercase tracking-wider text-brand">TOTAL</td>
                       <td className="px-4 py-2 text-[12px] text-brand">{block.totalAreas}</td>
                       <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{block.totalPercentage.toFixed(4)}%</td>
-                      <td className="px-4 py-2 text-center text-[10px] text-ink-soft">0</td>
+                      <td className="px-4 py-2 text-center text-[10px] font-bold text-brand">
+                        {Array.from(new Set(block.rows.flatMap((r) => r.commerceNames || []))).length}
+                      </td>
                     </tr>
                     {block.rows.length === 0 ? (
                       <tr>
@@ -817,7 +846,19 @@ export function DirectoryForm({
                           <td className="px-4 py-2 text-[11px] text-ink-soft">{row.entityType}</td>
                           <td className="px-4 py-2 text-[12px] font-medium text-ink">{row.privateAreaName}</td>
                           <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{row.percentage.toFixed(4)}%</td>
-                          <td className="px-4 py-2 text-center text-[10px] text-ink-soft">No</td>
+                          <td className="px-4 py-2 text-center text-[11px] text-ink">
+                            {row.commerceNames && row.commerceNames.length > 0 ? (
+                              <div className="flex flex-wrap items-center justify-center gap-1">
+                                {row.commerceNames.map((name, i) => (
+                                  <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-brand-mint/20 border border-brand-mint/40 text-brand text-[10px] font-bold">
+                                    {name}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-ink-soft/40 text-[10px]">No</span>
+                            )}
+                          </td>
                         </tr>
                       ))
                     )}

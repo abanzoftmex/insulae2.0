@@ -1,3 +1,4 @@
+import React, { Fragment } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getDirectoryUseCase } from "@/modules/directory";
@@ -18,7 +19,9 @@ import {
   Mail,
   Phone,
   ArrowRight,
-  Briefcase
+  Briefcase,
+  Home,
+  Store
 } from "lucide-react";
 import { ProvisionalPasswordButton } from "./provisional-password-button";
 
@@ -163,9 +166,9 @@ export default async function DirectorioPage(props: PageProps) {
             <thead>
               <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/80">
                 <th className="px-4">Nombre / Razón Social</th>
-                <th className="px-4">Vínculo / Unidad</th>
+                <th className="px-4">Área Privativa o Comercio</th>
                 <th className="px-4">Contacto</th>
-                <th className="px-4">Configuración</th>
+                <th className="px-4">Requiere Factura</th>
                 <th className="px-4 text-right">Acción</th>
               </tr>
             </thead>
@@ -178,68 +181,123 @@ export default async function DirectorioPage(props: PageProps) {
                 </tr>
               ) : (
                 vm.people.map((person, index) => (
-                  <tr key={person.id} className={cn("hover:bg-brand-mint/20 transition-colors group", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-3">
-                         <div className="h-8 w-8 rounded-full bg-brand-mint/30 flex items-center justify-center text-brand font-bold text-[10px]">
-                           {person.legalNameLabel.slice(0, 2).toUpperCase()}
-                         </div>
-                         <div className="min-w-0">
-                           <p className="text-base font-bold text-ink leading-tight">{person.legalNameLabel}</p>
-                           <p className="text-xs font-semibold text-ink-soft mt-0.5">{person.primaryRoleLabel}</p>
-                         </div>
-                      </div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                       <div className="flex items-center gap-2">
-                         <Briefcase className="h-4 w-4 text-ink-soft/60" />
-                         <span className="text-xs font-bold text-ink-soft">{person.commerceLabel || "Individual"}</span>
-                       </div>
-                    </td>
-
-                    <td className="px-4 py-3">
-                       <div className="flex flex-col gap-1">
-                         {person.email && (
-                           <div className="flex items-center gap-2 text-ink-soft">
-                             <Mail className="h-4 w-4 shrink-0 text-ink-soft/60" />
-                             <span className="text-xs font-medium">{person.email}</span>
+                  <React.Fragment key={person.id}>
+                    <tr className={cn("hover:bg-brand-mint/20 transition-colors group", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-3">
+                           <div className="h-8 w-8 rounded-full bg-brand-mint/30 flex items-center justify-center text-brand font-bold text-[10px]">
+                             {person.legalNameLabel.slice(0, 2).toUpperCase()}
                            </div>
-                         )}
-                         {person.phone && (
-                           <div className="flex items-center gap-2 text-ink-soft">
-                             <Phone className="h-4 w-4 shrink-0 text-ink-soft/60" />
-                             <span className="text-xs font-medium">{person.phone}</span>
+                           <div className="min-w-0">
+                             <p className="text-base font-bold text-ink leading-tight">{person.legalNameLabel}</p>
+                             <p className="text-xs font-semibold text-ink-soft mt-0.5">{person.primaryRoleLabel}</p>
                            </div>
-                         )}
-                       </div>
-                    </td>
+                        </div>
+                      </td>
 
-                    <td className="px-4 py-3">
-                       <div className="flex items-center gap-2">
-                         {person.requiresInvoiceLabel === "Si" ? (
-                           <Badge variant="brand" className="px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest">Factura</Badge>
-                         ) : (
-                           <span className="text-xs font-medium text-ink-soft/60">Sin Factura</span>
-                         )}
-                       </div>
-                    </td>
+                      <td className="px-4 py-3">
+                         <div className="flex flex-col gap-1">
+                           {person.assignedAreasLabel !== "sin areas" && (
+                             <div className="flex items-center gap-1.5">
+                               <Home className="h-3.5 w-3.5 text-brand shrink-0" />
+                               <span className="text-xs font-bold text-ink max-w-[240px] truncate" title={person.assignedAreasLabel}>
+                                 {person.assignedAreasLabel}
+                               </span>
+                             </div>
+                           )}
+                           {person.commerceLabel && person.commerceLabel !== "-" && (
+                             <div className="flex items-center gap-1.5">
+                               <Store className="h-3.5 w-3.5 text-brand-accent shrink-0" />
+                               <span className="text-xs font-semibold text-ink-soft max-w-[240px] truncate" title={person.commerceLabel}>
+                                 {person.commerceLabel}
+                               </span>
+                             </div>
+                           )}
+                           {person.assignedAreasLabel === "sin areas" && (person.commerceLabel === "-" || !person.commerceLabel) && (
+                             <span className="text-xs font-medium text-ink-soft/40">-</span>
+                           )}
+                         </div>
+                      </td>
 
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <ProvisionalPasswordButton
-                          userId={person.id}
-                          userEmail={person.email}
-                          userName={person.legalNameLabel}
-                        />
-                        <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25">
-                          <Link href={buildEditHref(person.reference)}>
-                            Perfil <ArrowRight className="h-3.5 w-3.5" />
-                          </Link>
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+                      <td className="px-4 py-3">
+                         <div className="flex flex-col gap-1">
+                           {person.email && (
+                             <div className="flex items-center gap-2 text-ink-soft">
+                               <Mail className="h-4 w-4 shrink-0 text-ink-soft/60" />
+                               <span className="text-xs font-medium">{person.email}</span>
+                             </div>
+                           )}
+                           {person.phone && (
+                             <div className="flex items-center gap-2 text-ink-soft">
+                               <Phone className="h-4 w-4 shrink-0 text-ink-soft/60" />
+                               <span className="text-xs font-medium">{person.phone}</span>
+                             </div>
+                           )}
+                         </div>
+                      </td>
+
+                      <td className="px-4 py-3">
+                         <div className="flex items-center gap-2">
+                           {person.requiresInvoiceLabel === "Si" ? (
+                             <Badge variant="brand" className="px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest">Sí</Badge>
+                           ) : (
+                             <Badge variant="outline" className="px-2.5 py-1 rounded-full text-[9px] font-bold tracking-widest text-ink-soft/60">No</Badge>
+                           )}
+                         </div>
+                      </td>
+
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            asChild 
+                            className="h-8 w-8 p-0 border-green-700 bg-green-600 text-white hover:bg-green-700 hover:text-white transition-all shadow-sm rounded-md shrink-0" 
+                            title="Agregar usuario anidado"
+                          >
+                            <Link href={buildEditHref(person.reference)}>
+                              <Plus className="h-4 w-4 stroke-[3]" />
+                            </Link>
+                          </Button>
+                          <ProvisionalPasswordButton
+                            userId={person.id}
+                            userEmail={person.email}
+                            userName={person.legalNameLabel}
+                          />
+                          <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25">
+                            <Link href={buildEditHref(person.reference)}>
+                              Perfil <ArrowRight className="h-3.5 w-3.5" />
+                            </Link>
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                    {person.children && person.children.length > 0 && person.children.map((child) => (
+                      <tr key={child.id} className="bg-[#f0e6d6]/60 border-l-4 border-green-600 hover:bg-[#f0e6d6]/90 transition-colors">
+                        <td className="px-4 py-2 pl-10">
+                          <div className="flex items-center gap-2">
+                            <span className="text-green-700 font-bold text-xs">└─</span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-ink leading-tight">{child.fullName}</p>
+                              <span className="text-[9px] font-bold text-green-800 uppercase tracking-widest">{child.registrationTypeDesc}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2 text-xs font-mono font-bold text-brand-accent">
+                          {child.idVq ? `ID SDV: ${child.idVq}` : "-"}
+                        </td>
+                        <td className="px-4 py-2 text-xs text-ink-soft/60 italic">Usuario anidado</td>
+                        <td className="px-4 py-2"><Badge variant="outline" className="px-2 py-0.5 text-[8px] text-ink-soft/60">Anidado</Badge></td>
+                        <td className="px-4 py-2 text-right">
+                          <Button variant="dark" size="sm" asChild className="h-7 gap-1.5 px-3 text-[9px] font-bold uppercase shadow-sm">
+                            <Link href={buildEditHref(person.reference)}>
+                              Perfil <ArrowRight className="h-3 w-3" />
+                            </Link>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </React.Fragment>
                 ))
               )}
             </tbody>

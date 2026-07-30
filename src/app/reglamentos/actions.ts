@@ -33,7 +33,7 @@ export async function createRegulationDocumentAction(
   if (!name || !fileUrl) {
     return {
       ok: false,
-      message: "Nombre y archivo PDF son obligatorios.",
+      message: "Nombre y archivo son obligatorios.",
     };
   }
 

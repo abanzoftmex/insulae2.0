@@ -46,23 +46,23 @@ export function ExcelImport({ year, isClosed }: { year: number; isClosed: boolea
   };
 
   return (
-    <div className="flex items-center gap-2 p-1 bg-canvas-2 rounded-lg border border-line/50">
+    <div className="flex items-center gap-2 p-1 bg-canvas-2 rounded-xl border border-line/60 shadow-xs">
       <Link
         href={`/presupuestos/plantilla?anio=${year}`}
-        className="h-7 px-3 flex items-center gap-1.5 text-ink-soft hover:text-ink text-[11px] font-semibold uppercase transition-colors"
+        className="h-8 px-3.5 flex items-center gap-1.5 text-ink-soft hover:text-ink text-[11px] font-bold uppercase tracking-wider transition-colors rounded-lg hover:bg-canvas"
         download
       >
-        <Download className="h-3 w-3" /> Plantilla
+        <Download className="h-3.5 w-3.5" /> Plantilla
       </Link>
-      <div className="w-px h-4 bg-line" />
+      <div className="w-px h-4 bg-line/60" />
       <div className="flex items-center gap-2">
         <label 
-          className={`h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[11px] font-semibold uppercase transition-standard ${isUploading ? "opacity-70 cursor-not-allowed" : "cursor-pointer hover:bg-brand-accent/5"}`}
+          className={`h-8 px-4 flex items-center justify-center rounded-lg bg-green-700 hover:bg-green-800 text-white text-[11px] font-extrabold uppercase tracking-wider transition-all shadow-xs ${isUploading ? "opacity-70 cursor-not-allowed" : "cursor-pointer hover:shadow-sm active:scale-95"}`}
         >
           {isUploading ? (
-            <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
           ) : (
-            <Upload className="h-3 w-3 mr-1" />
+            <Upload className="h-3.5 w-3.5 mr-1.5" />
           )}
           {isUploading ? "Importando..." : "Importar"}
           <input

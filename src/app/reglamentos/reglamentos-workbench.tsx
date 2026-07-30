@@ -3,6 +3,7 @@
 import React, { useState, useTransition, useMemo } from "react";
 import { 
   FileText, 
+  Image as ImageIcon,
   Plus, 
   FileDown, 
   Upload, 
@@ -30,6 +31,13 @@ import { RowActions } from "@/components/ui/row-actions";
 import { ExternalLinkButton } from "@/components/ui/external-link-button";
 import { cn } from "@/shared/utils/cn";
 
+function isImageFile(url?: string | null, mimeType?: string | null): boolean {
+  if (mimeType?.startsWith("image/")) return true;
+  if (!url) return false;
+  const cleanUrl = url.split("?")[0].toLowerCase();
+  return /\.(png|jpg|jpeg|webp|gif|svg|bmp|heic)$/i.test(cleanUrl);
+}
+
 export function ReglamentosWorkbench({ directory }: { directory: RegulationDirectoryVM }) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
@@ -43,6 +51,8 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
   const [formName, setFormName] = useState("");
   const [formType, setFormType] = useState<any>("REGULATION");
   const [formFileUrl, setFormFileUrl] = useState("");
+  const [formMimeType, setFormMimeType] = useState<string | null>(null);
+  const [formSizeBytes, setFormSizeBytes] = useState<number | null>(null);
   const [uploading, setUploading] = useState(false);
 
   const filteredDocuments = useMemo(() => {
@@ -59,6 +69,8 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
     setFormName("");
     setFormType("REGULATION");
     setFormFileUrl("");
+    setFormMimeType(null);
+    setFormSizeBytes(null);
     setIsModalOpen(true);
   };
 
@@ -67,6 +79,8 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
     setFormName(doc.name);
     setFormType(doc.documentType);
     setFormFileUrl(doc.publicUrl);
+    setFormMimeType(doc.mimeType || null);
+    setFormSizeBytes(doc.sizeBytes || null);
     setIsModalOpen(true);
   };
 
@@ -82,6 +96,8 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
         kind: "project-document"
       });
       setFormFileUrl(res.url);
+      setFormMimeType(file.type || null);
+      setFormSizeBytes(file.size || null);
     } catch {
       alert("Error al subir archivo");
     } finally {
@@ -95,7 +111,9 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
         id: editingId || undefined,
         name: formName,
         documentType: formType,
-        fileUrl: formFileUrl
+        fileUrl: formFileUrl,
+        mimeType: formMimeType || undefined,
+        sizeBytes: formSizeBytes || undefined,
       };
 
       const res = editingId 
@@ -124,19 +142,26 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
     {
       header: "Documento",
       accessorKey: "name",
-      cell: (row) => (
-        <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-lg bg-brand-deep flex items-center justify-center text-brand-mint shrink-0">
-            <FileText className="h-4 w-4" />
+      cell: (row) => {
+        const isImg = isImageFile(row.publicUrl, row.mimeType);
+        return (
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-brand-deep flex items-center justify-center text-brand-mint shrink-0 overflow-hidden">
+              {isImg ? (
+                <img src={row.publicUrl} alt={row.name} className="h-full w-full object-cover" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
+            </div>
+            <div className="min-w-0">
+               <p className="font-bold text-sm leading-tight">{row.name}</p>
+               <p className="text-xs text-ink-soft/70 uppercase tracking-widest font-bold mt-0.5">
+                 {row.uploadedAtLabel}{row.uploadedBy ? ` · por ${row.uploadedBy}` : ""}
+               </p>
+            </div>
           </div>
-          <div className="min-w-0">
-             <p className="font-bold text-sm leading-tight">{row.name}</p>
-             <p className="text-xs text-ink-soft/70 uppercase tracking-widest font-bold mt-0.5">
-               {row.uploadedAtLabel}{row.uploadedBy ? ` · por ${row.uploadedBy}` : ""}
-             </p>
-          </div>
-        </div>
-      )
+        );
+      }
     },
     {
       header: "Tipo",
@@ -249,26 +274,32 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
           </div>
 
           <div className="pt-2 border-t border-line/50">
-             <p className="text-[10px] font-bold uppercase text-ink-soft/40 tracking-widest mb-3">Archivo Digital (PDF)</p>
+             <p className="text-[10px] font-bold uppercase text-ink-soft/40 tracking-widest mb-3">Archivo Digital (PDF o Imagen)</p>
              {formFileUrl ? (
                <div className="flex items-center justify-between p-3 bg-canvas/40 rounded-lg border border-line/50">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-brand" />
-                    <span className="text-[12px] font-bold text-ink truncate max-w-50">{formName || "Archivo cargado"}</span>
+                  <div className="flex items-center gap-3">
+                    {isImageFile(formFileUrl, formMimeType) ? (
+                      <div className="h-10 w-10 rounded-md overflow-hidden bg-brand-deep/5 border border-line shrink-0 flex items-center justify-center">
+                        <img src={formFileUrl} alt={formName || "Vista previa"} className="h-full w-full object-cover" />
+                      </div>
+                    ) : (
+                      <FileText className="h-5 w-5 text-brand shrink-0" />
+                    )}
+                    <span className="text-[12px] font-bold text-ink truncate max-w-48">{formName || "Archivo cargado"}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                     <a href={formFileUrl} target="_blank" className="p-1.5 rounded hover:bg-canvas text-brand transition-colors"><ExternalLink className="h-3.5 w-3.5" /></a>
-                     <button onClick={() => setFormFileUrl("")} className="p-1.5 rounded hover:bg-danger/10 text-danger transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
+                     <a href={formFileUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded hover:bg-canvas text-brand transition-colors"><ExternalLink className="h-3.5 w-3.5" /></a>
+                     <button onClick={() => { setFormFileUrl(""); setFormMimeType(null); setFormSizeBytes(null); }} className="p-1.5 rounded hover:bg-danger/10 text-danger transition-colors"><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>
                </div>
              ) : (
                <label className="h-20 flex flex-col items-center justify-center gap-2 border-2 border-dashed border-line rounded-xl cursor-pointer hover:bg-canvas transition-colors group">
                   {uploading ? <Loader2 className="h-6 w-6 animate-spin text-brand/40" /> : <Upload className="h-6 w-6 text-brand/20 group-hover:text-brand transition-colors" />}
                   <div className="text-center">
-                    <p className="text-[10px] font-bold uppercase text-brand-accent">Click para subir PDF</p>
-                    <p className="text-[9px] font-bold text-ink-soft/40 uppercase tracking-tighter">Máximo 10MB</p>
+                    <p className="text-[10px] font-bold uppercase text-brand-accent">Click para subir PDF o Imagen</p>
+                    <p className="text-[9px] font-bold text-ink-soft/40 uppercase tracking-tighter">PDF, PNG, JPG, WEBP (Máximo 10MB)</p>
                   </div>
-                  <input type="file" className="hidden" accept="application/pdf" onChange={handleUpload} />
+                  <input type="file" className="hidden" accept="application/pdf,image/*" onChange={handleUpload} />
                </label>
              )}
           </div>
