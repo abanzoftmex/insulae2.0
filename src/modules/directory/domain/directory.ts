@@ -27,6 +27,7 @@ export interface DirectoryPerson {
   assignmentRoles: string[];
   assignedAreas: string[];
   assignmentCount: number;
+  children?: NestedUser[];
 }
 
 export interface DirectoryContactAssignment {
@@ -40,6 +41,7 @@ export interface ParticipationRow {
   privateAreaName: string;
   percentage: number;
   hasCommerces: boolean;
+  commerceNames?: string[];
 }
 
 export interface ParticipationBlock {
@@ -68,6 +70,7 @@ export interface NestedUser {
   registrationTypeCode: string | null;
   registrationTypeDesc: string | null;
   idVq: string | null;
+  apolfap?: string | null;
 }
 
 export interface DirectoryContactParticipation {

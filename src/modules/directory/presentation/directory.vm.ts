@@ -16,6 +16,12 @@ export interface DirectoryPersonVM {
   assignmentRolesLabel: string;
   assignedAreasLabel: string;
   assignmentCount: string;
+  children?: Array<{
+    id: string;
+    idVq: string | null;
+    fullName: string;
+    registrationTypeDesc: string;
+  }>;
 }
 
 export interface DirectoryVM {
@@ -80,6 +86,12 @@ function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
     assignmentRolesLabel: joinOrFallback(person.assignmentRoles, "sin asignacion"),
     assignedAreasLabel: joinOrFallback(person.assignedAreas, "sin areas"),
     assignmentCount: person.assignmentCount.toLocaleString("es-MX"),
+    children: person.children?.map((child) => ({
+      id: child.id,
+      idVq: child.idVq ?? null,
+      fullName: `${child.firstName ?? ""} ${child.lastName ?? ""}`.trim() || "Sin nombre",
+      registrationTypeDesc: child.registrationTypeDesc || child.registrationTypeCode || "Usuario Anidado",
+    })) ?? [],
   };
 }
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { getCondominiumOrganigramUseCase } from "@/modules/condominium-organigram";
 import { OrganigramaEditorShell } from "./organigrama-editor-shell";
+import { OrganigramaDiagram } from "./organigrama-diagram";
 import { StructureManagerButton } from "./structure-manager-button";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
@@ -92,62 +93,76 @@ export default async function EstructuraCondominalPage({ searchParams }: Estruct
       {isEditMode ? (
         <OrganigramaEditorShell groups={snapshot.groups} userOptions={snapshot.userOptions} />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {snapshot.groups.filter((g) => g.rows.length > 0).length === 0 ? (
-            <div className="col-span-full py-20 text-center text-ink-soft/30 italic font-bold uppercase text-[11px] bg-card rounded-md border border-line">
-              No hay grupos o cargos configurados
-            </div>
-          ) : (
-            snapshot.groups
-              .filter((group) => group.rows.length > 0)
-              .map((group) => (
-                <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered h-fit">
-                  <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-                    <CardTitle className="text-[12px] font-bold uppercase tracking-widest text-white">{group.groupName}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="h-8 bg-canvas/10 text-[9px] font-bold uppercase tracking-widest text-ink-soft/70 border-b border-line/30">
-                          <th className="px-4 py-2">Cargo / Responsabilidad</th>
-                          <th className="px-4 py-2">Titular</th>
-                          <th className="px-4 py-2">Suplente</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-line/30">
-                        {group.rows.map((row) => (
-                          <tr key={row.positionId} className="h-12 hover:bg-canvas/5 transition-colors group/row">
-                            <td className="px-4 py-2">
-                              <p className="text-[12px] font-bold text-ink leading-tight">{row.positionName}</p>
-                            </td>
-                            <td className="px-4 py-2">
-                              {row.responsible.length === 0 ? (
-                                <span className="text-[10px] text-ink-soft/50 uppercase font-bold">Pendiente</span>
-                              ) : (
-                                row.responsible.map((item) => (
-                                  <p key={item.userId} className="text-[11px] font-bold text-brand">{item.displayName}</p>
-                                ))
-                              )}
-                            </td>
-                            <td className="px-4 py-2">
-                              {!row.allowsAlternate ? (
-                                <span className="text-[9px] text-ink-soft/50 uppercase font-bold tracking-tighter">No aplica</span>
-                              ) : row.alternates.length === 0 ? (
-                                <span className="text-[10px] text-ink-soft/50 uppercase font-bold">Pendiente</span>
-                              ) : (
-                                row.alternates.map((item) => (
-                                  <p key={item.userId} className="text-[11px] font-medium text-ink-soft">{item.displayName}</p>
-                                ))
-                              )}
-                            </td>
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {snapshot.groups.filter((g) => g.rows.length > 0).length === 0 ? (
+              <div className="col-span-full py-20 text-center text-ink-soft/30 italic font-bold uppercase text-[11px] bg-card rounded-md border border-line">
+                No hay grupos o cargos configurados
+              </div>
+            ) : (
+              [...snapshot.groups]
+                .filter((group) => group.rows.length > 0)
+                .sort((a, b) => (a.groupPosition ?? 0) - (b.groupPosition ?? 0))
+                .map((group) => (
+                  <Card key={group.groupId} className="overflow-hidden border-transparent shadow-layered h-fit">
+                    <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-row items-start justify-between gap-2 min-h-[52px]">
+                      <CardTitle className="text-[12px] font-bold uppercase tracking-wide text-white leading-snug break-words flex-1 mt-0.5">{group.groupName}</CardTitle>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-white/20 text-white shrink-0 border border-white/30 self-start mt-0.5">
+                        Orden #{group.groupPosition}
+                      </span>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="h-8 bg-canvas/10 text-[9px] font-bold uppercase tracking-widest text-ink-soft/70 border-b border-line/30">
+                            <th className="px-4 py-2">Cargo / Responsabilidad</th>
+                            <th className="px-4 py-2">Titular</th>
+                            <th className="px-4 py-2">Suplente</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </CardContent>
-                </Card>
-              ))
-          )}
+                        </thead>
+                        <tbody className="divide-y divide-line/30">
+                          {[...group.rows]
+                            .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+                            .map((row) => (
+                            <tr key={row.positionId} className="h-12 hover:bg-canvas/5 transition-colors group/row">
+                              <td className="px-4 py-2">
+                                <p className="text-[12px] font-bold text-ink leading-tight">{row.positionName}</p>
+                              </td>
+                              <td className="px-4 py-2">
+                                {row.responsible.length === 0 ? (
+                                  <span className="text-[10px] text-ink-soft/50 uppercase font-bold">Pendiente</span>
+                                ) : (
+                                  row.responsible.map((item) => (
+                                    <p key={item.userId} className="text-[11px] font-bold text-brand">{item.displayName}</p>
+                                  ))
+                                )}
+                              </td>
+                              <td className="px-4 py-2">
+                                {!row.allowsAlternate ? (
+                                  <span className="text-[9px] text-ink-soft/50 uppercase font-bold tracking-tighter">No aplica</span>
+                                ) : row.alternates.length === 0 ? (
+                                  <span className="text-[10px] text-ink-soft/50 uppercase font-bold">Pendiente</span>
+                                ) : (
+                                  row.alternates.map((item) => (
+                                    <p key={item.userId} className="text-[11px] font-medium text-ink-soft">{item.displayName}</p>
+                                  ))
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </CardContent>
+                  </Card>
+                ))
+            )}
+          </div>
+
+          {/* Organigrama Diagram below cards */}
+          <OrganigramaDiagram
+            condominiumName={snapshot.condominiumName}
+            groups={snapshot.groups}
+          />
         </div>
       )}
     </div>

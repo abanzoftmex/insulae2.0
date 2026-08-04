@@ -6,6 +6,8 @@ export interface RegulationDocument {
   name: string;
   documentType: RegulationDocumentType;
   publicUrl: string;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
   uploadedAt: Date;
   uploadedBy: string | null;
 }

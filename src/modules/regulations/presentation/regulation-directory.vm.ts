@@ -10,6 +10,8 @@ export interface RegulationDocumentVM {
   documentType: RegulationDocumentType;
   documentTypeLabel: string;
   publicUrl: string;
+  mimeType?: string | null;
+  sizeBytes?: number | null;
   uploadedAtLabel: string;
   uploadedBy: string | null;
 }
@@ -48,6 +50,8 @@ function mapDocument(document: RegulationDocument): RegulationDocumentVM {
     documentType: document.documentType,
     documentTypeLabel: documentTypeLabel(document.documentType),
     publicUrl: document.publicUrl,
+    mimeType: document.mimeType,
+    sizeBytes: document.sizeBytes,
     uploadedAtLabel: formatUploadedAt(document.uploadedAt),
     uploadedBy: document.uploadedBy,
   };

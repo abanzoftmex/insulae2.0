@@ -5,9 +5,23 @@ import type { DirectoryContactParticipation } from "@/modules/directory/domain/d
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import crypto from "crypto";
 
+function cleanUserId(id: string): string {
+  let decoded = id.trim();
+  try {
+    decoded = decodeURIComponent(decoded);
+  } catch {
+    // ignore
+  }
+  if (decoded.includes(":commerce:")) {
+    return decoded.split(":commerce:")[0] ?? decoded;
+  }
+  return decoded.split(":")[0] ?? decoded;
+}
+
 export async function saveDirectoryContactAction(id: string, data: Partial<DirectoryContactParticipation>) {
   try {
-    const res = await updateDirectoryContactUseCase.execute({ id, data });
+    const targetId = cleanUserId(id);
+    const res = await updateDirectoryContactUseCase.execute({ id: targetId, data });
     return { ok: true, message: "Contacto actualizado correctamente.", idVq: res.idVq };
   } catch (error) {
     console.error("[saveDirectoryContactAction] failed", error);
@@ -21,8 +35,9 @@ function hashSHA256(text: string): string {
 
 export async function updatePasswordAction(id: string, passwordPlain: string) {
   try {
+    const targetId = cleanUserId(id);
     await prisma.user.update({
-      where: { id },
+      where: { id: targetId },
       data: { passwordHash: hashSHA256(passwordPlain) },
     });
     return { ok: true, message: "Contraseña actualizada correctamente." };
@@ -44,8 +59,9 @@ function generateRandomPassword(length = 8): string {
 
 export async function generateTemporaryPasswordAction(id: string) {
   try {
+    const targetId = cleanUserId(id);
     const user = await prisma.user.findUnique({
-      where: { id },
+      where: { id: targetId },
       include: {
         condominium: true,
       },
@@ -261,6 +277,7 @@ export async function createNestedUserAction(
     gender?: string;
     registrationTypeCode: string;
     registrationTypeDesc: string;
+    apolfap?: string;
   }
 ) {
   try {
@@ -304,10 +321,10 @@ export async function createNestedUserAction(
 
     const generatedIdVq = `${parentIdVq}-${code}-${nextSuffix}`;
 
-    const parentApol = parent.apolfap || "";
+    const targetApol = (data.apolfap || parent.apolfap || "").trim();
     let computedChildEmail = null;
-    if (parentApol && generatedIdVq) {
-      computedChildEmail = `ID-${parentApol.trim()}${generatedIdVq.trim()}`;
+    if (targetApol && generatedIdVq) {
+      computedChildEmail = `ID-${targetApol}${generatedIdVq.trim()}`;
     }
 
     const newChild = await prisma.user.create({
@@ -315,6 +332,7 @@ export async function createNestedUserAction(
         condominiumId: parent.condominiumId,
         parentId,
         idVq: generatedIdVq,
+        apolfap: targetApol || null,
         userType: "INDIVIDUAL",
         firstName: data.firstName || null,
         lastName: `${data.lastNamePaterno || ""} ${data.lastNameMaterno || ""}`.trim() || null,
