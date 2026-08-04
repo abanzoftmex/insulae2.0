@@ -262,8 +262,8 @@ export function AppShell({
             onClick={() => toggleMenu(item.label)}
             className={cn(
               "w-full flex items-center h-10 px-3 rounded-lg text-[14px] font-medium text-ink",
-              "hover:bg-[#f5f4f0] transition-standard group",
-              isOpen && "text-brand"
+              "hover:bg-[#5d5b35]/10 transition-standard group",
+              isOpen && "text-brand font-semibold"
             )}
           >
             <Icon
@@ -278,13 +278,13 @@ export function AppShell({
             <ChevronDown
               className={cn(
                 "shrink-0 text-ink-soft/50 transition-transform duration-200",
-                isOpen && "rotate-180"
+                isOpen && "rotate-180 text-brand"
               )}
               style={{ width: 13, height: 13 }}
             />
           </button>
           {isOpen && (
-            <div className="ml-4 pl-3 border-l border-line mt-0.5 mb-1 space-y-0.5">
+            <div className="ml-4 pl-3 border-l border-[#5d5b35]/20 mt-0.5 mb-1 space-y-0.5">
               {item.items?.map((sub) => {
                 if (sub.requiredModule && !permissions[sub.requiredModule]?.canRead) return null;
                 const isSubActive = currentPath === normalizePath(sub.href);
@@ -295,8 +295,8 @@ export function AppShell({
                     className={cn(
                       "flex items-center h-8 px-2.5 rounded-md text-[13px] transition-standard",
                       isSubActive
-                        ? "bg-brand-mint/30 text-brand font-semibold"
-                        : "text-ink-soft hover:text-ink hover:bg-[#f5f4f0]"
+                        ? "bg-[#f1eac1]/80 text-[#3d3c22] font-semibold shadow-2xs border border-[#5d5b35]/15"
+                        : "text-ink-soft hover:text-ink hover:bg-[#5d5b35]/10"
                     )}
                   >
                     {sub.label}
@@ -316,7 +316,7 @@ export function AppShell({
         <div key={item.label}>
           <button
             onClick={() => toggleMenu(item.label)}
-            className="w-full flex items-center justify-center h-10 rounded-lg text-ink-soft hover:bg-[#f5f4f0] hover:text-ink transition-standard"
+            className="w-full flex items-center justify-center h-10 rounded-lg text-ink-soft hover:bg-[#5d5b35]/10 hover:text-ink transition-standard"
             aria-label={item.label}
             title={item.label}
           >
@@ -337,7 +337,7 @@ export function AppShell({
             className={cn(
               "w-full flex items-center h-10 rounded-lg transition-standard",
               collapsed ? "justify-center px-0" : "px-3",
-              "text-ink hover:bg-[#f5f4f0]"
+              "text-ink hover:bg-[#5d5b35]/10"
             )}
             aria-label={collapsed ? item.label : undefined}
             title={collapsed ? item.label : undefined}
@@ -363,14 +363,14 @@ export function AppShell({
             "flex items-center h-10 rounded-lg transition-standard",
             collapsed ? "justify-center px-0" : "px-3",
             isActive
-              ? "bg-[#f2f0eb] text-brand font-semibold"
-              : "text-ink hover:bg-[#f5f4f0]"
+              ? "bg-white/85 text-[#5d5b35] font-semibold shadow-2xs border border-[#5d5b35]/20"
+              : "text-ink hover:bg-[#5d5b35]/10"
           )}
           aria-label={collapsed ? item.label : undefined}
           title={collapsed ? item.label : undefined}
         >
           {isActive && !collapsed && (
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-brand-accent rounded-full" />
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-[#5d5b35] rounded-full" />
           )}
           <Icon
             className={cn(
@@ -395,7 +395,7 @@ export function AppShell({
       {/* Brand + collapse toggle */}
       <div
         className={cn(
-          "relative border-b border-line shrink-0",
+          "relative border-b border-[#5d5b35]/15 shrink-0",
           isCollapsed ? "flex flex-col items-center py-2 gap-1" : "flex items-center px-4 py-3"
         )}
       >
@@ -421,7 +421,7 @@ export function AppShell({
         <button
           onClick={toggleCollapsed}
           className={cn(
-            "flex items-center justify-center rounded-md text-ink-soft/70 hover:text-ink hover:bg-[#f5f4f0] transition-standard active-scale",
+            "flex items-center justify-center rounded-md text-ink-soft/70 hover:text-ink hover:bg-[#5d5b35]/10 transition-standard active-scale",
             isCollapsed ? "w-10 h-7 mt-1" : "absolute top-2 right-2 w-7 h-7"
           )}
           aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
@@ -455,11 +455,11 @@ export function AppShell({
           return (
             <div key={section.title}>
               {!isCollapsed && (
-                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
+                <p className="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-widest text-[#5d5b35]">
                   {section.title}
                 </p>
               )}
-              {isCollapsed && <div className="mx-auto w-4 border-t border-line/50 mb-1.5" />}
+              {isCollapsed && <div className="mx-auto w-4 border-t border-[#5d5b35]/20 mb-1.5" />}
               <div className="space-y-0.5">
                 {visibleItems.map((item) => renderNavItem(item))}
               </div>
@@ -473,17 +473,17 @@ export function AppShell({
         <button
           onClick={() => setIsSearchOpen(true)}
           className={cn(
-            "w-full flex items-center rounded-lg border border-line bg-canvas/60",
-            "hover:bg-canvas transition-standard text-ink-soft hover:text-ink",
+            "w-full flex items-center rounded-lg border border-[#5d5b35]/20 bg-white/60",
+            "hover:bg-white transition-standard text-ink-soft hover:text-ink shadow-2xs",
             isCollapsed ? "h-10 justify-center" : "h-9 px-3 gap-2.5"
           )}
           aria-label="Buscar"
         >
-          <Search style={{ width: 14, height: 14 }} strokeWidth={1.5} className="shrink-0" />
+          <Search style={{ width: 14, height: 14 }} strokeWidth={1.5} className="shrink-0 text-brand" />
           {!isCollapsed && (
             <>
               <span className="flex-1 text-left text-[13px]">Buscar...</span>
-              <kbd className="hidden sm:inline-flex items-center gap-px px-1 py-px rounded text-[11px] font-medium text-ink-soft/40 border border-line">
+              <kbd className="hidden sm:inline-flex items-center gap-px px-1 py-px rounded text-[11px] font-medium text-ink-soft/60 border border-[#5d5b35]/20 bg-white/50">
                 ⌘K
               </kbd>
             </>
@@ -493,25 +493,25 @@ export function AppShell({
 
       {/* User profile */}
       {isCollapsed ? (
-        <div className="shrink-0 border-t border-line p-2 flex justify-center bg-canvas/20">
+        <div className="shrink-0 border-t border-[#5d5b35]/15 p-2 flex justify-center bg-white/40">
           <div
-            className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0"
+            className="w-8 h-8 rounded-full bg-[#5d5b35]/10 text-[#5d5b35] flex items-center justify-center text-[12px] font-bold border border-[#5d5b35]/20 shrink-0"
             title={currentUserName}
           >
             {userInitials}
           </div>
         </div>
       ) : (
-        <div className="shrink-0 border-t border-line px-4 py-3 bg-canvas/20">
+        <div className="shrink-0 border-t border-[#5d5b35]/15 px-4 py-3 bg-white/40">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0">
+            <div className="w-8 h-8 rounded-full bg-[#5d5b35]/10 text-[#5d5b35] flex items-center justify-center text-[12px] font-bold border border-[#5d5b35]/20 shrink-0">
               {userInitials}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-bold text-ink truncate leading-tight">
                 {currentUserName}
               </p>
-              <p className="text-[10px] font-medium text-ink-soft/60 truncate leading-tight uppercase mt-0.5">
+              <p className="text-[10px] font-semibold text-[#5d5b35] truncate leading-tight uppercase mt-0.5">
                 Sesión activa
               </p>
             </div>
@@ -539,7 +539,7 @@ export function AppShell({
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden lg:flex flex-col bg-card border-r border-line",
+          "fixed inset-y-0 left-0 z-40 hidden lg:flex flex-col bg-[#f6f3eb]/90 backdrop-blur-md border-r border-[#5d5b35]/15",
           "transition-all duration-200 overflow-hidden",
           isCollapsed ? "w-[72px]" : "w-[264px]"
         )}
@@ -555,10 +555,10 @@ export function AppShell({
         )}
       >
         {/* Mobile-only top bar */}
-        <div className="lg:hidden sticky top-0 z-30 h-12 bg-card border-b border-line flex items-center px-4 gap-3">
+        <div className="lg:hidden sticky top-0 z-30 h-12 bg-[#f6f3eb]/90 backdrop-blur-md border-b border-[#5d5b35]/15 flex items-center px-4 gap-3">
           <button
             onClick={openMobile}
-            className="p-1.5 -ml-1 rounded-lg hover:bg-canvas text-ink-soft transition-standard"
+            className="p-1.5 -ml-1 rounded-lg hover:bg-[#5d5b35]/10 text-ink-soft transition-standard"
             aria-label="Abrir menú"
           >
             <Menu style={{ width: 18, height: 18 }} />
@@ -594,12 +594,12 @@ export function AppShell({
         />
         <aside
           className={cn(
-            "absolute inset-y-0 left-0 w-[264px] bg-card flex flex-col overflow-hidden",
+            "absolute inset-y-0 left-0 w-[264px] bg-[#f6f3eb]/95 backdrop-blur-md border-r border-[#5d5b35]/15 flex flex-col overflow-hidden",
             "transition-transform duration-200",
             isMobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#5d5b35]/15 shrink-0">
             <div className="flex flex-col items-start gap-1">
               {navbarLogoUrl && (
                 <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-8 object-contain" />
@@ -611,7 +611,7 @@ export function AppShell({
             </div>
             <button
               onClick={closeMobile}
-              className="p-1.5 rounded-lg hover:bg-canvas text-ink-soft transition-standard"
+              className="p-1.5 rounded-lg hover:bg-[#5d5b35]/10 text-ink-soft transition-standard"
               aria-label="Cerrar menú"
             >
               <X style={{ width: 16, height: 16 }} />
@@ -633,7 +633,7 @@ export function AppShell({
 
               return (
                 <div key={s.title}>
-                  <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
+                  <p className="px-3 mb-1.5 text-[11px] font-bold uppercase tracking-widest text-[#5d5b35]">
                     {s.title}
                   </p>
                   <div className="space-y-0.5">
@@ -646,16 +646,16 @@ export function AppShell({
           </nav>
           
           {/* User profile mobile */}
-          <div className="shrink-0 border-t border-line px-4 py-3 bg-canvas/20">
+          <div className="shrink-0 border-t border-[#5d5b35]/15 px-4 py-3 bg-white/40">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#5d5b35]/10 text-[#5d5b35] flex items-center justify-center text-[12px] font-bold border border-[#5d5b35]/20 shrink-0">
                 {userInitials}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[13px] font-bold text-ink truncate leading-tight">
                   {currentUserName}
                 </p>
-                <p className="text-[10px] font-medium text-ink-soft/60 truncate leading-tight uppercase mt-0.5">
+                <p className="text-[10px] font-semibold text-[#5d5b35] truncate leading-tight uppercase mt-0.5">
                   Sesión activa
                 </p>
               </div>

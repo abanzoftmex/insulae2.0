@@ -8,82 +8,28 @@ import {
   FileText,
   Zap,
   Bell,
-  DollarSign,
+  BookOpen,
+  ShieldCheck,
+  BarChart3,
+  PieChart,
+  CheckCircle2,
+  HeartHandshake,
 } from "lucide-react";
 
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
-import { getFinancialSummaryUseCase } from "@/modules/financial-summary";
-import { getDirectoryUseCase } from "@/modules/directory";
-import { prisma } from "@/shared/infrastructure/db/prisma";
-
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { StatCard } from "@/components/ui/stat-card";
-import { FinancialChart } from "@/components/ui/financial-chart";
 import { LiveClock } from "@/components/ui/live-clock";
 
 export const metadata: Metadata = {
   title: "Inicio | Val'Quirico",
-  description: "Inicio operativo del condominio con accesos rápidos a módulos principales.",
+  description: "Bienvenida y accesos principales a la gestión operativa del condominio.",
 };
 
 export default async function Home() {
-  const currentYear = new Date().getFullYear();
-  const prevYear = currentYear - 1;
+  const condominiumOverview = await getCondominiumOverviewUseCase.execute();
+  const condominiumName = condominiumOverview?.condominiumName || "Val'Quirico";
 
-  const [
-    condominiumOverview,
-    financialSummaryCurrent,
-    financialSummaryPrev,
-    directoryOverview,
-    openTicketsCount,
-  ] = await Promise.all([
-    getCondominiumOverviewUseCase.execute(),
-    getFinancialSummaryUseCase.execute({ year: currentYear }),
-    getFinancialSummaryUseCase.execute({ year: prevYear }),
-    getDirectoryUseCase.execute({ query: "", page: 1, pageSize: 1 }),
-    prisma.ticket.count({
-      where: {
-        condominium: { isActive: true },
-        status: { in: ["OPEN", "IN_PROGRESS"] },
-      },
-    }),
-  ]);
-
-  // Use the most recent year that has actual financial data
-  const hasCurrentYearData = financialSummaryCurrent?.months.some(
-    (m) => m.totalIncome > 0 || m.totalExpenses > 0,
-  );
-  const financialSummary = hasCurrentYearData
-    ? financialSummaryCurrent
-    : (financialSummaryPrev ?? financialSummaryCurrent);
-
-  const stats = {
-    areas: condominiumOverview?.activePrivateAreas ?? 0,
-    residents: directoryOverview?.totalUsers ?? 0,
-    collections: financialSummary?.totals.totalIncome ?? 0,
-    openTickets: openTicketsCount,
-  };
-
-  const reportYear = financialSummary?.year ?? currentYear;
-
-  const MONTH_ABBR = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  // Only include months that have at least some income or expense data
-  const chartData = (financialSummary?.months ?? [])
-    .filter((m) => m.totalIncome > 0 || m.totalExpenses > 0)
-    .map((m) => ({
-      month: MONTH_ABBR[(m.month - 1) % 12],
-      ordinaryIncome: m.ordinaryIncome,
-      extraordinaryIncome: m.extraordinaryIncome,
-      otherIncome: m.otherIncome,
-      totalIncome: m.totalIncome,
-      ordinaryExpenses: m.ordinaryExpenses,
-      extraordinaryExpenses: m.extraordinaryExpenses,
-      totalExpenses: m.totalExpenses,
-    }));
-
-  const condominiumName =
-    condominiumOverview?.condominiumName || "Val'Quirico";
   const initialDate = new Date().toLocaleDateString("es-MX", {
     day: "numeric",
     month: "long",
@@ -103,179 +49,301 @@ export default async function Home() {
     <div
       className={
         isSassi
-          ? "space-y-6 min-h-screen relative overflow-hidden -m-4 md:-m-6 lg:-mt-8 lg:-mx-10 lg:-mb-24 p-4 md:p-6 lg:pt-8 lg:px-10 lg:pb-32 bg-cover bg-center bg-no-repeat shadow-card"
-          : "space-y-6"
+          ? "space-y-8 min-h-screen relative overflow-hidden -m-4 md:-m-6 lg:-mt-8 lg:-mx-10 lg:-mb-24 p-4 md:p-6 lg:pt-8 lg:px-10 lg:pb-32 bg-cover bg-center bg-no-repeat shadow-card"
+          : "space-y-8 pb-12"
       }
       style={
         isSassi
           ? {
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('/images/fdo2.jpg')",
+              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.40), rgba(0, 0, 0, 0.40)), url('/images/fdo2.jpg')",
             }
           : undefined
       }
     >
-      <div className="relative z-10 space-y-6">
-        {/* Page header */}
-        {condominiumOverview?.condominiumSlug === "sassi" && condominiumOverview?.condominiumImageUrl ? (
-          <div
-            className="relative overflow-hidden rounded-card bg-cover bg-center p-6 md:p-8 shadow-card border border-brand/20 min-h-[140px] flex items-center"
-            style={{ 
-              backgroundImage: `linear-gradient(rgba(30, 57, 50, 0.95), rgba(30, 57, 50, 0.80)), url(${condominiumOverview.condominiumImageUrl})` 
-            }}
-          >
-            <div className="relative z-10 flex flex-col gap-2 min-w-0">
-              <Badge 
-                variant="brand" 
-                className="w-fit rounded-full px-4 py-1.5 text-[9px] tracking-widest bg-brand-mint text-brand-deep font-bold border-none uppercase shadow-sm"
+      <div className="relative z-10 space-y-8">
+        
+        {/* ─── Header / Banner de Bienvenida Cálida ───────────────────────────── */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-deep via-brand to-brand-deep p-6 md:p-8 text-white shadow-lg border border-brand/20">
+          {/* Elementos decorativos traslúcidos */}
+          <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+          <div className="absolute right-20 -top-10 w-40 h-40 bg-brand-mint/10 rounded-full blur-xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-3 max-w-2xl">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="brand"
+                  className="rounded-full px-3.5 py-1 text-[10px] tracking-widest bg-brand-mint text-brand-deep font-bold border-none uppercase shadow-xs"
+                >
+                  Gestor de Condominio
+                </Badge>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-semibold tracking-wider uppercase border border-white/15">
+                  <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                  Operatividad Normal
+                </span>
+              </div>
+
+              <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                ¡Te damos la bienvenida a {condominiumName}!
+              </h1>
+
+              <p className="text-white/85 text-xs md:text-sm font-medium leading-relaxed">
+                Tu centro de control y convivencia comunitaria. Aquí podrás gestionar accesos, comunicarte con residentes y consultar la documentación oficial de manera sencilla y transparente.
+              </p>
+
+              <div className="pt-1 text-[11px] font-bold text-brand-mint/90 uppercase tracking-wider flex items-center gap-2">
+                <span>{condominiumName}</span>
+                <span>·</span>
+                <LiveClock initialDate={initialDate} initialTime={initialTime} />
+              </div>
+            </div>
+
+            <div className="shrink-0 flex flex-col sm:flex-row md:flex-col gap-2.5">
+              <Link
+                href="/directorio"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-mint text-brand-deep font-bold text-xs hover:bg-white transition-standard shadow-sm"
               >
-                Información y Gestión
-              </Badge>
-              <div className="flex flex-col gap-1.5 mt-1">
-                <h1 className="text-3xl font-bold text-white tracking-tighter uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-                  Bienvenido a tu gestor de condominio
-                </h1>
-                <p className="text-brand-mint/90 text-[11px] font-bold uppercase tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                  {condominiumName} · <LiveClock initialDate={initialDate} initialTime={initialTime} />
+                <Users className="h-4 w-4" />
+                Directorio de Personas
+              </Link>
+              <Link
+                href="/reglamentos"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-standard border border-white/20"
+              >
+                <BookOpen className="h-4 w-4" />
+                Reglamentos y Actas
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* ─── Accesos Principales Operativos (Sin números) ───────────────────── */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className={`text-base font-bold uppercase tracking-wider ${isSassi ? "text-white drop-shadow-sm" : "text-brand"}`}>
+              Módulos de Gestión Diario
+            </h2>
+            <span className={`text-[11px] font-semibold ${isSassi ? "text-brand-mint/90" : "text-ink-soft/70"}`}>
+              Selecciona una categoría para navegar
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <CategoryCard
+              href="/directorio"
+              icon={<Users className="h-5 w-5 text-brand" />}
+              badge="Comunidad"
+              title="Propietarios y Residentes"
+              description="Directorio unificado de residentes, arrendatarios, arrendadores y contactos de emergencia."
+              cta="Ver directorio"
+              isSassi={isSassi}
+            />
+
+            <CategoryCard
+              href="/areas-privativas"
+              icon={<MapPin className="h-5 w-5 text-brand" />}
+              badge="Inmuebles"
+              title="Áreas Privativas"
+              description="Catálogo de lotes, viviendas, locales comerciales y zonas del condominio."
+              cta="Ver inmuebles"
+              isSassi={isSassi}
+            />
+
+            <CategoryCard
+              href="/tickets"
+              icon={<TicketIcon className="h-5 w-5 text-brand" />}
+              badge="Atención"
+              title="Solicitudes y Soporte"
+              description="Seguimiento de tickets, reportes de mantenimiento y solicitudes de residentes."
+              cta="Atender solicitudes"
+              isSassi={isSassi}
+            />
+
+            <CategoryCard
+              href="/reglamentos"
+              icon={<BookOpen className="h-5 w-5 text-brand" />}
+              badge="Normativa"
+              title="Documentos y Reglamentos"
+              description="Estatutos condominales, acuerdos de asamblea y normas comunitarias de convivencia."
+              cta="Consultar normas"
+              isSassi={isSassi}
+            />
+          </div>
+        </div>
+
+        {/* ─── Acciones Frecuentes de Administración ──────────────────────────── */}
+        <div className="space-y-3">
+          <h2 className={`text-base font-bold uppercase tracking-wider px-1 ${isSassi ? "text-white drop-shadow-sm" : "text-brand"}`}>
+            Acciones Frecuentes
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <QuickActionCard
+              href="/reporte-condominio"
+              icon={<FileText className="h-4 w-4 text-white" />}
+              title="Generar Ficha de Condominio"
+              description="Descarga el estado actual y la ficha técnica del condominio en formato PDF."
+              cta="Generar PDF"
+              isSassi={isSassi}
+            />
+
+            <QuickActionCard
+              href="/cobros-masivos"
+              icon={<Zap className="h-4 w-4 text-white" />}
+              title="Proceso de Cobros Masivos"
+              description="Emisión masiva de cuotas ordinarias y extraordinarias para las áreas privativas."
+              cta="Iniciar cobros"
+              isSassi={isSassi}
+            />
+
+            <QuickActionCard
+              href="/notificaciones"
+              icon={<Bell className="h-4 w-4 text-white" />}
+              title="Redactar Comunicado"
+              description="Envía avisos de interés general a los residentes vía correo o notificación del portal."
+              cta="Redactar aviso"
+              isSassi={isSassi}
+            />
+          </div>
+        </div>
+
+        {/* ─── Banner Cálido de Redirección a Análisis y Finanzas ─────────────── */}
+        <div className={`p-6 rounded-2xl border transition-all ${
+          isSassi 
+            ? "bg-white/95 backdrop-blur-md border-brand/20 shadow-md text-ink" 
+            : "bg-gradient-to-r from-canvas-2 via-card to-canvas-2 border-line/70 shadow-sm text-ink"
+        }`}>
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <div className="h-11 w-11 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0 border border-brand/20">
+                <HeartHandshake className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-brand tracking-tight">
+                  ¿Deseas consultar cifras financieras o métricas del condominio?
+                </h3>
+                <p className="text-xs text-ink-soft/85 leading-relaxed max-w-2xl">
+                  Para mantener este portal enfocado en la bienvenida y gestión operativa del día a día, las gráficas comparativas, los balances de cobranza e indicadores de ocupación han sido organizados en sus secciones especializadas.
                 </p>
               </div>
             </div>
-          </div>
-        ) : (
-          <div className={`flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b ${isSassi ? "border-white/20" : "border-brand"}`}>
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <h1 className={`text-3xl font-bold tracking-tighter uppercase ${isSassi ? "text-white drop-shadow-sm" : "text-brand"}`}>
-                Bienvenido a tu gestor de condominio
-              </h1>
-              <Badge 
-                variant="brand" 
-                className={isSassi ? "w-fit rounded-full px-4 py-2 text-[10px] tracking-widest bg-brand-mint text-brand-deep border-none shadow-sm" : "w-fit rounded-full px-4 py-2 text-[10px] tracking-widest"}
+
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <Link
+                href="/resumen-financiero"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-deep transition-standard shadow-xs"
               >
-                Información y Gestión
-              </Badge>
-              <p className={`text-[11px] font-bold uppercase tracking-tight ${isSassi ? "text-brand-mint/90 drop-shadow-sm" : "text-ink-soft/80"}`}>
-                {condominiumName} · <LiveClock initialDate={initialDate} initialTime={initialTime} />
-              </p>
+                <PieChart className="h-4 w-4" />
+                Resumen Financiero
+              </Link>
+              <Link
+                href="/estadisticas"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-mint/40 text-brand-deep font-bold text-xs hover:bg-brand-mint transition-standard border border-brand/20"
+              >
+                <BarChart3 className="h-4 w-4 text-brand" />
+                Ver Estadísticas
+              </Link>
             </div>
           </div>
-        )}
-
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard
-            accent="brand"
-            label="Áreas privativas"
-            value={stats.areas.toLocaleString()}
-            icon={<MapPin className="h-3.5 w-3.5" />}
-            trend={{ value: "+0.5%", isUp: true }}
-            className={isSassi ? "bg-white border-brand/20 shadow-sm" : ""}
-          />
-          <StatCard
-            accent="lime"
-            label="Residentes"
-            value={stats.residents.toLocaleString()}
-            icon={<Users className="h-3.5 w-3.5" />}
-            className={isSassi ? "bg-white border-lime-200/60 shadow-sm" : ""}
-          />
-          <StatCard
-            accent="emerald"
-            label={`Cobranza Anual (${reportYear})`}
-            value={`$${stats.collections.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            icon={<DollarSign className="h-3.5 w-3.5" />}
-            trend={{ value: "Total Recaudado", isUp: true }}
-            className={isSassi ? "bg-white border-emerald-200/60 shadow-sm" : ""}
-          />
-          <StatCard
-            accent="cyan"
-            label="Tickets abiertos"
-            value={String(stats.openTickets)}
-            icon={<TicketIcon className="h-3.5 w-3.5" />}
-            trend={stats.openTickets > 0 ? { value: String(stats.openTickets), isUp: false } : undefined}
-            className={isSassi ? "bg-white border-cyan-200/60 shadow-sm" : ""}
-          />
         </div>
 
-        {/* Actividad Financiera Chart Card */}
-        <div className="w-full">
-          <Card className="w-full">
-            <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-col gap-0.5">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
-                Actividad Financiera: Ingresos vs Gastos ({reportYear})
-              </CardTitle>
-              <p className="text-[9px] text-white/70 font-semibold uppercase tracking-wider">
-                Comparativo mensual del flujo de caja (Recaudación de cuotas vs Egresos del condominio)
-              </p>
-            </CardHeader>
-            <CardContent className="px-2 pb-3 pt-4">
-              {chartData.length > 0 ? (
-                <FinancialChart data={chartData} />
-              ) : (
-                <div className="flex items-center justify-center h-[160px] text-[12px] text-ink-soft/50 font-medium">
-                  Sin movimientos registrados para {reportYear}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <QuickAction
-            href="/reporte-condominio"
-            icon={<FileText className="h-4 w-4" />}
-            title="Generar reporte"
-            description="Estado actual del condominio en PDF."
-            cta="Continuar"
-          />
-          <QuickAction
-            href="/cobros-masivos"
-            icon={<Zap className="h-4 w-4" />}
-            title="Cobros masivos"
-            description="Proceso de cobranza para todas las áreas."
-            cta="Lanzar"
-          />
-          <QuickAction
-            href="/notificaciones"
-            icon={<Bell className="h-4 w-4" />}
-            title="Notificación masiva"
-            description="Comunicados masivos vía email/push."
-            cta="Redactar"
-          />
-        </div>
       </div>
     </div>
   );
 }
 
-// ─── Local sub-components ────────────────────────────────────────────────────
+// ─── Sub-componentes Locales ──────────────────────────────────────────────────
 
-function QuickAction({
+function CategoryCard({
+  href,
+  icon,
+  badge,
+  title,
+  description,
+  cta,
+  isSassi,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  badge: string;
+  title: string;
+  description: string;
+  cta: string;
+  isSassi?: boolean;
+}) {
+  return (
+    <Link href={href} className="block group">
+      <Card className={`p-5 h-full transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col justify-between border ${
+        isSassi ? "bg-white/95 backdrop-blur-md border-white/40 shadow-sm hover:shadow-md" : "hover:border-brand/40 hover:shadow-md"
+      }`}>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-brand/10 border border-brand/15 group-hover:bg-brand group-hover:text-white transition-colors">
+              {icon}
+            </span>
+            <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-canvas-2 text-ink-soft/70 border border-line/50">
+              {badge}
+            </span>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-bold text-ink group-hover:text-brand transition-colors">
+              {title}
+            </h3>
+            <p className="text-xs text-ink-soft/80 leading-relaxed mt-1">
+              {description}
+            </p>
+          </div>
+        </div>
+
+        <div className="pt-4 mt-2 border-t border-line/40 flex items-center text-xs font-bold text-brand group-hover:translate-x-0.5 transition-transform">
+          <span>{cta}</span>
+          <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
+        </div>
+      </Card>
+    </Link>
+  );
+}
+
+function QuickActionCard({
   href,
   icon,
   title,
   description,
   cta,
+  isSassi,
 }: {
   href: string;
   icon: React.ReactNode;
   title: string;
   description: string;
   cta: string;
+  isSassi?: boolean;
 }) {
   return (
     <Link href={href} className="block group">
-      <Card className="p-5 h-full transition-standard hover:shadow-md cursor-pointer">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-brand-deep text-brand-mint shrink-0 group-hover:bg-brand transition-colors">
-            {icon}
-          </span>
-          <h3 className="text-[13px] font-bold text-brand">{title}</h3>
+      <Card className={`p-5 h-full transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between border ${
+        isSassi ? "bg-white/95 backdrop-blur-md border-white/40 shadow-sm" : "hover:border-brand/30"
+      }`}>
+        <div className="space-y-3">
+          <div className="flex items-center gap-3">
+            <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-brand-deep text-white shrink-0 group-hover:bg-brand transition-colors">
+              {icon}
+            </span>
+            <h3 className="text-xs font-bold text-brand tracking-tight">
+              {title}
+            </h3>
+          </div>
+          <p className="text-xs text-ink-soft/80 leading-relaxed">
+            {description}
+          </p>
         </div>
-        <p className="text-[12px] text-ink-soft/80 leading-relaxed mb-4">
-          {description}
-        </p>
-        <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase tracking-tight shadow-md shadow-brand-deep/25 group-hover:bg-brand transition-colors">
-          <ArrowRight className="h-3 w-3" /> {cta}
-        </span>
+
+        <div className="pt-4 mt-3">
+          <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase tracking-tight shadow-xs group-hover:bg-brand transition-colors">
+            <ArrowRight className="h-3 w-3" /> {cta}
+          </span>
+        </div>
       </Card>
     </Link>
   );
