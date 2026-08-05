@@ -1833,12 +1833,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       requestedYear,
     );
 
-    const ordinaryIncomeSeries = sumSeries([
-      monthlyByKind[CHARGE_GROUP_KIND.ORDINARY],
-      monthlyByKind[CHARGE_GROUP_KIND.STC],
-      monthlyByKind[CHARGE_GROUP_KIND.SANCTION],
-      monthlyByKind[CHARGE_GROUP_KIND.COMODATO],
-    ]);
+    const ordinaryIncomeSeries = sumSeries(
+      ordinaryIncomeRowsSource.map(
+        (row) => ordinaryIncomeByRowAndYear.get(row.id)?.[requestedYear] ?? createZeroSeries(),
+      ),
+    );
+
 
     const requestedYearIsLegacyVisible = visibleYears.includes(
       requestedYear as number,
@@ -1949,10 +1949,11 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const ordinaryBanksSeries = ordinaryBankIncomeMonthly;
     const ordinaryCashSeries = ordinaryCashIncomeMonthly;
 
-    const extraordinaryIncomeSeries = sumSeries([
-      monthlyByKind[CHARGE_GROUP_KIND.EXTRA_CONDO],
-      monthlyByKind[CHARGE_GROUP_KIND.EXTRA_COMMERCE],
-    ]);
+    const extraordinaryIncomeSeries = sumSeries(
+      EXTRAORDINARY_INCOME_ROWS.map(
+        (row) => extraordinaryIncomeByRowAndYear[row.id][requestedYear] ?? createZeroSeries(),
+      ),
+    );
 
     const extraordinaryOtherSeriesList = extraordinaryOtherCatalogRows.map(
       (row) => extraordinaryOtherSeriesByRowForRequestedYear.get(row.id) ?? createZeroSeries(),
@@ -1980,10 +1981,13 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             id: "ordinary-income",
             title: "Ingresos mensuales",
             rows: [
-              toTableRow("ordinary-fee", "Cuotas ordinarias", monthlyByKind[CHARGE_GROUP_KIND.ORDINARY]),
-              toTableRow("stc-fee", "Cuotas STC", monthlyByKind[CHARGE_GROUP_KIND.STC]),
-              toTableRow("sanction-fee", "Sancion", monthlyByKind[CHARGE_GROUP_KIND.SANCTION]),
-              toTableRow("comodato-fee", "Comodato", monthlyByKind[CHARGE_GROUP_KIND.COMODATO]),
+              ...ordinaryIncomeRowsSource.map((row) =>
+                toTableRow(
+                  row.id,
+                  row.label,
+                  ordinaryIncomeByRowAndYear.get(row.id)?.[requestedYear] ?? createZeroSeries(),
+                ),
+              ),
               toTableRow("ordinary-income-total", "Total", ordinaryIncomeSeries, true),
             ],
           },
@@ -2043,15 +2047,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
             id: "extraordinary-income",
             title: "Ingresos mensuales",
             rows: [
-              toTableRow(
-                "extra-condo",
-                "Cuotas extraordinarias - Condominos",
-                monthlyByKind[CHARGE_GROUP_KIND.EXTRA_CONDO],
-              ),
-              toTableRow(
-                "extra-commerce",
-                "Cuota extraordinaria - Comercios",
-                monthlyByKind[CHARGE_GROUP_KIND.EXTRA_COMMERCE],
+              ...EXTRAORDINARY_INCOME_ROWS.map((row) =>
+                toTableRow(
+                  row.id,
+                  row.label,
+                  extraordinaryIncomeByRowAndYear[row.id][requestedYear] ?? createZeroSeries(),
+                ),
               ),
               toTableRow("extra-income-total", "Total", extraordinaryIncomeSeries, true),
             ],
