@@ -16,7 +16,7 @@
  */
 import * as React from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 
 import { cn } from "@/shared/utils/cn";
 
@@ -146,6 +146,57 @@ export function StatusBadge({
     >
       {children}
     </span>
+  );
+}
+
+/* ── Tarjeta de módulo ───────────────────────────────────────────────────── */
+
+/**
+ * Entrada a un módulo: la tarjeta sí se gana el espacio cuando lleva una
+ * descripción que explica qué hay dentro (a diferencia del acceso rápido, que
+ * es sólo un destino y va como fila).
+ *
+ * Diferencias con la versión de la que viene: el icono va en una teja NEUTRA
+ * y monocroma en vez de un chip de color por categoría, el badge es un tinte
+ * gris de 4px en vez de una pastilla, y el título va en sentence case. La
+ * categoría se distingue por la palabra, no por el color — con cuatro tarjetas
+ * equivalentes, cuatro colores no informan de nada.
+ */
+export function ModuleCard({
+  href,
+  icon,
+  badge,
+  title,
+  description,
+  cta,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  badge?: string;
+  title: string;
+  description: string;
+  cta: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group flex flex-col rounded-panel border border-stroke-2 bg-surface p-4 transition-colors hover:bg-surface-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-ctrl bg-surface-3 text-fg-2">
+          {icon}
+        </span>
+        {badge && <StatusBadge>{badge}</StatusBadge>}
+      </div>
+      <h3 className="mt-3 text-[14px] font-semibold leading-5 text-fg">{title}</h3>
+      {/* flex-1 empuja el CTA al fondo: sin esto, tarjetas con descripciones de
+          distinto largo dejan los enlaces a alturas distintas en la misma fila. */}
+      <p className="mt-1 flex-1 text-[12px] leading-4 text-fg-3">{description}</p>
+      <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-brand">
+        {cta}
+        <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+      </span>
+    </Link>
   );
 }
 

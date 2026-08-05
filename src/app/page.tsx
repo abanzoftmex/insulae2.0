@@ -6,7 +6,6 @@ import {
   BarChart3,
   Bell,
   BookOpen,
-  Building2,
   DollarSign,
   FileText,
   Image as ImageIcon,
@@ -31,6 +30,7 @@ import {
   EmptyState,
   InvertedLink,
   Metric,
+  ModuleCard,
   StatusBadge,
   SubtleLink,
   Surface,
@@ -244,9 +244,10 @@ export default async function Home() {
           blanco/90 ~5.9:1 y blanco/80 ~5.1:1. Por debajo de /80 el texto de
           12px cae bajo AA, así que ese es el piso. */}
       <section className="relative overflow-hidden rounded-panel bg-brand px-6 py-6">
-        {/* Marca de agua. Sangra por el borde derecho y la recortan las esquinas
-            del panel (`overflow-hidden`), que es lo que la hace parecer parte de
-            la superficie y no una imagen pegada encima.
+        {/* Marca de agua completa, separada del borde: el logo lleva el escudo
+            a la izquierda y el logotipo a la derecha, así que al sangrarlo se
+            perdía justo el final de la palabra y se leía como un recorte, no
+            como una marca.
 
             Opacidad 8%: sobre el olivo, el blanco del logo levanta el fondo a
             ~#6b6947, así que el texto blanco encima sigue en 5.6:1 — AA incluso
@@ -259,7 +260,7 @@ export default async function Home() {
           width={1077}
           height={290}
           priority
-          className="pointer-events-none absolute -right-10 top-1/2 hidden w-[460px] -translate-y-1/2 opacity-[0.08] md:block"
+          className="pointer-events-none absolute right-6 top-1/2 hidden w-[420px] -translate-y-1/2 opacity-[0.08] md:block"
         />
 
         <div className="relative flex flex-wrap items-center justify-between gap-x-8 gap-y-5">
@@ -328,6 +329,58 @@ export default async function Home() {
           icon={<AlertTriangle className="h-4 w-4" />}
         />
       </div>
+
+      {/* ── Módulos de gestión ─────────────────────────────────────────────
+          Las cuatro entradas vienen de la versión de `9d6a82c` ("Módulos de
+          Gestión Diario"), incluidas sus descripciones. Se mantienen como
+          TARJETAS y no como filas: aquí la descripción explica qué hay dentro
+          del módulo, y eso justifica el espacio. El acceso rápido de abajo es
+          sólo un destino, por eso ese sí va como fila. */}
+      <section className="space-y-3">
+        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+          <h2 className="text-[14px] font-semibold leading-5 text-fg">
+            Módulos de gestión
+          </h2>
+          <span className="text-[12px] leading-4 text-fg-3">
+            Selecciona una categoría para navegar
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <ModuleCard
+            href="/directorio"
+            icon={<Users className="h-4 w-4" />}
+            badge="Comunidad"
+            title="Propietarios y residentes"
+            description="Directorio unificado de residentes, arrendatarios, arrendadores y contactos de emergencia."
+            cta="Ver directorio"
+          />
+          <ModuleCard
+            href="/areas-privativas"
+            icon={<MapPin className="h-4 w-4" />}
+            badge="Inmuebles"
+            title="Áreas privativas"
+            description="Catálogo de lotes, viviendas, locales comerciales y zonas del condominio."
+            cta="Ver inmuebles"
+          />
+          <ModuleCard
+            href="/tickets"
+            icon={<TicketIcon className="h-4 w-4" />}
+            badge="Atención"
+            title="Solicitudes y soporte"
+            description="Seguimiento de tickets, reportes de mantenimiento y solicitudes de residentes."
+            cta="Atender solicitudes"
+          />
+          <ModuleCard
+            href="/reglamentos"
+            icon={<BookOpen className="h-4 w-4" />}
+            badge="Normativa"
+            title="Documentos y reglamentos"
+            description="Estatutos condominales, acuerdos de asamblea y normas comunitarias de convivencia."
+            cta="Consultar normas"
+          />
+        </div>
+      </section>
 
       {/* ── Finanzas + tickets ─────────────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
@@ -442,12 +495,12 @@ export default async function Home() {
         </Surface>
 
         <Surface className="xl:col-span-4">
-          <SurfaceHeader title="Accesos rápidos" subtitle="Módulos y tareas frecuentes" />
-          {/* Rutas y copy fusionados con la versión de `9d6a82c` (sus
-              "Módulos de Gestión" + "Acciones Frecuentes"): de ahí vienen
-              /reglamentos, que aquí no existía, y descripciones que dicen qué
-              hay dentro en vez de repetir el título. Se sirven como filas de
-              comando, no como 7 tarjetas: mismo dato, un sexto del espacio. */}
+          <SurfaceHeader title="Acciones frecuentes" subtitle="Tareas del día a día" />
+          {/* Copy tomado de "Acciones Frecuentes" de `9d6a82c`. Aquí NO se
+              repiten directorio, áreas privativas ni reglamentos: ya son
+              tarjetas arriba, y duplicar el mismo destino en dos formatos
+              obliga a leer la página dos veces para saber que llevan al mismo
+              sitio. Esto son acciones (hacer algo), no módulos (ir a algo). */}
           <div className="py-1">
             <ActionRow
               href="/reporte-condominio"
@@ -468,22 +521,10 @@ export default async function Home() {
               description="Avisos por correo o portal del residente"
             />
             <ActionRow
-              href="/directorio"
-              icon={<Users className="h-4 w-4" />}
-              label="Propietarios y residentes"
-              description="Residentes, arrendatarios y contactos de emergencia"
-            />
-            <ActionRow
-              href="/areas-privativas"
-              icon={<Building2 className="h-4 w-4" />}
-              label="Áreas privativas"
-              description="Lotes, viviendas, locales y zonas"
-            />
-            <ActionRow
-              href="/reglamentos"
-              icon={<BookOpen className="h-4 w-4" />}
-              label="Documentos y reglamentos"
-              description="Estatutos, acuerdos de asamblea y normas"
+              href="/estadisticas"
+              icon={<BarChart3 className="h-4 w-4" />}
+              label="Estadísticas del condominio"
+              description="Ocupación, giros y perfil de la comunidad"
             />
             <ActionRow
               href="/resumen-financiero"
