@@ -1,14 +1,21 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import Image from "next/image";
+import { cookies } from "next/headers";
 import {
-  Users,
-  MapPin,
-  Ticket as TicketIcon,
-  ArrowRight,
-  FileText,
-  Zap,
+  AlertTriangle,
+  BarChart3,
   Bell,
+  Building2,
   DollarSign,
+  FileText,
+  Image as ImageIcon,
+  MapPin,
+  Paperclip,
+  Scale,
+  Ticket as TicketIcon,
+  Users,
+  Wallet,
+  Zap,
 } from "lucide-react";
 
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
@@ -16,41 +23,166 @@ import { getFinancialSummaryUseCase } from "@/modules/financial-summary";
 import { getDirectoryUseCase } from "@/modules/directory";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { StatCard } from "@/components/ui/stat-card";
 import { FinancialChart } from "@/components/ui/financial-chart";
 import { LiveClock } from "@/components/ui/live-clock";
+import {
+  ActionRow,
+  EmptyState,
+  InvertedLink,
+  Metric,
+  StatusBadge,
+  SubtleLink,
+  Surface,
+  SurfaceHeader,
+} from "@/components/ui/fluent";
 
 export const metadata: Metadata = {
   title: "Inicio | Val'Quirico",
   description: "Inicio operativo del condominio con accesos rápidos a módulos principales.",
 };
 
+export const dynamic = "force-dynamic";
+
+const TIME_ZONE = "America/Mexico_City";
+const MONTH_ABBR = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+
+const TICKET_STATUS: Record<
+  string,
+  { label: string; tone: "neutral" | "brand" | "positive" | "critical" }
+> = {
+  OPEN: { label: "Abierto", tone: "brand" },
+  IN_PROGRESS: { label: "En proceso", tone: "neutral" },
+  RESOLVED: { label: "Resuelto", tone: "positive" },
+  CLOSED: { label: "Cerrado", tone: "neutral" },
+};
+
+/** Saludo según la hora local del condominio, no la del servidor. */
+function greetingFor(date: Date): string {
+  const hour = Number(
+    new Intl.DateTimeFormat("en-US", { hour: "numeric", hourCycle: "h23", timeZone: TIME_ZONE }).format(date),
+  );
+  if (hour < 12) return "Buenos días";
+  if (hour < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+function firstName(fullName: string): string {
+  const [first] = fullName.trim().split(/\s+/);
+  return first || fullName;
+}
+
+async function getSessionUserName(): Promise<string | null> {
+  try {
+    const sessionStr = (await cookies()).get("insulae_session")?.value;
+    if (!sessionStr) return null;
+    const session = JSON.parse(sessionStr) as { name?: string };
+    return session.name?.trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+function formatShortDate(value: Date | null): string {
+  if (!value) return "—";
+  return new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "short",
+    timeZone: TIME_ZONE,
+  }).format(value);
+}
+
+function formatCount(value: number): string {
+  return value.toLocaleString("es-MX");
+}
+
+/** Importes compactos: en un KPI, `$1.2M` informa lo mismo que 12 dígitos y no rompe la caja. */
+function formatMoney(value: number): string {
+  const abs = Math.abs(value);
+  const sign = value < 0 ? "−" : "";
+  if (abs >= 1_000_000) return `${sign}$${(abs / 1_000_000).toFixed(1)}M`;
+  if (abs >= 10_000) return `${sign}$${Math.round(abs / 1_000)}k`;
+  return `${sign}$${abs.toLocaleString("es-MX", { maximumFractionDigits: 0 })}`;
+}
+
 export default async function Home() {
-  const currentYear = new Date().getFullYear();
+  const now = new Date();
+  const currentYear = now.getFullYear();
   const prevYear = currentYear - 1;
+  const activeCondominium = { condominium: { isActive: true } };
 
   const [
+    userName,
     condominiumOverview,
     financialSummaryCurrent,
     financialSummaryPrev,
     directoryOverview,
     openTicketsCount,
+    ticketStatusBreakdown,
+    recentTickets,
+    recentNotifications,
+    activeNoticesCount,
+    debtAreasCount,
   ] = await Promise.all([
+    getSessionUserName(),
     getCondominiumOverviewUseCase.execute(),
     getFinancialSummaryUseCase.execute({ year: currentYear }),
     getFinancialSummaryUseCase.execute({ year: prevYear }),
     getDirectoryUseCase.execute({ query: "", page: 1, pageSize: 1 }),
     prisma.ticket.count({
+      where: { ...activeCondominium, status: { in: ["OPEN", "IN_PROGRESS"] } },
+    }),
+    prisma.ticket.groupBy({
+      by: ["status"],
+      where: activeCondominium,
+      _count: { _all: true },
+    }),
+    prisma.ticket.findMany({
+      where: { ...activeCondominium, status: { in: ["OPEN", "IN_PROGRESS"] } },
+      orderBy: { openedAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        openedAt: true,
+        department: { select: { name: true } },
+        privateArea: { select: { code: true, name: true } },
+      },
+    }),
+    prisma.notification.findMany({
+      where: activeCondominium,
+      orderBy: [{ sentAt: { sort: "desc", nulls: "last" } }],
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        message: true,
+        sentAt: true,
+        imageUrl: true,
+        pdfUrl: true,
+        categoryRef: { select: { name: true } },
+      },
+    }),
+    prisma.notification.count({
+      where: { ...activeCondominium, validUntil: { gte: now } },
+    }),
+    // Sólo el CONTEO de áreas con cargos abiertos: los montos de cartera
+    // migrados están inflados y no deben publicarse como importe.
+    //
+    // Se cuenta a nivel PADRE (`parentPrivateAreaId: null`) a propósito: el
+    // padrón que muestra la tarjeta de al lado (`activePrivateAreas`) también
+    // es de padres. Contar por `Charge.privateAreaId` sin filtrar mete las
+    // 1,254 áreas hijas y el porcentaje se dispara por encima del 100%.
+    prisma.privateArea.count({
       where: {
-        condominium: { isActive: true },
-        status: { in: ["OPEN", "IN_PROGRESS"] },
+        ...activeCondominium,
+        parentPrivateAreaId: null,
+        charges: { some: { isCollectible: true, status: { in: ["OPEN", "PARTIAL"] } } },
       },
     }),
   ]);
 
-  // Use the most recent year that has actual financial data
+  // Usa el año más reciente que efectivamente tenga movimientos.
   const hasCurrentYearData = financialSummaryCurrent?.months.some(
     (m) => m.totalIncome > 0 || m.totalExpenses > 0,
   );
@@ -58,17 +190,20 @@ export default async function Home() {
     ? financialSummaryCurrent
     : (financialSummaryPrev ?? financialSummaryCurrent);
 
-  const stats = {
-    areas: condominiumOverview?.activePrivateAreas ?? 0,
-    residents: directoryOverview?.totalUsers ?? 0,
-    collections: financialSummary?.totals.totalIncome ?? 0,
-    openTickets: openTicketsCount,
-  };
-
   const reportYear = financialSummary?.year ?? currentYear;
+  const totalIncome = financialSummary?.totals.totalIncome ?? 0;
+  const totalExpenses = financialSummary?.totals.totalExpenses ?? 0;
+  const netBalance = totalIncome - totalExpenses;
 
-  const MONTH_ABBR = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-  // Only include months that have at least some income or expense data
+  const activeAreas = condominiumOverview?.activePrivateAreas ?? 0;
+  const debtCoverage = activeAreas > 0 ? Math.round((debtAreasCount / activeAreas) * 100) : 0;
+
+  const ticketCounts = ticketStatusBreakdown.reduce<Record<string, number>>((acc, row) => {
+    acc[row.status] = row._count._all;
+    return acc;
+  }, {});
+  const totalTickets = Object.values(ticketCounts).reduce((sum, n) => sum + n, 0);
+
   const chartData = (financialSummary?.months ?? [])
     .filter((m) => m.totalIncome > 0 || m.totalExpenses > 0)
     .map((m) => ({
@@ -82,201 +217,271 @@ export default async function Home() {
       totalExpenses: m.totalExpenses,
     }));
 
-  const condominiumName =
-    condominiumOverview?.condominiumName || "Val'Quirico";
-  const initialDate = new Date().toLocaleDateString("es-MX", {
+  const condominiumName = condominiumOverview?.condominiumName || "Val'Quirico";
+  const initialDate = now.toLocaleDateString("es-MX", {
     day: "numeric",
     month: "long",
     year: "numeric",
-    timeZone: "America/Mexico_City",
+    timeZone: TIME_ZONE,
   });
-  const initialTime = new Date().toLocaleTimeString("es-MX", {
+  const initialTime = now.toLocaleTimeString("es-MX", {
     hour: "2-digit",
     minute: "2-digit",
     hour12: true,
-    timeZone: "America/Mexico_City",
+    timeZone: TIME_ZONE,
   });
 
-  const isSassi = condominiumOverview?.condominiumSlug === "sassi";
-
   return (
-    <div
-      className={
-        isSassi
-          ? "space-y-6 min-h-screen relative overflow-hidden -m-4 md:-m-6 lg:-mt-8 lg:-mx-10 lg:-mb-24 p-4 md:p-6 lg:pt-8 lg:px-10 lg:pb-32 bg-cover bg-center bg-no-repeat shadow-card"
-          : "space-y-6"
-      }
-      style={
-        isSassi
-          ? {
-              backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)), url('/images/fdo2.jpg')",
-            }
-          : undefined
-      }
-    >
-      <div className="relative z-10 space-y-6">
-        {/* Page header */}
-        {condominiumOverview?.condominiumSlug === "sassi" && condominiumOverview?.condominiumImageUrl ? (
-          <div
-            className="relative overflow-hidden rounded-card bg-cover bg-center p-6 md:p-8 shadow-card border border-brand/20 min-h-[140px] flex items-center"
-            style={{ 
-              backgroundImage: `linear-gradient(rgba(30, 57, 50, 0.95), rgba(30, 57, 50, 0.80)), url(${condominiumOverview.condominiumImageUrl})` 
-            }}
-          >
-            <div className="relative z-10 flex flex-col gap-2 min-w-0">
-              <Badge 
-                variant="brand" 
-                className="w-fit rounded-full px-4 py-1.5 text-[9px] tracking-widest bg-brand-mint text-brand-deep font-bold border-none uppercase shadow-sm"
-              >
-                Información y Gestión
-              </Badge>
-              <div className="flex flex-col gap-1.5 mt-1">
-                <h1 className="text-3xl font-bold text-white tracking-tighter uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]">
-                  Bienvenido a tu gestor de condominio
-                </h1>
-                <p className="text-brand-mint/90 text-[11px] font-bold uppercase tracking-wider drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
-                  {condominiumName} · <LiveClock initialDate={initialDate} initialTime={initialTime} />
+    <div className="space-y-5">
+      {/* ── Banner de bienvenida ───────────────────────────────────────────
+          Color de marca PLANO. Lo que hacía que la versión anterior se leyera
+          decorativa no era el color: era el gradiente de tres paradas, las
+          pastillas y las sombras sobre el texto. Un banner de marca sólido sí
+          es Fluent — es el patrón de cabecera de los productos de Microsoft.
+
+          Opacidades del texto calibradas contra #5d5b35: blanco 6.97:1,
+          blanco/90 ~5.9:1 y blanco/80 ~5.1:1. Por debajo de /80 el texto de
+          12px cae bajo AA, así que ese es el piso. */}
+      <section className="relative overflow-hidden rounded-panel bg-brand px-6 py-6">
+        {/* Marca de agua. Sangra por el borde derecho y la recortan las esquinas
+            del panel (`overflow-hidden`), que es lo que la hace parecer parte de
+            la superficie y no una imagen pegada encima.
+
+            Opacidad 8%: sobre el olivo, el blanco del logo levanta el fondo a
+            ~#6b6947, así que el texto blanco encima sigue en 5.6:1 — AA incluso
+            donde se superpone. Por eso el texto puede pasar por encima sin
+            reservarle hueco. */}
+        <Image
+          src="/brand/valquirico-logo-light.png"
+          alt=""
+          aria-hidden
+          width={1077}
+          height={290}
+          priority
+          className="pointer-events-none absolute -right-10 top-1/2 hidden w-[460px] -translate-y-1/2 opacity-[0.08] md:block"
+        />
+
+        <div className="relative flex flex-wrap items-center justify-between gap-x-8 gap-y-5">
+          <div className="min-w-0 max-w-2xl">
+            <p className="text-[12px] leading-4 text-white/80">
+              Insulae 2.0 · {condominiumName} ·{" "}
+              <LiveClock initialDate={initialDate} initialTime={initialTime} />
+            </p>
+            <h1 className="mt-1.5 text-[28px] font-semibold leading-9 tracking-[-0.02em] text-white">
+              {greetingFor(now)}
+              {userName ? `, ${firstName(userName)}` : ""}
+            </h1>
+            <p className="mt-2 text-[14px] leading-5 text-white/90">
+              Plataforma de administración condominal: padrón de residentes y áreas
+              privativas, cuotas y cobranza, finanzas, comunicados, gobernanza y
+              atención a incidencias.
+            </p>
+            <div className="mt-4">
+              <InvertedLink href="/estadisticas" icon={<BarChart3 className="h-4 w-4" />}>
+                Ver estadísticas
+              </InvertedLink>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* ── Indicadores ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <Metric
+          label="Áreas privativas"
+          value={formatCount(activeAreas)}
+          footnote={`${formatCount(condominiumOverview?.inactivePrivateAreas ?? 0)} inactivas`}
+          icon={<MapPin className="h-4 w-4" />}
+        />
+        <Metric
+          label="Residentes"
+          value={formatCount(directoryOverview?.totalUsers ?? 0)}
+          footnote="En el directorio"
+          icon={<Users className="h-4 w-4" />}
+        />
+        <Metric
+          label={`Cobranza ${reportYear}`}
+          value={formatMoney(totalIncome)}
+          footnote="Total recaudado"
+          icon={<DollarSign className="h-4 w-4" />}
+        />
+        <Metric
+          label={`Balance ${reportYear}`}
+          value={formatMoney(netBalance)}
+          footnote={netBalance >= 0 ? "Superávit del ejercicio" : "Déficit del ejercicio"}
+          tone={netBalance >= 0 ? "positive" : "critical"}
+          icon={<Scale className="h-4 w-4" />}
+        />
+        <Metric
+          label="Tickets abiertos"
+          value={formatCount(openTicketsCount)}
+          footnote={`${formatCount(totalTickets)} en total`}
+          icon={<TicketIcon className="h-4 w-4" />}
+        />
+        <Metric
+          label="Áreas con adeudo"
+          value={formatCount(debtAreasCount)}
+          footnote={activeAreas > 0 ? `${debtCoverage}% del padrón` : "Sin padrón activo"}
+          tone={debtAreasCount > 0 ? "critical" : "neutral"}
+          icon={<AlertTriangle className="h-4 w-4" />}
+        />
+      </div>
+
+      {/* ── Finanzas + tickets ─────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
+        <Surface className="flex flex-col xl:col-span-8">
+          <SurfaceHeader
+            title="Actividad financiera"
+            subtitle={`Ingresos y egresos mensuales · ${reportYear}`}
+            action={<SubtleLink href="/resumen-financiero">Ver resumen</SubtleLink>}
+          />
+          {/* min-h da un piso cuando la columna NO se estira (móvil): sin él,
+              un contenedor de altura indeterminada colapsa la gráfica a 0. */}
+          <div className="min-h-[260px] flex-1 px-1 py-3">
+            {chartData.length > 0 ? (
+              <FinancialChart data={chartData} />
+            ) : (
+              <EmptyState message={`Sin movimientos registrados en ${reportYear}`} />
+            )}
+          </div>
+        </Surface>
+
+        <Surface className="flex flex-col xl:col-span-4">
+          <SurfaceHeader
+            title="Tickets"
+            subtitle={`${formatCount(openTicketsCount)} requieren atención`}
+            action={<SubtleLink href="/tickets">Ver todos</SubtleLink>}
+          />
+
+          <div className="grid grid-cols-4 divide-x divide-stroke-3 border-b border-stroke-3">
+            {(["OPEN", "IN_PROGRESS", "RESOLVED", "CLOSED"] as const).map((status) => (
+              <div key={status} className="px-1 py-3 text-center">
+                <p className="text-[20px] font-semibold leading-6 text-fg tabular-nums">
+                  {formatCount(ticketCounts[status] ?? 0)}
+                </p>
+                <p className="mt-0.5 text-[12px] leading-4 text-fg-3">
+                  {TICKET_STATUS[status].label}
                 </p>
               </div>
-            </div>
+            ))}
           </div>
-        ) : (
-          <div className={`flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b ${isSassi ? "border-white/20" : "border-brand"}`}>
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <h1 className={`text-3xl font-bold tracking-tighter uppercase ${isSassi ? "text-white drop-shadow-sm" : "text-brand"}`}>
-                Bienvenido a tu gestor de condominio
-              </h1>
-              <Badge 
-                variant="brand" 
-                className={isSassi ? "w-fit rounded-full px-4 py-2 text-[10px] tracking-widest bg-brand-mint text-brand-deep border-none shadow-sm" : "w-fit rounded-full px-4 py-2 text-[10px] tracking-widest"}
-              >
-                Información y Gestión
-              </Badge>
-              <p className={`text-[11px] font-bold uppercase tracking-tight ${isSassi ? "text-brand-mint/90 drop-shadow-sm" : "text-ink-soft/80"}`}>
-                {condominiumName} · <LiveClock initialDate={initialDate} initialTime={initialTime} />
-              </p>
-            </div>
+
+          {recentTickets.length === 0 ? (
+            <EmptyState message="Sin tickets pendientes." />
+          ) : (
+            <ul className="divide-y divide-stroke-3">
+              {recentTickets.map((ticket) => {
+                const status = TICKET_STATUS[ticket.status];
+                const area = ticket.privateArea?.code || ticket.privateArea?.name;
+                return (
+                  <li key={ticket.id} className="px-4 py-3 transition-colors hover:bg-surface-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="truncate text-[14px] font-medium leading-5 text-fg">
+                        {ticket.title}
+                      </p>
+                      <StatusBadge tone={status.tone}>{status.label}</StatusBadge>
+                    </div>
+                    <p className="mt-0.5 truncate text-[12px] leading-4 text-fg-3">
+                      {[ticket.department?.name, area, formatShortDate(ticket.openedAt)]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </p>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Surface>
+      </div>
+
+      {/* ── Comunicados + accesos ──────────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-3 xl:grid-cols-12">
+        <Surface className="xl:col-span-8">
+          <SurfaceHeader
+            title="Comunicados"
+            subtitle={
+              activeNoticesCount > 0
+                ? `${formatCount(activeNoticesCount)} vigentes`
+                : "Últimos publicados"
+            }
+            action={<SubtleLink href="/notificaciones">Ver todos</SubtleLink>}
+          />
+          {recentNotifications.length === 0 ? (
+            <EmptyState message="Aún no hay comunicados publicados." />
+          ) : (
+            <ul className="divide-y divide-stroke-3">
+              {recentNotifications.map((notice) => (
+                <li
+                  key={notice.id}
+                  className="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-surface-3"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5">
+                      <p className="truncate text-[14px] font-medium leading-5 text-fg">
+                        {notice.title}
+                      </p>
+                      {notice.imageUrl && <ImageIcon className="h-3.5 w-3.5 shrink-0 text-fg-4" />}
+                      {notice.pdfUrl && <Paperclip className="h-3.5 w-3.5 shrink-0 text-fg-4" />}
+                    </div>
+                    <p className="truncate text-[12px] leading-4 text-fg-3">{notice.message}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2">
+                    {notice.categoryRef?.name && (
+                      <StatusBadge>{notice.categoryRef.name}</StatusBadge>
+                    )}
+                    <span className="w-14 text-right text-[12px] leading-5 text-fg-3 tabular-nums">
+                      {formatShortDate(notice.sentAt)}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Surface>
+
+        <Surface className="xl:col-span-4">
+          <SurfaceHeader title="Accesos rápidos" subtitle="Tareas frecuentes" />
+          <div className="py-1">
+            <ActionRow
+              href="/reporte-condominio"
+              icon={<FileText className="h-4 w-4" />}
+              label="Generar reporte"
+              description="Estado del condominio en PDF"
+            />
+            <ActionRow
+              href="/cobros-masivos"
+              icon={<Zap className="h-4 w-4" />}
+              label="Cobros masivos"
+              description="Cobranza para todas las áreas"
+            />
+            <ActionRow
+              href="/notificaciones"
+              icon={<Bell className="h-4 w-4" />}
+              label="Notificación masiva"
+              description="Comunicados por email o push"
+            />
+            <ActionRow
+              href="/directorio"
+              icon={<Users className="h-4 w-4" />}
+              label="Directorio"
+              description="Propietarios y arrendatarios"
+            />
+            <ActionRow
+              href="/areas-privativas"
+              icon={<Building2 className="h-4 w-4" />}
+              label="Áreas privativas"
+              description="Inventario e indivisos"
+            />
+            <ActionRow
+              href="/resumen-financiero"
+              icon={<Wallet className="h-4 w-4" />}
+              label="Resumen financiero"
+              description="Balance, cartera y resultados"
+            />
           </div>
-        )}
-
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatCard
-            accent="brand"
-            label="Áreas privativas"
-            value={stats.areas.toLocaleString()}
-            icon={<MapPin className="h-3.5 w-3.5" />}
-            trend={{ value: "+0.5%", isUp: true }}
-            className={isSassi ? "bg-white border-brand/20 shadow-sm" : ""}
-          />
-          <StatCard
-            accent="lime"
-            label="Residentes"
-            value={stats.residents.toLocaleString()}
-            icon={<Users className="h-3.5 w-3.5" />}
-            className={isSassi ? "bg-white border-lime-200/60 shadow-sm" : ""}
-          />
-          <StatCard
-            accent="emerald"
-            label={`Cobranza Anual (${reportYear})`}
-            value={`$${stats.collections.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-            icon={<DollarSign className="h-3.5 w-3.5" />}
-            trend={{ value: "Total Recaudado", isUp: true }}
-            className={isSassi ? "bg-white border-emerald-200/60 shadow-sm" : ""}
-          />
-          <StatCard
-            accent="cyan"
-            label="Tickets abiertos"
-            value={String(stats.openTickets)}
-            icon={<TicketIcon className="h-3.5 w-3.5" />}
-            trend={stats.openTickets > 0 ? { value: String(stats.openTickets), isUp: false } : undefined}
-            className={isSassi ? "bg-white border-cyan-200/60 shadow-sm" : ""}
-          />
-        </div>
-
-        {/* Actividad Financiera Chart Card */}
-        <div className="w-full">
-          <Card className="w-full">
-            <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-col gap-0.5">
-              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
-                Actividad Financiera: Ingresos vs Gastos ({reportYear})
-              </CardTitle>
-              <p className="text-[9px] text-white/70 font-semibold uppercase tracking-wider">
-                Comparativo mensual del flujo de caja (Recaudación de cuotas vs Egresos del condominio)
-              </p>
-            </CardHeader>
-            <CardContent className="px-2 pb-3 pt-4">
-              {chartData.length > 0 ? (
-                <FinancialChart data={chartData} />
-              ) : (
-                <div className="flex items-center justify-center h-[160px] text-[12px] text-ink-soft/50 font-medium">
-                  Sin movimientos registrados para {reportYear}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick actions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <QuickAction
-            href="/reporte-condominio"
-            icon={<FileText className="h-4 w-4" />}
-            title="Generar reporte"
-            description="Estado actual del condominio en PDF."
-            cta="Continuar"
-          />
-          <QuickAction
-            href="/cobros-masivos"
-            icon={<Zap className="h-4 w-4" />}
-            title="Cobros masivos"
-            description="Proceso de cobranza para todas las áreas."
-            cta="Lanzar"
-          />
-          <QuickAction
-            href="/notificaciones"
-            icon={<Bell className="h-4 w-4" />}
-            title="Notificación masiva"
-            description="Comunicados masivos vía email/push."
-            cta="Redactar"
-          />
-        </div>
+        </Surface>
       </div>
     </div>
-  );
-}
-
-// ─── Local sub-components ────────────────────────────────────────────────────
-
-function QuickAction({
-  href,
-  icon,
-  title,
-  description,
-  cta,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  cta: string;
-}) {
-  return (
-    <Link href={href} className="block group">
-      <Card className="p-5 h-full transition-standard hover:shadow-md cursor-pointer">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="inline-flex items-center justify-center h-9 w-9 rounded-lg bg-brand-deep text-brand-mint shrink-0 group-hover:bg-brand transition-colors">
-            {icon}
-          </span>
-          <h3 className="text-[13px] font-bold text-brand">{title}</h3>
-        </div>
-        <p className="text-[12px] text-ink-soft/80 leading-relaxed mb-4">
-          {description}
-        </p>
-        <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase tracking-tight shadow-md shadow-brand-deep/25 group-hover:bg-brand transition-colors">
-          <ArrowRight className="h-3 w-3" /> {cta}
-        </span>
-      </Card>
-    </Link>
   );
 }

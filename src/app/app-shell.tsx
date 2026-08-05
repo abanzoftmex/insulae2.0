@@ -1,148 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState, type ElementType } from "react";
-import {
-  BarChart3,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  X,
-  Search,
-  Users,
-  FileText,
-  MapPin,
-  BookOpen,
-  Settings,
-  Ticket,
-  TrendingUp,
-  TrendingDown,
-  PieChart,
-  ClipboardList,
-  AlertCircle,
-  Home,
-  ChevronDown,
-  LogOut,
-  RefreshCw,
-  type LucideIcon,
-} from "lucide-react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { Menu } from "lucide-react";
 import { useHydratedSidebar } from "@/stores/ui-sidebar.store";
 import { cn } from "@/shared/utils/cn";
 import { SearchModal } from "@/components/ui/search-modal";
-import { usePermissions } from "@/components/providers/permissions-provider";
-
-type NavItem = {
-  label: string;
-  href?: string;
-  icon: LucideIcon | ElementType;
-  requiredModule?: string;
-  items?: { label: string; href: string; requiredModule?: string }[];
-};
-
-type NavSection = {
-  title: string;
-  items: NavItem[];
-};
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    title: "Gestión",
-    items: [
-      { label: "Inicio", href: "/", icon: Home },
-      { label: "Estadísticas", href: "/estadisticas", icon: BarChart3, requiredModule: "Reporte condominio" },
-      {
-        label: "Condominio",
-        icon: Settings,
-        items: [
-          { label: "Reporte Territorial", href: "/reporte-condominio", requiredModule: "Reporte condominio" },
-          { label: "Configuración", href: "/condominio", requiredModule: "Condominio" },
-          { label: "Estructura Condominal", href: "/estructura-condominal", requiredModule: "Estructura condominal" },
-        ],
-      },
-      { label: "Directorio de Personas", href: "/directorio", icon: BookOpen, requiredModule: "Directorio" },
-      { label: "Directorio de sitios", href: "/contactos", icon: Users, requiredModule: "Contactos" },
-      { label: "Reglamentos y Documentos", href: "/reglamentos", icon: FileText, requiredModule: "Reglamentos" },
-    ],
-  },
-  {
-    title: "Administración",
-    items: [
-      {
-        label: "Áreas Privativas",
-        icon: MapPin,
-        items: [
-          { label: "Listado", href: "/areas-privativas", requiredModule: "Areas privativas" },
-          { label: "Seguridad", href: "/listado-seguridad" },
-          { label: "Barrios", href: "/listado-zonas", requiredModule: "Barrios" },
-          { label: "Usos de Suelo", href: "/listado-usos-suelo", requiredModule: "Usos de suelo" },
-        ],
-      },
-      {
-        label: "Atención",
-        icon: Ticket,
-        items: [
-          { label: "Tickets", href: "/tickets", requiredModule: "Tickets" },
-          { label: "Departamentos", href: "/departamentos-tickets", requiredModule: "Departamentos tickets" },
-          { label: "Notificaciones", href: "/notificaciones", requiredModule: "Notificaciones" },
-          { label: "Categorías", href: "/categorias-notificacion", requiredModule: "Categorías notificaciones" },
-        ],
-      },
-    ],
-  },
-  {
-    title: "Financiero",
-    items: [
-      { label: "Resumen", href: "/resumen-financiero", icon: PieChart, requiredModule: "Resumen financiero" },
-      {
-        label: "Ingresos",
-        icon: TrendingUp,
-        items: [
-          { label: "Listado", href: "/listado-ingresos", requiredModule: "Cobros" },
-          { label: "Estructura", href: "/listado-estructura-otros-ingresos", requiredModule: "Otros ingresos" },
-          { label: "Cobros Masivos", href: "/cobros-masivos", requiredModule: "Cobros masivos" },
-        ],
-      },
-      {
-        label: "Egresos",
-        icon: TrendingDown,
-        items: [
-          { label: "Gastos", href: "/listado-gastos", requiredModule: "Gastos" },
-          { label: "Presupuestos", href: "/presupuestos", requiredModule: "Presupuesto" },
-          { label: "Estructura Presupuestal", href: "/listado-estructura-presupuesto", requiredModule: "Estructura Presupuesto" },
-        ],
-      },
-      { label: "Sincronización Luca", href: "/sincronizacion-luca", icon: RefreshCw },
-      { label: "Cuotas Ordinarias", href: "/reporte-cuotas", icon: ClipboardList },
-      { label: "Cuotas Extraordinarias", href: "/reporte-cuotas-extraordinarias", icon: ClipboardList },
-      { label: "Sanciones", href: "/sanciones", icon: AlertCircle, requiredModule: "Catálogo de sanciones" },
-    ],
-  },
-  {
-    title: "Gobernanza",
-    items: [
-      { label: "Convocatorias", href: "/gobernanza/convocatorias", icon: ClipboardList, requiredModule: "Convocatorias" },
-    ],
-  },
-  {
-    title: "Condómino",
-    items: [
-      { label: "Mis convocatorias", href: "/condomino/mis-convocatorias", icon: FileText, requiredModule: "Convocatorias condómino" },
-    ],
-  },
-  {
-    title: "Seguridad",
-    items: [
-      { label: "Cambiar contraseña", href: "/cambio-contrasena", icon: Settings },
-      { label: "Roles", href: "/listado-roles", icon: Users, requiredModule: "Roles" },
-      { label: "Cerrar sesión", href: "/logout", icon: LogOut },
-    ],
-  },
-];
-
-function normalizePath(path: string): string {
-  return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
-}
+import {
+  DesktopSidebar,
+  MobileSidebar,
+  SIDEBAR_WIDTH_COLLAPSED,
+  SIDEBAR_WIDTH_EXPANDED,
+  normalizePath,
+} from "@/components/layout/app-sidebar";
 
 export function AppShell({
   children,
@@ -159,7 +29,8 @@ export function AppShell({
   const currentPath = normalizePath(pathname || "/");
   const { isCollapsed, isMobileOpen, toggleCollapsed, openMobile, closeMobile } =
     useHydratedSidebar();
-  const permissions = usePermissions();
+
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const userInitials = useMemo(() => {
     const parts = currentUserName.split(/\s+/).filter(Boolean);
@@ -168,37 +39,12 @@ export function AppShell({
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }, [currentUserName]);
 
-  const [openMenus, setOpenMenus] = useState<string[]>([]);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
-
-  const toggleMenu = (label: string) =>
-    setOpenMenus((prev) =>
-      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
-    );
-
-  // Auto-expand parent of active route
-  const activeParents = useMemo(() => {
-    const parents: string[] = [];
-    for (const section of NAV_SECTIONS)
-      for (const item of section.items)
-        if (item.items?.some((sub) => normalizePath(sub.href) === currentPath))
-          parents.push(item.label);
-    return parents;
-  }, [currentPath]);
-
-  useEffect(() => {
-    setOpenMenus((prev) => {
-      const merged = Array.from(new Set([...prev, ...activeParents]));
-      return merged.length === prev.length && merged.every((v) => prev.includes(v))
-        ? prev
-        : merged;
-    });
-  }, [activeParents]);
-
   // Body scroll lock
   useEffect(() => {
     document.body.style.overflow = isMobileOpen || isSearchOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isMobileOpen, isSearchOpen]);
 
   // Cmd+K / Ctrl+K
@@ -228,301 +74,14 @@ export function AppShell({
 
     const events = ["mousedown", "mousemove", "keypress", "scroll", "touchstart"];
 
-    // Set initial timer
     resetTimer();
-
-    // Attach activity listeners
-    events.forEach((event) => {
-      document.addEventListener(event, resetTimer);
-    });
+    events.forEach((event) => document.addEventListener(event, resetTimer));
 
     return () => {
       clearTimeout(timeoutId);
-      events.forEach((event) => {
-        document.removeEventListener(event, resetTimer);
-      });
+      events.forEach((event) => document.removeEventListener(event, resetTimer));
     };
   }, [currentPath]);
-
-  // ─── Nav item renderer ───────────────────────────────────────────────────────
-
-  // `collapsed` se parametriza porque el drawer móvil siempre renderiza
-  // expandido, sin importar la preferencia de colapso del sidebar desktop.
-  const renderNavItem = (item: NavItem, collapsed: boolean = isCollapsed) => {
-    const isActive = item.href ? currentPath === normalizePath(item.href) : false;
-    const hasSubmenu = !!item.items?.length;
-    const isOpen = openMenus.includes(item.label);
-    const Icon = item.icon;
-
-    // Expanded submenu
-    if (hasSubmenu && !collapsed) {
-      return (
-        <div key={item.label}>
-          <button
-            onClick={() => toggleMenu(item.label)}
-            className={cn(
-              "w-full flex items-center h-10 px-3 rounded-lg text-[14px] font-medium text-ink",
-              "hover:bg-[#f5f4f0] transition-standard group",
-              isOpen && "text-brand"
-            )}
-          >
-            <Icon
-              className={cn(
-                "shrink-0 text-ink-soft group-hover:text-brand transition-standard",
-                isOpen && "text-brand"
-              )}
-              style={{ width: 17, height: 17 }}
-              strokeWidth={1.5}
-            />
-            <span className="ml-2.5 flex-1 text-left truncate">{item.label}</span>
-            <ChevronDown
-              className={cn(
-                "shrink-0 text-ink-soft/50 transition-transform duration-200",
-                isOpen && "rotate-180"
-              )}
-              style={{ width: 13, height: 13 }}
-            />
-          </button>
-          {isOpen && (
-            <div className="ml-4 pl-3 border-l border-line mt-0.5 mb-1 space-y-0.5">
-              {item.items?.map((sub) => {
-                if (sub.requiredModule && !permissions[sub.requiredModule]?.canRead) return null;
-                const isSubActive = currentPath === normalizePath(sub.href);
-                return (
-                  <Link
-                    key={sub.href}
-                    href={sub.href}
-                    className={cn(
-                      "flex items-center h-8 px-2.5 rounded-md text-[13px] transition-standard",
-                      isSubActive
-                        ? "bg-brand-mint/30 text-brand font-semibold"
-                        : "text-ink-soft hover:text-ink hover:bg-[#f5f4f0]"
-                    )}
-                  >
-                    {sub.label}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      );
-    }
-
-    // Collapsed submenu — icon only. El título nativo sustituye a los tooltips
-    // personalizados: el overflow-hidden del aside los recortaba por completo.
-    if (hasSubmenu && collapsed) {
-      return (
-        <div key={item.label}>
-          <button
-            onClick={() => toggleMenu(item.label)}
-            className="w-full flex items-center justify-center h-10 rounded-lg text-ink-soft hover:bg-[#f5f4f0] hover:text-ink transition-standard"
-            aria-label={item.label}
-            title={item.label}
-          >
-            <Icon style={{ width: 17, height: 17 }} strokeWidth={1.5} />
-          </button>
-        </div>
-      );
-    }
-
-    // Regular link
-    if (item.href === "/logout") {
-      return (
-        <div key={item.label} className="relative">
-          <button
-            onClick={() => {
-              window.location.href = "/logout";
-            }}
-            className={cn(
-              "w-full flex items-center h-10 rounded-lg transition-standard",
-              collapsed ? "justify-center px-0" : "px-3",
-              "text-ink hover:bg-[#f5f4f0]"
-            )}
-            aria-label={collapsed ? item.label : undefined}
-            title={collapsed ? item.label : undefined}
-          >
-            <Icon
-              className="shrink-0 transition-standard text-ink-soft"
-              style={{ width: 17, height: 17 }}
-              strokeWidth={1.5}
-            />
-            {!collapsed && (
-              <span className="ml-2.5 text-[14px] truncate">{item.label}</span>
-            )}
-          </button>
-        </div>
-      );
-    }
-
-    return (
-      <div key={item.label} className="relative">
-        <Link
-          href={item.href || "#"}
-          className={cn(
-            "flex items-center h-10 rounded-lg transition-standard",
-            collapsed ? "justify-center px-0" : "px-3",
-            isActive
-              ? "bg-[#f2f0eb] text-brand font-semibold"
-              : "text-ink hover:bg-[#f5f4f0]"
-          )}
-          aria-label={collapsed ? item.label : undefined}
-          title={collapsed ? item.label : undefined}
-        >
-          {isActive && !collapsed && (
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-brand-accent rounded-full" />
-          )}
-          <Icon
-            className={cn(
-              "shrink-0 transition-standard",
-              isActive ? "text-brand" : "text-ink-soft"
-            )}
-            style={{ width: 17, height: 17 }}
-            strokeWidth={1.5}
-          />
-          {!collapsed && (
-            <span className="ml-2.5 text-[14px] truncate">{item.label}</span>
-          )}
-        </Link>
-      </div>
-    );
-  };
-
-  // ─── Shared sidebar content ──────────────────────────────────────────────────
-
-  const sidebarContent = (
-    <>
-      {/* Brand + collapse toggle */}
-      <div
-        className={cn(
-          "relative border-b border-line shrink-0",
-          isCollapsed ? "flex flex-col items-center py-2 gap-1" : "flex items-center px-4 py-3"
-        )}
-      >
-        <Link href="/" className="flex items-center justify-center min-w-0 flex-1">
-          {isCollapsed ? (
-            navbarLogoUrl ? (
-              <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-8 w-8 object-contain" />
-            ) : (
-              <span className="font-bold text-brand text-base">I</span>
-            )
-          ) : (
-            <div className="flex flex-col items-center gap-1.5 w-full">
-              {navbarLogoUrl && (
-                <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-10 max-w-[180px] object-contain" />
-              )}
-              <div className="text-center">
-                <span className="font-bold text-brand text-[16px] tracking-tight block">VAL'QUIRICO</span>
-                <span className="text-[9px] font-bold text-brand-deep uppercase tracking-widest block bg-[#f1eac1] text-[#3d3c22] px-2 py-0.5 rounded-full mt-1 font-sans">Insulae 2.0</span>
-              </div>
-            </div>
-          )}
-        </Link>
-        <button
-          onClick={toggleCollapsed}
-          className={cn(
-            "flex items-center justify-center rounded-md text-ink-soft/70 hover:text-ink hover:bg-[#f5f4f0] transition-standard active-scale",
-            isCollapsed ? "w-10 h-7 mt-1" : "absolute top-2 right-2 w-7 h-7"
-          )}
-          aria-label={isCollapsed ? "Expandir menú" : "Colapsar menú"}
-          aria-expanded={!isCollapsed}
-          title={isCollapsed ? "Expandir menú" : "Colapsar menú"}
-        >
-          {isCollapsed ? (
-            <ChevronRight style={{ width: 15, height: 15 }} />
-          ) : (
-            <ChevronLeft style={{ width: 15, height: 15 }} />
-          )}
-        </button>
-      </div>
-
-      {/* Nav */}
-      <nav className="flex-1 overflow-x-hidden overflow-y-auto py-3 px-2 space-y-4">
-        {NAV_SECTIONS.map((section) => {
-          // Filtrar items basado en permisos
-          const visibleItems = section.items.filter(item => {
-            if (item.requiredModule && !permissions[item.requiredModule]?.canRead) return false;
-            // Si tiene submenus, revisar si tiene al menos un submenu visible, o si el padre tiene permiso
-            if (item.items && item.items.length > 0) {
-              const visibleSubitems = item.items.filter(sub => !sub.requiredModule || permissions[sub.requiredModule]?.canRead);
-              if (visibleSubitems.length === 0) return false; // si no hay subitems visibles, ocultar padre
-            }
-            return true;
-          });
-
-          if (visibleItems.length === 0) return null;
-
-          return (
-            <div key={section.title}>
-              {!isCollapsed && (
-                <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
-                  {section.title}
-                </p>
-              )}
-              {isCollapsed && <div className="mx-auto w-4 border-t border-line/50 mb-1.5" />}
-              <div className="space-y-0.5">
-                {visibleItems.map((item) => renderNavItem(item))}
-              </div>
-            </div>
-          );
-        })}
-      </nav>
-
-      {/* Search button */}
-      <div className="shrink-0 px-2 pb-2">
-        <button
-          onClick={() => setIsSearchOpen(true)}
-          className={cn(
-            "w-full flex items-center rounded-lg border border-line bg-canvas/60",
-            "hover:bg-canvas transition-standard text-ink-soft hover:text-ink",
-            isCollapsed ? "h-10 justify-center" : "h-9 px-3 gap-2.5"
-          )}
-          aria-label="Buscar"
-        >
-          <Search style={{ width: 14, height: 14 }} strokeWidth={1.5} className="shrink-0" />
-          {!isCollapsed && (
-            <>
-              <span className="flex-1 text-left text-[13px]">Buscar...</span>
-              <kbd className="hidden sm:inline-flex items-center gap-px px-1 py-px rounded text-[11px] font-medium text-ink-soft/40 border border-line">
-                ⌘K
-              </kbd>
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* User profile */}
-      {isCollapsed ? (
-        <div className="shrink-0 border-t border-line p-2 flex justify-center bg-canvas/20">
-          <div
-            className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0"
-            title={currentUserName}
-          >
-            {userInitials}
-          </div>
-        </div>
-      ) : (
-        <div className="shrink-0 border-t border-line px-4 py-3 bg-canvas/20">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0">
-              {userInitials}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-bold text-ink truncate leading-tight">
-                {currentUserName}
-              </p>
-              <p className="text-[10px] font-medium text-ink-soft/60 truncate leading-tight uppercase mt-0.5">
-                Sesión activa
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-    </>
-  );
-
-  // ─── Shell ───────────────────────────────────────────────────────────────────
 
   const isLoginPage = currentPath === "/login";
   const isPrintPage = currentPath.endsWith("/imprimir");
@@ -533,136 +92,56 @@ export function AppShell({
     return <>{children}</>;
   }
 
+  const chrome = {
+    navbarLogoUrl,
+    navbarLogoAlt,
+    userName: currentUserName,
+    userInitials,
+    onOpenSearch: () => setIsSearchOpen(true),
+  };
+
   return (
-    <div className="flex min-h-screen bg-canvas font-sans">
+    // `--sidebar-w` es la única fuente de verdad del ancho: el rail y el padding
+    // del contenido lo consumen con la misma curva, así nunca se desincronizan.
+    <div
+      className="flex min-h-screen bg-canvas font-sans"
+      style={
+        {
+          "--sidebar-w": `${isCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED}px`,
+        } as CSSProperties
+      }
+    >
+      <DesktopSidebar isCollapsed={isCollapsed} onToggleCollapsed={toggleCollapsed} {...chrome} />
 
-      {/* Desktop sidebar */}
-      <aside
-        className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden lg:flex flex-col bg-card border-r border-line",
-          "transition-all duration-200 overflow-hidden",
-          isCollapsed ? "w-[72px]" : "w-[264px]"
-        )}
-      >
-        {sidebarContent}
-      </aside>
-
-      {/* Main content — no header */}
-      <div
-        className={cn(
-          "flex-1 flex flex-col min-h-screen min-w-0 transition-all duration-200",
-          isCollapsed ? "lg:pl-[72px]" : "lg:pl-[264px]"
-        )}
-      >
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-[260ms] ease-smooth lg:pl-[var(--sidebar-w)]">
         {/* Mobile-only top bar */}
-        <div className="lg:hidden sticky top-0 z-30 h-12 bg-card border-b border-line flex items-center px-4 gap-3">
+        <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-nav-line bg-nav px-4 lg:hidden">
           <button
             onClick={openMobile}
-            className="p-1.5 -ml-1 rounded-lg hover:bg-canvas text-ink-soft transition-standard"
+            className="-ml-1.5 rounded-lg p-1.5 text-nav-ink-soft transition-colors duration-150 hover:bg-nav-hover hover:text-brand-deep active:scale-90"
             aria-label="Abrir menú"
           >
-            <Menu style={{ width: 18, height: 18 }} />
+            <Menu style={{ width: 19, height: 19 }} strokeWidth={2} />
           </button>
-          <span className="font-semibold text-brand text-sm truncate">
-            VAL'QUIRICO · Insulae 2.0
+          <span className="truncate text-[13px] font-bold tracking-[0.02em] text-brand-deep">
+            VAL&apos;QUIRICO
+          </span>
+          <span className="rounded-full bg-card px-1.5 py-[2px] text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-brand ring-1 ring-nav-line">
+            Insulae 2.0
           </span>
         </div>
 
         <main
           className={cn(
-            "flex-1 p-4 md:p-6 lg:py-8 lg:px-10 w-full",
-            !isFullWidthPage && "max-w-[1440px] mx-auto"
+            "w-full flex-1 p-4 md:p-6 lg:px-10 lg:py-8",
+            !isFullWidthPage && "mx-auto max-w-[1440px]"
           )}
         >
           {children}
         </main>
       </div>
 
-      {/* Mobile drawer */}
-      <div
-        className={cn(
-          "fixed inset-0 z-50 lg:hidden",
-          isMobileOpen ? "pointer-events-auto" : "pointer-events-none"
-        )}
-      >
-        <div
-          className={cn(
-            "absolute inset-0 bg-brand-deep/40 backdrop-blur-sm transition-opacity duration-200",
-            isMobileOpen ? "opacity-100" : "opacity-0"
-          )}
-          onClick={closeMobile}
-        />
-        <aside
-          className={cn(
-            "absolute inset-y-0 left-0 w-[264px] bg-card flex flex-col overflow-hidden",
-            "transition-transform duration-200",
-            isMobileOpen ? "translate-x-0" : "-translate-x-full"
-          )}
-        >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-line shrink-0">
-            <div className="flex flex-col items-start gap-1">
-              {navbarLogoUrl && (
-                <img src={navbarLogoUrl} alt={navbarLogoAlt} className="h-8 object-contain" />
-              )}
-              <div>
-                <span className="font-bold text-brand text-[16px] block">VAL'QUIRICO</span>
-                <span className="text-[9px] font-bold text-[#3d3c22] uppercase tracking-widest block bg-[#f1eac1] px-2 py-0.5 rounded-full mt-0.5 font-sans text-center">Insulae 2.0</span>
-              </div>
-            </div>
-            <button
-              onClick={closeMobile}
-              className="p-1.5 rounded-lg hover:bg-canvas text-ink-soft transition-standard"
-              aria-label="Cerrar menú"
-            >
-              <X style={{ width: 16, height: 16 }} />
-            </button>
-          </div>
-          <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-            {NAV_SECTIONS.map((s) => {
-              // Filtrar items basado en permisos
-              const visibleItems = s.items.filter(item => {
-                if (item.requiredModule && !permissions[item.requiredModule]?.canRead) return false;
-                if (item.items && item.items.length > 0) {
-                  const visibleSubitems = item.items.filter(sub => !sub.requiredModule || permissions[sub.requiredModule]?.canRead);
-                  if (visibleSubitems.length === 0) return false;
-                }
-                return true;
-              });
-
-              if (visibleItems.length === 0) return null;
-
-              return (
-                <div key={s.title}>
-                  <p className="px-3 mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-ink-soft/70">
-                    {s.title}
-                  </p>
-                  <div className="space-y-0.5">
-                    {/* El drawer móvil siempre se muestra expandido */}
-                    {visibleItems.map((item) => renderNavItem(item, false))}
-                  </div>
-                </div>
-              );
-            })}
-          </nav>
-          
-          {/* User profile mobile */}
-          <div className="shrink-0 border-t border-line px-4 py-3 bg-canvas/20">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-brand/10 text-brand flex items-center justify-center text-[12px] font-bold border border-brand/20 shrink-0">
-                {userInitials}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-bold text-ink truncate leading-tight">
-                  {currentUserName}
-                </p>
-                <p className="text-[10px] font-medium text-ink-soft/60 truncate leading-tight uppercase mt-0.5">
-                  Sesión activa
-                </p>
-              </div>
-            </div>
-          </div>
-        </aside>
-      </div>
+      <MobileSidebar isOpen={isMobileOpen} onClose={closeMobile} {...chrome} />
 
       <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
