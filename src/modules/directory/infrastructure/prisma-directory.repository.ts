@@ -500,6 +500,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
             registrationTypeCode: true,
             registrationTypeDesc: true,
             idVq: true,
+            apolfap: true,
           },
           orderBy: {
             createdAt: "asc",
@@ -765,6 +766,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         registrationTypeCode: child.registrationTypeCode,
         registrationTypeDesc: child.registrationTypeDesc,
         idVq: child.idVq,
+        apolfap: child.apolfap,
       })),
     };
   }

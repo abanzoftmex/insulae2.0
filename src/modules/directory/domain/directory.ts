@@ -70,6 +70,7 @@ export interface NestedUser {
   registrationTypeCode: string | null;
   registrationTypeDesc: string | null;
   idVq: string | null;
+  apolfap?: string | null;
 }
 
 export interface DirectoryContactParticipation {

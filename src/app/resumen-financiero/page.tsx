@@ -18,6 +18,7 @@ import {
 } from "@/modules/financial-summary";
 import { getPrivateAreaListingUseCase } from "@/modules/private-areas";
 import { StatCard } from "@/components/ui/stat-card";
+import { FinancialChart } from "@/components/ui/financial-chart";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
@@ -414,6 +415,47 @@ export default async function ResumenFinancieroPage({
           Ambito: Valquirico · Datos consolidados de Neon · Periodo visual: 2024 / 2025 / 2026
         </p>
       </div>
+
+      {/* Actividad Financiera Chart Card */}
+      {(() => {
+        const MONTH_ABBR = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+        const chartData = (summary?.months ?? [])
+          .filter((m) => m.totalIncome > 0 || m.totalExpenses > 0)
+          .map((m) => ({
+            month: MONTH_ABBR[(m.month - 1) % 12],
+            ordinaryIncome: m.ordinaryIncome,
+            extraordinaryIncome: m.extraordinaryIncome,
+            otherIncome: m.otherIncome,
+            totalIncome: m.totalIncome,
+            ordinaryExpenses: m.ordinaryExpenses,
+            extraordinaryExpenses: m.extraordinaryExpenses,
+            totalExpenses: m.totalExpenses,
+          }));
+
+        return (
+          <div className="w-full">
+            <Card className="w-full shadow-layered">
+              <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-col gap-0.5">
+                <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
+                  Actividad Financiera: Ingresos vs Gastos ({selectedYear})
+                </CardTitle>
+                <p className="text-[9px] text-white/70 font-semibold uppercase tracking-wider">
+                  Comparativo mensual del flujo de caja (Recaudación de cuotas vs Egresos del condominio)
+                </p>
+              </CardHeader>
+              <CardContent className="px-2 pb-3 pt-4">
+                {chartData.length > 0 ? (
+                  <FinancialChart data={chartData} />
+                ) : (
+                  <div className="flex items-center justify-center h-[160px] text-[12px] text-ink-soft/50 font-medium">
+                    Sin movimientos registrados para {selectedYear}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
 
       {/* Main Content Sections */}
       <div className="space-y-6">

@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   BarChart3,
   Bell,
+  BookOpen,
   Building2,
   DollarSign,
   FileText,
@@ -441,37 +442,48 @@ export default async function Home() {
         </Surface>
 
         <Surface className="xl:col-span-4">
-          <SurfaceHeader title="Accesos rápidos" subtitle="Tareas frecuentes" />
+          <SurfaceHeader title="Accesos rápidos" subtitle="Módulos y tareas frecuentes" />
+          {/* Rutas y copy fusionados con la versión de `9d6a82c` (sus
+              "Módulos de Gestión" + "Acciones Frecuentes"): de ahí vienen
+              /reglamentos, que aquí no existía, y descripciones que dicen qué
+              hay dentro en vez de repetir el título. Se sirven como filas de
+              comando, no como 7 tarjetas: mismo dato, un sexto del espacio. */}
           <div className="py-1">
             <ActionRow
               href="/reporte-condominio"
               icon={<FileText className="h-4 w-4" />}
-              label="Generar reporte"
-              description="Estado del condominio en PDF"
+              label="Generar ficha del condominio"
+              description="Estado actual y ficha técnica en PDF"
             />
             <ActionRow
               href="/cobros-masivos"
               icon={<Zap className="h-4 w-4" />}
               label="Cobros masivos"
-              description="Cobranza para todas las áreas"
+              description="Emisión de cuotas ordinarias y extraordinarias"
             />
             <ActionRow
               href="/notificaciones"
               icon={<Bell className="h-4 w-4" />}
-              label="Notificación masiva"
-              description="Comunicados por email o push"
+              label="Redactar comunicado"
+              description="Avisos por correo o portal del residente"
             />
             <ActionRow
               href="/directorio"
               icon={<Users className="h-4 w-4" />}
-              label="Directorio"
-              description="Propietarios y arrendatarios"
+              label="Propietarios y residentes"
+              description="Residentes, arrendatarios y contactos de emergencia"
             />
             <ActionRow
               href="/areas-privativas"
               icon={<Building2 className="h-4 w-4" />}
               label="Áreas privativas"
-              description="Inventario e indivisos"
+              description="Lotes, viviendas, locales y zonas"
+            />
+            <ActionRow
+              href="/reglamentos"
+              icon={<BookOpen className="h-4 w-4" />}
+              label="Documentos y reglamentos"
+              description="Estatutos, acuerdos de asamblea y normas"
             />
             <ActionRow
               href="/resumen-financiero"
