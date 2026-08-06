@@ -1169,9 +1169,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
     const ordinaryIncomeRowByMiscCatalogId = new Map(
       ordinaryIncomeRowsSource.filter((r) => r.miscCatalogId).map((row) => [row.miscCatalogId, row]),
     );
-    const ordinaryIncomeRowByKind = new Map(
-      ordinaryIncomeRowsSource.filter((r) => r.kind).map((row) => [row.kind!, row]),
-    );
+    const ordinaryIncomeRowByKind = new Map<string, (typeof ordinaryIncomeRowsSource)[number]>();
+    for (const row of ordinaryIncomeRowsSource) {
+      if (row.kind && !ordinaryIncomeRowByKind.has(row.kind)) {
+        ordinaryIncomeRowByKind.set(row.kind, row);
+      }
+    }
     const ordinaryOtherRowByMiscCatalogId = new Map<string, OtherIncomeCatalogRow>(
       ordinaryOtherCatalogRows.map((row) => [row.miscCatalogId, row]),
     );
@@ -1418,18 +1421,18 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         }
       }
 
-      const extraordinaryRow = extraordinaryIncomeRowByKind.get(kind);
-      if (extraordinaryRow) {
-        addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][requestedYear], month, amount);
-      }
+      if (income.miscCatalogId === null) {
+        const extraordinaryRow = extraordinaryIncomeRowByKind.get(kind);
+        if (extraordinaryRow) {
+          addAmountToSeries(extraordinaryIncomeByRowAndYear[extraordinaryRow.id][requestedYear], month, amount);
+        }
 
-      const ordRow = ordinaryIncomeRowByKind.get(kind);
-      if (ordRow) {
-        const series = ordinaryIncomeByRowAndYear.get(ordRow.id)?.[requestedYear];
-        if (series) addAmountToSeries(series, month, amount);
-      }
-
-      if (income.miscCatalogId) {
+        const ordRow = ordinaryIncomeRowByKind.get(kind);
+        if (ordRow) {
+          const series = ordinaryIncomeByRowAndYear.get(ordRow.id)?.[requestedYear];
+          if (series) addAmountToSeries(series, month, amount);
+        }
+      } else {
         const ordIncomeRow = ordinaryIncomeRowByMiscCatalogId.get(income.miscCatalogId);
         if (ordIncomeRow) {
           const byYear = ordinaryIncomeByRowAndYear.get(ordIncomeRow.id);
