@@ -638,14 +638,25 @@ function SidebarBrand({
 }) {
   const { collapsed, onNavigate, reduce } = useSidebarCtx();
   const monogram = (navbarLogoAlt.trim()[0] || "V").toUpperCase();
+  const [currentLogo, setCurrentLogo] = useState<string | null>(
+    navbarLogoUrl || "/valquirico-logo.png"
+  );
+
+  useEffect(() => {
+    setCurrentLogo(navbarLogoUrl || "/valquirico-logo.png");
+  }, [navbarLogoUrl]);
+
+  const handleImgError = () => {
+    if (currentLogo !== "/valquirico-logo.png" && currentLogo !== "/brand/valquirico-logo-light.png") {
+      setCurrentLogo("/valquirico-logo.png");
+    } else if (currentLogo === "/valquirico-logo.png") {
+      setCurrentLogo("/brand/valquirico-logo-light.png");
+    } else {
+      setCurrentLogo(null);
+    }
+  };
 
   return (
-    // Expandido: el lockup horizontal completo (el logo YA dice "Val'Quirico",
-    // por eso no hay wordmark repitiéndolo).
-    // Colapsado: monograma. El logo real es 1077×290 — a cualquier altura
-    // legible desborda un rail de 68px y se recorta. Un monograma cuadrado es
-    // la única marca que funciona sin depender del aspect ratio del archivo,
-    // que además aquí viene de BD y puede cambiar.
     <motion.div
       className="flex shrink-0 items-center justify-center overflow-hidden border-b border-nav-line-soft px-3"
       animate={{ height: collapsed ? BRAND_HEIGHT.collapsed : BRAND_HEIGHT.expanded }}
@@ -678,19 +689,25 @@ function SidebarBrand({
               transition={reduce ? { duration: 0 } : { duration: 0.2, ease: EASE_SMOOTH }}
               className="flex flex-col items-center gap-2"
             >
-              {navbarLogoUrl ? (
+              {currentLogo ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={navbarLogoUrl}
+                  src={currentLogo}
                   alt={navbarLogoAlt}
+                  onError={handleImgError}
                   className="h-[52px] w-auto max-w-[188px] shrink-0 object-contain"
                 />
               ) : (
-                <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-xl bg-brand text-[21px] font-bold text-white">
-                  {monogram}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-[18px] font-black text-white shadow-xs">
+                    {monogram}
+                  </span>
+                  <span className="font-extrabold text-brand-deep text-base tracking-tight">
+                    {navbarLogoAlt}
+                  </span>
+                </div>
               )}
-              <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-card px-2 py-[3px] text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-brand ring-1 ring-nav-line">
+              <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-card px-2.5 py-[3px] text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-brand ring-1 ring-nav-line">
                 Insulae 2.0
               </span>
             </motion.span>

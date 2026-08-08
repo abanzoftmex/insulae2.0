@@ -98,7 +98,7 @@ export default async function Home() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="brand"
-                className="rounded-full px-3.5 py-1 text-[10px] tracking-widest bg-brand-mint text-brand-deep font-bold border-none uppercase shadow-xs"
+                className="rounded-full px-3.5 py-1 text-[10px] tracking-widest bg-brand-mint text-brand-deep font-bold border border-[#5d5b35]/25 uppercase shadow-xs"
               >
                 Gestor de Condominio
               </Badge>
@@ -146,7 +146,7 @@ export default async function Home() {
       {/* ─── Accesos Principales Operativos (Sin números) ───────────────────── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-base font-bold uppercase tracking-wider text-brand">
+          <h2 className="text-base font-bold uppercase tracking-wider text-[#5d5b35]">
             Módulos de Gestión Diario
           </h2>
           <span className="text-[11px] font-semibold text-ink-soft/70">
@@ -157,7 +157,7 @@ export default async function Home() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <CategoryCard
             href="/directorio"
-            icon={<Users className="h-5 w-5 text-brand" />}
+            icon={<Users className="h-5 w-5 text-[#5d5b35]" />}
             badge="Comunidad"
             title="Propietarios y Residentes"
             description="Directorio unificado de residentes, arrendatarios, arrendadores y contactos de emergencia."
@@ -166,7 +166,7 @@ export default async function Home() {
 
           <CategoryCard
             href="/areas-privativas"
-            icon={<MapPin className="h-5 w-5 text-brand" />}
+            icon={<MapPin className="h-5 w-5 text-[#5d5b35]" />}
             badge="Inmuebles"
             title="Áreas Privativas"
             description="Catálogo de lotes, viviendas, locales comerciales y zonas del condominio."
@@ -175,16 +175,17 @@ export default async function Home() {
 
           <CategoryCard
             href="/tickets"
-            icon={<TicketIcon className="h-5 w-5 text-brand" />}
+            icon={<TicketIcon className="h-5 w-5 text-[#922f12]" />}
             badge="Atención"
             title="Solicitudes y Soporte"
             description="Seguimiento de tickets, reportes de mantenimiento y solicitudes de residentes."
             cta="Atender solicitudes"
+            badgeColor="bg-[#922f12]/10 text-[#922f12] border-[#922f12]/20"
           />
 
           <CategoryCard
             href="/reglamentos"
-            icon={<BookOpen className="h-5 w-5 text-brand" />}
+            icon={<BookOpen className="h-5 w-5 text-[#5d5b35]" />}
             badge="Normativa"
             title="Documentos y Reglamentos"
             description="Estatutos condominales, acuerdos de asamblea y normas comunitarias de convivencia."
@@ -195,7 +196,7 @@ export default async function Home() {
 
       {/* ─── Acciones Frecuentes de Administración ──────────────────────────── */}
       <div className="space-y-3">
-        <h2 className="text-base font-bold uppercase tracking-wider px-1 text-brand">
+        <h2 className="text-base font-bold uppercase tracking-wider px-1 text-[#5d5b35]">
           Acciones Frecuentes
         </h2>
 
@@ -206,6 +207,7 @@ export default async function Home() {
             title="Generar Ficha de Condominio"
             description="Descarga el estado actual y la ficha técnica del condominio en formato PDF."
             cta="Generar PDF"
+            iconBg="bg-[#5d5b35]"
           />
 
           <QuickActionCard
@@ -214,6 +216,7 @@ export default async function Home() {
             title="Proceso de Cobros Masivos"
             description="Emisión masiva de cuotas ordinarias y extraordinarias para las áreas privativas."
             cta="Iniciar cobros"
+            iconBg="bg-[#3d3c22]"
           />
 
           <QuickActionCard
@@ -222,6 +225,7 @@ export default async function Home() {
             title="Redactar Comunicado"
             description="Envía avisos de interés general a los residentes vía correo o notificación del portal."
             cta="Redactar aviso"
+            iconBg="bg-[#922f12]"
           />
         </div>
       </div>
@@ -274,6 +278,7 @@ function CategoryCard({
   title,
   description,
   cta,
+  badgeColor,
 }: {
   href: string;
   icon: React.ReactNode;
@@ -281,16 +286,19 @@ function CategoryCard({
   title: string;
   description: string;
   cta: string;
+  badgeColor?: string;
 }) {
   return (
     <Link href={href} className="block group">
-      <Card className="p-5 h-full transition-all duration-200 hover:-translate-y-1 hover:border-brand/40 hover:shadow-md cursor-pointer flex flex-col justify-between border">
+      <Card className="p-5 h-full transition-all duration-200 hover:-translate-y-1 hover:border-[#5d5b35]/40 hover:shadow-md cursor-pointer flex flex-col justify-between border">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-brand/10 border border-brand/15 group-hover:bg-brand group-hover:text-white transition-colors">
               {icon}
             </span>
-            <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-canvas-2 text-ink-soft/70 border border-line/50">
+            <span className={`text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${
+              badgeColor || "bg-canvas-2 text-ink-soft/70 border-line/50"
+            }`}>
               {badge}
             </span>
           </div>
@@ -320,19 +328,23 @@ function QuickActionCard({
   title,
   description,
   cta,
+  iconBg,
 }: {
   href: string;
   icon: React.ReactNode;
   title: string;
   description: string;
   cta: string;
+  iconBg?: string;
 }) {
   return (
     <Link href={href} className="block group">
-      <Card className="p-5 h-full transition-all duration-200 hover:shadow-md hover:border-brand/30 cursor-pointer flex flex-col justify-between border">
+      <Card className="p-5 h-full transition-all duration-200 hover:shadow-md hover:border-[#5d5b35]/30 cursor-pointer flex flex-col justify-between border">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-brand-deep text-white shrink-0 group-hover:bg-brand transition-colors">
+            <span className={`inline-flex items-center justify-center h-8 w-8 rounded-lg text-white shrink-0 transition-colors ${
+              iconBg || "bg-brand-deep group-hover:bg-brand"
+            }`}>
               {icon}
             </span>
             <h3 className="text-xs font-bold text-brand tracking-tight">
@@ -345,7 +357,9 @@ function QuickActionCard({
         </div>
 
         <div className="pt-4 mt-3">
-          <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase tracking-tight shadow-xs group-hover:bg-brand transition-colors">
+          <span className={`inline-flex items-center gap-1.5 h-8 px-4 rounded-full text-white text-[10px] font-bold uppercase tracking-tight shadow-xs transition-colors ${
+            iconBg || "bg-brand-deep group-hover:bg-brand"
+          }`}>
             <ArrowRight className="h-3 w-3" /> {cta}
           </span>
         </div>

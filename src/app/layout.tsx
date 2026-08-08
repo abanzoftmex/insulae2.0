@@ -24,8 +24,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  let navbarLogoUrl: string | null = null;
-  let navbarLogoAlt = "Sassi";
+  let navbarLogoUrl: string | null = "/valquirico-logo.png";
+  let navbarLogoAlt = "Val'Quirico";
   const permissions = await getUserPermissions(); // Trigger recompile
 
   let currentUserName = "Usuario Insulae";
@@ -43,8 +43,10 @@ export default async function RootLayout({
   try {
     const overview = await getCondominiumOverviewUseCase.execute();
     if (overview) {
-      navbarLogoUrl = overview.condominiumLogoUrl ?? overview.footerLogoUrl ?? null;
-      navbarLogoAlt = overview.condominiumName || navbarLogoAlt;
+      const rawLogo = overview.condominiumLogoUrl ?? overview.footerLogoUrl;
+      const isDelinquentRemote = rawLogo && (rawLogo.includes("storage.googleapis.com") || rawLogo.includes("firebasestorage.googleapis.com"));
+      navbarLogoUrl = (!isDelinquentRemote && rawLogo) ? rawLogo : "/valquirico-logo.png";
+      navbarLogoAlt = overview.condominiumName || "Val'Quirico";
     }
   } catch (error) {
     console.warn("[RootLayout] Unable to load navbar logo", error);
