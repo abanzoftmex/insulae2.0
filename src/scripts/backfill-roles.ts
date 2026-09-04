@@ -2,6 +2,7 @@ import { prisma } from "../shared/infrastructure/db/prisma";
 import mysql from "mysql2/promise";
 import * as dotenv from "dotenv";
 import { join } from "path";
+import { fixLatin1Mojibake } from "../shared/utils/fix-latin1-mojibake";
 
 dotenv.config({ path: join(process.cwd(), ".env") });
 
@@ -29,10 +30,10 @@ async function main() {
   for (const mod of legacyModules as any[]) {
     await prisma.moduleCatalog.upsert({
       where: { legacyId: mod.id_cat_modulos },
-      update: { name: mod.nombre, isActive: mod.activo === 1 },
+      update: { name: fixLatin1Mojibake(mod.nombre), isActive: mod.activo === 1 },
       create: {
         legacyId: mod.id_cat_modulos,
-        name: mod.nombre,
+        name: fixLatin1Mojibake(mod.nombre),
         isActive: mod.activo === 1,
       },
     });
@@ -51,8 +52,8 @@ async function main() {
         },
       },
       update: {
-        name: role.nombre,
-        description: role.descripcion,
+        name: fixLatin1Mojibake(role.nombre),
+        description: fixLatin1Mojibake(role.descripcion),
         legacyIdGral: role.idGral || 0,
         isActive: role.activo === 1,
       },
@@ -60,8 +61,8 @@ async function main() {
         condominiumId: condominium.id,
         legacyId: role.id_roles_condominal,
         legacyIdGral: role.idGral || 0,
-        name: role.nombre,
-        description: role.descripcion,
+        name: fixLatin1Mojibake(role.nombre),
+        description: fixLatin1Mojibake(role.descripcion),
         isActive: role.activo === 1,
       },
     });

@@ -5,12 +5,16 @@
  *
  * Seguridad: RECHAZA cuentas sin passwordHash y NO acepta las contraseñas por defecto
  * que usa el login administrativo (eso es solo para el panel interno).
+ *
+ * Acceso: solo entran usuarios con el rol "Solo Minisitio" (ver condomino-access.ts),
+ * sin importar si son propietarios, arrendatarios o ambos.
  */
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { signCondominoToken } from "@/shared/application/auth/condomino-token";
+import { MINISITIO_ACCESS_DENIED_MESSAGE, minisitioRoleWhere } from "@/shared/application/auth/condomino-access";
 
 export const dynamic = "force-dynamic";
 
@@ -66,6 +70,8 @@ export async function POST(request: NextRequest) {
       businessEmail: true,
       userType: true,
       assignments: { where: { isActive: true }, select: { id: true } },
+      // Solo el rol del minisitio: si viene vacío, el usuario no tiene acceso al portal.
+      userRoles: { where: { role: minisitioRoleWhere(condo.id) }, select: { id: true }, take: 1 },
     },
   });
 
@@ -81,9 +87,9 @@ export async function POST(request: NextRequest) {
   const matchPassword = (h: string | null) =>
     !!h && (h === password || h === hashSHA256(password) || h === hashMD5(password));
 
-  // El usuario cuya contraseña coincide gana (resuelve emails compartidos).
-  const user = activos.find((u) => matchPassword(u.passwordHash));
-  if (!user) {
+  // Los usuarios cuya contraseña coincide (resuelve emails compartidos).
+  const matched = activos.filter((u) => matchPassword(u.passwordHash));
+  if (matched.length === 0) {
     if (activos.some((u) => u.passwordHash)) {
       return NextResponse.json({ success: false, message: "Credenciales incorrectas." }, { status: 401 });
     }
@@ -91,6 +97,12 @@ export async function POST(request: NextRequest) {
       { success: false, message: "Aún no has configurado tu contraseña. Usa “¿Olvidaste tu contraseña?” para activarla." },
       { status: 403 }
     );
+  }
+
+  // Solo entra al minisitio quien tiene el rol "Solo Minisitio" (propietario o arrendatario por igual).
+  const user = matched.find((u) => u.userRoles.length > 0);
+  if (!user) {
+    return NextResponse.json({ success: false, message: MINISITIO_ACCESS_DENIED_MESSAGE }, { status: 403 });
   }
 
   // Indicadores de tipo (propietario / arrendatario / both)

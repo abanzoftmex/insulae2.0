@@ -1,4 +1,5 @@
 import { prisma as basePrisma } from "@/shared/infrastructure/db/prisma";
+import { fixLatin1Mojibake } from "@/shared/utils/fix-latin1-mojibake";
 import { toPrivateAreaStatusFromLegacy } from "@/shared/domain/private-area-status";
 import { toBudgetExpenseGroupFromLegacyGroupId } from "@/shared/domain/budget-expense-group";
 import { resolveChargeGroupKind } from "@/shared/domain/charge-group-kind";
@@ -732,16 +733,16 @@ export class PromoteFromStagingUseCase {
         ? await prisma.role.update({
             where: { id: existing.id },
             data: {
-              name: asString(payload.nombre) ?? `Rol ${row.legacyId}`,
-              description: asString(payload.descripcion),
+              name: fixLatin1Mojibake(asString(payload.nombre)) ?? `Rol ${row.legacyId}`,
+              description: fixLatin1Mojibake(asString(payload.descripcion)),
               isActive: asBoolean(payload.activo, true),
             },
           })
         : await prisma.role.create({
             data: {
               legacyId: row.legacyId,
-              name: asString(payload.nombre) ?? `Rol ${row.legacyId}`,
-              description: asString(payload.descripcion),
+              name: fixLatin1Mojibake(asString(payload.nombre)) ?? `Rol ${row.legacyId}`,
+              description: fixLatin1Mojibake(asString(payload.descripcion)),
               isActive: asBoolean(payload.activo, true),
             },
           });

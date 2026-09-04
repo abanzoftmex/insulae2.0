@@ -1,12 +1,13 @@
 /**
  * POST /api/condomino/auth/forgot  { email }
- * Si existe un usuario activo con ese email, devuelve un token de reset (1h).
- * No revela si el email existe (el minisitio envía el correo solo si hay token).
+ * Si existe un usuario activo con ese email y con rol "Solo Minisitio", devuelve un token de reset (1h).
+ * No revela si el email existe ni si tiene acceso (el minisitio envía el correo solo si hay token).
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { signResetToken } from "@/shared/application/auth/condomino-token";
+import { minisitioRoleWhere } from "@/shared/application/auth/condomino-access";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,7 @@ export async function POST(request: NextRequest) {
     where: {
       condominiumId: condominium.id,
       isActive: true,
+      userRoles: { some: { role: minisitioRoleWhere(condominium.id) } },
       OR: [
         { email: { equals: email, mode: "insensitive" } },
         { personalEmail: { equals: email, mode: "insensitive" } },
