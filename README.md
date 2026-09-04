@@ -2,7 +2,7 @@
 
 Base técnica para migrar Insulae legacy (PHP/MySQL) a una plataforma moderna con Next.js, PostgreSQL y arquitectura hexagonal.
 
-## Objetivo
+## Objetivos
 a
 - Migrar datos y procesos críticos del legacy de forma incremental.
 - Mantener alcance exclusivo Valquirico (sin multi-sitio).sa
