@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
@@ -12,6 +14,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CobrosSincronizacionPage() {
+  await requirePageAccess(MODULES.SINCRONIZACION_LUCA);
+
   const condominium = await getActiveCondominium();
 
   if (!condominium) {

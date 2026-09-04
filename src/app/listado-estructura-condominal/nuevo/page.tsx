@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { notFound } from "next/navigation";
 
 import { getCondominiumStructureFormTemplateUseCase } from "@/modules/condominium-structure";
@@ -5,6 +7,8 @@ import { getCondominiumStructureFormTemplateUseCase } from "@/modules/condominiu
 import { EstructuraCondominalFormShell } from "../estructura-condominal-form-shell";
 
 export default async function NuevoGrupoEstructuraCondominalPage() {
+  await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL);
+
   const template = await getCondominiumStructureFormTemplateUseCase.execute();
 
   if (!template) {

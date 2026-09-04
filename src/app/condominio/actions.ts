@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 
@@ -58,6 +60,7 @@ export async function updateCondominioSettingsAction(
   input: UpdateCondominioSettingsInput,
 ): Promise<{ ok: boolean; message: string }> {
   try {
+    await assertPermission(MODULES.CONDOMINIO, "canUpdate");
     const condominium = await prisma.condominium.findFirst({
       where: {
         slug: PROJECT_SCOPE.condominiumCode,

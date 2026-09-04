@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import {
@@ -29,6 +31,7 @@ export async function createExpenseAction(input: {
   budgetConceptId?: string;
 }) {
   try {
+    await assertPermission(MODULES.GASTOS, "canCreate");
     const condoId = await getCondominiumId();
     const saveInput: SaveExpenseInput = {
       date: new Date(input.date),
@@ -63,6 +66,7 @@ export async function updateExpenseAction(
   },
 ) {
   try {
+    await assertPermission(MODULES.GASTOS, "canUpdate");
     const current = await prisma.expense.findUnique({
       where: { id },
       select: { externalSource: true, amount: true, date: true },
@@ -101,6 +105,7 @@ export async function updateExpenseAction(
 
 export async function deleteExpenseAction(id: string) {
   try {
+    await assertPermission(MODULES.GASTOS, "canDelete");
     await deleteExpenseUseCase.execute(id);
     revalidatePath("/listado-gastos");
     revalidatePath("/resumen-financiero");

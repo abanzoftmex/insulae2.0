@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import { cookies } from "next/headers";
 import {
   Users,
   MapPin,
@@ -21,6 +20,8 @@ import { getCondominiumOverviewUseCase } from "@/modules/condominium";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LiveClock } from "@/components/ui/live-clock";
+import { getUserPermissions, readAdminSession } from "@/shared/application/auth/permissions";
+import { MODULES, type ModuleName } from "@/shared/application/auth/modules";
 
 export const metadata: Metadata = {
   title: "Inicio | Val'Quirico",
@@ -45,23 +46,112 @@ function firstName(fullName: string): string {
   return first || fullName;
 }
 
-async function getSessionUserName(): Promise<string | null> {
-  try {
-    const sessionStr = (await cookies()).get("insulae_session")?.value;
-    if (!sessionStr) return null;
-    const session = JSON.parse(sessionStr) as { name?: string };
-    return session.name?.trim() || null;
-  } catch {
-    return null;
-  }
-}
+// Cada acceso declara el módulo que lo respalda: solo se muestra si el rol puede consultarlo.
+type CategoryCardDef = {
+  module: ModuleName;
+  href: string;
+  icon: React.ReactNode;
+  badge: string;
+  title: string;
+  description: string;
+  cta: string;
+  badgeColor?: string;
+};
+
+type QuickActionDef = {
+  module: ModuleName;
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  cta: string;
+  iconBg?: string;
+};
+
+const CATEGORY_CARDS: CategoryCardDef[] = [
+  {
+    module: MODULES.DIRECTORIO,
+    href: "/directorio",
+    icon: <Users className="h-5 w-5 text-[#5d5b35]" />,
+    badge: "Comunidad",
+    title: "Propietarios y Residentes",
+    description: "Directorio unificado de residentes, arrendatarios, arrendadores y contactos de emergencia.",
+    cta: "Ver directorio",
+  },
+  {
+    module: MODULES.AREAS_PRIVATIVAS,
+    href: "/areas-privativas",
+    icon: <MapPin className="h-5 w-5 text-[#5d5b35]" />,
+    badge: "Inmuebles",
+    title: "Áreas Privativas",
+    description: "Catálogo de lotes, viviendas, locales comerciales y zonas del condominio.",
+    cta: "Ver inmuebles",
+  },
+  {
+    module: MODULES.TICKETS,
+    href: "/tickets",
+    icon: <TicketIcon className="h-5 w-5 text-[#922f12]" />,
+    badge: "Atención",
+    title: "Solicitudes y Soporte",
+    description: "Seguimiento de tickets, reportes de mantenimiento y solicitudes de residentes.",
+    cta: "Atender solicitudes",
+    badgeColor: "bg-[#922f12]/10 text-[#922f12] border-[#922f12]/20",
+  },
+  {
+    module: MODULES.REGLAMENTOS,
+    href: "/reglamentos",
+    icon: <BookOpen className="h-5 w-5 text-[#5d5b35]" />,
+    badge: "Normativa",
+    title: "Documentos y Reglamentos",
+    description: "Estatutos condominales, acuerdos de asamblea y normas comunitarias de convivencia.",
+    cta: "Consultar normas",
+  },
+];
+
+const QUICK_ACTIONS: QuickActionDef[] = [
+  {
+    module: MODULES.REPORTE_CONDOMINIO,
+    href: "/reporte-condominio",
+    icon: <FileText className="h-4 w-4 text-white" />,
+    title: "Generar Ficha de Condominio",
+    description: "Descarga el estado actual y la ficha técnica del condominio en formato PDF.",
+    cta: "Generar PDF",
+    iconBg: "bg-[#5d5b35]",
+  },
+  {
+    module: MODULES.COBROS_MASIVOS,
+    href: "/cobros-masivos",
+    icon: <Zap className="h-4 w-4 text-white" />,
+    title: "Proceso de Cobros Masivos",
+    description: "Emisión masiva de cuotas ordinarias y extraordinarias para las áreas privativas.",
+    cta: "Iniciar cobros",
+    iconBg: "bg-[#3d3c22]",
+  },
+  {
+    module: MODULES.NOTIFICACIONES,
+    href: "/notificaciones",
+    icon: <Bell className="h-4 w-4 text-white" />,
+    title: "Redactar Comunicado",
+    description: "Envía avisos de interés general a los residentes vía correo o notificación del portal.",
+    cta: "Redactar aviso",
+    iconBg: "bg-[#922f12]",
+  },
+];
 
 export default async function Home() {
   const now = new Date();
-  const [userName, condominiumOverview] = await Promise.all([
-    getSessionUserName(),
+  const [session, permissions, condominiumOverview] = await Promise.all([
+    readAdminSession(),
+    getUserPermissions(),
     getCondominiumOverviewUseCase.execute(),
   ]);
+
+  const userName = session?.name?.trim() || null;
+  const canRead = (module: ModuleName) => permissions[module]?.canRead === true;
+  const categoryCards = CATEGORY_CARDS.filter((card) => canRead(card.module));
+  const quickActions = QUICK_ACTIONS.filter((card) => canRead(card.module));
+  const showResumen = canRead(MODULES.RESUMEN_FINANCIERO);
+  const showEstadisticas = canRead(MODULES.REPORTE_CONDOMINIO);
 
   const condominiumName = condominiumOverview?.condominiumName || "Val'Quirico";
 
@@ -124,147 +214,107 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="shrink-0 flex flex-col sm:flex-row md:flex-col gap-2.5">
-            <Link
-              href="/directorio"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-mint text-brand-deep font-bold text-xs hover:bg-white transition-standard shadow-sm"
-            >
-              <Users className="h-4 w-4" />
-              Directorio de Personas
-            </Link>
-            <Link
-              href="/reglamentos"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-standard border border-white/20"
-            >
-              <BookOpen className="h-4 w-4" />
-              Reglamentos y Actas
-            </Link>
+          {(canRead(MODULES.DIRECTORIO) || canRead(MODULES.REGLAMENTOS)) && (
+            <div className="shrink-0 flex flex-col sm:flex-row md:flex-col gap-2.5">
+              {canRead(MODULES.DIRECTORIO) && (
+                <Link
+                  href="/directorio"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-mint text-brand-deep font-bold text-xs hover:bg-white transition-standard shadow-sm"
+                >
+                  <Users className="h-4 w-4" />
+                  Directorio de Personas
+                </Link>
+              )}
+              {canRead(MODULES.REGLAMENTOS) && (
+                <Link
+                  href="/reglamentos"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-standard border border-white/20"
+                >
+                  <BookOpen className="h-4 w-4" />
+                  Reglamentos y Actas
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ─── Accesos Principales Operativos (solo módulos con permiso de lectura) ─── */}
+      {categoryCards.length > 0 && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-base font-bold uppercase tracking-wider text-[#5d5b35]">
+              Módulos de Gestión Diario
+            </h2>
+            <span className="text-[11px] font-semibold text-ink-soft/70">
+              Selecciona una categoría para navegar
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {categoryCards.map((card) => (
+              <CategoryCard key={card.href} {...card} />
+            ))}
           </div>
         </div>
-      </div>
-
-      {/* ─── Accesos Principales Operativos (Sin números) ───────────────────── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-base font-bold uppercase tracking-wider text-[#5d5b35]">
-            Módulos de Gestión Diario
-          </h2>
-          <span className="text-[11px] font-semibold text-ink-soft/70">
-            Selecciona una categoría para navegar
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <CategoryCard
-            href="/directorio"
-            icon={<Users className="h-5 w-5 text-[#5d5b35]" />}
-            badge="Comunidad"
-            title="Propietarios y Residentes"
-            description="Directorio unificado de residentes, arrendatarios, arrendadores y contactos de emergencia."
-            cta="Ver directorio"
-          />
-
-          <CategoryCard
-            href="/areas-privativas"
-            icon={<MapPin className="h-5 w-5 text-[#5d5b35]" />}
-            badge="Inmuebles"
-            title="Áreas Privativas"
-            description="Catálogo de lotes, viviendas, locales comerciales y zonas del condominio."
-            cta="Ver inmuebles"
-          />
-
-          <CategoryCard
-            href="/tickets"
-            icon={<TicketIcon className="h-5 w-5 text-[#922f12]" />}
-            badge="Atención"
-            title="Solicitudes y Soporte"
-            description="Seguimiento de tickets, reportes de mantenimiento y solicitudes de residentes."
-            cta="Atender solicitudes"
-            badgeColor="bg-[#922f12]/10 text-[#922f12] border-[#922f12]/20"
-          />
-
-          <CategoryCard
-            href="/reglamentos"
-            icon={<BookOpen className="h-5 w-5 text-[#5d5b35]" />}
-            badge="Normativa"
-            title="Documentos y Reglamentos"
-            description="Estatutos condominales, acuerdos de asamblea y normas comunitarias de convivencia."
-            cta="Consultar normas"
-          />
-        </div>
-      </div>
+      )}
 
       {/* ─── Acciones Frecuentes de Administración ──────────────────────────── */}
-      <div className="space-y-3">
-        <h2 className="text-base font-bold uppercase tracking-wider px-1 text-[#5d5b35]">
-          Acciones Frecuentes
-        </h2>
+      {quickActions.length > 0 && (
+        <div className="space-y-3">
+          <h2 className="text-base font-bold uppercase tracking-wider px-1 text-[#5d5b35]">
+            Acciones Frecuentes
+          </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <QuickActionCard
-            href="/reporte-condominio"
-            icon={<FileText className="h-4 w-4 text-white" />}
-            title="Generar Ficha de Condominio"
-            description="Descarga el estado actual y la ficha técnica del condominio en formato PDF."
-            cta="Generar PDF"
-            iconBg="bg-[#5d5b35]"
-          />
-
-          <QuickActionCard
-            href="/cobros-masivos"
-            icon={<Zap className="h-4 w-4 text-white" />}
-            title="Proceso de Cobros Masivos"
-            description="Emisión masiva de cuotas ordinarias y extraordinarias para las áreas privativas."
-            cta="Iniciar cobros"
-            iconBg="bg-[#3d3c22]"
-          />
-
-          <QuickActionCard
-            href="/notificaciones"
-            icon={<Bell className="h-4 w-4 text-white" />}
-            title="Redactar Comunicado"
-            description="Envía avisos de interés general a los residentes vía correo o notificación del portal."
-            cta="Redactar aviso"
-            iconBg="bg-[#922f12]"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {quickActions.map((card) => (
+              <QuickActionCard key={card.href} {...card} />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ─── Banner Cálido de Redirección a Análisis y Finanzas ─────────────── */}
-      <div className="p-6 rounded-2xl border transition-all bg-gradient-to-r from-canvas-2 via-card to-canvas-2 border-line/70 shadow-sm text-ink">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="flex items-start gap-4">
-            <div className="h-11 w-11 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0 border border-brand/20">
-              <HeartHandshake className="h-6 w-6" />
+      {(showResumen || showEstadisticas) && (
+        <div className="p-6 rounded-2xl border transition-all bg-gradient-to-r from-canvas-2 via-card to-canvas-2 border-line/70 shadow-sm text-ink">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <div className="h-11 w-11 rounded-2xl bg-brand/10 text-brand flex items-center justify-center shrink-0 border border-brand/20">
+                <HeartHandshake className="h-6 w-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-brand tracking-tight">
+                  ¿Deseas consultar cifras financieras o métricas del condominio?
+                </h3>
+                <p className="text-xs text-ink-soft/85 leading-relaxed max-w-2xl">
+                  Para mantener este portal enfocado en la bienvenida y gestión operativa del día a día, las gráficas comparativas, los balances de cobranza e indicadores de ocupación han sido organizados en sus secciones especializadas.
+                </p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <h3 className="text-base font-bold text-brand tracking-tight">
-                ¿Deseas consultar cifras financieras o métricas del condominio?
-              </h3>
-              <p className="text-xs text-ink-soft/85 leading-relaxed max-w-2xl">
-                Para mantener este portal enfocado en la bienvenida y gestión operativa del día a día, las gráficas comparativas, los balances de cobranza e indicadores de ocupación han sido organizados en sus secciones especializadas.
-              </p>
-            </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-3 shrink-0">
-            <Link
-              href="/resumen-financiero"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-deep transition-standard shadow-xs"
-            >
-              <PieChart className="h-4 w-4" />
-              Resumen Financiero
-            </Link>
-            <Link
-              href="/estadisticas"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-mint/40 text-brand-deep font-bold text-xs hover:bg-brand-mint transition-standard border border-brand/20"
-            >
-              <BarChart3 className="h-4 w-4 text-brand" />
-              Ver Estadísticas
-            </Link>
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              {showResumen && (
+                <Link
+                  href="/resumen-financiero"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand text-white font-bold text-xs hover:bg-brand-deep transition-standard shadow-xs"
+                >
+                  <PieChart className="h-4 w-4" />
+                  Resumen Financiero
+                </Link>
+              )}
+              {showEstadisticas && (
+                <Link
+                  href="/estadisticas"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-brand-mint/40 text-brand-deep font-bold text-xs hover:bg-brand-mint transition-standard border border-brand/20"
+                >
+                  <BarChart3 className="h-4 w-4 text-brand" />
+                  Ver Estadísticas
+                </Link>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -279,15 +329,7 @@ function CategoryCard({
   description,
   cta,
   badgeColor,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  badge: string;
-  title: string;
-  description: string;
-  cta: string;
-  badgeColor?: string;
-}) {
+}: Omit<CategoryCardDef, "module">) {
   return (
     <Link href={href} className="block group">
       <Card className="p-5 h-full transition-all duration-200 hover:-translate-y-1 hover:border-[#5d5b35]/40 hover:shadow-md cursor-pointer flex flex-col justify-between border">
@@ -329,14 +371,7 @@ function QuickActionCard({
   description,
   cta,
   iconBg,
-}: {
-  href: string;
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  cta: string;
-  iconBg?: string;
-}) {
+}: Omit<QuickActionDef, "module">) {
   return (
     <Link href={href} className="block group">
       <Card className="p-5 h-full transition-all duration-200 hover:shadow-md hover:border-[#5d5b35]/30 cursor-pointer flex flex-col justify-between border">

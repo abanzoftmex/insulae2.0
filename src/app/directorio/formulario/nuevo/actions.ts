@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -11,6 +13,7 @@ function hashSHA256(text: string): string {
 
 export async function createFullDirectoryContactAction(data: any) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canCreate");
     const condominium = await prisma.condominium.findFirst({
       where: { slug: PROJECT_SCOPE.condominiumCode, isActive: true },
       select: { id: true },

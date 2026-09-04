@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
@@ -129,6 +131,8 @@ function Paginator({ page, totalPages, buildHref }: { page: number; totalPages: 
 }
 
 export default async function ListadoSeguridadPage(props: PageProps) {
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS_CASETA);
+
   const searchParams = await props.searchParams;
   const params = searchParams ?? {};
 

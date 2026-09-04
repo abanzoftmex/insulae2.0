@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { getTicketListingUseCase, toTicketListingVM } from "@/modules/tickets";
 import { TicketsWorkbench } from "./tickets-workbench";
@@ -14,6 +16,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function TicketsPage() {
+  await requirePageAccess(MODULES.TICKETS);
+
   const listing = await getTicketListingUseCase.execute();
 
   if (!listing) {

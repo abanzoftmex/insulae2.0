@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -78,6 +80,7 @@ function parseExcelDate(val: any): Date | null {
 
 export async function importIncomesAction(rows: ImportRow[]) {
   try {
+    await assertPermission(MODULES.COBROS, "canCreate");
     const condo = await prisma.condominium.findFirst({
       where: { isActive: true },
       select: { id: true },

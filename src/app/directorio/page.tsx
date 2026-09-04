@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React, { Fragment } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -77,6 +79,8 @@ function Paginator({ page, totalPages, buildHref }: { page: number; totalPages: 
 }
 
 export default async function DirectorioPage(props: PageProps) {
+  await requirePageAccess(MODULES.DIRECTORIO);
+
   const searchParams = await props.searchParams;
   const params = searchParams ?? {};
   const query = pickParam(params.q).trim();

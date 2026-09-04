@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -56,6 +58,8 @@ async function StatusToggle({ isClosed, budgetId }: { isClosed: boolean, budgetI
 }
 
 export default async function PresupuestosPage(props: { searchParams: Promise<{ anio?: string }> }) {
+  await requirePageAccess(MODULES.PRESUPUESTO);
+
   const searchParams = await props.searchParams;
   const currentYear = new Date().getUTCFullYear();
   const year = parseInt(searchParams.anio ?? "", 10) || currentYear;

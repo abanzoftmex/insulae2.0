@@ -1,8 +1,12 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { ExpenseCreatePage } from "./expense-create-page";
 
 export default async function NewExpensePage() {
+  await requirePageAccess(MODULES.GASTOS);
+
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },
     select: { id: true, slug: true },

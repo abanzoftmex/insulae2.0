@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 
 import { getCondominiumStructureListingUseCase } from "@/modules/condominium-structure";
@@ -6,6 +8,8 @@ import { toCondominiumStructureListingVm } from "@/modules/condominium-structure
 import { deleteCondominiumStructureGroupFromFormAction } from "./actions";
 
 export default async function ListadoEstructuraCondominalPage() {
+  await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL);
+
   const listing = await getCondominiumStructureListingUseCase.execute();
 
   if (!listing) {

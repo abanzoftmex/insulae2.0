@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCondominiumOrganigramUseCase } from "@/modules/condominium-organigram";
@@ -37,6 +39,8 @@ interface EstructuraCondominalPageProps {
 }
 
 export default async function EstructuraCondominalPage({ searchParams }: EstructuraCondominalPageProps) {
+  await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL);
+
   const params = await searchParams;
   const isEditMode = params.mode === "edit";
 

@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 
@@ -19,6 +21,7 @@ export interface SaveTicketResponseActionInput {
 }
 
 export async function getTicketResponseFormDataAction(id: string) {
+    await assertPermission(MODULES.TICKETS, "canRead");
   const data = await getTicketResponseFormUseCase.execute(id);
   return data ? toTicketResponseFormVM(data) : null;
 }
@@ -26,6 +29,7 @@ export async function getTicketResponseFormDataAction(id: string) {
 export async function saveTicketResponseAction(
   input: SaveTicketResponseActionInput,
 ): Promise<{ ok: boolean; message: string; ticketId?: string }> {
+    await assertPermission(MODULES.TICKETS, "canUpdate");
   const result = await saveTicketResponseUseCase.execute(input);
 
   if (result.ok) {
@@ -42,6 +46,7 @@ export async function createTicketAction(data: {
   privateAreaId: string;
 }) {
   try {
+    await assertPermission(MODULES.TICKETS, "canCreate");
     const condominium = await prisma.condominium.findFirst({
       where: { slug: PROJECT_SCOPE.condominiumCode, isActive: true },
       select: { id: true },

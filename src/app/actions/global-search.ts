@@ -1,5 +1,8 @@
 "use server";
 
+import { getUserPermissions } from "@/shared/application/auth/permissions";
+import { MODULES, type ModuleName } from "@/shared/application/auth/modules";
+
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 
@@ -129,5 +132,15 @@ export async function globalSearch(query: string): Promise<SearchResultItem[]> {
     })),
   ];
 
-  return results;
+  // Solo se devuelven resultados de los módulos que el usuario puede consultar.
+  const permissions = await getUserPermissions();
+  const moduleByType: Record<SearchResultItem["type"], ModuleName> = {
+    area: MODULES.AREAS_PRIVATIVAS,
+    resident: MODULES.DIRECTORIO,
+    ticket: MODULES.TICKETS,
+    expense: MODULES.GASTOS,
+    income: MODULES.COBROS,
+    contact: MODULES.CONTACTOS,
+  };
+  return results.filter((item) => permissions[moduleByType[item.type]]?.canRead === true);
 }

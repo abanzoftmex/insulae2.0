@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { getAnnouncementFormDataUseCase } from "@/modules/announcement/application/get-form-data.use-case";
 import { getAnnouncementByIdUseCase } from "@/modules/announcement/application/announcement.use-cases";
 import { AnnouncementForm } from "../../nuevo/components/announcement-form";
@@ -10,6 +12,8 @@ interface PageProps {
 }
 
 export default async function EditAnnouncementPage({ params }: PageProps) {
+  await requirePageAccess(MODULES.CONVOCATORIAS);
+
   const { id } = await params;
 
   // 1. Fetch catalogs and current convocatoria details

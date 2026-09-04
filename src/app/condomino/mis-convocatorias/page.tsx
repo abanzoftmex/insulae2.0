@@ -1,9 +1,14 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { getAnnouncementsUseCase } from "@/modules/announcement/application/announcement.use-cases";
 import { AnnouncementCard } from "@/app/gobernanza/convocatorias/components/announcement-card";
 import { getCurrentSession } from "@/app/actions/auth";
+import { getUserPermissions } from "@/shared/application/auth/permissions";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 export default async function MyAnnouncementsPage() {
+  await requirePageAccess(MODULES.CONVOCATORIAS_CONDOMINO);
+
   const session = await getCurrentSession();
   if (!session) {
     return (
@@ -15,7 +20,9 @@ export default async function MyAnnouncementsPage() {
     );
   }
 
-  const isAdmin = session.role === "ADMIN";
+  // Quien administra convocatorias las ve todas; el resto solo las que le corresponden.
+  const permissions = await getUserPermissions();
+  const isAdmin = !!permissions[MODULES.CONVOCATORIAS]?.canCreate;
   const rawAnnouncements = await getAnnouncementsUseCase.execute();
 
   let announcements = rawAnnouncements;

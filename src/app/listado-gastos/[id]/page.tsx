@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getExpenseUseCase } from "@/modules/expense";
@@ -9,6 +11,8 @@ interface PageProps {
 }
 
 export default async function EditExpensePage({ params }: PageProps) {
+  await requirePageAccess(MODULES.GASTOS);
+
   const { id } = await params;
 
   const expense = await getExpenseUseCase.findById(id);

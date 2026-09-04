@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { 
   getDirectoryContactParticipationUseCase, 
@@ -48,6 +50,8 @@ function isUuidReference(reference: string): boolean {
 }
 
 export default async function DirectorioFormularioPage({ params, searchParams }: PageProps) {
+  await requirePageAccess(MODULES.DIRECTORIO);
+
   const [{ reference }, rawSearchParams] = await Promise.all([params, searchParams]);
   const query = pickParam(rawSearchParams?.q).trim();
   const page = pickParam(rawSearchParams?.page).trim() || "1";

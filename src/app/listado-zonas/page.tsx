@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { getZoneListingUseCase } from "@/modules/zones";
 import { toZoneListingVM } from "@/modules/zones/presentation/zone-listing.vm";
@@ -12,6 +14,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ListadoZonasPage() {
+  await requirePageAccess(MODULES.BARRIOS);
+
   const listing = await getZoneListingUseCase.execute();
   const vm = listing ? toZoneListingVM(listing) : null;
 

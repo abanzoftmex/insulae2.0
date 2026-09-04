@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 export const dynamic = "force-dynamic";
 
 import React from "react";
@@ -15,6 +17,8 @@ const BUDGET_GROUP_LABELS: Record<string, string> = {
 };
 
 export default async function ImportExpensesPage() {
+  await requirePageAccess(MODULES.GASTOS);
+
   const condo = await prisma.condominium.findFirst({
     where: { isActive: true },
     select: { id: true },

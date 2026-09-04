@@ -51,7 +51,8 @@
     "migration:backfill-ticket-departments": "tsx --tsconfig tsconfig.json src/scripts/backfill-ticket-departments-from-legacy.ts",
     "migration:backfill-tickets": "tsx --tsconfig tsconfig.json src/scripts/backfill-tickets-from-legacy.ts",
     "migration:migrate-notification-assets": "tsx --tsconfig tsconfig.json src/scripts/migrate-notification-assets-to-firebase.ts",
-    "condomino:reset-minisitio-passwords": "tsx --tsconfig tsconfig.json src/scripts/reset-minisitio-passwords.ts"
+    "condomino:reset-minisitio-passwords": "tsx --tsconfig tsconfig.json src/scripts/reset-minisitio-passwords.ts",
+    "admin:set-staff-initial-passwords": "tsx --tsconfig tsconfig.json src/scripts/set-staff-initial-passwords.ts"
   },
   "dependencies": {
     "@abanzoftmex/luca-insulae-contract": "^0.1.0",

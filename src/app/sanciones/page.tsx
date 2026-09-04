@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import type { Metadata } from "next";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -15,6 +17,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function SanctionsPage() {
+  await requirePageAccess(MODULES.CATALOGO_SANCIONES);
+
   const condominium = await prisma.condominium.findFirst({ 
     where: { isActive: true },
     select: { id: true, name: true }

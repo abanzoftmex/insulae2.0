@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Metadata } from "next";
@@ -74,6 +76,8 @@ function SyncCard({
 }
 
 export default async function SincronizacionLucaPage() {
+  await requirePageAccess(MODULES.SINCRONIZACION_LUCA);
+
   const condominium = await getActiveCondominium();
 
   if (!condominium) {

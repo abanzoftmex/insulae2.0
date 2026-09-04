@@ -1,10 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { cookies } from "next/headers";
 import "./globals.css";
 import { AppShell } from "./app-shell";
 import { getCondominiumOverviewUseCase } from "@/modules/condominium";
-import { getUserPermissions } from "@/shared/application/auth/permissions";
+import { getUserPermissions, readAdminSession } from "@/shared/application/auth/permissions";
 import { PermissionsProvider } from "@/components/providers/permissions-provider";
 import { GlobalLoader } from "@/components/global-loader";
 import { Suspense } from "react";
@@ -28,17 +27,8 @@ export default async function RootLayout({
   let navbarLogoAlt = "Val'Quirico";
   const permissions = await getUserPermissions(); // Trigger recompile
 
-  let currentUserName = "Usuario Insulae";
-  try {
-    const cookieStore = await cookies();
-    const sessionStr = cookieStore.get("insulae_session")?.value;
-    if (sessionStr) {
-      const session = JSON.parse(sessionStr);
-      currentUserName = session.name || currentUserName;
-    }
-  } catch (error) {
-    console.warn("[RootLayout] Unable to load user session info", error);
-  }
+  const session = await readAdminSession();
+  const currentUserName = session?.name || "Usuario Insulae";
 
   try {
     const overview = await getCondominiumOverviewUseCase.execute();

@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 
@@ -21,6 +23,7 @@ export interface SaveNotificationActionInput {
 export async function saveNotificationAction(
   input: SaveNotificationActionInput,
 ): Promise<{ ok: boolean; message: string; notificationId?: string }> {
+    await assertPermission(MODULES.NOTIFICACIONES, "canUpdate");
   const result = await saveNotificationUseCase.execute(input);
 
   if (result.ok) {
@@ -33,6 +36,7 @@ export async function saveNotificationAction(
 export async function deleteNotificationAction(
   formData: FormData,
 ): Promise<{ ok: boolean; message: string; notificationId?: string }> {
+    await assertPermission(MODULES.NOTIFICACIONES, "canDelete");
   const notificationId = String(formData.get("notificationId") ?? "");
   const result = await deleteNotificationUseCase.execute(notificationId);
 

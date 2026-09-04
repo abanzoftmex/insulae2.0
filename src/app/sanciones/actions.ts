@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
@@ -11,6 +13,7 @@ const repository = new PrismaSanctionRepository(prisma);
 
 export async function createSanctionAction(req: Omit<CreateSanctionRequest, "condominiumId">) {
   try {
+    await assertPermission(MODULES.CATALOGO_SANCIONES, "canCreate");
     const condominium = await prisma.condominium.findFirst({ where: { isActive: true } });
     if (!condominium) throw new Error("Condominium not found");
 
@@ -29,6 +32,7 @@ export async function createSanctionAction(req: Omit<CreateSanctionRequest, "con
 
 export async function updateSanctionAction(req: Omit<UpdateSanctionRequest, "condominiumId">) {
   try {
+    await assertPermission(MODULES.CATALOGO_SANCIONES, "canUpdate");
     const condominium = await prisma.condominium.findFirst({ where: { isActive: true } });
     if (!condominium) throw new Error("Condominium not found");
 
@@ -47,6 +51,7 @@ export async function updateSanctionAction(req: Omit<UpdateSanctionRequest, "con
 
 export async function deleteSanctionAction(id: string) {
   try {
+    await assertPermission(MODULES.CATALOGO_SANCIONES, "canDelete");
     const condominium = await prisma.condominium.findFirst({ where: { isActive: true } });
     if (!condominium) throw new Error("Condominium not found");
 

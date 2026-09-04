@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.repository";
 import { GetRoleUseCase, GetModulesUseCase } from "@/modules/role/application/role.use-cases";
@@ -9,6 +11,8 @@ interface Props {
 }
 
 export default async function EditRolePage(props: Props) {
+  await requirePageAccess(MODULES.ROLES);
+
   const params = await props.params;
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },

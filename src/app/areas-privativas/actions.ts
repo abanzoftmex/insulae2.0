@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -85,6 +87,7 @@ async function revalidatePrivateAreaFormPath(privateAreaId: string): Promise<voi
 }
 
 export async function updatePrivateAreaSnapshotAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   if (!privateAreaId) {
     return;
@@ -241,6 +244,7 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
 }
 
 export async function togglePrivateAreaStatusAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const nextStatus = toString(formData.get("nextStatus"));
 
@@ -264,6 +268,7 @@ export async function togglePrivateAreaStatusAction(formData: FormData): Promise
 }
 
 export async function updateOrdinaryAreaChargeAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const amount = toNumber(formData.get("annualOrdinaryFee"));
 
@@ -345,6 +350,7 @@ export async function updateOrdinaryAreaChargeAction(formData: FormData): Promis
 }
 
 export async function createPrivateAreaRentalAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canCreate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const tenantName = toString(formData.get("tenantName"));
   const status = toString(formData.get("status"));
@@ -397,6 +403,7 @@ function roleBucketToRoleName(roleBucket: string): string {
 }
 
 export async function addPrivateAreaAssignmentAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const userId = toString(formData.get("userId"));
   const roleBucket = toString(formData.get("roleBucket"));
@@ -458,6 +465,7 @@ export async function addPrivateAreaAssignmentAction(formData: FormData): Promis
 }
 
 export async function removePrivateAreaAssignmentAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const assignmentId = toString(formData.get("assignmentId"));
 
@@ -479,6 +487,7 @@ export async function removePrivateAreaAssignmentAction(formData: FormData): Pro
 }
 
 export async function setPrivateAreaAdministratorAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const userId = toString(formData.get("userId"));
 
@@ -545,6 +554,7 @@ export async function setPrivateAreaAdministratorAction(formData: FormData): Pro
 }
 
 export async function setPrivateAreaRentalTenantAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const tenantName = toString(formData.get("tenantName"));
 
@@ -597,6 +607,7 @@ export async function setPrivateAreaRentalTenantAction(formData: FormData): Prom
 }
 
 export async function createPrivateAreaChargeAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canCreate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const chargeGroupId = toString(formData.get("chargeGroupId"));
   const amount = toNumber(formData.get("amount"));
@@ -661,6 +672,7 @@ export async function createPrivateAreaChargeAction(formData: FormData): Promise
   revalidatePath("/reporte-cuotas-extraordinarias");
 }
 export async function updatePrivateAreaChargeAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const chargeId = toString(formData.get("chargeId"));
   const chargeGroupId = toString(formData.get("chargeGroupId"));
   const amount = toNumber(formData.get("amount"));
@@ -698,6 +710,7 @@ export async function updatePrivateAreaChargeAction(formData: FormData): Promise
 }
 
 export async function deletePrivateAreaChargeAction(chargeId: string): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canDelete");
   if (!chargeId) return;
   
   await prisma.charge.delete({
@@ -711,6 +724,7 @@ export async function deletePrivateAreaChargeAction(chargeId: string): Promise<v
 }
 
 export async function sendPrivateAreaStatementEmailAction(privateAreaId: string, opc: string): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canRead");
   // TODO: Implement actual email sending logic via Resend / NodeMailer / Sendgrid.
   // For now, this is a placeholder that simulates a successful email send.
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -718,6 +732,7 @@ export async function sendPrivateAreaStatementEmailAction(privateAreaId: string,
 }
 
 export async function createPrivateAreaAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canCreate");
   const name = toString(formData.get("name"));
   if (!name) {
     throw new Error("El nombre de la área privativa es obligatorio.");
@@ -842,6 +857,7 @@ export async function createPrivateAreaAction(formData: FormData): Promise<void>
 }
 
 export async function deletePrivateAreaPermanentlyAction(formData: FormData): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canDelete");
   const privateAreaId = toString(formData.get("privateAreaId"));
   if (!privateAreaId) return;
 
@@ -861,6 +877,7 @@ export async function deletePrivateAreaPermanentlyAction(formData: FormData): Pr
 
 export async function importPrivateAreasCSVAction(rows: any[]) {
   try {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canCreate");
     const condominium = await prisma.condominium.findFirst({
       where: { slug: PROJECT_SCOPE.condominiumCode, isActive: true },
       select: { id: true },
@@ -1124,6 +1141,7 @@ export async function importPrivateAreasCSVAction(rows: any[]) {
 }
 
 export async function cancelPaymentAction(paymentId: string): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   if (!paymentId) return;
 
   await prisma.$transaction(async (tx) => {
@@ -1192,6 +1210,7 @@ export async function savePrivateAreaImageAction(input: {
   mimeType?: string;
   slotIndex: number;
 }): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   await prisma.privateAreaImage.upsert({
     where: {
       privateAreaId_slotIndex: {
@@ -1223,6 +1242,7 @@ export async function deletePrivateAreaImageAction(input: {
   privateAreaId: string;
   slotIndex: number;
 }): Promise<void> {
+    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   await prisma.privateAreaImage.delete({
     where: {
       privateAreaId_slotIndex: {

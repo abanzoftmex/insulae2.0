@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { getDirectoryRolesUseCase } from "@/modules/directory";
 import { CreateDirectoryForm } from "./create-directory-form";
@@ -11,6 +13,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function DirectorioFormularioNuevoPage() {
+  await requirePageAccess(MODULES.DIRECTORIO);
+
   const roles = await getDirectoryRolesUseCase.execute();
 
   const backHref = "/directorio";

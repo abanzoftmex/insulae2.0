@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { notFound, redirect } from "next/navigation";
 import { PrismaBudgetRepository } from "@/modules/budget/infrastructure/prisma-budget.repository";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -9,6 +11,8 @@ interface PageProps {
 }
 
 export default async function BudgetGroupPage({ params, searchParams }: PageProps) {
+  await requirePageAccess(MODULES.ESTRUCTURA_PRESUPUESTO);
+
   const { id } = await params;
   const { anio } = await searchParams;
 

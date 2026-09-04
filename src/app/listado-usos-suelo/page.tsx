@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { getLandUseListingUseCase } from "@/modules/land-uses";
 import { toLandUseListingVM } from "@/modules/land-uses/presentation/land-use-listing.vm";
@@ -13,6 +15,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ListadoUsosSueloPage() {
+  await requirePageAccess(MODULES.USOS_DE_SUELO);
+
   const listing = await getLandUseListingUseCase.execute();
   const vm = listing ? toLandUseListingVM(listing) : null;
 

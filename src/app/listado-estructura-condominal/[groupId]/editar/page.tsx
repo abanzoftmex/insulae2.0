@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { notFound } from "next/navigation";
 
 import { getCondominiumStructureFormUseCase } from "@/modules/condominium-structure";
@@ -13,6 +15,8 @@ interface EditarGrupoEstructuraCondominalPageProps {
 export default async function EditarGrupoEstructuraCondominalPage({
   params,
 }: EditarGrupoEstructuraCondominalPageProps) {
+  await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL);
+
   const { groupId } = await params;
   const snapshot = await getCondominiumStructureFormUseCase.execute(groupId);
 

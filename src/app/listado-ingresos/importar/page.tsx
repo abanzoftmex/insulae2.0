@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
@@ -13,6 +15,8 @@ import {
 import { ImportIncomeForm } from "./components/import-income-form";
 
 export default async function ImportarIngresosPage() {
+  await requirePageAccess(MODULES.COBROS);
+
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },
     select: { id: true, name: true },

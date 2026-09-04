@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { DM_Serif_Display, Plus_Jakarta_Sans } from "next/font/google";
@@ -30,6 +32,8 @@ type PageProps = {
 };
 
 export default async function EditarUsoSueloPage({ params }: PageProps) {
+  await requirePageAccess(MODULES.USOS_DE_SUELO);
+
   const { landUseId } = await params;
 
   const [snapshot, listing] = await Promise.all([

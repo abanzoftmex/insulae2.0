@@ -1,8 +1,12 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { getNotificationFormUseCase } from "@/modules/notifications";
 
 import { NotificacionFormShell } from "../notificacion-form-shell";
 
 export default async function NuevaNotificacionPage() {
+  await requirePageAccess(MODULES.NOTIFICACIONES);
+
   const formData = await getNotificationFormUseCase.execute();
 
   if (!formData) {

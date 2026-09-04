@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { notFound } from "next/navigation";
 
 import { getTicketResponseFormUseCase, toTicketResponseFormVM } from "@/modules/tickets";
@@ -9,6 +11,8 @@ interface EditarTicketPageProps {
 }
 
 export default async function EditarTicketPage({ params }: EditarTicketPageProps) {
+  await requirePageAccess(MODULES.TICKETS);
+
   const { ticketId } = await params;
   const formData = await getTicketResponseFormUseCase.execute(ticketId);
 

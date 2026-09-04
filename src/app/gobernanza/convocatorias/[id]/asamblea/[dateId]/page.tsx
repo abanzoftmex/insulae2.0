@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { getAnnouncementByIdUseCase } from "@/modules/announcement/application/announcement.use-cases";
 import { getAnnouncementFormDataUseCase } from "@/modules/announcement/application/get-form-data.use-case";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -11,6 +13,8 @@ interface PageProps {
 }
 
 export default async function AsambleaDashboardPage({ params }: PageProps) {
+  await requirePageAccess(MODULES.CONVOCATORIAS);
+
   const { id, dateId } = await params;
 
   // 1. Fetch Convocatoria details

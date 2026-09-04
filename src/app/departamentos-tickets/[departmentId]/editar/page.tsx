@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { notFound } from "next/navigation";
 
 import { getTicketDepartmentFormUseCase } from "@/modules/ticket-departments";
@@ -9,6 +11,8 @@ interface EditarDepartamentoTicketPageProps {
 }
 
 export default async function EditarDepartamentoTicketPage({ params }: EditarDepartamentoTicketPageProps) {
+  await requirePageAccess(MODULES.DEPARTAMENTOS_TICKETS);
+
   const { departmentId } = await params;
   const snapshot = await getTicketDepartmentFormUseCase.execute(departmentId);
 

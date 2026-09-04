@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { revalidatePath } from "next/cache";
@@ -11,6 +13,7 @@ import { headers } from "next/headers";
  */
 export async function toggleAttendanceAction(dateId: string, positionId: string, isPresent: boolean) {
   try {
+    await assertPermission([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO], "canRead");
     const callDate = await prisma.announcementDate.findUnique({
       where: { id: dateId }
     });
@@ -50,6 +53,7 @@ export async function toggleAttendanceAction(dateId: string, positionId: string,
  */
 export async function registerVoteAction(topicId: string, positionId: string, voteType: string) {
   try {
+    await assertPermission([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO], "canRead");
     const topic = await prisma.announcementTopic.findUnique({
       where: { id: topicId }
     });
@@ -91,6 +95,7 @@ export async function registerVoteAction(topicId: string, positionId: string, vo
  */
 export async function saveTopicConclusionsAction(topicId: string, conclusions: string) {
   try {
+    await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
     const updated = await prisma.announcementTopic.update({
       where: { id: topicId },
       data: { conclusions }
@@ -109,6 +114,7 @@ export async function saveTopicConclusionsAction(topicId: string, conclusions: s
  */
 export async function closeAsambleaAction(dateId: string, isCompleted: boolean) {
   try {
+    await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
     const status = isCompleted ? "Realizada" : "No Realizada";
     
     const updatedDate = await prisma.announcementDate.update({
@@ -150,6 +156,7 @@ export async function closeAsambleaAction(dateId: string, isCompleted: boolean) 
  */
 export async function sendAnnouncementInvitationAction(announcementId: string) {
   try {
+    await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
     const resendApiKey = process.env.RESEND_API_KEY;
     if (!resendApiKey) {
       throw new Error("La variable de entorno RESEND_API_KEY no está configurada.");
@@ -404,6 +411,7 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
  */
 export async function getAnnouncementWhatsAppTextAction(announcementId: string) {
   try {
+    await assertPermission(MODULES.CONVOCATORIAS, "canRead");
     const announcement = await prisma.announcement.findUnique({
       where: { id: announcementId },
       include: {

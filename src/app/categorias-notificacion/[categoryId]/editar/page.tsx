@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { notFound } from "next/navigation";
 
 import { getNotificationCategoryFormUseCase } from "@/modules/notification-categories";
@@ -11,6 +13,8 @@ interface EditarCategoriaNotificacionPageProps {
 export default async function EditarCategoriaNotificacionPage({
   params,
 }: EditarCategoriaNotificacionPageProps) {
+  await requirePageAccess(MODULES.CATEGORIAS_NOTIFICACIONES);
+
   const { categoryId } = await params;
   const snapshot = await getNotificationCategoryFormUseCase.execute(categoryId);
 

@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getCondominiumReportUseCase } from "@/modules/condominium-report";
@@ -29,6 +31,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ReporteCondominioPage() {
+  await requirePageAccess(MODULES.REPORTE_CONDOMINIO);
+
   const report = await getCondominiumReportUseCase.execute();
   const vm = report ? toCondominiumReportVM(report) : null;
 

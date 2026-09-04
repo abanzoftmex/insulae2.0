@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getIncomeUseCase } from "@/modules/income";
@@ -9,6 +11,8 @@ interface PageProps {
 }
 
 export default async function EditIncomePage({ params }: PageProps) {
+  await requirePageAccess(MODULES.COBROS);
+
   const { id } = await params;
 
   const income = await getIncomeUseCase.execute(id);

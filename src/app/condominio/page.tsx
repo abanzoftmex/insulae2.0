@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { CondominiumOverviewVM } from "@/modules/condominium/presentation/condominium-overview.vm";
@@ -28,6 +30,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function CondominioPage() {
+  await requirePageAccess(MODULES.CONDOMINIO);
+
   let overview: CondominiumOverviewVM | null = null;
   let editorInitialValues = {
     projectId: "",

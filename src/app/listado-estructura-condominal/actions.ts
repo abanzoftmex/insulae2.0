@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 
@@ -22,6 +24,7 @@ export interface SaveCondominiumStructureActionInput {
 export async function saveCondominiumStructureAction(
   input: SaveCondominiumStructureActionInput,
 ): Promise<{ ok: boolean; message: string; groupId?: string }> {
+    await assertPermission(MODULES.ESTRUCTURA_CONDOMINAL, "canUpdate");
   const response = await saveCondominiumStructureUseCase.execute({
     id: input.id,
     name: input.name,
@@ -40,6 +43,7 @@ export async function saveCondominiumStructureAction(
 export async function deleteCondominiumStructureGroupAction(
   groupId: string,
 ): Promise<{ ok: boolean; message: string }> {
+    await assertPermission(MODULES.ESTRUCTURA_CONDOMINAL, "canDelete");
   const response = await deleteCondominiumStructureGroupUseCase.execute(groupId);
 
   if (response.ok) {
@@ -55,6 +59,7 @@ export async function deleteCondominiumStructureGroupAction(
 export async function deleteCondominiumStructureGroupFromFormAction(
   formData: FormData,
 ): Promise<void> {
+    await assertPermission(MODULES.ESTRUCTURA_CONDOMINAL, "canDelete");
   const groupId = String(formData.get("groupId") ?? "");
   await deleteCondominiumStructureGroupAction(groupId);
 }

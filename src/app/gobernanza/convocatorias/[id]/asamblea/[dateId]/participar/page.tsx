@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { getAnnouncementByIdUseCase } from "@/modules/announcement/application/announcement.use-cases";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getCurrentSession } from "@/app/actions/auth";
@@ -13,6 +15,8 @@ interface PageProps {
 }
 
 export default async function ParticiparAsambleaPage({ params }: PageProps) {
+  await requirePageAccess([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO]);
+
   const { id, dateId } = await params;
 
   // 1. Fetch user session

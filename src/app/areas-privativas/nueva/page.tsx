@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
@@ -22,6 +24,8 @@ type PageProps = {
 };
 
 export default async function NuevaAreaPrivativaPage({ searchParams }: PageProps) {
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+
   const resolvedSearchParams = (await searchParams) ?? {};
   const parentIdParam = resolvedSearchParams.parentId;
   const parentId = typeof parentIdParam === "string" ? parentIdParam : null;

@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { getAnnouncementsUseCase } from "@/modules/announcement/application/announcement.use-cases";
 import { AnnouncementCard } from "./components/announcement-card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +11,8 @@ import { getUserPermissions } from "@/shared/application/auth/permissions";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 export default async function AnnouncementsPage() {
+  await requirePageAccess(MODULES.CONVOCATORIAS);
+
   const session = await getCurrentSession();
   if (!session) {
     return (
@@ -21,12 +25,8 @@ export default async function AnnouncementsPage() {
   }
 
   const permissions = await getUserPermissions();
-  // canManage: ADMIN role OR user has Convocatorias permission assigned via roles
-  const isAdmin = session.role === "ADMIN";
-  const canManage = isAdmin
-    || !!permissions["Convocatorias"]?.canCreate
-    || !!permissions["convocatorias"]?.canCreate
-    || !!permissions["Gobernanza"]?.canCreate;
+  // Quien puede crear convocatorias administra el listado completo; el resto ve solo las suyas.
+  const canManage = !!permissions[MODULES.CONVOCATORIAS]?.canCreate;
   const rawAnnouncements = await getAnnouncementsUseCase.execute();
 
   let announcements = rawAnnouncements;

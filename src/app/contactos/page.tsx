@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { getContactDirectoryUseCase } from "@/modules/contacts";
 import { toContactDirectoryVM } from "@/modules/contacts/presentation/contact-directory.vm";
@@ -13,6 +15,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function ContactosPage() {
+  await requirePageAccess(MODULES.CONTACTOS);
+
   const directory = await getContactDirectoryUseCase.execute();
   const vm = directory ? toContactDirectoryVM(directory) : null;
 

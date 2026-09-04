@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { updateDirectoryContactUseCase } from "@/modules/directory";
 import type { DirectoryContactParticipation } from "@/modules/directory/domain/directory";
@@ -20,6 +22,7 @@ function cleanUserId(id: string): string {
 
 export async function saveDirectoryContactAction(id: string, data: Partial<DirectoryContactParticipation>) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canUpdate");
     const targetId = cleanUserId(id);
     const res = await updateDirectoryContactUseCase.execute({ id: targetId, data });
     return { ok: true, message: "Contacto actualizado correctamente.", idVq: res.idVq };
@@ -35,6 +38,7 @@ function hashSHA256(text: string): string {
 
 export async function updatePasswordAction(id: string, passwordPlain: string) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canUpdate");
     const targetId = cleanUserId(id);
     await prisma.user.update({
       where: { id: targetId },
@@ -59,6 +63,7 @@ function generateRandomPassword(length = 8): string {
 
 export async function generateTemporaryPasswordAction(id: string) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canUpdate");
     const targetId = cleanUserId(id);
     const user = await prisma.user.findUnique({
       where: { id: targetId },
@@ -192,6 +197,7 @@ async function ensureRegistrationTypesExist(condominiumId: string) {
 
 export async function getRegistrationTypesAction(condominiumId: string) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canRead");
     await ensureRegistrationTypesExist(condominiumId);
     const items = await prisma.registrationType.findMany({
       where: { condominiumId, isActive: true },
@@ -206,6 +212,7 @@ export async function getRegistrationTypesAction(condominiumId: string) {
 
 export async function addRegistrationTypeAction(condominiumId: string, description: string) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canCreate");
     await ensureRegistrationTypesExist(condominiumId);
     const existing = await prisma.registrationType.findMany({
       where: { condominiumId, isActive: true },
@@ -240,6 +247,7 @@ export async function addRegistrationTypeAction(condominiumId: string, descripti
 
 export async function updateRegistrationTypeAction(id: string, description: string) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canUpdate");
     await prisma.registrationType.update({
       where: { id },
       data: { description },
@@ -253,6 +261,7 @@ export async function updateRegistrationTypeAction(id: string, description: stri
 
 export async function deleteRegistrationTypeAction(id: string) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canDelete");
     await prisma.registrationType.update({
       where: { id },
       data: { isActive: false },
@@ -281,6 +290,7 @@ export async function createNestedUserAction(
   }
 ) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canCreate");
     const parent = await prisma.user.findUnique({
       where: { id: parentId },
       select: { idVq: true, apolfap: true, condominiumId: true }
@@ -359,6 +369,7 @@ export async function createNestedUserAction(
 
 export async function deleteNestedUserAction(id: string) {
   try {
+    await assertPermission(MODULES.DIRECTORIO, "canDelete");
     await prisma.user.update({
       where: { id },
       data: { isActive: false }

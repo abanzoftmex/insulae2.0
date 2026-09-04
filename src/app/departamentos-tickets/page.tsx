@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 import { Building2, Mail, Plus, Ticket, Edit2, Trash2 } from "lucide-react";
 
@@ -11,6 +13,8 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function DepartamentosTicketsPage() {
+  await requirePageAccess(MODULES.DEPARTAMENTOS_TICKETS);
+
   const submitDeleteDepartment = async (formData: FormData): Promise<void> => {
     "use server";
     await deleteTicketDepartmentAction(formData);

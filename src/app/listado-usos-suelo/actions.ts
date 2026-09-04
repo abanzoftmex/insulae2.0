@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 
@@ -16,12 +18,14 @@ export interface SaveLandUseActionInput {
 }
 
 export async function getLandUseFormDataAction(id: string) {
+    await assertPermission(MODULES.USOS_DE_SUELO, "canRead");
   return await getLandUseFormUseCase.execute(id);
 }
 
 export async function saveLandUseAction(
   input: SaveLandUseActionInput,
 ): Promise<{ ok: boolean; message: string; landUseId?: string }> {
+    await assertPermission(MODULES.USOS_DE_SUELO, "canUpdate");
   const response = await saveLandUseUseCase.execute({
     id: input.id,
     name: input.name,
@@ -40,6 +44,7 @@ export async function saveLandUseAction(
 }
 
 export async function deleteLandUseAction(id: string): Promise<{ ok: boolean; message: string }> {
+    await assertPermission(MODULES.USOS_DE_SUELO, "canDelete");
   const response = await deleteLandUseUseCase.execute(id);
 
   if (response.ok) {

@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 import { Info } from "lucide-react";
 
@@ -20,6 +22,8 @@ type PageProps = {
 };
 
 export default async function FormularioApolImagenesPage({ searchParams }: PageProps) {
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);
 

@@ -14,6 +14,9 @@ import {
   normalizePath,
 } from "@/components/layout/app-sidebar";
 
+// Pantallas públicas que se renderizan sin sidebar ni navbar.
+const BARE_PATHS = new Set(["/login", "/olvide-contrasena", "/restablecer-contrasena"]);
+
 export function AppShell({
   children,
   navbarLogoUrl = null,
@@ -61,7 +64,7 @@ export function AppShell({
 
   // Inactivity timeout: 15 minutes of no user interaction redirects to /logout
   useEffect(() => {
-    if (currentPath === "/login") return;
+    if (BARE_PATHS.has(currentPath)) return;
 
     let timeoutId: NodeJS.Timeout;
 
@@ -83,7 +86,7 @@ export function AppShell({
     };
   }, [currentPath]);
 
-  const isLoginPage = currentPath === "/login";
+  const isLoginPage = BARE_PATHS.has(currentPath);
   const isPrintPage = currentPath.endsWith("/imprimir");
   // Rutas que aprovechan todo el ancho disponible (sin tope centrado de 1440px)
   const isFullWidthPage = currentPath === "/estadisticas";

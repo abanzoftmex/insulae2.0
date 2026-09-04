@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import { 
@@ -24,6 +26,7 @@ export async function updateBudgetAmountAction(
   amount: number
 ) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canUpdate");
     const condoId = await getFirstCondo();
     await updateBudgetMonthUseCase.execute(condoId, year, budgetMonthId, amount);
     revalidatePath("/presupuestos");
@@ -44,6 +47,7 @@ export async function createBudgetAmountAction(
   amount: number
 ) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canCreate");
     const b = await inlineRepo.getBudget(await getFirstCondo(), year);
     if (b.status !== "OPEN") throw new Error("Presupuesto cerrado");
 
@@ -61,6 +65,7 @@ export async function updateUnitCostAction(
   unitCost: number
 ) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canUpdate");
     const condoId = await getFirstCondo();
     const b = await inlineRepo.getBudget(condoId, year);
     if (b.status !== "OPEN") throw new Error("Presupuesto cerrado");
@@ -80,6 +85,7 @@ export async function updateSupplierUrlAction(
   supplierUrl: string | null
 ) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canUpdate");
     const condoId = await getFirstCondo();
     const b = await inlineRepo.getBudget(condoId, year);
     if (b.status !== "OPEN") throw new Error("Presupuesto cerrado");
@@ -108,6 +114,7 @@ export async function updateMonthUnitsAction(
   units: number
 ) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canUpdate");
     const condoId = await getFirstCondo();
     const b = await inlineRepo.getBudget(condoId, year);
     if (b.status !== "OPEN") throw new Error("Presupuesto cerrado");
@@ -123,6 +130,7 @@ export async function updateMonthUnitsAction(
 
 export async function toggleBudgetStatusAction(budgetId: string) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canUpdate");
     await toggleBudgetStatusUseCase.execute(budgetId);
     revalidatePath("/presupuestos");
     return { success: true };
@@ -133,6 +141,7 @@ export async function toggleBudgetStatusAction(budgetId: string) {
 
 export async function importBudgetExcelAction(year: number, formData: FormData) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canCreate");
     const file = formData.get("file") as File;
     if (!file) throw new Error("No se adjuntó ningún archivo");
 
@@ -151,6 +160,7 @@ export async function importBudgetExcelAction(year: number, formData: FormData) 
 
 export async function deleteBudgetGroupAction(groupId: string) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canDelete");
     await deleteBudgetGroupUseCase.execute(groupId);
     revalidatePath("/listado-estructura-presupuesto");
     return { success: true };
@@ -161,6 +171,7 @@ export async function deleteBudgetGroupAction(groupId: string) {
 
 export async function deleteBudgetConceptAction(conceptId: string) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canDelete");
     await deleteBudgetConceptUseCase.execute(conceptId);
     revalidatePath("/listado-estructura-presupuesto");
     return { success: true };
@@ -171,6 +182,7 @@ export async function deleteBudgetConceptAction(conceptId: string) {
 
 export async function saveBudgetGroupAction(data: any) {
   try {
+    await assertPermission(MODULES.PRESUPUESTO, "canUpdate");
     const condoId = await getFirstCondo();
     data.condominiumId = condoId;
     await inlineRepo.saveBudgetGroup(data);

@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import {
@@ -30,6 +32,7 @@ export async function createIncomeAction(input: {
   privateAreaId?: string;
 }) {
   try {
+    await assertPermission(MODULES.COBROS, "canCreate");
     const condoId = await getCondominiumId();
     const saveInput: SaveIncomeInput = {
       date: new Date(input.date),
@@ -72,6 +75,7 @@ export async function updateIncomeAction(
   },
 ) {
   try {
+    await assertPermission(MODULES.COBROS, "canUpdate");
     const current = await prisma.income.findUnique({
       where: { id },
       select: { externalSource: true, amount: true, date: true },
@@ -110,6 +114,7 @@ export async function updateIncomeAction(
 
 export async function deleteIncomeAction(id: string) {
   try {
+    await assertPermission(MODULES.COBROS, "canDelete");
     await deleteIncomeUseCase.execute(id);
     revalidateIncomePaths();
     return { success: true };

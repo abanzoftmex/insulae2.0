@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { randomUUID } from "node:crypto";
 
@@ -88,6 +90,7 @@ export async function createContactAction(
   input: ContactEntryInput,
 ): Promise<{ ok: boolean; message: string }> {
   try {
+    await assertPermission(MODULES.CONTACTOS, "canCreate");
     await ensureDefaultContactTypes();
 
     const condominiumId = await resolveCondominiumId();
@@ -156,6 +159,7 @@ export async function updateContactAction(
   input: ContactEntryInput,
 ): Promise<{ ok: boolean; message: string }> {
   try {
+    await assertPermission(MODULES.CONTACTOS, "canUpdate");
     if (!input.id) {
       return { ok: false, message: "No se recibio el identificador del contacto." };
     }
@@ -224,6 +228,7 @@ export async function deleteContactAction(
   id: string,
 ): Promise<{ ok: boolean; message: string }> {
   try {
+    await assertPermission(MODULES.CONTACTOS, "canDelete");
     const contactId = trimSafe(id);
     if (!contactId) {
       return { ok: false, message: "No se recibio el identificador del contacto." };

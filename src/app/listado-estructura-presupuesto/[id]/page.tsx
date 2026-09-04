@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getBudgetStructureUseCase } from "@/modules/budget";
@@ -7,6 +9,8 @@ import { PrismaBudgetRepository } from "@/modules/budget/infrastructure/prisma-b
 const budgetRepo = new PrismaBudgetRepository();
 
 export default async function EditBudgetGroupPage(props: { params: Promise<{ id: string }>, searchParams: Promise<{ anio?: string }> }) {
+  await requirePageAccess(MODULES.ESTRUCTURA_PRESUPUESTO);
+
   const params = await props.params;
   const searchParams = await props.searchParams;
   const id = params.id;

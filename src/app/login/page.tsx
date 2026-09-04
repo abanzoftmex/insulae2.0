@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { loginAction } from "@/app/actions/auth";
 import { Eye, EyeOff } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -179,6 +180,15 @@ export default function LoginPage() {
                   )}
                 </button>
               </form>
+
+              <div className="mt-5 text-center">
+                <Link
+                  href="/olvide-contrasena"
+                  className="text-[11px] font-semibold text-white/50 hover:text-[#b58c42] transition-standard"
+                >
+                  ¿Olvidaste tu contraseña?
+                </Link>
+              </div>
             </div>
 
             {/* Footer */}

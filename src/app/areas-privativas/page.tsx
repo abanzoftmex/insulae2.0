@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -282,6 +284,8 @@ function renderLegacyAction(action: PrivateAreaLegacyAction): ReactNode {
 // Using Paginator from @/components/ui/paginator
 
 export default async function AreasPrivativasPage(props: PageProps) {
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+
   const searchParams = await props.searchParams;
   const params = searchParams ?? {};
 

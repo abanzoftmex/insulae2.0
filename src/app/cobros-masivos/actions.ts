@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import { previewMassChargesUseCase, createMassChargesUseCase } from "@/modules/charge";
@@ -13,6 +15,7 @@ export async function previewMassChargesAction(
   req: PreviewMassChargeRequest
 ): Promise<{ success: boolean; data?: PreviewMassChargeResult; error?: string }> {
   try {
+    await assertPermission(MODULES.COBROS_MASIVOS, "canRead");
     const result = await previewMassChargesUseCase.execute(req);
     return { success: true, data: result };
   } catch (error: any) {
@@ -25,6 +28,7 @@ export async function createMassChargesAction(
   previewCache: PreviewPropertyResult[]
 ): Promise<{ success: boolean; created?: number; error?: string }> {
   try {
+    await assertPermission(MODULES.COBROS_MASIVOS, "canCreate");
     const result = await createMassChargesUseCase.execute(req, previewCache);
     if (result.success) {
       revalidatePath("/resumen-financiero");

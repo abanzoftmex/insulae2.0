@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Fragment } from "react";
@@ -188,6 +190,8 @@ export default async function ResumenFinancieroPage({
 }: {
   searchParams?: Promise<{ mode?: string; year?: string }>;
 }) {
+  await requirePageAccess(MODULES.RESUMEN_FINANCIERO);
+
   const resolvedSearchParams = (await searchParams) ?? {};
   const selectedMode: Mode = resolvedSearchParams.mode === "extraordinary" ? "extraordinary" : "ordinary";
   const showOrdinary = selectedMode === "ordinary";

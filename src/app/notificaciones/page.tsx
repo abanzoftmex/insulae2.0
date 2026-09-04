@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 import { Bell, FileText, Image, Edit2, Plus, Trash2 } from "lucide-react";
 
@@ -17,6 +19,8 @@ const TYPE_VARIANT: Record<string, "brand" | "warning" | "success"> = {
 };
 
 export default async function NotificacionesPage() {
+  await requirePageAccess(MODULES.NOTIFICACIONES);
+
   const submitDeleteNotification = async (formData: FormData): Promise<void> => {
     "use server";
     await deleteNotificationAction(formData);

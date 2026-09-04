@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -192,6 +194,8 @@ interface PageProps {
 }
 
 export default async function ReporteCuotasExtraordinariasPage({ searchParams }: PageProps) {
+  await requirePageAccess(MODULES.COBROS);
+
   const params = await searchParams;
   const currentYear = new Date().getFullYear();
   const page = Math.max(1, parseInt(params.page ?? "1", 10) || 1);

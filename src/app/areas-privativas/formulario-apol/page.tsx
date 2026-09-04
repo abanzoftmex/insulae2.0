@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 
 import { getPrivateAreaActionPageDataUseCase } from "@/modules/private-area-actions";
@@ -164,6 +166,8 @@ function AssignmentSection(props: {
 }
 
 export default async function FormularioApolPage({ searchParams }: PageProps) {
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);
 

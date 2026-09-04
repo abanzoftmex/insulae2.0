@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import { getBudgetByYearUseCase } from "@/modules/budget";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -225,6 +227,8 @@ function GroupTable({ group, year, accent }: {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default async function PresupuestoPdfPage(props: { searchParams: Promise<{ anio?: string }> }) {
+  await requirePageAccess(MODULES.PRESUPUESTO);
+
   const searchParams = await props.searchParams;
   const year = parseInt(searchParams.anio ?? "", 10) || new Date().getFullYear();
 

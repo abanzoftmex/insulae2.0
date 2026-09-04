@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { Info } from "lucide-react";
 
@@ -38,6 +40,8 @@ function firstParam(value: string | string[] | undefined): string | null {
 }
 
 export default async function EstadisticasPage({ searchParams }: PageProps) {
+  await requirePageAccess(MODULES.REPORTE_CONDOMINIO);
+
   const params = (await searchParams) ?? {};
   const filters = {
     zone: firstParam(params.zona),

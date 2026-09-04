@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 import { Plus, Tag } from "lucide-react";
 
@@ -15,6 +17,8 @@ import { StatCard } from "@/components/ui/stat-card";
 export const dynamic = "force-dynamic";
 
 export default async function CategoriasNotificacionPage() {
+  await requirePageAccess(MODULES.CATEGORIAS_NOTIFICACIONES);
+
   const submitDeleteCategory = async (formData: FormData): Promise<void> => {
     "use server";
     await deleteNotificationCategoryAction(formData);

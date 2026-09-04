@@ -1,11 +1,12 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
 import { getAnnouncementByIdUseCase } from "@/modules/announcement/application/announcement.use-cases";
 import { getAnnouncementFormDataUseCase } from "@/modules/announcement/application/get-form-data.use-case";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { AnnouncementDetailsActions } from "../components/announcement-details-actions";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
-import { cookies } from "next/headers";
 import { getUserPermissions } from "@/shared/application/auth/permissions";
+import { MODULES } from "@/shared/application/auth/modules";
 import { Card } from "@/components/ui/card";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
@@ -66,18 +67,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function AnnouncementDetailPage({ params }: PageProps) {
+  await requirePageAccess([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO]);
+
   const { id } = await params;
 
-  // Read session to verify if Admin or Resident
-  const cookieStore = await cookies();
-  const sessionStr = cookieStore.get("insulae_session")?.value;
-  const session = sessionStr ? JSON.parse(sessionStr) : null;
+  // Quien puede crear convocatorias ve las acciones de administración; el resto (condóminos) solo consulta.
   const permissions = await getUserPermissions();
-  const isAdmin = session?.role === "ADMIN";
-  const isAdmin_detail = isAdmin
-    || !!permissions["Convocatorias"]?.canCreate
-    || !!permissions["convocatorias"]?.canCreate
-    || !!permissions["Gobernanza"]?.canCreate;
+  const isAdmin_detail = !!permissions[MODULES.CONVOCATORIAS]?.canCreate;
 
   // 1. Fetch Convocatoria Details
   const announcement = await getAnnouncementByIdUseCase.execute(id);

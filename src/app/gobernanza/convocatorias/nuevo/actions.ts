@@ -1,10 +1,13 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { revalidatePath } from "next/cache";
 
 export async function createAnnouncementAction(formData: any) {
   try {
+    await assertPermission(MODULES.CONVOCATORIAS, "canCreate");
     // 1. Get Condominium
     const condominium = await prisma.condominium.findFirst({
       where: { slug: "valquirico" }
@@ -99,6 +102,7 @@ export async function createAnnouncementAction(formData: any) {
 
 export async function updateAnnouncementAction(id: string, formData: any) {
   try {
+    await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
     await prisma.$transaction(async (tx) => {
       // 1. Delete existing relational dependencies
       await tx.announcementDate.deleteMany({ where: { announcementId: id } });

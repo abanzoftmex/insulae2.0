@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { SanctionForm } from "../components/sanction-form";
@@ -14,6 +16,8 @@ interface Props {
 }
 
 export default async function EditSanctionPage({ params }: Props) {
+  await requirePageAccess(MODULES.CATALOGO_SANCIONES);
+
   const condominium = await prisma.condominium.findFirst({ where: { isActive: true } });
   if (!condominium) notFound();
 

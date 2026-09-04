@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import type { Metadata } from "next";
 import { getBudgetStructureUseCase } from "@/modules/budget";
@@ -15,6 +17,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function BudgetStructurePage(props: { searchParams: Promise<{ anio?: string }> }) {
+  await requirePageAccess(MODULES.ESTRUCTURA_PRESUPUESTO);
+
   const searchParams = await props.searchParams;
   const currentYear = new Date().getUTCFullYear();
   const year = parseInt(searchParams.anio ?? "", 10) || currentYear;

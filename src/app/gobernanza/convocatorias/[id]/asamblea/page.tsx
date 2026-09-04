@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { getAnnouncementByIdUseCase } from "@/modules/announcement/application/announcement.use-cases";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
@@ -12,6 +14,8 @@ interface PageProps {
 }
 
 export default async function AsambleaLauncherPage({ params }: PageProps) {
+  await requirePageAccess(MODULES.CONVOCATORIAS);
+
   const { id } = await params;
 
   const announcement = await getAnnouncementByIdUseCase.execute(id);

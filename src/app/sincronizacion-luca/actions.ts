@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -7,6 +9,7 @@ import { prisma } from "@/shared/infrastructure/db/prisma";
 // alerta de la tarjeta "Rechazados" — quedan visibles en el desplegable
 // "Historial" de la misma pantalla.
 export async function archiveRejectedSyncEventsAction(condominiumId: string): Promise<void> {
+    await assertPermission(MODULES.SINCRONIZACION_LUCA, "canUpdate");
   if (!condominiumId) return;
 
   await prisma.lucaSyncEvent.updateMany({

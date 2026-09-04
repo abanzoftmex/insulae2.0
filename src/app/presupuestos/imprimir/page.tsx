@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import { getBudgetByYearUseCase } from "@/modules/budget";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -206,6 +208,8 @@ function GroupTable({
 }
 
 export default async function BudgetPrintPage(props: { searchParams: Promise<{ anio?: string }> }) {
+  await requirePageAccess(MODULES.PRESUPUESTO);
+
   const searchParams = await props.searchParams;
   const currentYear = new Date().getFullYear();
   const year = parseInt(searchParams.anio ?? "", 10) || currentYear;

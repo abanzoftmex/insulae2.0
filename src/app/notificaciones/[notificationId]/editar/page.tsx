@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { notFound } from "next/navigation";
 
 import { getNotificationFormUseCase } from "@/modules/notifications";
@@ -9,6 +11,8 @@ interface EditarNotificacionPageProps {
 }
 
 export default async function EditarNotificacionPage({ params }: EditarNotificacionPageProps) {
+  await requirePageAccess(MODULES.NOTIFICACIONES);
+
   const { notificationId } = await params;
   const formData = await getNotificationFormUseCase.execute(notificationId);
 

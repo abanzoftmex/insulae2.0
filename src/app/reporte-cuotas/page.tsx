@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -188,6 +190,8 @@ function renderRowActionButtons(areaId: string, isChild: boolean) {
 }
 
 export default async function ReporteCuotasPage(props: { searchParams: Promise<{ page?: string; q?: string; pageSize?: string }> }) {
+  await requirePageAccess(MODULES.COBROS);
+
   const searchParams = await props.searchParams;
   const currentYear = new Date().getUTCFullYear();
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);

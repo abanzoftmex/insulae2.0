@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 
@@ -27,6 +29,7 @@ export interface RegulationDocumentActionInput {
 export async function createRegulationDocumentAction(
   input: RegulationDocumentActionInput,
 ): Promise<{ ok: boolean; message: string }> {
+    await assertPermission(MODULES.REGLAMENTOS, "canCreate");
   const name = trimSafe(input.name);
   const fileUrl = trimSafe(input.fileUrl ?? "");
 
@@ -58,6 +61,7 @@ export async function createRegulationDocumentAction(
 export async function updateRegulationDocumentAction(
   input: RegulationDocumentActionInput,
 ): Promise<{ ok: boolean; message: string }> {
+    await assertPermission(MODULES.REGLAMENTOS, "canUpdate");
   const id = trimSafe(input.id ?? "");
   const name = trimSafe(input.name);
 
@@ -92,6 +96,7 @@ export async function updateRegulationDocumentAction(
 export async function archiveRegulationDocumentAction(
   id: string,
 ): Promise<{ ok: boolean; message: string }> {
+    await assertPermission(MODULES.REGLAMENTOS, "canDelete");
   const documentId = trimSafe(id);
   if (!documentId) {
     return {

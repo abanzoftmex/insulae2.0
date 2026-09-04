@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import Link from "next/link";
 import { AlertCircle, FileSpreadsheet, ArrowLeft } from "lucide-react";
 
@@ -55,6 +57,8 @@ function getPaymentMethodLabel(method: string): string {
 }
 
 export default async function HistoricoPagosPage({ searchParams }: PageProps) {
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);
   const opc = parseOpc(resolvedSearchParams);

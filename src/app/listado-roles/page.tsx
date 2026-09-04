@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.repository";
 import { GetRolesUseCase } from "@/modules/role/application/role.use-cases";
@@ -16,6 +18,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function RolesPage() {
+  await requirePageAccess(MODULES.ROLES);
+
   const permissions = await getUserPermissions();
   if (!permissions["Roles"]?.canRead) {
     redirect("/");

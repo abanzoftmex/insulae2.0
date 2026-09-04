@@ -1,4 +1,6 @@
 "use server";
+import { assertPermission } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -18,6 +20,7 @@ const VALID_METHODS = new Set(["CASH", "TRANSFER", "CARD", "CHECK", "OTHER"]);
 
 export async function importExpensesAction(rows: ImportRow[]) {
   try {
+    await assertPermission(MODULES.GASTOS, "canCreate");
     const condo = await prisma.condominium.findFirst({
       where: { isActive: true },
       select: { id: true },

@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import type { Metadata } from "next";
 import { Lora, Nunito_Sans } from "next/font/google";
 
@@ -22,7 +24,9 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-export default function NuevoBarrioPage() {
+export default async function NuevoBarrioPage() {
+  await requirePageAccess(MODULES.BARRIOS);
+
   return (
     <div className={`${lora.variable} ${nunito.variable}`}>
       <ZonaFormShell mode="create" />

@@ -1,3 +1,5 @@
+import { requirePageAccess } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import type { Metadata } from "next";
 import { MassChargeWorkbench } from "./components/mass-charge-workbench";
@@ -11,6 +13,8 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function MassChargePage() {
+  await requirePageAccess(MODULES.COBROS_MASIVOS);
+
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },
     select: { id: true, name: true }
