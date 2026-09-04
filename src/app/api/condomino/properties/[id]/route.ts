@@ -4,14 +4,15 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { getCondominoFromRequest } from "@/shared/application/auth/condomino-token";
+import { requireCondomino } from "@/shared/application/auth/condomino-session";
 import { getCondominoScope, computeBalance, mapAreaStatus, computeIndiviso, num } from "@/shared/application/condomino/condomino-scope";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  const session = getCondominoFromRequest(request);
-  if (!session) return NextResponse.json({ success: false, message: "No autorizado." }, { status: 401 });
+  const auth = await requireCondomino(request);
+  if (!auth.ok) return auth.response;
+  const session = auth.session;
 
   const { id } = await ctx.params;
   const scope = await getCondominoScope(session.userId, session.condominiumId);

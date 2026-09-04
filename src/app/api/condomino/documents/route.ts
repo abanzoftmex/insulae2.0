@@ -4,7 +4,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { getCondominoFromRequest } from "@/shared/application/auth/condomino-token";
+import { requireCondomino } from "@/shared/application/auth/condomino-session";
 
 export const dynamic = "force-dynamic";
 
@@ -17,8 +17,9 @@ function resolveDocUrl(bucket: string, path: string): string {
 }
 
 export async function GET(request: NextRequest) {
-  const session = getCondominoFromRequest(request);
-  if (!session) return NextResponse.json({ success: false, message: "No autorizado." }, { status: 401 });
+  const auth = await requireCondomino(request);
+  if (!auth.ok) return auth.response;
+  const session = auth.session;
 
   const project = await prisma.project.findFirst({
     where: { condominiumId: session.condominiumId, isActive: true },

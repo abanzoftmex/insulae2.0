@@ -4,15 +4,16 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { getCondominoFromRequest } from "@/shared/application/auth/condomino-token";
+import { requireCondomino } from "@/shared/application/auth/condomino-session";
 
 export const dynamic = "force-dynamic";
 
 const REPLY_MARK = "\n\n---RESPUESTA_CONDOMINO---\n";
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  const session = getCondominoFromRequest(request);
-  if (!session) return NextResponse.json({ success: false, message: "No autorizado." }, { status: 401 });
+  const auth = await requireCondomino(request);
+  if (!auth.ok) return auth.response;
+  const session = auth.session;
 
   const { id } = await ctx.params;
   let body: { respuesta?: string };

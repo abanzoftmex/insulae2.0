@@ -5,7 +5,7 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { getCondominoFromRequest } from "@/shared/application/auth/condomino-token";
+import { requireCondomino } from "@/shared/application/auth/condomino-session";
 import { num, round2 } from "@/shared/application/condomino/condomino-scope";
 
 export const dynamic = "force-dynamic";
@@ -38,8 +38,9 @@ function isExtraordinary(kind: string | null | undefined): boolean {
 }
 
 export async function GET(request: NextRequest) {
-  const session = getCondominoFromRequest(request);
-  if (!session) return NextResponse.json({ success: false, message: "No autorizado." }, { status: 401 });
+  const auth = await requireCondomino(request);
+  if (!auth.ok) return auth.response;
+  const session = auth.session;
 
   const yearsParam = new URL(request.url).searchParams.get("years");
   const years = (yearsParam ? yearsParam.split(",") : [String(new Date().getFullYear())])

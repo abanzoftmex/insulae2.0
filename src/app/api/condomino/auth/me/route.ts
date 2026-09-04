@@ -1,21 +1,20 @@
 /**
  * GET /api/condomino/auth/me
  * Valida el token Bearer del condómino y devuelve sus datos básicos.
- * Lo usa el minisitio para verificar la sesión al cargar.
- * Devuelve 403 si el usuario ya no tiene el rol "Solo Minisitio" (el minisitio cierra la sesión).
+ * Lo usa el minisitio para verificar la sesión al cargar y en cada cambio de página.
+ * Devuelve 401 (code ACCESS_REVOKED) si el usuario ya no está activo o perdió el rol
+ * "Solo Minisitio"; el minisitio cierra la sesión ante cualquier respuesta no exitosa.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { getCondominoFromRequest } from "@/shared/application/auth/condomino-token";
-import { MINISITIO_ACCESS_DENIED_MESSAGE, minisitioRoleWhere } from "@/shared/application/auth/condomino-access";
+import { requireCondomino } from "@/shared/application/auth/condomino-session";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
-  const session = getCondominoFromRequest(request);
-  if (!session) {
-    return NextResponse.json({ success: false, message: "Token inválido o expirado." }, { status: 401 });
-  }
+  const auth = await requireCondomino(request);
+  if (!auth.ok) return auth.response;
+  const session = auth.session;
 
   const user = await prisma.user.findFirst({
     where: { id: session.userId, condominiumId: session.condominiumId, isActive: true },
@@ -29,15 +28,11 @@ export async function GET(request: NextRequest) {
       businessEmail: true,
       userType: true,
       assignments: { where: { isActive: true }, select: { id: true } },
-      userRoles: { where: { role: minisitioRoleWhere(session.condominiumId) }, select: { id: true }, take: 1 },
     },
   });
 
   if (!user) {
     return NextResponse.json({ success: false, message: "Cuenta no encontrada o inactiva." }, { status: 401 });
-  }
-  if (user.userRoles.length === 0) {
-    return NextResponse.json({ success: false, message: MINISITIO_ACCESS_DENIED_MESSAGE }, { status: 403 });
   }
 
   const rentalCount = await prisma.rental.count({

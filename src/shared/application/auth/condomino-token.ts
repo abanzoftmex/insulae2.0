@@ -2,6 +2,10 @@
  * Token de sesión para el portal de condóminos (minisitio).
  * HMAC-SHA256 firmado por insulae2.0; el minisitio lo guarda y lo reenvía como Bearer.
  * Sin dependencias externas (solo crypto de Node).
+ *
+ * El token solo prueba identidad y vigencia (1 día). La autorización (usuario activo y
+ * rol "Solo Minisitio") se revalida en cada petición con requireCondomino()
+ * (ver condomino-session.ts), de modo que revocar el rol surte efecto de inmediato.
  */
 import crypto from "crypto";
 
@@ -10,7 +14,7 @@ const SECRET =
   process.env.NEXTAUTH_SECRET ||
   "dev-condomino-secret-change-me";
 
-const TTL_SECONDS = 60 * 60 * 24 * 7; // 7 días
+const TTL_SECONDS = 60 * 60 * 24; // 1 día
 
 export interface CondominoTokenPayload {
   userId: string;
