@@ -36,7 +36,11 @@ export async function requireCondomino(request: Request): Promise<CondominoAuthR
       id: session.userId,
       condominiumId: session.condominiumId,
       isActive: true,
-      userRoles: { some: { role: minisitioRoleWhere(session.condominiumId) } },
+      OR: [
+        { userType: "ADMIN" },
+        { userRoles: { some: { role: minisitioRoleWhere(session.condominiumId) } } },
+        { assignments: { some: { isActive: true } } },
+      ],
     },
   });
 

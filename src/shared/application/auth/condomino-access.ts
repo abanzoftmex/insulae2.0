@@ -24,6 +24,10 @@ export function minisitioRoleWhere(condominiumId: string): Prisma.RoleWhereInput
     OR: [
       { legacyIdGral: MINISITIO_ROLE.legacyIdGral },
       { name: { equals: MINISITIO_ROLE.name, mode: "insensitive" } },
+      { name: { equals: "Condómino", mode: "insensitive" } },
+      { name: { equals: "Master", mode: "insensitive" } },
+      { name: { equals: "Dirección INSULAE", mode: "insensitive" } },
+      { description: { contains: "Solo Minisitio", mode: "insensitive" } },
     ],
   };
 }

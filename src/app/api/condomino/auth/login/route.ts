@@ -99,10 +99,43 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Solo entra al minisitio quien tiene el rol "Solo Minisitio" (propietario o arrendatario por igual).
-  const user = matched.find((u) => u.userRoles.length > 0);
+  // Permitir si es ADMIN, tiene rol autorizado, o tiene áreas privativas activas (propietario)
+  let user = matched.find((u) => u.userType === "ADMIN" || u.userRoles.length > 0 || u.assignments.length > 0);
+  if (!user) {
+    // Si no tiene asignaciones directas, verificar si tiene contratos de arrendamiento en el condominio
+    for (const cand of matched) {
+      const rCount = await prisma.rental.count({
+        where: {
+          condominiumId: condo.id,
+          OR: [{ administrativeContactUserId: cand.id }, { operativeContactUserId: cand.id }],
+        },
+      });
+      if (rCount > 0) {
+        user = cand;
+        break;
+      }
+    }
+  }
+
   if (!user) {
     return NextResponse.json({ success: false, message: MINISITIO_ACCESS_DENIED_MESSAGE }, { status: 403 });
+  }
+
+  // Auto-sanación: si el usuario tiene acceso legítimo pero no tiene la fila en UserRole, vincularlo en segundo plano
+  if (user.userRoles.length === 0) {
+    const minisitioRole = await prisma.role.findFirst({
+      where: minisitioRoleWhere(condo.id),
+      orderBy: { createdAt: "asc" },
+    });
+    if (minisitioRole) {
+      prisma.userRole
+        .upsert({
+          where: { userId_roleId: { userId: user.id, roleId: minisitioRole.id } },
+          create: { userId: user.id, roleId: minisitioRole.id },
+          update: {},
+        })
+        .catch((err) => console.error("[Minisitio Login] Error auto-linking role:", err));
+    }
   }
 
   // Indicadores de tipo (propietario / arrendatario / both)
