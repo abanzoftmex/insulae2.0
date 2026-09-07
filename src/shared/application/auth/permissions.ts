@@ -43,11 +43,14 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
     select: {
       isActive: true,
       userType: true,
+      condominiumId: true,
+      initialRole: true,
       userRoles: {
         where: { role: { isActive: true } },
         select: {
           role: {
             select: {
+              id: true,
               permissions: {
                 where: { isActive: true, module: { isActive: true } },
                 select: {
@@ -68,8 +71,46 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
   if (!user || !user.isActive) return {};
   if (user.userType === "ADMIN") return getFullPermissions();
 
+  let roles = user.userRoles.map((ur) => ur.role);
+
+  // Fallback auto-sanación: si el usuario no tiene UserRole pero tiene initialRole
+  if (roles.length === 0 && user.initialRole && user.initialRole.trim() !== "") {
+    const fallbackRole = await prisma.role.findFirst({
+      where: {
+        condominiumId: user.condominiumId,
+        name: { equals: user.initialRole.trim(), mode: "insensitive" },
+        isActive: true,
+      },
+      select: {
+        id: true,
+        permissions: {
+          where: { isActive: true, module: { isActive: true } },
+          select: {
+            canRead: true,
+            canCreate: true,
+            canUpdate: true,
+            canDelete: true,
+            module: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    if (fallbackRole) {
+      roles = [fallbackRole];
+      // Persistir el vínculo en la base de datos de forma asíncrona
+      prisma.userRole
+        .upsert({
+          where: { userId_roleId: { userId, roleId: fallbackRole.id } },
+          create: { userId, roleId: fallbackRole.id },
+          update: {},
+        })
+        .catch((err) => console.error("[getPermissionsForUser] Error auto-linking role:", err));
+    }
+  }
+
   const permissionsMap: UserPermissions = {};
-  for (const { role } of user.userRoles) {
+  for (const role of roles) {
     for (const perm of role.permissions) {
       const modName = perm.module.name;
       const current = (permissionsMap[modName] ??= {
