@@ -170,7 +170,9 @@ export default async function DirectorioPage(props: PageProps) {
             <thead>
               <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/80">
                 <th className="px-4">Nombre / Razón Social</th>
+                <th className="px-4 text-center">Total de Áreas Privativas</th>
                 <th className="px-4">Área Privativa o Comercio</th>
+                <th className="px-4 text-right">Indiviso</th>
                 <th className="px-4">Contacto</th>
                 <th className="px-4">Requiere Factura</th>
                 <th className="px-4 text-right">Acción</th>
@@ -179,7 +181,7 @@ export default async function DirectorioPage(props: PageProps) {
             <tbody className="divide-y divide-black/5">
               {vm.people.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-20 text-center text-ink-soft/50 italic font-bold uppercase text-[11px]">
+                  <td colSpan={7} className="py-20 text-center text-ink-soft/50 italic font-bold uppercase text-[11px]">
                     Sin registros que coincidan con la búsqueda
                   </td>
                 </tr>
@@ -197,6 +199,12 @@ export default async function DirectorioPage(props: PageProps) {
                              <p className="text-xs font-semibold text-ink-soft mt-0.5">{person.primaryRoleLabel}</p>
                            </div>
                         </div>
+                      </td>
+
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs font-bold text-ink bg-canvas px-2.5 py-1 rounded-md border border-line/60 inline-block min-w-[36px]">
+                          {person.totalPrivateAreasLabel}
+                        </span>
                       </td>
 
                       <td className="px-4 py-3">
@@ -221,6 +229,12 @@ export default async function DirectorioPage(props: PageProps) {
                              <span className="text-xs font-medium text-ink-soft/40">-</span>
                            )}
                          </div>
+                      </td>
+
+                      <td className="px-4 py-3 text-right">
+                        <span className="text-xs font-mono font-bold text-brand-accent">
+                          {person.indivisoLabel}
+                        </span>
                       </td>
 
                       <td className="px-4 py-3">
@@ -287,9 +301,11 @@ export default async function DirectorioPage(props: PageProps) {
                             </div>
                           </div>
                         </td>
+                        <td className="px-4 py-2 text-center text-xs text-ink-soft/40">-</td>
                         <td className="px-4 py-2 text-xs font-mono font-bold text-brand-accent">
                           {child.idVq ? `ID SDV: ${child.idVq}` : "-"}
                         </td>
+                        <td className="px-4 py-2 text-right text-xs text-ink-soft/40">-</td>
                         <td className="px-4 py-2 text-xs text-ink-soft/60 italic">Usuario anidado</td>
                         <td className="px-4 py-2"><Badge variant="outline" className="px-2 py-0.5 text-[8px] text-ink-soft/60">Anidado</Badge></td>
                         <td className="px-4 py-2 text-right">

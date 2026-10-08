@@ -27,6 +27,8 @@ export interface DirectoryPerson {
   assignmentRoles: string[];
   assignedAreas: string[];
   assignmentCount: number;
+  totalPrivateAreas: number;
+  indiviso: number;
   children?: NestedUser[];
 }
 

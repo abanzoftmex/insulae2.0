@@ -55,6 +55,279 @@ function uniqueSorted(values: string[]): string[] {
   );
 }
 
+const legacyNameCollator = new Intl.Collator("es", {
+  numeric: true,
+  sensitivity: "base",
+});
+
+function toLegacySortableName(name: string): string {
+  const sanitized = name.trim().toUpperCase();
+  const firstGroup = sanitized.split("/")[0]?.trim() ?? sanitized;
+  return firstGroup;
+}
+
+function compareAreasByLegacyOrder<T extends { sortOrder: number; name: string; id?: string }>(a: T, b: T): number {
+  const orderA = a.sortOrder || 0;
+  const orderB = b.sortOrder || 0;
+  if (orderA !== orderB) {
+    return orderA - orderB;
+  }
+  const byName = legacyNameCollator.compare(
+    toLegacySortableName(a.name),
+    toLegacySortableName(b.name)
+  );
+  if (byName !== 0) {
+    return byName;
+  }
+  if (a.id && b.id) {
+    return a.id.localeCompare(b.id, "es");
+  }
+  return 0;
+}
+
+type RepositoryAssignment = {
+  roleName: string | null;
+  privateArea: {
+    id: string;
+    name: string;
+    sortOrder: number;
+    indiviso: Prisma.Decimal | number | null;
+    m2CommonArea: Prisma.Decimal | number | null;
+    m2Construction: Prisma.Decimal | number | null;
+    m2Original: Prisma.Decimal | number | null;
+    rentals?: Array<{
+      tenantName: string | null;
+      commerce: { name: string | null } | null;
+    }>;
+    parentPrivateArea: {
+      id: string;
+      name: string;
+      sortOrder: number;
+      indiviso: Prisma.Decimal | number | null;
+      m2CommonArea: Prisma.Decimal | number | null;
+      m2Original: Prisma.Decimal | number | null;
+      m2ConstructionChildren: Prisma.Decimal | number | null;
+    } | null;
+  };
+};
+
+type SimpleArea = {
+  id: string;
+  name: string;
+  sortOrder: number;
+  parentPrivateAreaId: string | null;
+};
+
+async function getMasterAreaOrderMap(condominiumId: string): Promise<Map<string, number>> {
+  const allAreas = await prisma.privateArea.findMany({
+    where: { condominiumId, isActive: true },
+    select: { id: true, name: true, sortOrder: true, parentPrivateAreaId: true },
+  });
+
+  const childRowsByParentId = new Map<string, SimpleArea[]>();
+  for (const a of allAreas) {
+    if (a.parentPrivateAreaId) {
+      const list = childRowsByParentId.get(a.parentPrivateAreaId) ?? [];
+      list.push(a);
+      childRowsByParentId.set(a.parentPrivateAreaId, list);
+    }
+  }
+
+  const orderedList: SimpleArea[] = [];
+  const visited = new Set<string>();
+
+  const pushWithDescendants = (area: SimpleArea): void => {
+    if (visited.has(area.id)) return;
+    visited.add(area.id);
+    orderedList.push(area);
+
+    const children = (childRowsByParentId.get(area.id) ?? []).sort(compareAreasByLegacyOrder);
+    for (const child of children) {
+      pushWithDescendants(child);
+    }
+  };
+
+  const topLevel = allAreas.filter((a) => !a.parentPrivateAreaId).sort(compareAreasByLegacyOrder);
+  for (const row of topLevel) {
+    pushWithDescendants(row);
+  }
+
+  const remaining = allAreas.filter((a) => !visited.has(a.id)).sort(compareAreasByLegacyOrder);
+  for (const row of remaining) {
+    pushWithDescendants(row);
+  }
+
+  const masterOrderMap = new Map<string, number>();
+  orderedList.forEach((area, index) => {
+    masterOrderMap.set(area.id, index);
+  });
+
+  return masterOrderMap;
+}
+
+function computeParticipationBlocks(
+  assignments: RepositoryAssignment[],
+  totalM2Project: number,
+  userCommerces: Array<{ commerceName: string }> = [],
+  masterOrderMap?: Map<string, number>
+): ParticipationBlock[] {
+  const blockMap: Record<string, { title: string; roles: string[] }> = {
+    legal: { title: "Propietario Legal", roles: ["legal", "dueño legal", "propietario legal"] },
+    pleno: { title: "Dominio actual", roles: ["pleno", "dominio actual", "dominio pleno", "dominio"] },
+    arrendatario: { title: "Arrendatario", roles: ["arrendatario", "arrend", "arrendamiento"] },
+    moral: { title: "Propietario Inicial", roles: ["moral", "dueño moral", "inicial", "propietario inicial"] },
+  };
+
+  const legalNames = new Set(
+    assignments
+      .filter((a) => {
+        const r = (a.roleName || "").toLowerCase();
+        return ["legal", "dueño legal", "propietario legal"].some((keyword) => r.includes(keyword));
+      })
+      .map((a) => a.privateArea.name)
+  );
+  const plenoNames = new Set(
+    assignments
+      .filter((a) => {
+        const r = (a.roleName || "").toLowerCase();
+        return ["pleno", "dominio actual", "dominio pleno", "dominio"].some((keyword) => r.includes(keyword));
+      })
+      .map((a) => a.privateArea.name)
+  );
+  const arrendNames = new Set(
+    assignments
+      .filter((a) => {
+        const r = (a.roleName || "").toLowerCase();
+        return ["arrendatario", "arrend", "arrendamiento"].some((keyword) => r.includes(keyword));
+      })
+      .map((a) => a.privateArea.name)
+  );
+
+  const sortedAssignments = [...assignments].sort((a, b) => {
+    if (masterOrderMap) {
+      const idxA = masterOrderMap.get(a.privateArea.id) ?? 999999;
+      const idxB = masterOrderMap.get(b.privateArea.id) ?? 999999;
+      if (idxA !== idxB) {
+        return idxA - idxB;
+      }
+    }
+    return compareAreasByLegacyOrder(a.privateArea, b.privateArea);
+  });
+
+  return Object.entries(blockMap).map(([key, config]) => {
+    const rows: ParticipationRow[] = [];
+    const seenNames = new Set<string>();
+
+    for (const assignment of sortedAssignments) {
+      const roleLower = (assignment.roleName ?? "").toLowerCase();
+      const matches = config.roles.some((r) => roleLower.includes(r));
+
+      if (matches) {
+        const area = assignment.privateArea;
+        if (seenNames.has(area.name)) continue;
+
+        if (key === "pleno") {
+          if (!legalNames.has(area.name)) continue;
+        } else if (key === "arrendatario") {
+          if (legalNames.has(area.name)) continue;
+        } else if (key === "moral") {
+          if (plenoNames.has(area.name) || arrendNames.has(area.name)) continue;
+        }
+
+        seenNames.add(area.name);
+
+        let percentage = 0;
+        const m2Total = Number(area.m2Original ?? 0);
+
+        if (area.parentPrivateArea) {
+          const parentM2Total = Number(area.parentPrivateArea.m2Original ?? 0);
+          const parentIndiviso = totalM2Project > 0 ? (parentM2Total / totalM2Project) * 100 : 0;
+          const constructionChildren = Number(area.parentPrivateArea.m2ConstructionChildren ?? 0);
+
+          if (constructionChildren > 0 && parentIndiviso > 0) {
+            percentage = parentIndiviso * (Number(area.m2Construction ?? 0) / constructionChildren);
+          } else if (totalM2Project > 0) {
+            percentage = (m2Total / totalM2Project) * 100;
+          }
+        } else if (totalM2Project > 0) {
+          percentage = (m2Total / totalM2Project) * 100;
+        }
+
+        if (percentage === 0 && area.indiviso) {
+          percentage = Number(area.indiviso);
+        }
+
+        let entityType = assignment.roleName || "Sin rol";
+        if (key === "legal") {
+          entityType = "Propietario Legal";
+        } else if (key === "pleno") {
+          entityType = "Dominio actual";
+        } else if (key === "arrendatario") {
+          entityType = "Arrendatario";
+        } else if (key === "moral") {
+          entityType = "Propietario Inicial";
+        }
+
+        const rentalCommerceNames = uniqueSorted(
+          (area.rentals ?? [])
+            .map((r) => r.commerce?.name || r.tenantName || "")
+            .filter(Boolean)
+        );
+
+        const userCommerceNames = uniqueSorted(
+          userCommerces.map((c) => c.commerceName).filter(Boolean)
+        );
+
+        const commerceNames = rentalCommerceNames.length > 0
+          ? rentalCommerceNames
+          : userCommerceNames;
+
+        rows.push({
+          entityType,
+          privateAreaName: area.name,
+          percentage,
+          hasCommerces: commerceNames.length > 0,
+          commerceNames,
+        });
+      }
+    }
+
+    return {
+      title: config.title,
+      totalAreas: rows.length,
+      totalPercentage: rows.reduce((sum, r) => sum + r.percentage, 0),
+      rows,
+    };
+  });
+}
+
+function computeParticipationSummary(
+  blocks: ParticipationBlock[]
+): { totalPrivateAreas: number; indiviso: number } {
+  const legalBlock = blocks.find(
+    (b) => b.title.toLowerCase().includes("propietario legal") || b.title.toLowerCase().includes("legal")
+  );
+  if (legalBlock && legalBlock.totalAreas > 0) {
+    return {
+      totalPrivateAreas: legalBlock.totalAreas,
+      indiviso: legalBlock.totalPercentage,
+    };
+  }
+
+  const activeBlock = blocks.find((b) => b.totalAreas > 0);
+  if (activeBlock) {
+    return {
+      totalPrivateAreas: activeBlock.totalAreas,
+      indiviso: activeBlock.totalPercentage,
+    };
+  }
+
+  return {
+    totalPrivateAreas: 0,
+    indiviso: 0,
+  };
+}
+
 function resolveReferenceWhere(reference: string): Prisma.UserWhereInput | null {
   let decoded = reference.trim();
   try {
@@ -188,6 +461,11 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           id: true,
           slug: true,
           name: true,
+          projects: {
+            where: { isActive: true },
+            take: 1,
+            select: { totalM2: true },
+          },
         },
       })) ??
       (await prisma.condominium.findFirst({
@@ -197,6 +475,11 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           id: true,
           slug: true,
           name: true,
+          projects: {
+            where: { isActive: true },
+            take: 1,
+            select: { totalM2: true },
+          },
         },
       }));
 
@@ -204,6 +487,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       return null;
     }
 
+    const totalM2Project = Number(condominium.projects[0]?.totalM2 ?? 0);
     const query = normalizeText(filters.query);
 
     const where: Prisma.UserWhereInput = {
@@ -287,7 +571,34 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
             roleName: true,
             privateArea: {
               select: {
+                id: true,
                 name: true,
+                sortOrder: true,
+                indiviso: true,
+                m2CommonArea: true,
+                m2Construction: true,
+                m2Original: true,
+                rentals: {
+                  select: {
+                    tenantName: true,
+                    commerce: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
+                parentPrivateArea: {
+                  select: {
+                    id: true,
+                    name: true,
+                    sortOrder: true,
+                    indiviso: true,
+                    m2CommonArea: true,
+                    m2Original: true,
+                    m2ConstructionChildren: true,
+                  },
+                },
               },
             },
           },
@@ -306,6 +617,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       },
     });
 
+    const masterOrderMap = await getMasterAreaOrderMap(condominium.id);
     const requiresInvoiceByUserId = await this.getRequiresInvoiceByUserId(users.map((user) => user.id));
     const commercesByUserId = await this.getCommerceRowsByUserId(users.map((user) => user.id));
     const peopleExpanded = users
@@ -324,6 +636,9 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           user.assignments.map((assignment) => assignment.privateArea.name),
         );
         const commerces = commercesByUserId.get(user.id) ?? [];
+        const userCommercesForSummary = commerces.map((c) => ({ commerceName: c.commerceName }));
+        const blocks = computeParticipationBlocks(user.assignments, totalM2Project, userCommercesForSummary, masterOrderMap);
+        const { totalPrivateAreas, indiviso } = computeParticipationSummary(blocks);
 
         const basePerson: Omit<DirectoryPerson, "id" | "commerceName"> = {
           displayName,
@@ -337,6 +652,8 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           assignmentRoles,
           assignedAreas,
           assignmentCount: user.assignments.length,
+          totalPrivateAreas,
+          indiviso,
           children: user.children.map((c) => ({
             id: c.id,
             firstName: c.firstName,
@@ -570,142 +887,8 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       return null;
     }
 
-    // Process participation blocks
-    const blockMap: Record<string, { title: string; roles: string[] }> = {
-      legal: { title: "Propietario Legal", roles: ["legal", "dueño legal", "propietario legal"] },
-      pleno: { title: "Dominio actual", roles: ["pleno", "dominio actual", "dominio pleno", "dominio"] },
-      arrendatario: { title: "Arrendatario", roles: ["arrendatario", "arrend", "arrendamiento"] },
-      moral: { title: "Propietario Inicial", roles: ["moral", "dueño moral", "inicial", "propietario inicial"] },
-    };
-
-    // Pre-calculate area name sets for cross-block filtering
-    const legalNames = new Set(
-      user.assignments
-        .filter((a) => {
-          const r = (a.roleName || "").toLowerCase();
-          return ["legal", "dueño legal", "propietario legal"].some((keyword) => r.includes(keyword));
-        })
-        .map((a) => a.privateArea.name)
-    );
-    const plenoNames = new Set(
-      user.assignments
-        .filter((a) => {
-          const r = (a.roleName || "").toLowerCase();
-          return ["pleno", "dominio actual", "dominio pleno", "dominio"].some((keyword) => r.includes(keyword));
-        })
-        .map((a) => a.privateArea.name)
-    );
-    const arrendNames = new Set(
-      user.assignments
-        .filter((a) => {
-          const r = (a.roleName || "").toLowerCase();
-          return ["arrendatario", "arrend", "arrendamiento"].some((keyword) => r.includes(keyword));
-        })
-        .map((a) => a.privateArea.name)
-    );
-
-    const blocks: ParticipationBlock[] = Object.entries(blockMap).map(([key, config]) => {
-      const rows: ParticipationRow[] = [];
-      const seenNames = new Set<string>();
-
-      // Sort user assignments by sortOrder and then name
-      const sortedAssignments = [...user.assignments].sort((a, b) => {
-        const orderA = a.privateArea.sortOrder || 0;
-        const orderB = b.privateArea.sortOrder || 0;
-        if (orderA !== orderB) return orderA - orderB;
-        return a.privateArea.name.localeCompare(b.privateArea.name, undefined, { numeric: true });
-      });
-
-      for (const assignment of sortedAssignments) {
-        const roleLower = (assignment.roleName ?? "").toLowerCase();
-        const matches = config.roles.some((r) => roleLower.includes(r));
-
-        if (matches) {
-          const area = assignment.privateArea;
-          if (seenNames.has(area.name)) continue;
-
-          // Legacy UI specific filtering rules:
-          if (key === "pleno") {
-            // "Dominio actual" block shows ONLY areas that are also in the "Legal" block
-            if (!legalNames.has(area.name)) continue;
-          } else if (key === "arrendatario") {
-            // "Arrendatario" block shows ONLY areas that are NOT in the "Legal" block
-            if (legalNames.has(area.name)) continue;
-          } else if (key === "moral") {
-            // "Propietario Inicial" block shows ONLY areas that are NOT in Pleno and NOT in Arrendatario
-            if (plenoNames.has(area.name) || arrendNames.has(area.name)) continue;
-          }
-
-          seenNames.add(area.name);
-
-          // Trust the m2Original/totalM2Project formula for the base indiviso
-          let percentage = 0;
-          const m2Total = Number(area.m2Original ?? 0);
-          
-          if (area.parentPrivateArea) {
-            // Formula for sub-areas: (child.m2Construction / parent.m2ConstructionChildren) * ParentIndiviso
-            const parentM2Total = Number(area.parentPrivateArea.m2Original ?? 0);
-            const parentIndiviso = (parentM2Total / totalM2Project) * 100;
-            const constructionChildren = Number(area.parentPrivateArea.m2ConstructionChildren ?? 0);
-
-            if (constructionChildren > 0 && parentIndiviso > 0) {
-              percentage = parentIndiviso * (Number(area.m2Construction ?? 0) / constructionChildren);
-            } else {
-              percentage = (m2Total / totalM2Project) * 100;
-            }
-          } else {
-            // Base formula for areas without parent
-            percentage = (m2Total / totalM2Project) * 100;
-          }
-
-          // Special case: if calculated is 0 but area has an indiviso in DB, trust the DB
-          if (percentage === 0 && area.indiviso) {
-            percentage = Number(area.indiviso);
-          }
-
-          // Normalize entity type naming to match legacy and fix encoding issues
-          let entityType = assignment.roleName || "Sin rol";
-          if (key === "legal") {
-            entityType = "Propietario Legal";
-          } else if (key === "pleno") {
-            entityType = "Dominio actual";
-          } else if (key === "arrendatario") {
-            entityType = "Arrendatario";
-          } else if (key === "moral") {
-            entityType = "Propietario Inicial";
-          }
-
-          const rentalCommerceNames = uniqueSorted(
-            (area.rentals ?? [])
-              .map((r) => r.commerce?.name || r.tenantName || "")
-              .filter(Boolean)
-          );
-
-          const userCommerceNames = uniqueSorted(
-            user.commerces.map((c) => c.commerceName).filter(Boolean)
-          );
-
-          const commerceNames = rentalCommerceNames.length > 0
-            ? rentalCommerceNames
-            : userCommerceNames;
-
-          rows.push({
-            entityType,
-            privateAreaName: area.name,
-            percentage,
-            hasCommerces: commerceNames.length > 0,
-            commerceNames,
-          });
-        }
-      }
-
-      return {
-        title: config.title,
-        totalAreas: rows.length,
-        totalPercentage: rows.reduce((sum, r) => sum + r.percentage, 0),
-        rows,
-      };
-    });
+    const masterOrderMap = await getMasterAreaOrderMap(condominium.id);
+    const blocks = computeParticipationBlocks(user.assignments, totalM2Project, user.commerces, masterOrderMap);
 
     return {
       id: user.id,

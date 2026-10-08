@@ -16,6 +16,8 @@ export interface DirectoryPersonVM {
   assignmentRolesLabel: string;
   assignedAreasLabel: string;
   assignmentCount: string;
+  totalPrivateAreasLabel: string;
+  indivisoLabel: string;
   children?: Array<{
     id: string;
     idVq: string | null;
@@ -86,6 +88,8 @@ function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
     assignmentRolesLabel: joinOrFallback(person.assignmentRoles, "sin asignacion"),
     assignedAreasLabel: joinOrFallback(person.assignedAreas, "sin areas"),
     assignmentCount: person.assignmentCount.toLocaleString("es-MX"),
+    totalPrivateAreasLabel: person.totalPrivateAreas.toString(),
+    indivisoLabel: `${person.indiviso.toFixed(4)}%`,
     children: person.children?.map((child) => ({
       id: child.id,
       idVq: child.idVq ?? null,
