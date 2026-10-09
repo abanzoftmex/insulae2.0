@@ -965,8 +965,8 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           },
           rentals: {
             orderBy: [
-              { startsAt: "asc" },
-              { tenantName: "asc" },
+              { startsAt: "desc" },
+              { id: "desc" },
             ],
             select: {
               startsAt: true,

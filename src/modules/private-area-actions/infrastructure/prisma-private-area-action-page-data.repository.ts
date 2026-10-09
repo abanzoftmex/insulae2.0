@@ -725,12 +725,8 @@ export class PrismaPrivateAreaActionPageDataRepository
       .map((user) => toUserDisplayName(user))
       .filter((name) => name.trim().length > 0);
 
-    const currentTenantNameFromRentals =
-      area.rentals
-        .map((rental) => rental.tenantName?.trim() ?? "")
-        .find((tenantName) => tenantName.length > 0) ?? null;
-
-    const currentTenantName = currentTenantNameFromRentals ?? null;
+    const latestRentalRecord = area.rentals[0];
+    const currentTenantName = latestRentalRecord?.tenantName?.trim() || null;
 
     const m2ApoleRaw = decimalToNullableNumber(area.m2Apole);
     const m2Original = decimalToNullableNumber(area.m2Original);

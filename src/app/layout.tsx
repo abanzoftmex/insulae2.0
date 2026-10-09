@@ -14,7 +14,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Insulae 2.0 | Valquirico",
+  title: {
+    default: "Insulae 2.0",
+    template: "%s | Insulae 2.0",
+  },
   description: "Plataforma condominal para Valquirico con arquitectura hexagonal.",
 };
 
