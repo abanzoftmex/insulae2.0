@@ -150,7 +150,7 @@ function toHierarchyLabel(role: "FUSION" | "PARENT" | "CHILD" | "SINGLE"): strin
   return "Individual";
 }
 
-function toDisplayName(name: string, role: "FUSION" | "PARENT" | "CHILD" | "SINGLE"): string {
+export function toCanonicalAreaDisplayName(name: string, role?: string | null): string {
   if (role !== "CHILD") {
     return name;
   }
@@ -164,6 +164,10 @@ function toDisplayName(name: string, role: "FUSION" | "PARENT" | "CHILD" | "SING
   }
 
   return `FAPA: ${name}`;
+}
+
+function toDisplayName(name: string, role: "FUSION" | "PARENT" | "CHILD" | "SINGLE"): string {
+  return toCanonicalAreaDisplayName(name, role);
 }
 
 export function toPrivateAreaListingVM(listing: PrivateAreaListing): PrivateAreaListingVM {

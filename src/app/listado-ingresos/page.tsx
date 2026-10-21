@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import React from "react";
 import type { Metadata } from "next";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -17,6 +18,11 @@ export const dynamic = "force-dynamic";
 
 export default async function ListadoIngresosPage() {
   await requirePageAccess(MODULES.COBROS);
+
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.COBROS, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.COBROS, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.COBROS, "canDelete");
 
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },
@@ -73,6 +79,9 @@ export default async function ListadoIngresosPage() {
         areas={areas}
         condominiumSlug={condominium.slug}
         projectId={condominium.id}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
       />
     </div>
   );

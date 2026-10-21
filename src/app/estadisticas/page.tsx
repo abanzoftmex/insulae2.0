@@ -73,7 +73,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
     },
     {
       key: "areas",
-      label: "Inmuebles activos",
+      label: "Áreas privativas",
       value: formatInt(vm.totalPrivateAreas),
       hint: `${formatInt(vm.parentPrivateAreas)} predios · ${formatInt(vm.childPrivateAreas)} unidades`,
       accent: "cyan",
@@ -106,7 +106,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
     },
     {
       key: "land",
-      label: "Lotes / suelo",
+      label: "Apoles",
       value: formatInt(vm.landAreas),
       hint: "Sin unidad construida clasificada",
     },
@@ -145,23 +145,23 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
         rows: vm.businessOpeningsByYear.map((row) => ({ Año: row.year, Aperturas: row.value })),
       },
       {
-        name: "Inmuebles por barrio",
-        rows: vm.areasByZone.map((row) => ({ Barrio: row.name, Inmuebles: row.value })),
+        name: "Áreas por barrio",
+        rows: vm.areasByZone.map((row) => ({ Barrio: row.name, Áreas: row.value })),
       },
       {
         name: "Usos de suelo",
-        rows: vm.areasByUseType.map((row) => ({ "Uso de suelo": row.name, Inmuebles: row.value })),
+        rows: vm.areasByUseType.map((row) => ({ "Uso de suelo": row.name, Áreas: row.value })),
       },
       {
         name: "Clasificación",
-        rows: vm.areasByCategory.map((row) => ({ Categoría: row.name, Inmuebles: row.value })),
+        rows: vm.areasByCategory.map((row) => ({ Categoría: row.name, Áreas: row.value })),
       },
       {
         name: "Tipos de propiedad",
         rows: vm.ownershipByRole.map((row) => ({ Rol: row.name, Asignaciones: row.value })),
       },
       {
-        name: "Propietarios por inmuebles",
+        name: "Propietarios por áreas",
         rows: vm.ownersByAreaCount.map((row) => ({ Rango: row.name, Propietarios: row.value })),
       },
       {
@@ -268,18 +268,18 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
         <section id="patrimonio" className="space-y-3 scroll-mt-24">
           <SectionHeader
             eyebrow="Patrimonio"
-            title="Composición del inmobiliario"
+            title="Composición de las Áreas privativas"
             description="Cómo se reparten los inmuebles entre barrios, clasificaciones y usos de suelo."
             accent="#0891b2"
           />
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard
-              title="Clasificación de inmuebles"
+              title="Clasificación de áreas"
               subtitle="Derivada del uso de suelo registrado"
               className="lg:col-span-2"
               bodyClassName="justify-between gap-4"
             >
-              <CompositionDonut data={vm.areasByCategory} totalLabel="inmuebles" />
+              <CompositionDonut data={vm.areasByCategory} totalLabel="Áreas" />
               <div className="grid grid-cols-3 gap-2.5">
                 <MiniStat label="Predios" value={formatInt(vm.parentPrivateAreas)} />
                 <MiniStat label="Unidades" value={formatInt(vm.childPrivateAreas)} />

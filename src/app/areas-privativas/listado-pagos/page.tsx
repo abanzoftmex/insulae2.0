@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import Link from "next/link";
 import { AlertCircle, Receipt, Wallet } from "lucide-react";
 
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/ui/stat-card";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
+import { PROJECT_SCOPE } from "@/config/project-scope";
 import { CapturarCuotaDialog } from "./_components/capturar-cuota-dialog";
 import { EditarCuotaDialog } from "./_components/editar-cuota-dialog";
 import { BorrarCuotaDialog } from "./_components/borrar-cuota-dialog";
@@ -48,7 +50,11 @@ function getPaymentMethodLabel(method: string): string {
 }
 
 export default async function ListadoPagosPage({ searchParams }: PageProps) {
-  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+  await requirePageAccess([MODULES.AREAS_PRIVATIVAS, MODULES.COBROS]);
+  const permissions = await getUserPermissions();
+  const canCreateCharges = hasPermission(permissions, MODULES.COBROS, "canCreate");
+  const canUpdateCharges = hasPermission(permissions, MODULES.COBROS, "canUpdate");
+  const canDeleteCharges = hasPermission(permissions, MODULES.COBROS, "canDelete");
 
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);
@@ -103,10 +109,17 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
   // Query active charge groups for this condominium
   const areaCondo = await prisma.privateArea.findUnique({
     where: { id: area.privateAreaId },
-    select: { condominiumId: true },
+    select: {
+      condominiumId: true,
+      condominium: { select: { name: true } },
+    },
   });
 
-  const chargeGroups = areaCondo
+  const configuredSenderEmail =
+    process.env.ADMIN_MAIL_FROM?.trim() ||
+    `Condominio ${areaCondo?.condominium?.name || PROJECT_SCOPE.condominiumName} <soporte@insulae.sistemasabanza.com>`;
+
+  const chargeGroups = areaCondo?.condominiumId
     ? await prisma.chargeGroup.findMany({
       where: { condominiumId: areaCondo.condominiumId, isActive: true },
       orderBy: { name: "asc" },
@@ -483,9 +496,11 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
         {/* Action Bar (Dark Blue) */}
         <div className="bg-white border border-[#ddd0be] rounded-md p-3 flex flex-wrap items-center gap-2">
           {/* Capturar Cuota is actually a trigger, but for now we render its default appearance */}
-          <div className="[&>button]:bg-[#2c3e50] [&>button]:hover:bg-[#1a252f] [&>button]:text-white [&>button]:border-transparent [&>button]:shadow-sm">
-            <CapturarCuotaDialog privateAreaId={area.privateAreaId} opc={opc} chargeGroups={chargeGroups} />
-          </div>
+          {canCreateCharges && (
+            <div className="[&>button]:bg-[#2c3e50] [&>button]:hover:bg-[#1a252f] [&>button]:text-white [&>button]:border-transparent [&>button]:shadow-sm">
+              <CapturarCuotaDialog privateAreaId={area.privateAreaId} opc={opc} chargeGroups={chargeGroups} />
+            </div>
+          )}
 
           <Link
             href={buildActionHref("historico-pagos", area.privateAreaId, opc)}
@@ -499,6 +514,9 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
             opc={opc}
             areaName={area.name}
             charges={visibleChargeLines}
+            recipientEmail={contactUser?.email || null}
+            recipientName={contactUser?.name || area.name}
+            configuredSenderEmail={configuredSenderEmail}
           />
         </div>
 
@@ -535,8 +553,9 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                       <tr key={charge.id} className={`border-b border-[#e1ebf6] transition-colors hover:bg-[#faf6f0] ${rowBg}`}>
                         <td className="py-2 px-3 text-center">
                           <div className="flex items-center justify-center gap-1">
-                            <EditarCuotaDialog charge={charge} chargeGroups={chargeGroups} />
-                            <BorrarCuotaDialog chargeId={charge.id} />
+                            {canUpdateCharges && <EditarCuotaDialog charge={charge} chargeGroups={chargeGroups} />}
+                            {canDeleteCharges && <BorrarCuotaDialog chargeId={charge.id} />}
+                            {!canUpdateCharges && !canDeleteCharges && <span className="text-[10px] text-[#3a2a18]/40">—</span>}
                           </div>
                         </td>
                         <td className="py-2 px-3">{charge.chargeGroupName}</td>

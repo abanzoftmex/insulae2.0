@@ -22,9 +22,18 @@ interface ImageSlotsProps {
   condominiumId: string;
   condominiumSlug: string;
   initialImages: DBImage[];
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
-export function ImageSlots({ privateAreaId, condominiumId, condominiumSlug, initialImages }: ImageSlotsProps) {
+export function ImageSlots({
+  privateAreaId,
+  condominiumId,
+  condominiumSlug,
+  initialImages,
+  canUpdate = true,
+  canDelete = true,
+}: ImageSlotsProps) {
   const [images, setImages] = useState<Record<number, DBImage>>(() => {
     const map: Record<number, DBImage> = {};
     initialImages.forEach((img) => {
@@ -153,7 +162,7 @@ export function ImageSlots({ privateAreaId, condominiumId, condominiumSlug, init
                     </div>
                   </>
                 )
-              ) : (
+              ) : canUpdate ? (
                 <label className="flex h-full w-full cursor-pointer flex-col items-center justify-center gap-2 hover:bg-canvas/50 transition-colors">
                   <Upload className="h-6 w-6 text-ink-soft/40" />
                   <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/50">
@@ -166,6 +175,13 @@ export function ImageSlots({ privateAreaId, condominiumId, condominiumSlug, init
                     onChange={(e) => handleFileChange(index, e.target.files?.[0])}
                   />
                 </label>
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-ink-soft/30">
+                  <Upload className="h-6 w-6 text-ink-soft/20" />
+                  <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/40">
+                    Sin archivo
+                  </p>
+                </div>
               )}
             </div>
 
@@ -186,15 +202,17 @@ export function ImageSlots({ privateAreaId, condominiumId, condominiumSlug, init
                       <Download className="h-3.5 w-3.5" />
                     </a>
                   </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleDelete(index)}
-                    className="h-7 w-7 p-0 rounded-full border border-line text-rose-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
-                    title="Eliminar"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  {canDelete && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDelete(index)}
+                      className="h-7 w-7 p-0 rounded-full border border-line text-rose-500 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">

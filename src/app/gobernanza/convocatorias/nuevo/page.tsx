@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 
 export default async function NewAnnouncementPage() {
-  await requirePageAccess(MODULES.CONVOCATORIAS);
+  await requirePageAccess(MODULES.CONVOCATORIAS, "canCreate");
 
   const formData = await getAnnouncementFormDataUseCase.execute();
 

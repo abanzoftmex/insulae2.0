@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import Link from "next/link";
 
 import { getPrivateAreaActionPageDataUseCase } from "@/modules/private-area-actions";
@@ -96,7 +97,10 @@ function AssignmentSection(props: {
     id: string;
     user: { id: string; name: string; email: string | null; phone: string | null };
   }>;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }) {
+  const { canUpdate = true, canDelete = true } = props;
   return (
     <Card className="border-transparent shadow-layered">
       <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
@@ -121,45 +125,49 @@ function AssignmentSection(props: {
               <p className="text-[12px] font-bold text-ink">{assignment.user.name}</p>
               <p className="text-[10px] text-ink-soft">{assignment.user.email ?? "Sin correo"}</p>
             </div>
-            <form action={removePrivateAreaAssignmentAction}>
-              <input type="hidden" name="privateAreaId" value={props.privateAreaId} />
-              <input type="hidden" name="assignmentId" value={assignment.id} />
-              <Button
-                type="submit"
-                variant="destructive"
-                size="sm"
-                className="h-7 text-[10px] font-bold uppercase tracking-widest"
-              >
-                Eliminar
-              </Button>
-            </form>
+            {canDelete && (
+              <form action={removePrivateAreaAssignmentAction}>
+                <input type="hidden" name="privateAreaId" value={props.privateAreaId} />
+                <input type="hidden" name="assignmentId" value={assignment.id} />
+                <Button
+                  type="submit"
+                  variant="destructive"
+                  size="sm"
+                  className="h-7 text-[10px] font-bold uppercase tracking-widest"
+                >
+                  Eliminar
+                </Button>
+              </form>
+            )}
           </div>
         ))}
         </div>
 
-        <form action={addPrivateAreaAssignmentAction} className="grid gap-2 sm:grid-cols-[1fr_auto] pt-1">
-          <input type="hidden" name="privateAreaId" value={props.privateAreaId} />
-          <input type="hidden" name="roleBucket" value={props.roleBucket} />
-          <select
-            name="userId"
-            required
-            defaultValue=""
-            className="w-full rounded-md border border-line bg-card px-3 py-2 text-[12px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30"
-          >
-            <option value="" disabled>
-              Seleccione una persona
-            </option>
-            {props.userOptions.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name}
-                {user.email ? ` · ${user.email}` : ""}
+        {canUpdate && (
+          <form action={addPrivateAreaAssignmentAction} className="grid gap-2 sm:grid-cols-[1fr_auto] pt-1">
+            <input type="hidden" name="privateAreaId" value={props.privateAreaId} />
+            <input type="hidden" name="roleBucket" value={props.roleBucket} />
+            <select
+              name="userId"
+              required
+              defaultValue=""
+              className="w-full rounded-md border border-line bg-card px-3 py-2 text-[12px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30"
+            >
+              <option value="" disabled>
+                Seleccione una persona
               </option>
-            ))}
-          </select>
-          <Button type="submit" variant="dark" size="sm">
-            Agregar
-          </Button>
-        </form>
+              {props.userOptions.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.name}
+                  {user.email ? ` · ${user.email}` : ""}
+                </option>
+              ))}
+            </select>
+            <Button type="submit" variant="dark" size="sm">
+              Agregar
+            </Button>
+          </form>
+        )}
       </CardContent>
     </Card>
   );
@@ -167,6 +175,9 @@ function AssignmentSection(props: {
 
 export default async function FormularioApolPage({ searchParams }: PageProps) {
   await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+  const permissions = await getUserPermissions();
+  const canUpdate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canDelete");
 
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);
@@ -264,9 +275,15 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
           <Card className="border-transparent shadow-layered lg:col-span-2">
             <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand flex flex-row items-center justify-between rounded-t-card">
               <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Información general</CardTitle>
-              <Button type="submit" variant="outline" size="sm" className="h-7 px-4 text-[10px] border-white/20 bg-white/10 text-white hover:bg-white hover:text-brand font-bold uppercase tracking-widest transition-colors">
-                Guardar Cambios
-              </Button>
+              {canUpdate ? (
+                <Button type="submit" variant="outline" size="sm" className="h-7 px-4 text-[10px] border-white/20 bg-white/10 text-white hover:bg-white hover:text-brand font-bold uppercase tracking-widest transition-colors">
+                  Guardar Cambios
+                </Button>
+              ) : (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-200 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/20">
+                  Modo sólo lectura
+                </span>
+              )}
             </CardHeader>
             <CardContent className="p-4">
             <div className="mt-0 grid gap-4 md:grid-cols-2">
@@ -297,6 +314,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 type="text"
                 name="name"
                 defaultValue={area.name}
+                disabled={!canUpdate}
                 required
               />
 
@@ -305,6 +323,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 type="number"
                 name="sortOrder"
                 defaultValue={toInputValue(area.sortOrder)}
+                disabled={!canUpdate}
               />
 
               <Input
@@ -313,6 +332,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 name="lucaPropertyCode"
                 placeholder="Ej. 4-111-001"
                 defaultValue={area.lucaPropertyCode ?? ""}
+                disabled={!canUpdate}
               />
 
               <Input
@@ -320,6 +340,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 type="text"
                 name="level"
                 defaultValue={area.level ?? ""}
+                disabled={!canUpdate}
               />
             </div>
 
@@ -330,6 +351,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 step="0.0001"
                 name="m2Updated"
                 defaultValue={toInputValue(area.m2Apole)}
+                disabled={!canUpdate}
               />
 
               {!area.isChild ? (
@@ -339,6 +361,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                   step="0.0001"
                   name="m2Original"
                   defaultValue={toInputValue(area.m2Original)}
+                  disabled={!canUpdate}
                 />
               ) : null}
 
@@ -348,6 +371,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 step="0.0001"
                 name="m2Construction"
                 defaultValue={toInputValue(area.m2Construction)}
+                disabled={!canUpdate}
               />
 
               <Input
@@ -356,6 +380,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 step="0.000001"
                 name="m2ConstructionCommonArea"
                 defaultValue={toInputValue(area.m2ConstructionCommonArea)}
+                disabled={!canUpdate}
               />
 
               <Input
@@ -375,8 +400,9 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                   </label>
                   <select
                     name="zoneId"
+                    disabled={!canUpdate}
                     defaultValue={selectedZoneId !== null ? String(selectedZoneId) : ""}
-                    className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent"
+                    className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value="">Seleccione</option>
                     {area.zones.map((zone) => (
@@ -395,6 +421,7 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                   step="0.000001"
                   name="vccc"
                   defaultValue={toInputValue(area.vccc)}
+                  disabled={!canUpdate}
                 />
               ) : null}
             </div>
@@ -443,8 +470,9 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 </label>
                 <select
                   name="landUseId"
+                  disabled={!canUpdate}
                   defaultValue={selectedLandUseId !== null ? String(selectedLandUseId) : ""}
-                  className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent"
+                  className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Seleccione</option>
                   {area.landUses.map((landUse) => (
@@ -485,8 +513,9 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 </label>
                 <select
                   name="userId"
+                  disabled={!canUpdate}
                   defaultValue={administratorAssignment?.user.id ?? ""}
-                  className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30"
+                  className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Sin asignar</option>
                   {area.userOptions.map((user) => (
@@ -498,9 +527,11 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 </select>
               </div>
 
-              <Button type="submit" variant="dark" size="sm" className="w-full font-bold uppercase tracking-widest text-[10px]">
-                Actualizar administrador
-              </Button>
+              {canUpdate && (
+                <Button type="submit" variant="dark" size="sm" className="w-full font-bold uppercase tracking-widest text-[10px]">
+                  Actualizar administrador
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>
@@ -523,8 +554,9 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 </label>
                 <select
                   name="tenantName"
+                  disabled={!canUpdate}
                   defaultValue={currentTenantName}
-                  className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30"
+                  className="flex h-9 w-full rounded-md border border-line bg-card px-3 py-1 text-[13px] font-medium text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Sin asignar</option>
                   {area.tenantOptions.map((tenantName) => (
@@ -535,9 +567,11 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 </select>
               </div>
 
-              <Button type="submit" variant="dark" size="sm" className="w-full font-bold uppercase tracking-widest text-[10px]">
-                Guardar arrendatario o usuario
-              </Button>
+              {canUpdate && (
+                <Button type="submit" variant="dark" size="sm" className="w-full font-bold uppercase tracking-widest text-[10px]">
+                  Guardar arrendatario o usuario
+                </Button>
+              )}
             </form>
 
             <div className="space-y-1 rounded bg-canvas border border-line/50 px-3 py-2 text-[12px] text-ink-soft">
@@ -566,6 +600,8 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
           privateAreaId={area.privateAreaId}
           userOptions={area.userOptions}
           assignments={groupedAssignments.ACTUAL}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
         />
 
         <AssignmentSection
@@ -575,6 +611,8 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
           privateAreaId={area.privateAreaId}
           userOptions={area.userOptions}
           assignments={groupedAssignments.LEGAL}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
         />
 
         <AssignmentSection
@@ -584,6 +622,8 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
           privateAreaId={area.privateAreaId}
           userOptions={area.userOptions}
           assignments={groupedAssignments.INITIAL}
+          canUpdate={canUpdate}
+          canDelete={canDelete}
         />
 
         <Card className="border-transparent shadow-layered">
@@ -603,45 +643,50 @@ export default async function FormularioApolPage({ searchParams }: PageProps) {
                 min="0"
                 name="annualOrdinaryFee"
                 defaultValue={toInputValue(area.annualOrdinaryFee)}
+                disabled={!canUpdate}
               />
-              <Button type="submit" variant="dark" size="sm" className="w-full font-bold uppercase tracking-widest text-[10px]">
-                Guardar cuota
-              </Button>
+              {canUpdate && (
+                <Button type="submit" variant="dark" size="sm" className="w-full font-bold uppercase tracking-widest text-[10px]">
+                  Guardar cuota
+                </Button>
+              )}
             </form>
           </CardContent>
         </Card>
 
-        <Card className="border-transparent shadow-layered">
-          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Estatus y Eliminación</CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-3">
-            <p className="text-[11px] text-ink-soft">
-              {area.isActive 
-                ? "El lote está actualmente Activo. Si decides desactivarlo, dejará de figurar en el panel principal y listados operativos."
-                : "El lote está actualmente Inactivo. Puedes reactivarlo para volver a habilitar los cobros y la gestión."}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <form action={togglePrivateAreaStatusAction} className="flex-1">
-                <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
-                <input type="hidden" name="nextStatus" value={area.isActive ? "INACTIVE" : "ACTIVE"} />
-                <Button
-                  type="submit"
-                  variant={area.isActive ? "destructive" : "dark"}
-                  size="sm"
-                  className="w-full font-bold uppercase tracking-widest text-[10px]"
-                >
-                  {area.isActive ? "Desactivar lote" : "Reactivar lote"}
-                </Button>
-              </form>
+        {canDelete && (
+          <Card className="border-transparent shadow-layered">
+            <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Estatus y Eliminación</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              <p className="text-[11px] text-ink-soft">
+                {area.isActive 
+                  ? "El lote está actualmente Activo. Si decides desactivarlo, dejará de figurar en el panel principal y listados operativos."
+                  : "El lote está actualmente Inactivo. Puedes reactivarlo para volver a habilitar los cobros y la gestión."}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <form action={togglePrivateAreaStatusAction} className="flex-1">
+                  <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
+                  <input type="hidden" name="nextStatus" value={area.isActive ? "INACTIVE" : "ACTIVE"} />
+                  <Button
+                    type="submit"
+                    variant={area.isActive ? "destructive" : "dark"}
+                    size="sm"
+                    className="w-full font-bold uppercase tracking-widest text-[10px]"
+                  >
+                    {area.isActive ? "Desactivar lote" : "Reactivar lote"}
+                  </Button>
+                </form>
 
-              <form action={deletePrivateAreaPermanentlyAction} className="flex-1">
-                <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
-                <DeletePermanentlyButton />
-              </form>
-            </div>
-          </CardContent>
-        </Card>
+                <form action={deletePrivateAreaPermanentlyAction} className="flex-1">
+                  <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
+                  <DeletePermanentlyButton />
+                </form>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </section>
     </PrivateAreaActionShell>
   );

@@ -2,6 +2,7 @@ export interface ZoneListItem {
   id: string;
   name: string;
   initials: string | null;
+  order?: number | null;
   activeSubzones: number;
   canDelete: boolean;
 }

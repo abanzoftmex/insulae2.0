@@ -11,7 +11,7 @@ interface EditarTicketPageProps {
 }
 
 export default async function EditarTicketPage({ params }: EditarTicketPageProps) {
-  await requirePageAccess(MODULES.TICKETS);
+  await requirePageAccess(MODULES.TICKETS, "canUpdate");
 
   const { ticketId } = await params;
   const formData = await getTicketResponseFormUseCase.execute(ticketId);

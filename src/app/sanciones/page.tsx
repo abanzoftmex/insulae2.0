@@ -16,8 +16,15 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export default async function SanctionsPage() {
   await requirePageAccess(MODULES.CATALOGO_SANCIONES);
+
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.CATALOGO_SANCIONES, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.CATALOGO_SANCIONES, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.CATALOGO_SANCIONES, "canDelete");
 
   const condominium = await prisma.condominium.findFirst({ 
     where: { isActive: true },
@@ -43,7 +50,14 @@ export default async function SanctionsPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Catálogo de Sanciones</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Catálogo de Sanciones</h1>
+              {!canUpdate && !canCreate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Catálogo Reglamentario</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {condominium.name} · Administración de fundamentos legales y reglamentarios.
@@ -52,7 +66,12 @@ export default async function SanctionsPage() {
         </div>
       </div>
 
-      <SanctionWorkbench initialSanctions={sanctions} />
+      <SanctionWorkbench 
+        initialSanctions={sanctions} 
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+      />
     </div>
   );
 }

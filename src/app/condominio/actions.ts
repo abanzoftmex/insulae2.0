@@ -24,7 +24,9 @@ export interface UpdateCondominioSettingsInput {
   usesLandUseFormula: boolean;
   hasVccc: boolean;
   footerLeft: string;
+  footerLeftTitle: string;
   footerRight: string;
+  footerRightTitle: string;
   condominiumLogoUrl: string;
   condominiumImageUrl: string;
   footerLogoUrl: string;
@@ -114,7 +116,9 @@ export async function updateCondominioSettingsAction(
           usesLandUseFormula: input.usesLandUseFormula,
           hasVccc: input.hasVccc,
           footerLeft: toNullableString(input.footerLeft),
+          footerLeftTitle: toNullableString(input.footerLeftTitle),
           footerRight: toNullableString(input.footerRight),
+          footerRightTitle: toNullableString(input.footerRightTitle),
           condominiumLogoUrl: toNullableString(input.condominiumLogoUrl),
           condominiumImageUrl: toNullableString(input.condominiumImageUrl),
           footerLogoUrl: toNullableString(input.footerLogoUrl),
@@ -140,7 +144,9 @@ export async function updateCondominioSettingsAction(
           usesLandUseFormula: input.usesLandUseFormula,
           hasVccc: input.hasVccc,
           footerLeft: toNullableString(input.footerLeft),
+          footerLeftTitle: toNullableString(input.footerLeftTitle),
           footerRight: toNullableString(input.footerRight),
+          footerRightTitle: toNullableString(input.footerRightTitle),
           condominiumLogoUrl: toNullableString(input.condominiumLogoUrl),
           condominiumImageUrl: toNullableString(input.condominiumImageUrl),
           footerLogoUrl: toNullableString(input.footerLogoUrl),

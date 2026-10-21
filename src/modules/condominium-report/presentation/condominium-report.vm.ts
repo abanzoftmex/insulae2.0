@@ -24,6 +24,9 @@ export interface CondominiumReportVM {
   inactiveChildren: string;
   areasWithUseType: string;
   areasWithoutUseType: string;
+  validAreasCount: string;
+  validParentAreasCount: string;
+  validChildAreasCount: string;
   totalPrivateAreaM2: string;
   totalApoleAreaM2: string;
   totalBuiltAreaM2: string;
@@ -146,6 +149,9 @@ export function toCondominiumReportVM(report: CondominiumReport): CondominiumRep
     inactiveChildren: formatInteger(report.inactiveChildren),
     areasWithUseType: formatInteger(report.areasWithUseType),
     areasWithoutUseType: formatInteger(report.areasWithoutUseType),
+    validAreasCount: formatInteger(report.validAreasCount),
+    validParentAreasCount: formatInteger(report.validParentAreasCount),
+    validChildAreasCount: formatInteger(report.validChildAreasCount),
     totalPrivateAreaM2: formatNumber4(report.totalPrivateAreaM2),
     totalApoleAreaM2: formatNumber4(report.totalApoleAreaM2),
     totalBuiltAreaM2: formatNumber4(report.totalBuiltAreaM2),

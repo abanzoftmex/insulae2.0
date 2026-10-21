@@ -32,7 +32,7 @@ type PageProps = {
 };
 
 export default async function EditarBarrioPage({ params }: PageProps) {
-  await requirePageAccess(MODULES.BARRIOS);
+  await requirePageAccess(MODULES.BARRIOS, "canUpdate");
 
   const { zoneId } = await params;
   const zone = await getZoneFormUseCase.execute(zoneId);

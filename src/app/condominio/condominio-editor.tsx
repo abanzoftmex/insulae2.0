@@ -195,8 +195,28 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
             <div className="flex flex-col gap-4">
               <RichTextEditor label="Aviso de Privacidad (Simplificado)" value={form.projectDescription} onChange={(html) => onInput("projectDescription", html)} minHeight="120px" />
               <RichTextEditor label="Aviso de Privacidad (Completo)" value={form.privacyNoticeText} onChange={(html) => onInput("privacyNoticeText", html)} minHeight="160px" />
-              <RichTextEditor label="Pie de Recibos (Izquierdo)" value={form.footerLeft} onChange={(html) => onInput("footerLeft", html)} minHeight="120px" />
-              <RichTextEditor label="Pie de Recibos (Derecho)" value={form.footerRight} onChange={(html) => onInput("footerRight", html)} minHeight="120px" />
+              <RichTextEditor
+                label="Pie de Recibos (Izquierdo)"
+                editableTitle={{
+                  value: form.footerLeftTitle,
+                  placeholder: "Pie de Recibos (Izquierdo)",
+                  onChange: (val) => onInput("footerLeftTitle", val),
+                }}
+                value={form.footerLeft}
+                onChange={(html) => onInput("footerLeft", html)}
+                minHeight="120px"
+              />
+              <RichTextEditor
+                label="Pie de Recibos (Derecho)"
+                editableTitle={{
+                  value: form.footerRightTitle,
+                  placeholder: "Pie de Recibos (Derecho)",
+                  onChange: (val) => onInput("footerRightTitle", val),
+                }}
+                value={form.footerRight}
+                onChange={(html) => onInput("footerRight", html)}
+                minHeight="120px"
+              />
             </div>
           </div>
 

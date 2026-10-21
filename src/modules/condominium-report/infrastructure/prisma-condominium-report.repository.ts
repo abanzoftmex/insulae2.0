@@ -9,6 +9,7 @@ import type {
   LandUseZoneRow,
 } from "../domain/condominium-report";
 import type { CondominiumReportRepository } from "../domain/condominium-report.repository";
+import { hasValidUseType } from "@/modules/statistics/infrastructure/prisma-statistics.repository";
 
 type PrivateAreaSnapshot = {
   id: string;
@@ -177,7 +178,7 @@ export class PrismaCondominiumReportRepository
       prisma.zoneCatalog.findMany({
         where: { condominiumId: condominium.id, isActive: true },
         orderBy: [{ legacyId: "asc" }, { name: "asc" }],
-        select: { name: true },
+        select: { name: true, order: true },
       }),
       prisma.landUseCatalog.findMany({
         where: { condominiumId: condominium.id, isActive: true },
@@ -300,6 +301,12 @@ export class PrismaCondominiumReportRepository
     // 4. activeFusionsCount
     const activeFusionsCount = reportableAreas.filter((area) => area.isFusion).length;
 
+    // Áreas privativas válidas con uso de suelo registrado (criterio canónico 1,185: 354 predios · 831 unidades)
+    const validUseTypeAreas = reportableAreas.filter((a) => hasValidUseType(a.useType));
+    const validAreasCount = validUseTypeAreas.length;
+    const validParentAreasCount = validUseTypeAreas.filter((a) => !a.parentPrivateAreaId).length;
+    const validChildAreasCount = validAreasCount - validParentAreasCount;
+
     // Fracciones: count of areas with active use type
     const areasWithUseType = reportableAreas.filter(
       (area) => area.useType && area.useType.trim().length > 0
@@ -339,10 +346,15 @@ export class PrismaCondominiumReportRepository
     );
 
     const catalogZoneByLower = new Map<string, string>();
+    const zoneOrderByCanonicalKey = new Map<string, number>();
+
     for (const zoneCatalog of zoneCatalogs) {
       const trimmed = zoneCatalog.name.trim();
       if (trimmed.length > 0) {
         catalogZoneByLower.set(trimmed.toLowerCase(), trimmed);
+        if (zoneCatalog.order !== null && zoneCatalog.order !== undefined) {
+          zoneOrderByCanonicalKey.set(canonicalZoneKey(trimmed), zoneCatalog.order);
+        }
       }
     }
 
@@ -379,6 +391,22 @@ export class PrismaCondominiumReportRepository
     );
 
     const zoneNames = Array.from(zoneSet.values()).sort((a, b) => {
+      const aOrder = zoneOrderByCanonicalKey.get(canonicalZoneKey(a));
+      const bOrder = zoneOrderByCanonicalKey.get(canonicalZoneKey(b));
+
+      const aHasOrder = aOrder !== undefined;
+      const bHasOrder = bOrder !== undefined;
+
+      if (aHasOrder && bHasOrder) {
+        if (aOrder !== bOrder) {
+          return aOrder - bOrder;
+        }
+      } else if (aHasOrder) {
+        return -1;
+      } else if (bHasOrder) {
+        return 1;
+      }
+
       const aPriority = preferredPriority.get(canonicalZoneKey(a));
       const bPriority = preferredPriority.get(canonicalZoneKey(b));
 
@@ -638,6 +666,9 @@ export class PrismaCondominiumReportRepository
       inactiveChildren,
       areasWithUseType,
       areasWithoutUseType,
+      validAreasCount,
+      validParentAreasCount,
+      validChildAreasCount,
       totalPrivateAreaM2,
       totalApoleAreaM2,
       totalBuiltAreaM2,

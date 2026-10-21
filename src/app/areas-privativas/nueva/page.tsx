@@ -24,7 +24,7 @@ type PageProps = {
 };
 
 export default async function NuevaAreaPrivativaPage({ searchParams }: PageProps) {
-  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS, "canCreate");
 
   const resolvedSearchParams = (await searchParams) ?? {};
   const parentIdParam = resolvedSearchParams.parentId;

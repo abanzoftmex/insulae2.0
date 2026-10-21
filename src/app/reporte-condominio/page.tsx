@@ -20,7 +20,8 @@ import {
   ArrowRight,
   Database,
   FileText,
-  Activity
+  Activity,
+  Building2,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -219,16 +220,28 @@ export default async function ReporteCondominioPage() {
         </Card>
 
         <div className="grid grid-cols-1 gap-3">
-          <StatCard
-            accent="cyan"
-            label="APoLes (Padres)"
-            value={vm.activeParents}
-            trend={{
-              value: `Inactivas: ${vm.inactiveParents}`,
-              isUp: Number(vm.inactiveParents) === 0
-            }}
-            icon={<Activity className="h-3.5 w-3.5" />}
-          />
+          <div
+            className="p-4 rounded-xl flex flex-col justify-between min-h-25 border border-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
+            style={{ backgroundColor: "#f0fbfd" }}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#52525b]">
+                Áreas privativas
+              </p>
+              <span className="p-1.5 rounded-md shrink-0 bg-[#083344] text-[#f0fbfd]">
+                <Building2 className="w-4 h-4" />
+              </span>
+            </div>
+            <div className="flex items-end justify-between gap-2 mt-2">
+              <span className="text-2xl font-bold leading-none text-[#09090b]">
+                {vm.validAreasCount}
+              </span>
+              <span className="text-[10px] font-semibold text-ink-soft/70 text-right leading-tight max-w-[58%]">
+                {vm.validParentAreasCount} predios · {vm.validChildAreasCount} unidades
+              </span>
+            </div>
+          </div>
+
           <Card className="p-4 flex flex-col justify-between min-h-25 shadow-sm bg-lime-50/70 border-lime-200/60">
             <div className="flex items-start justify-between">
               <p className="text-[10px] font-bold uppercase tracking-wider text-lime-700">
@@ -238,16 +251,22 @@ export default async function ReporteCondominioPage() {
                 <Layers className="h-3.5 w-3.5" />
               </div>
             </div>
-            <div className="mt-2">
-              <h3 className="text-xl font-bold leading-none text-lime-700">
-                {vm.activeChildrenOfApolAreas}
-              </h3>
-              <p className="text-[10px] font-bold text-lime-600/60 uppercase mt-1">Fracciones de APOLes</p>
+            <div className="mt-2 flex items-end justify-between gap-2">
+              <div>
+                <h3 className="text-xl font-bold leading-none text-lime-700">
+                  {vm.validChildAreasCount}
+                </h3>
+                <p className="text-[10px] font-bold text-lime-600/60 uppercase mt-1">Unidades / Fracciones</p>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-bold text-lime-800">{vm.validParentAreasCount}</span>
+                <p className="text-[9px] font-semibold text-lime-700/70 uppercase">Predios padres</p>
+              </div>
             </div>
-             <div className="mt-3 pt-2.5 border-t border-lime-600/10 flex justify-between items-center text-[10px]">
-               <span className="font-semibold text-lime-600/70 uppercase">Fracciones hijos de áreas comunes (Calles):</span>
-               <span className="font-extrabold text-lime-700 bg-lime-900/10 rounded px-1.5 py-0.5">{vm.activeChildrenOfCommonAreas}</span>
-             </div>
+            <div className="mt-3 pt-2.5 border-t border-lime-600/10 flex justify-between items-center text-[10px]">
+              <span className="font-semibold text-lime-600/70 uppercase">Total con uso de suelo:</span>
+              <span className="font-extrabold text-lime-700 bg-lime-900/10 rounded px-1.5 py-0.5">{vm.validAreasCount}</span>
+            </div>
           </Card>
         </div>
       </div>

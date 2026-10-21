@@ -7,7 +7,7 @@ import { getCondominiumStructureFormTemplateUseCase } from "@/modules/condominiu
 import { EstructuraCondominalFormShell } from "../estructura-condominal-form-shell";
 
 export default async function NuevoGrupoEstructuraCondominalPage() {
-  await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL);
+  await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL, "canCreate");
 
   const template = await getCondominiumStructureFormTemplateUseCase.execute();
 

@@ -38,7 +38,17 @@ function isImageFile(url?: string | null, mimeType?: string | null): boolean {
   return /\.(png|jpg|jpeg|webp|gif|svg|bmp|heic)$/i.test(cleanUrl);
 }
 
-export function ReglamentosWorkbench({ directory }: { directory: RegulationDirectoryVM }) {
+export function ReglamentosWorkbench({ 
+  directory,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: { 
+  directory: RegulationDirectoryVM;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -106,6 +116,7 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
   };
 
   const handleSave = () => {
+    if (editingId ? !canUpdate : !canCreate) return;
     startTransition(async () => {
       const payload = {
         id: editingId || undefined,
@@ -130,6 +141,7 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
   };
 
   const handleDelete = (id: string) => {
+    if (!canDelete) return;
     if (!confirm("¿Archivar este documento? Ya no será visible para los residentes.")) return;
     startTransition(async () => {
       const res = await archiveRegulationDocumentAction(id);
@@ -184,7 +196,10 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
       accessorKey: "id",
       align: "right",
       cell: (row) => (
-        <RowActions onEdit={() => openEditModal(row)} onDelete={() => handleDelete(row.id)} />
+        <RowActions 
+          onEdit={canUpdate ? () => openEditModal(row) : undefined} 
+          onDelete={canDelete ? () => handleDelete(row.id) : undefined} 
+        />
       )
     }
   ];
@@ -232,8 +247,8 @@ export function ReglamentosWorkbench({ directory }: { directory: RegulationDirec
         data={filteredDocuments}
         columns={columns}
         onSearch={setSearch}
-        onAdd={openAddModal}
-        addLabel="Nuevo Documento"
+        onAdd={canCreate ? openAddModal : undefined}
+        addLabel={canCreate ? "Nuevo Documento" : undefined}
       />
 
       <Modal

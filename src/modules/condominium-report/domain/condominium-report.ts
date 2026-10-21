@@ -26,6 +26,9 @@ export interface CondominiumReport {
   inactiveChildren: number;
   areasWithUseType: number;
   areasWithoutUseType: number;
+  validAreasCount: number;
+  validParentAreasCount: number;
+  validChildAreasCount: number;
   totalPrivateAreaM2: number;
   totalApoleAreaM2: number;
   totalBuiltAreaM2: number;

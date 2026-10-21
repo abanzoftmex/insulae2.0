@@ -14,9 +14,10 @@ interface Props {
   initialData?: Role;
   modules: ModuleCatalog[];
   condominiumId: string;
+  canUpdate?: boolean;
 }
 
-export function RoleForm({ initialData, modules, condominiumId }: Props) {
+export function RoleForm({ initialData, modules, condominiumId, canUpdate = true }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +42,7 @@ export function RoleForm({ initialData, modules, condominiumId }: Props) {
   });
 
   const handlePermissionChange = (moduleId: string, field: string, value: boolean) => {
+    if (!canUpdate) return;
     setPermissions((prev) => ({
       ...prev,
       [moduleId]: {
@@ -52,6 +54,7 @@ export function RoleForm({ initialData, modules, condominiumId }: Props) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canUpdate) return;
     setLoading(true);
     setError(null);
 
@@ -95,14 +98,23 @@ export function RoleForm({ initialData, modules, condominiumId }: Props) {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
-              {initialData ? "Editar Rol" : "Nuevo Rol"}
-            </h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
+                {initialData ? (canUpdate ? "Editar Rol" : "Detalles del Rol") : "Nuevo Rol"}
+              </h1>
+              {!canUpdate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">
               Control de Acceso
             </Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
-              {initialData ? "Modifica nombre, descripción y permisos del rol" : "Define nombre y permisos para el nuevo rol"}
+              {initialData 
+                ? (canUpdate ? "Modifica nombre, descripción y permisos del rol" : "Visualización de permisos del rol") 
+                : "Define nombre y permisos para el nuevo rol"}
             </p>
           </div>
         </div>
@@ -121,12 +133,14 @@ export function RoleForm({ initialData, modules, condominiumId }: Props) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
+              disabled={!canUpdate}
               placeholder="Ej. Administrador de Ingresos"
             />
             <Input
               label="Descripción"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
+              disabled={!canUpdate}
               placeholder="Breve descripción de las responsabilidades"
             />
           </div>
@@ -153,16 +167,40 @@ export function RoleForm({ initialData, modules, condominiumId }: Props) {
                   <tr key={mod.id} className="hover:bg-canvas/30 transition-colors">
                     <td className="px-4 py-3 text-[11px] font-bold text-ink">{mod.name}</td>
                     <td className="px-4 py-3 text-center">
-                      <input type="checkbox" checked={permissions[mod.id]?.canRead} onChange={(e) => handlePermissionChange(mod.id, "canRead", e.target.checked)} className="w-4 h-4 rounded border-line text-brand focus:ring-brand" />
+                      <input 
+                        type="checkbox" 
+                        disabled={!canUpdate}
+                        checked={permissions[mod.id]?.canRead} 
+                        onChange={(e) => handlePermissionChange(mod.id, "canRead", e.target.checked)} 
+                        className="w-4 h-4 rounded border-line text-brand focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed" 
+                      />
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <input type="checkbox" checked={permissions[mod.id]?.canCreate} onChange={(e) => handlePermissionChange(mod.id, "canCreate", e.target.checked)} className="w-4 h-4 rounded border-line text-brand focus:ring-brand" />
+                      <input 
+                        type="checkbox" 
+                        disabled={!canUpdate}
+                        checked={permissions[mod.id]?.canCreate} 
+                        onChange={(e) => handlePermissionChange(mod.id, "canCreate", e.target.checked)} 
+                        className="w-4 h-4 rounded border-line text-brand focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed" 
+                      />
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <input type="checkbox" checked={permissions[mod.id]?.canUpdate} onChange={(e) => handlePermissionChange(mod.id, "canUpdate", e.target.checked)} className="w-4 h-4 rounded border-line text-brand focus:ring-brand" />
+                      <input 
+                        type="checkbox" 
+                        disabled={!canUpdate}
+                        checked={permissions[mod.id]?.canUpdate} 
+                        onChange={(e) => handlePermissionChange(mod.id, "canUpdate", e.target.checked)} 
+                        className="w-4 h-4 rounded border-line text-brand focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed" 
+                      />
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <input type="checkbox" checked={permissions[mod.id]?.canDelete} onChange={(e) => handlePermissionChange(mod.id, "canDelete", e.target.checked)} className="w-4 h-4 rounded border-line text-brand focus:ring-brand" />
+                      <input 
+                        type="checkbox" 
+                        disabled={!canUpdate}
+                        checked={permissions[mod.id]?.canDelete} 
+                        onChange={(e) => handlePermissionChange(mod.id, "canDelete", e.target.checked)} 
+                        className="w-4 h-4 rounded border-line text-brand focus:ring-brand disabled:opacity-50 disabled:cursor-not-allowed" 
+                      />
                     </td>
                   </tr>
                 ))}
@@ -180,12 +218,14 @@ export function RoleForm({ initialData, modules, condominiumId }: Props) {
 
         <div className="flex justify-end gap-3 pt-1">
           <Button variant="ghost" type="button" onClick={() => router.push("/listado-roles")} className="h-8 text-[10px] font-bold uppercase tracking-widest">
-            Cancelar
+            {canUpdate ? "Cancelar" : "Volver"}
           </Button>
-          <Button type="submit" disabled={loading || success} className="h-8 px-6 text-[10px] font-bold uppercase tracking-widest gap-2">
-            <Save className="h-3.5 w-3.5" />
-            {loading ? "Guardando..." : "Guardar Rol"}
-          </Button>
+          {canUpdate && (
+            <Button type="submit" disabled={loading || success} className="h-8 px-6 text-[10px] font-bold uppercase tracking-widest gap-2">
+              <Save className="h-3.5 w-3.5" />
+              {loading ? "Guardando..." : "Guardar Rol"}
+            </Button>
+          )}
         </div>
 
       </form>

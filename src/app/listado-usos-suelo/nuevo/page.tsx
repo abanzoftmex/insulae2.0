@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function NuevoUsoSueloPage() {
-  await requirePageAccess(MODULES.USOS_DE_SUELO);
+  await requirePageAccess(MODULES.USOS_DE_SUELO, "canCreate");
 
   const template = await getLandUseFormTemplateUseCase.execute();
 

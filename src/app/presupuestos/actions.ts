@@ -160,7 +160,7 @@ export async function importBudgetExcelAction(year: number, formData: FormData) 
 
 export async function deleteBudgetGroupAction(groupId: string) {
   try {
-    await assertPermission(MODULES.PRESUPUESTO, "canDelete");
+    await assertPermission([MODULES.ESTRUCTURA_PRESUPUESTO, MODULES.PRESUPUESTO], "canDelete");
     await deleteBudgetGroupUseCase.execute(groupId);
     revalidatePath("/listado-estructura-presupuesto");
     return { success: true };
@@ -171,7 +171,7 @@ export async function deleteBudgetGroupAction(groupId: string) {
 
 export async function deleteBudgetConceptAction(conceptId: string) {
   try {
-    await assertPermission(MODULES.PRESUPUESTO, "canDelete");
+    await assertPermission([MODULES.ESTRUCTURA_PRESUPUESTO, MODULES.PRESUPUESTO], "canDelete");
     await deleteBudgetConceptUseCase.execute(conceptId);
     revalidatePath("/listado-estructura-presupuesto");
     return { success: true };
@@ -182,7 +182,11 @@ export async function deleteBudgetConceptAction(conceptId: string) {
 
 export async function saveBudgetGroupAction(data: any) {
   try {
-    await assertPermission(MODULES.PRESUPUESTO, "canUpdate");
+    if (data?.id) {
+      await assertPermission([MODULES.ESTRUCTURA_PRESUPUESTO, MODULES.PRESUPUESTO], "canUpdate");
+    } else {
+      await assertPermission([MODULES.ESTRUCTURA_PRESUPUESTO, MODULES.PRESUPUESTO], "canCreate");
+    }
     const condoId = await getFirstCondo();
     data.condominiumId = condoId;
     await inlineRepo.saveBudgetGroup(data);

@@ -35,6 +35,9 @@ interface ExpenseWorkbenchProps {
   budgetConcepts: BudgetConceptItem[];
   condominiumSlug: string;
   projectId: string;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -64,7 +67,10 @@ export function ExpenseWorkbench({
   initialExpenses,
   budgetConcepts,
   condominiumSlug,
-  projectId
+  projectId,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
 }: ExpenseWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
@@ -227,20 +233,27 @@ export function ExpenseWorkbench({
       align: "right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => openEditModal(row)}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-            title="Editar"
-          >
-            <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
-            title="Eliminar"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => openEditModal(row)}
+              className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+              title="Editar"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => handleDelete(row.id)}
+              className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+              title="Eliminar"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {!canUpdate && !canDelete && (
+            <span className="text-ink-soft/30 text-[10px] uppercase font-bold px-2 py-1">Solo Ver</span>
+          )}
         </div>
       )
     }
@@ -259,21 +272,23 @@ export function ExpenseWorkbench({
           <Badge variant="danger">Flujo de Salida</Badge>
           <Badge variant="brand">{initialExpenses.length} Total</Badge>
         </div>
-        <div className="flex items-center gap-2">
-          <a
-            href="/listado-gastos/plantilla"
-            download
-            className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard"
-          >
-            <FileDown className="h-3 w-3 mr-1" /> Plantilla
-          </a>
-          <Link
-            href="/listado-gastos/importar"
-            className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard"
-          >
-            <Upload className="h-3 w-3 mr-1" /> Importar
-          </Link>
-        </div>
+        {canCreate && (
+          <div className="flex items-center gap-2">
+            <a
+              href="/listado-gastos/plantilla"
+              download
+              className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard"
+            >
+              <FileDown className="h-3 w-3 mr-1" /> Plantilla
+            </a>
+            <Link
+              href="/listado-gastos/importar"
+              className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard"
+            >
+              <Upload className="h-3 w-3 mr-1" /> Importar
+            </Link>
+          </div>
+        )}
       </div>
 
       <DataTable
@@ -282,8 +297,8 @@ export function ExpenseWorkbench({
         data={filteredExpenses}
         columns={columns}
         onSearch={setSearch}
-        onAdd={openAddModal}
-        addLabel="Nuevo Egreso"
+        onAdd={canCreate ? openAddModal : undefined}
+        addLabel={canCreate ? "Nuevo Egreso" : undefined}
       />
 
       <Modal

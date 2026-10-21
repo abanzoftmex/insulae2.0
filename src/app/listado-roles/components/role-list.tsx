@@ -7,14 +7,23 @@ import { deleteRoleAction } from "../actions";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
-import { Edit2, Trash2, ShieldCheck } from "lucide-react";
+import { Edit2, Trash2, ShieldCheck, Eye } from "lucide-react";
 
 interface Props {
   roles: Role[];
   condominiumId: string;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
-export function RoleList({ roles, condominiumId }: Props) {
+export function RoleList({ 
+  roles, 
+  condominiumId,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: Props) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
 
@@ -78,17 +87,21 @@ export function RoleList({ roles, condominiumId }: Props) {
         <div className="flex items-center justify-end gap-1">
           <Link
             href={`/listado-roles/${row.id}`}
+            title={canUpdate ? "Editar rol" : "Ver permisos"}
             className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
           >
-            <Edit2 className="h-3.5 w-3.5" />
+            {canUpdate ? <Edit2 className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
           </Link>
-          <button
-            onClick={() => handleDelete(row.id)}
-            disabled={isPending}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors disabled:opacity-40"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {canDelete && (
+            <button
+              onClick={() => handleDelete(row.id)}
+              disabled={isPending}
+              className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors disabled:opacity-40"
+              title="Eliminar rol"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       ),
     },
@@ -106,8 +119,8 @@ export function RoleList({ roles, condominiumId }: Props) {
         data={filtered}
         columns={columns}
         onSearch={setSearch}
-        addLabel="Nuevo Rol"
-        onAdd={() => window.location.assign("/listado-roles/nuevo")}
+        addLabel={canCreate ? "Nuevo Rol" : undefined}
+        onAdd={canCreate ? () => window.location.assign("/listado-roles/nuevo") : undefined}
       />
     </>
   );

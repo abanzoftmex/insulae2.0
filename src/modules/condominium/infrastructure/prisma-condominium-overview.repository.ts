@@ -23,7 +23,9 @@ type ProjectSnapshot = {
   footerLogoUrl?: string | null;
   privacyNoticePdfUrl?: string | null;
   footerLeft?: string | null;
+  footerLeftTitle?: string | null;
   footerRight?: string | null;
+  footerRightTitle?: string | null;
   developedBy?: string | null;
   usesLandUseFormula?: boolean | null;
   hasVccc?: boolean | null;
@@ -83,7 +85,9 @@ export class PrismaCondominiumOverviewRepository
               footerLogoUrl: true,
               privacyNoticePdfUrl: true,
               footerLeft: true,
+              footerLeftTitle: true,
               footerRight: true,
+              footerRightTitle: true,
               developedBy: true,
               usesLandUseFormula: true,
               hasVccc: true,
@@ -127,7 +131,9 @@ export class PrismaCondominiumOverviewRepository
               footerLogoUrl: true,
               privacyNoticePdfUrl: true,
               footerLeft: true,
+              footerLeftTitle: true,
               footerRight: true,
+              footerRightTitle: true,
               developedBy: true,
               usesLandUseFormula: true,
               hasVccc: true,
@@ -311,7 +317,9 @@ export class PrismaCondominiumOverviewRepository
       footerLogoUrl: project?.footerLogoUrl ?? null,
       privacyNoticePdfUrl: project?.privacyNoticePdfUrl ?? null,
       footerLeft: project?.footerLeft ?? null,
+      footerLeftTitle: project?.footerLeftTitle ?? null,
       footerRight: project?.footerRight ?? null,
+      footerRightTitle: project?.footerRightTitle ?? null,
       usesLandUseFormula: project?.usesLandUseFormula ?? false,
       hasVccc: project?.hasVccc ?? false,
       cus: project?.cus !== null && project?.cus !== undefined ? decimalToNumber(project.cus) : null,

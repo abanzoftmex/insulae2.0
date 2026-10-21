@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import type { Metadata } from "next";
 import { getTicketListingUseCase, toTicketListingVM } from "@/modules/tickets";
 import { TicketsWorkbench } from "./tickets-workbench";
@@ -17,6 +18,9 @@ export const dynamic = "force-dynamic";
 
 export default async function TicketsPage() {
   await requirePageAccess(MODULES.TICKETS);
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.TICKETS, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.TICKETS, "canUpdate");
 
   const listing = await getTicketListingUseCase.execute();
 
@@ -64,6 +68,8 @@ export default async function TicketsPage() {
         condominiumSlug={vm.condominiumSlug} 
         departments={departments}
         privateAreas={privateAreas}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
       />
     </div>
   );

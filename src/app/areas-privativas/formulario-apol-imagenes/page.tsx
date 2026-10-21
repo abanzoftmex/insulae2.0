@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import Link from "next/link";
 import { Info } from "lucide-react";
 
@@ -23,6 +24,9 @@ type PageProps = {
 
 export default async function FormularioApolImagenesPage({ searchParams }: PageProps) {
   await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+  const permissions = await getUserPermissions();
+  const canUpdate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canDelete");
 
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);
@@ -105,6 +109,8 @@ export default async function FormularioApolImagenesPage({ searchParams }: PageP
               condominiumId={area.condominiumId}
               condominiumSlug={PROJECT_SCOPE.condominiumCode}
               initialImages={images}
+              canUpdate={canUpdate}
+              canDelete={canDelete}
             />
           </CardContent>
         </Card>

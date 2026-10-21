@@ -11,6 +11,7 @@ import {
   resolvePrivateAreaReference,
 } from "../../_lib/private-area-action-routing";
 import { PrintTrigger } from "./_components/print-trigger";
+import { PROJECT_SCOPE } from "@/config/project-scope";
 
 type PageProps = {
   searchParams?: Promise<ActionPageSearchParams>;
@@ -49,6 +50,20 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
   }
 
   const { area } = pageData;
+
+  const project = await prisma.project.findFirst({
+    where: {
+      condominium: { slug: PROJECT_SCOPE.condominiumCode },
+      isActive: true,
+    },
+    orderBy: { id: "desc" },
+    select: {
+      footerLeft: true,
+      footerLeftTitle: true,
+      footerRight: true,
+      footerRightTitle: true,
+    },
+  });
 
   const mappedCharges = pageData.visibleChargeLines.map((c) => {
     return {
@@ -458,7 +473,9 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start mt-6 print:mt-10 border-t border-gray-100 pt-6">
         {/* Left Instruction Box */}
         <div className="md:col-span-8 border border-gray-400 rounded-lg p-3 bg-white text-[9.5px] text-gray-800 space-y-2">
-          <p className="font-bold text-black">Estimado Condómino le recordamos que:</p>
+          <p className="font-bold text-black uppercase text-[10px] tracking-wide">
+            {project?.footerLeftTitle?.trim() || "Estimado Condómino le recordamos que:"}
+          </p>
           <p>
             La fecha de pago de la cuota ordinaria condominal son los primeros 7 días hábiles del mes, a partir del día 8 genera interés moratorio establecido en el reglamento general de condóminos artículo 3.9 (mora en los pagos).
           </p>
@@ -478,6 +495,11 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
 
         {/* Right Bank details Box */}
         <div className="md:col-span-4 text-[10px] space-y-3">
+          {project?.footerRightTitle?.trim() && (
+            <p className="font-bold text-black uppercase text-[10px] tracking-wide">
+              {project.footerRightTitle.trim()}
+            </p>
+          )}
           <div>
             <p className="font-bold text-black">Banco: INBURSA</p>
             <p className="text-gray-700">Clabe interbancaria: <span className="font-bold">036650500395989048</span></p>

@@ -6,3 +6,5 @@ const privateAreaListingRepository = new PrismaPrivateAreaListingRepository();
 export const getPrivateAreaListingUseCase = new GetPrivateAreaListingUseCase(
   privateAreaListingRepository,
 );
+
+export { toCanonicalAreaDisplayName } from "./presentation/private-area-listing.vm";

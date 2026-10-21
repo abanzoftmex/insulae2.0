@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import React, { Fragment } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -81,6 +82,11 @@ function Paginator({ page, totalPages, buildHref }: { page: number; totalPages: 
 export default async function DirectorioPage(props: PageProps) {
   await requirePageAccess(MODULES.DIRECTORIO);
 
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.DIRECTORIO, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.DIRECTORIO, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.DIRECTORIO, "canDelete");
+
   const searchParams = await props.searchParams;
   const params = searchParams ?? {};
   const query = pickParam(params.q).trim();
@@ -142,11 +148,13 @@ export default async function DirectorioPage(props: PageProps) {
                   <Search className="h-4 w-4" /> Buscar
                 </Button>
               </form>
-              <Button asChild className="h-9 px-6 text-[10px] font-bold uppercase gap-2 bg-brand text-white hover:bg-brand-accent transition-colors shrink-0">
-                <Link href="/directorio/formulario/nuevo">
-                  <Plus className="h-4 w-4" /> Agregar Persona
-                </Link>
-              </Button>
+              {canCreate && (
+                <Button asChild className="h-9 px-6 text-[10px] font-bold uppercase gap-2 bg-brand text-white hover:bg-brand-accent transition-colors shrink-0">
+                  <Link href="/directorio/formulario/nuevo">
+                    <Plus className="h-4 w-4" /> Agregar Persona
+                  </Link>
+                </Button>
+              )}
             </div>
           </Card>
         </div>
@@ -266,22 +274,26 @@ export default async function DirectorioPage(props: PageProps) {
 
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            asChild 
-                            className="h-8 w-8 p-0 border-green-700 bg-green-600 text-white hover:bg-green-700 hover:text-white transition-all shadow-sm rounded-md shrink-0" 
-                            title="Agregar usuario anidado"
-                          >
-                            <Link href={buildEditHref(person.reference)}>
-                              <Plus className="h-4 w-4 stroke-[3]" />
-                            </Link>
-                          </Button>
-                          <ProvisionalPasswordButton
-                            userId={person.id}
-                            userEmail={person.email}
-                            userName={person.legalNameLabel}
-                          />
+                          {canCreate && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              asChild 
+                              className="h-8 w-8 p-0 border-green-700 bg-green-600 text-white hover:bg-green-700 hover:text-white transition-all shadow-sm rounded-md shrink-0" 
+                              title="Agregar usuario anidado"
+                            >
+                              <Link href={buildEditHref(person.reference)}>
+                                <Plus className="h-4 w-4 stroke-[3]" />
+                              </Link>
+                            </Button>
+                          )}
+                          {canUpdate && (
+                            <ProvisionalPasswordButton
+                              userId={person.id}
+                              userEmail={person.email}
+                              userName={person.legalNameLabel}
+                            />
+                          )}
                           <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25">
                             <Link href={buildEditHref(person.reference)}>
                               Perfil <ArrowRight className="h-3.5 w-3.5" />

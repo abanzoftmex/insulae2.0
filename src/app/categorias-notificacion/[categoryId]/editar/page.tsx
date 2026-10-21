@@ -13,7 +13,7 @@ interface EditarCategoriaNotificacionPageProps {
 export default async function EditarCategoriaNotificacionPage({
   params,
 }: EditarCategoriaNotificacionPageProps) {
-  await requirePageAccess(MODULES.CATEGORIAS_NOTIFICACIONES);
+  await requirePageAccess(MODULES.CATEGORIAS_NOTIFICACIONES, "canUpdate");
 
   const { categoryId } = await params;
   const snapshot = await getNotificationCategoryFormUseCase.execute(categoryId);

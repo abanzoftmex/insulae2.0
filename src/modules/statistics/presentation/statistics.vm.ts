@@ -37,7 +37,7 @@ export interface StatisticsVM extends StatisticsReport {
 export function toStatisticsVM(report: StatisticsReport): StatisticsVM {
   const kpis: StatisticsVM["kpis"] = [
     { label: "Propietarios", value: formatInt(report.totalOwners), hint: `${formatInt(report.ownersWithMultipleAreas)} con más de un inmueble` },
-    { label: "Inmuebles", value: formatInt(report.totalPrivateAreas), hint: `${formatInt(report.parentPrivateAreas)} predios · ${formatInt(report.childPrivateAreas)} unidades` },
+    { label: "Áreas privativas", value: formatInt(report.totalPrivateAreas), hint: `${formatInt(report.parentPrivateAreas)} predios · ${formatInt(report.childPrivateAreas)} unidades` },
     { label: "Negocios activos", value: formatInt(report.activeBusinesses), hint: `${formatInt(report.totalBusinesses)} registrados en total` },
     {
       label: "Giros comerciales",

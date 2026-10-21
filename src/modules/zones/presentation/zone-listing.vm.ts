@@ -4,6 +4,8 @@ export interface ZoneRowVM {
   id: string;
   name: string;
   initials: string;
+  order: number | null;
+  orderLabel: string;
   activeSubzones: string;
   canDelete: boolean;
 }
@@ -20,6 +22,8 @@ function mapRow(zone: ZoneListItem): ZoneRowVM {
     id: zone.id,
     name: zone.name,
     initials: zone.initials?.trim() ? zone.initials : "--",
+    order: zone.order ?? null,
+    orderLabel: zone.order !== null && zone.order !== undefined ? String(zone.order) : "--",
     activeSubzones: zone.activeSubzones.toLocaleString("es-MX"),
     canDelete: zone.canDelete,
   };

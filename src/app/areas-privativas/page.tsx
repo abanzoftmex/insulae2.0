@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -285,6 +286,9 @@ function renderLegacyAction(action: PrivateAreaLegacyAction): ReactNode {
 
 export default async function AreasPrivativasPage(props: PageProps) {
   await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canUpdate");
 
   const searchParams = await props.searchParams;
   const params = searchParams ?? {};
@@ -412,12 +416,14 @@ export default async function AreasPrivativasPage(props: PageProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <CsvManager />
-          <Button variant="primary" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full bg-gold hover:bg-[#bca065] text-white shadow-md shadow-brand-deep/15 transition-all active-scale">
-            <Link href="/areas-privativas/nueva">
-              <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden /> Nueva AP
-            </Link>
-          </Button>
+          <CsvManager canUpdate={canUpdate} />
+          {canCreate && (
+            <Button variant="primary" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full bg-gold hover:bg-[#bca065] text-white shadow-md shadow-brand-deep/15 transition-all active-scale">
+              <Link href="/areas-privativas/nueva">
+                <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden /> Nueva AP
+              </Link>
+            </Button>
+          )}
           <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
             <Link href="/listado-seguridad"><Shield className="h-3.5 w-3.5 shrink-0" aria-hidden /> Seguridad</Link>
           </Button>
@@ -711,7 +717,9 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     
                     {/* Sticky Column 1: Acciones */}
                     <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
-                      <div className="flex flex-wrap gap-1 w-[80px]">{actions.map(renderLegacyAction)}</div>
+                      <div className="flex flex-wrap gap-1 w-[80px]">
+                        {actions.map((act) => renderLegacyAction(!canCreate && act.id === "ADD_FAP" ? { ...act, isEnabled: false } : act))}
+                      </div>
                     </td>
 
                     {/* Sticky Column 2: Ubicación */}

@@ -15,7 +15,7 @@ interface EditarGrupoEstructuraCondominalPageProps {
 export default async function EditarGrupoEstructuraCondominalPage({
   params,
 }: EditarGrupoEstructuraCondominalPageProps) {
-  await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL);
+  await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL, "canUpdate");
 
   const { groupId } = await params;
   const snapshot = await getCondominiumStructureFormUseCase.execute(groupId);

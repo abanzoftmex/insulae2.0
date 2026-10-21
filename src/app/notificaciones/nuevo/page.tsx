@@ -5,7 +5,7 @@ import { getNotificationFormUseCase } from "@/modules/notifications";
 import { NotificacionFormShell } from "../notificacion-form-shell";
 
 export default async function NuevaNotificacionPage() {
-  await requirePageAccess(MODULES.NOTIFICACIONES);
+  await requirePageAccess(MODULES.NOTIFICACIONES, "canCreate");
 
   const formData = await getNotificationFormUseCase.execute();
 

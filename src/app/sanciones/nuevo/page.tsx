@@ -5,7 +5,7 @@ import { SanctionForm } from "../components/sanction-form";
 export const dynamic = "force-dynamic";
 
 export default async function NewSanctionPage() {
-  await requirePageAccess(MODULES.CATALOGO_SANCIONES);
+  await requirePageAccess(MODULES.CATALOGO_SANCIONES, "canCreate");
 
   return <SanctionForm />;
 }

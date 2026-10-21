@@ -25,7 +25,11 @@ export async function getLandUseFormDataAction(id: string) {
 export async function saveLandUseAction(
   input: SaveLandUseActionInput,
 ): Promise<{ ok: boolean; message: string; landUseId?: string }> {
+  if (input.id) {
     await assertPermission(MODULES.USOS_DE_SUELO, "canUpdate");
+  } else {
+    await assertPermission(MODULES.USOS_DE_SUELO, "canCreate");
+  }
   const response = await saveLandUseUseCase.execute({
     id: input.id,
     name: input.name,

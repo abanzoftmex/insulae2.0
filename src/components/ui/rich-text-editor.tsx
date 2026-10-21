@@ -16,6 +16,11 @@ import {
 
 interface RichTextEditorProps {
   label: string;
+  editableTitle?: {
+    value: string;
+    placeholder?: string;
+    onChange: (value: string) => void;
+  };
   value: string;
   onChange: (html: string) => void;
   className?: string;
@@ -24,6 +29,7 @@ interface RichTextEditorProps {
 
 export function RichTextEditor({
   label,
+  editableTitle,
   value,
   onChange,
   className,
@@ -133,9 +139,24 @@ export function RichTextEditor({
 
   return (
     <div className={cn("flex flex-col gap-1.5 w-full", className)}>
-      <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">
-        {label}
-      </label>
+      {editableTitle ? (
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none shrink-0">
+            Título:
+          </label>
+          <input
+            type="text"
+            value={editableTitle.value}
+            placeholder={editableTitle.placeholder || label}
+            onChange={(e) => editableTitle.onChange(e.target.value)}
+            className="w-full max-w-sm rounded border border-line bg-card px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+          />
+        </div>
+      ) : (
+        <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">
+          {label}
+        </label>
+      )}
 
       <div className="rounded-md border border-line bg-card focus-within:ring-2 focus-within:ring-brand-accent/30 focus-within:border-brand-accent transition-standard overflow-hidden">
         {/* Toolbar */}

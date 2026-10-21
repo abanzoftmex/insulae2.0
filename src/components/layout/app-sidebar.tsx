@@ -81,7 +81,7 @@ export const NAV_SECTIONS: NavSection[] = [
         label: "Condominio",
         icon: Building2,
         items: [
-          { label: "Reporte Territorial", href: "/reporte-condominio", requiredModule: "Reporte condominio" },
+          { label: "Reporte de uso de suelo", href: "/reporte-condominio", requiredModule: "Reporte condominio" },
           { label: "Configuración", href: "/condominio", requiredModule: "Condominio" },
           { label: "Estructura Condominal", href: "/estructura-condominal", requiredModule: "Estructura condominal" },
         ],

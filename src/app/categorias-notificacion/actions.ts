@@ -18,7 +18,11 @@ export interface SaveNotificationCategoryActionInput {
 export async function saveNotificationCategoryAction(
   input: SaveNotificationCategoryActionInput,
 ): Promise<{ ok: boolean; message: string; categoryId?: string }> {
+  if (input.id) {
     await assertPermission(MODULES.CATEGORIAS_NOTIFICACIONES, "canUpdate");
+  } else {
+    await assertPermission(MODULES.CATEGORIAS_NOTIFICACIONES, "canCreate");
+  }
   const result = await saveNotificationCategoryUseCase.execute(input);
 
   if (result.ok) {

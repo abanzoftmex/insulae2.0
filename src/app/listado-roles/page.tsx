@@ -4,7 +4,7 @@ import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.repository";
 import { GetRolesUseCase } from "@/modules/role/application/role.use-cases";
 import { RoleList } from "./components/role-list";
-import { getUserPermissions } from "@/shared/application/auth/permissions";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import { redirect } from "next/navigation";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Badge } from "@/components/ui/badge";
@@ -21,9 +21,13 @@ export default async function RolesPage() {
   await requirePageAccess(MODULES.ROLES);
 
   const permissions = await getUserPermissions();
-  if (!permissions["Roles"]?.canRead) {
+  if (!hasPermission(permissions, MODULES.ROLES, "canRead")) {
     redirect("/");
   }
+
+  const canCreate = hasPermission(permissions, MODULES.ROLES, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.ROLES, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.ROLES, "canDelete");
 
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },
@@ -51,7 +55,13 @@ export default async function RolesPage() {
           </div>
         </div>
       </div>
-      <RoleList roles={roles} condominiumId={condominium.id} />
+      <RoleList 
+        roles={roles} 
+        condominiumId={condominium.id} 
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+      />
     </div>
   );
 }

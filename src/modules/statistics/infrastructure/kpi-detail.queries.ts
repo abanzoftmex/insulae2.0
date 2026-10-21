@@ -8,7 +8,7 @@ import type {
   NameCount,
   StatisticsFilters,
 } from "../domain/statistics";
-import { classifyUseType } from "./prisma-statistics.repository";
+import { classifyUseType, hasValidUseType } from "./prisma-statistics.repository";
 
 const OWNER_ROLES = ["Dueño Legal", "Dueño Moral", "Dominio pleno"];
 const ACTIVE_RENTAL_STATUS = "1";
@@ -433,22 +433,23 @@ export async function loadKpiDetail(
     }
 
     case "areas": {
-      const parents = areas.filter((a) => a.isParent).length;
-      const built = areas.filter((a) => a.m2Construction > 0);
+      const eligibleAreas = areas.filter((a) => hasValidUseType(a.useType));
+      const parents = eligibleAreas.filter((a) => a.isParent).length;
+      const built = eligibleAreas.filter((a) => a.m2Construction > 0);
       const totalM2 = built.reduce((sum, a) => sum + a.m2Construction, 0);
       const byCategory = new Map<string, number>();
-      for (const area of areas) bump(byCategory, area.category);
+      for (const area of eligibleAreas) bump(byCategory, area.category);
 
       return {
         key,
-        title: "Inmuebles activos",
-        subtitle: "Todas las áreas privativas activas del condominio, con su barrio, uso de suelo, propietarios y negocio.",
+        title: "Áreas privativas",
+        subtitle: "Todas las áreas privativas activas del condominio con uso de suelo registrado, con su barrio, uso, propietarios y negocio.",
         headline: [
-          { label: "Inmuebles activos", value: fmt(areas.length) },
-          { label: "Predios", value: fmt(parents), hint: `${fmt(areas.length - parents)} unidades dentro de predios` },
+          { label: "Áreas privativas", value: fmt(eligibleAreas.length) },
+          { label: "Predios", value: fmt(parents), hint: `${fmt(eligibleAreas.length - parents)} unidades dentro de predios` },
           { label: "Con construcción", value: fmt(built.length) },
           { label: "Superficie construida", value: fmtM2(totalM2) },
-          { label: "Con propietario", value: fmt(areas.filter((a) => a.ownerNames.length > 0).length) },
+          { label: "Con propietario", value: fmt(eligibleAreas.filter((a) => a.ownerNames.length > 0).length) },
         ],
         charts: [
           {
@@ -457,21 +458,21 @@ export async function loadKpiDetail(
             data: toNameCounts(byCategory),
             kind: "donut",
             palette: "category",
-            centerLabel: "inmuebles",
+            centerLabel: "áreas",
           },
           {
             title: "Estructura del inventario",
             subtitle: "Predios frente a unidades dentro de un predio",
             data: [
               { name: "Predios", value: parents },
-              { name: "Unidades en predio", value: areas.length - parents },
+              { name: "Unidades en predio", value: eligibleAreas.length - parents },
             ],
             kind: "donut",
             palette: "sequential",
-            centerLabel: "inmuebles",
+            centerLabel: "áreas",
           },
-          { ...chartByZone(areas, "Inmuebles por barrio"), wide: true },
-          { ...chartByUseType(areas, "Top usos de suelo"), wide: true },
+          { ...chartByZone(eligibleAreas, "Áreas por barrio"), wide: true },
+          { ...chartByUseType(eligibleAreas, "Top usos de suelo"), wide: true },
         ],
         columns: areaColumns([
           { key: "categoria", label: "Clasificación" },
@@ -480,7 +481,7 @@ export async function loadKpiDetail(
           { key: "propietarios", label: "Propietarios", clamp: true },
           { key: "negocio", label: "Negocio activo", clamp: true },
         ]),
-        rows: areas.map((area) => ({
+        rows: eligibleAreas.map((area) => ({
           ...areaRow(area),
           categoria: area.category,
           tipo: area.isParent ? "Predio" : "Unidad",
@@ -703,7 +704,7 @@ export async function loadKpiDetail(
           subtitle: "Inmuebles de uso comercial, de servicios y hotelería.",
         },
         land: {
-          title: "Lotes y suelo",
+          title: "Apoles",
           subtitle: "Lotes de terreno por zona, incluidos los lotes carreteros.",
         },
       };
@@ -720,7 +721,7 @@ export async function loadKpiDetail(
           data: toNameCounts(useTypeMap, 7),
           kind: "donut",
           palette: "sequential",
-          centerLabel: "inmuebles",
+          centerLabel: "áreas",
         },
       ];
 
@@ -747,7 +748,7 @@ export async function loadKpiDetail(
           data: toNameCounts(buildStatus),
           kind: "donut",
           palette: "category",
-          centerLabel: "lotes",
+          centerLabel: "apoles",
         });
       } else {
         const occupancyStatus = new Map<string, number>();

@@ -11,7 +11,7 @@ interface EditarDepartamentoTicketPageProps {
 }
 
 export default async function EditarDepartamentoTicketPage({ params }: EditarDepartamentoTicketPageProps) {
-  await requirePageAccess(MODULES.DEPARTAMENTOS_TICKETS);
+  await requirePageAccess(MODULES.DEPARTAMENTOS_TICKETS, "canUpdate");
 
   const { departmentId } = await params;
   const snapshot = await getTicketDepartmentFormUseCase.execute(departmentId);

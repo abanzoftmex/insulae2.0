@@ -3,7 +3,7 @@ import { MODULES } from "@/shared/application/auth/modules";
 import { CategoriaNotificacionFormShell } from "../categoria-notificacion-form-shell";
 
 export default async function NuevaCategoriaNotificacionPage() {
-  await requirePageAccess(MODULES.CATEGORIAS_NOTIFICACIONES);
+  await requirePageAccess(MODULES.CATEGORIAS_NOTIFICACIONES, "canCreate");
 
   return (
     <CategoriaNotificacionFormShell

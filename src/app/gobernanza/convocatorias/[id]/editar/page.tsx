@@ -12,7 +12,7 @@ interface PageProps {
 }
 
 export default async function EditAnnouncementPage({ params }: PageProps) {
-  await requirePageAccess(MODULES.CONVOCATORIAS);
+  await requirePageAccess(MODULES.CONVOCATORIAS, "canUpdate");
 
   const { id } = await params;
 

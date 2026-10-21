@@ -172,7 +172,7 @@ export default async function Home() {
     <div className="space-y-8 pb-12">
       {/* ─── Header / Banner de Bienvenida Cálida ───────────────────────────── */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-deep via-brand to-brand-deep p-6 md:p-8 text-white shadow-lg border border-brand/20">
-        {/* Marca de agua traslúcida */}
+        {/* Marca de agua con presencia visual clara en la parte superior derecha */}
         <Image
           src="/brand/valquirico-logo-light.png"
           alt=""
@@ -180,11 +180,11 @@ export default async function Home() {
           width={1077}
           height={290}
           priority
-          className="pointer-events-none absolute right-6 top-1/2 hidden w-[380px] -translate-y-1/2 opacity-[0.08] md:block"
+          className="pointer-events-none absolute right-6 md:right-8 top-6 md:top-8 hidden w-[250px] sm:w-[280px] lg:w-[340px] opacity-35 lg:opacity-40 md:block drop-shadow-sm transition-all"
         />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
+          <div className="space-y-3 max-w-lg lg:max-w-xl">
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="brand"
@@ -212,30 +212,30 @@ export default async function Home() {
               <span>·</span>
               <LiveClock initialDate={initialDate} initialTime={initialTime} />
             </div>
-          </div>
 
-          {(canRead(MODULES.DIRECTORIO) || canRead(MODULES.REGLAMENTOS)) && (
-            <div className="shrink-0 flex flex-col sm:flex-row md:flex-col gap-2.5">
-              {canRead(MODULES.DIRECTORIO) && (
-                <Link
-                  href="/directorio"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-mint text-brand-deep font-bold text-xs hover:bg-white transition-standard shadow-sm"
-                >
-                  <Users className="h-4 w-4" />
-                  Directorio de Personas
-                </Link>
-              )}
-              {canRead(MODULES.REGLAMENTOS) && (
-                <Link
-                  href="/reglamentos"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-standard border border-white/20"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  Reglamentos y Actas
-                </Link>
-              )}
-            </div>
-          )}
+            {(canRead(MODULES.DIRECTORIO) || canRead(MODULES.REGLAMENTOS)) && (
+              <div className="pt-3 flex flex-wrap items-center gap-3">
+                {canRead(MODULES.DIRECTORIO) && (
+                  <Link
+                    href="/directorio"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-brand-mint text-brand-deep font-bold text-xs hover:bg-white transition-standard shadow-sm"
+                  >
+                    <Users className="h-4 w-4" />
+                    Directorio de Personas
+                  </Link>
+                )}
+                {canRead(MODULES.REGLAMENTOS) && (
+                  <Link
+                    href="/reglamentos"
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-xs transition-standard border border-white/20"
+                  >
+                    <BookOpen className="h-4 w-4" />
+                    Reglamentos y Actas
+                  </Link>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

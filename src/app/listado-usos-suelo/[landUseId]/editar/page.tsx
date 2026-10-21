@@ -32,7 +32,7 @@ type PageProps = {
 };
 
 export default async function EditarUsoSueloPage({ params }: PageProps) {
-  await requirePageAccess(MODULES.USOS_DE_SUELO);
+  await requirePageAccess(MODULES.USOS_DE_SUELO, "canUpdate");
 
   const { landUseId } = await params;
 

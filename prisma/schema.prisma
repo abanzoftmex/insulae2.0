@@ -633,6 +633,7 @@ model ZoneCatalog {
   legacyId      Int?
   name          String
   initials      String?
+  order         Int?
   marketValue   Decimal?         @db.Decimal(14, 2)
   weight        Decimal?         @db.Decimal(12, 4)
   isActive      Boolean          @default(true)
@@ -1052,7 +1053,9 @@ model Project {
   footerLogoUrl       String?
   privacyNoticePdfUrl String?
   footerLeft          String?
+  footerLeftTitle     String?
   footerRight         String?
+  footerRightTitle    String?
   developedBy         String?
   usesLandUseFormula  Boolean?
   hasVccc             Boolean?

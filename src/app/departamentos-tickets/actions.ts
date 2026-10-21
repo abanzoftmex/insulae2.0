@@ -19,7 +19,11 @@ export interface SaveTicketDepartmentActionInput {
 export async function saveTicketDepartmentAction(
   input: SaveTicketDepartmentActionInput,
 ): Promise<{ ok: boolean; message: string; departmentId?: string }> {
+  if (input.id) {
     await assertPermission(MODULES.DEPARTAMENTOS_TICKETS, "canUpdate");
+  } else {
+    await assertPermission(MODULES.DEPARTAMENTOS_TICKETS, "canCreate");
+  }
   const result = await saveTicketDepartmentUseCase.execute(input);
 
   if (result.ok) {

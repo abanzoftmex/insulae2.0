@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function DirectorioFormularioNuevoPage() {
-  await requirePageAccess(MODULES.DIRECTORIO);
+  await requirePageAccess(MODULES.DIRECTORIO, "canCreate");
 
   const roles = await getDirectoryRolesUseCase.execute();
 

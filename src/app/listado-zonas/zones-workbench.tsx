@@ -18,9 +18,17 @@ import { getZoneFormDataAction, saveZoneAction, deleteZoneAction } from "./actio
 
 interface ZonesWorkbenchProps {
   initialRows: ZoneRowVM[];
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
-export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
+export function ZonesWorkbench({ 
+  initialRows,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: ZonesWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   
@@ -32,6 +40,8 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
   // Form State
   const [name, setName] = useState("");
   const [initials, setInitials] = useState("");
+  const [order, setOrder] = useState("");
+  const [orderError, setOrderError] = useState<string | null>(null);
 
   const filteredRows = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -39,30 +49,49 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
   }, [initialRows, search]);
 
   const openAddModal = () => {
+    if (!canCreate) return;
     setEditingId(null);
     setName("");
     setInitials("");
+    setOrder("");
+    setOrderError(null);
     setIsModalOpen(true);
   };
 
   const openEditModal = async (id: string) => {
+    if (!canUpdate) return;
     setEditingId(id);
     setIsLoadingForm(true);
     setIsModalOpen(true);
+    setOrderError(null);
     const data = await getZoneFormDataAction(id);
     if (data) {
       setName(data.name);
       setInitials(data.initials || "");
+      setOrder(data.order !== null && data.order !== undefined ? String(data.order) : "");
     }
     setIsLoadingForm(false);
   };
 
   const handleSave = () => {
+    const trimmedOrder = order.trim();
+    let parsedOrder: number | null = null;
+    if (trimmedOrder !== "") {
+      const num = Number(trimmedOrder);
+      if (!Number.isInteger(num) || num <= 0) {
+        setOrderError("El número de orden debe ser un número entero positivo (1, 2, 3...).");
+        return;
+      }
+      parsedOrder = num;
+    }
+    setOrderError(null);
+
     startTransition(async () => {
       const res = await saveZoneAction({
         id: editingId || undefined,
         name,
-        initials
+        initials,
+        order: parsedOrder,
       });
       if (res.ok) {
         setIsModalOpen(false);
@@ -92,6 +121,16 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
   };
 
   const columns: DataTableColumn<ZoneRowVM>[] = [
+    {
+      header: "Orden",
+      accessorKey: "orderLabel",
+      align: "center",
+      cell: (row) => (
+        <span className="px-2 py-0.5 rounded bg-canvas text-xs font-bold text-ink-soft/70">
+          {row.orderLabel}
+        </span>
+      )
+    },
     {
       header: "Barrio",
       accessorKey: "name",
@@ -127,8 +166,8 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
       align: "right",
       cell: (row) => (
         <RowActions
-          onEdit={() => openEditModal(row.id)}
-          onDelete={() => handleDelete(row.id, row.canDelete)}
+          onEdit={canUpdate ? () => openEditModal(row.id) : undefined}
+          onDelete={canDelete ? () => handleDelete(row.id, row.canDelete) : undefined}
         />
       )
     }
@@ -142,8 +181,8 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
         data={filteredRows}
         columns={columns}
         onSearch={setSearch}
-        onAdd={openAddModal}
-        addLabel="Nuevo Barrio"
+        onAdd={canCreate ? openAddModal : undefined}
+        addLabel={canCreate ? "Nuevo Barrio" : undefined}
       />
 
       <Modal
@@ -185,6 +224,23 @@ export function ZonesWorkbench({ initialRows }: ZonesWorkbenchProps) {
               placeholder="Ej. BL"
               maxLength={5}
             />
+            <div className="space-y-1">
+              <Input 
+                label="Número de orden" 
+                type="number"
+                min="1"
+                step="1"
+                value={order} 
+                onChange={(e) => {
+                  setOrder(e.target.value);
+                  if (orderError) setOrderError(null);
+                }} 
+                placeholder="Ej. 1, 2, 3..."
+              />
+              {orderError && (
+                <p className="text-xs text-rose-500 font-medium">{orderError}</p>
+              )}
+            </div>
 
             <div className="flex gap-2 p-3 bg-canvas/40 rounded-md border border-line/30">
               <Info className="h-4 w-4 text-brand-accent shrink-0 mt-0.5" />

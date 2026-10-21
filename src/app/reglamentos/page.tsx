@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import type { Metadata } from "next";
 import { getRegulationDirectoryUseCase } from "@/modules/regulations";
 import { toRegulationDirectoryVM } from "@/modules/regulations/presentation/regulation-directory.vm";
@@ -16,6 +17,10 @@ export const dynamic = "force-dynamic";
 
 export default async function ReglamentosPage() {
   await requirePageAccess(MODULES.REGLAMENTOS);
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.REGLAMENTOS, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.REGLAMENTOS, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.REGLAMENTOS, "canDelete");
 
   const directory = await getRegulationDirectoryUseCase.execute();
   const vm = directory ? toRegulationDirectoryVM(directory) : null;
@@ -44,7 +49,12 @@ export default async function ReglamentosPage() {
         </div>
       </div>
 
-      <ReglamentosWorkbench directory={vm} />
+      <ReglamentosWorkbench 
+        directory={vm} 
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+      />
     </div>
   );
 }

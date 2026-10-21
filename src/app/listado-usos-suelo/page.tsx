@@ -14,8 +14,15 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export default async function ListadoUsosSueloPage() {
   await requirePageAccess(MODULES.USOS_DE_SUELO);
+
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.USOS_DE_SUELO, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.USOS_DE_SUELO, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.USOS_DE_SUELO, "canDelete");
 
   const listing = await getLandUseListingUseCase.execute();
   const vm = listing ? toLandUseListingVM(listing) : null;
@@ -35,7 +42,14 @@ export default async function ListadoUsosSueloPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Configuración de Usos de Suelo</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Configuración de Usos de Suelo</h1>
+              {!canUpdate && !canCreate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Configuración Operativa</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {vm.condominiumName} · Gestión operativa de categorías y fórmulas de cálculo.
@@ -44,7 +58,12 @@ export default async function ListadoUsosSueloPage() {
         </div>
       </div>
 
-      <LandUseWorkbench initialVm={vm} />
+      <LandUseWorkbench 
+        initialVm={vm} 
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+      />
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { Prisma } from "@prisma/client";
 
+import { toCanonicalAreaDisplayName } from "@/modules/private-areas";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
@@ -91,6 +92,7 @@ type RepositoryAssignment = {
     id: string;
     name: string;
     sortOrder: number;
+    isActive?: boolean;
     indiviso: Prisma.Decimal | number | null;
     m2CommonArea: Prisma.Decimal | number | null;
     m2Construction: Prisma.Decimal | number | null;
@@ -165,17 +167,31 @@ async function getMasterAreaOrderMap(condominiumId: string): Promise<Map<string,
   return masterOrderMap;
 }
 
+async function getActiveParentIdsWithActiveChildren(condominiumId: string): Promise<Set<string>> {
+  const activeChildren = await prisma.privateArea.findMany({
+    where: {
+      condominiumId,
+      parentPrivateAreaId: { not: null },
+      isActive: true,
+    },
+    select: { parentPrivateAreaId: true },
+  });
+  return new Set(activeChildren.map((c) => c.parentPrivateAreaId).filter(Boolean) as string[]);
+}
+
 function computeParticipationBlocks(
   assignments: RepositoryAssignment[],
   totalM2Project: number,
   userCommerces: Array<{ commerceName: string }> = [],
-  masterOrderMap?: Map<string, number>
+  masterOrderMap?: Map<string, number>,
+  activeParentIdsWithActiveChildren?: Set<string>,
+  privateAreasM2Project?: number,
 ): ParticipationBlock[] {
   const blockMap: Record<string, { title: string; roles: string[] }> = {
     legal: { title: "Propietario Legal", roles: ["legal", "dueño legal", "propietario legal"] },
     pleno: { title: "Dominio actual", roles: ["pleno", "dominio actual", "dominio pleno", "dominio"] },
     arrendatario: { title: "Arrendatario", roles: ["arrendatario", "arrend", "arrendamiento"] },
-    moral: { title: "Propietario Inicial", roles: ["moral", "dueño moral", "inicial", "propietario inicial"] },
+    moral: { title: "Propietario inicial (BLOCKCHAIN) Historia", roles: ["moral", "dueño moral", "inicial", "propietario inicial"] },
   };
 
   const legalNames = new Set(
@@ -217,6 +233,7 @@ function computeParticipationBlocks(
   return Object.entries(blockMap).map(([key, config]) => {
     const rows: ParticipationRow[] = [];
     const seenNames = new Set<string>();
+    const seenAreaIds = new Set<string>();
 
     for (const assignment of sortedAssignments) {
       const roleLower = (assignment.roleName ?? "").toLowerCase();
@@ -224,33 +241,42 @@ function computeParticipationBlocks(
 
       if (matches) {
         const area = assignment.privateArea;
-        if (seenNames.has(area.name)) continue;
 
         if (key === "pleno") {
           if (!legalNames.has(area.name)) continue;
         } else if (key === "arrendatario") {
           if (legalNames.has(area.name)) continue;
         } else if (key === "moral") {
-          if (plenoNames.has(area.name) || arrendNames.has(area.name)) continue;
+          if (area.isActive === false) continue;
         }
 
-        seenNames.add(area.name);
+        if (key === "moral") {
+          if (seenAreaIds.has(area.id)) continue;
+          seenAreaIds.add(area.id);
+        } else {
+          if (seenNames.has(area.name)) continue;
+          seenNames.add(area.name);
+        }
 
         let percentage = 0;
         const m2Total = Number(area.m2Original ?? 0);
+        const m2Const = Number(area.m2Construction ?? 0);
+        const denominator = key === "moral" && (privateAreasM2Project ?? 0) > 0
+          ? (privateAreasM2Project as number)
+          : totalM2Project;
 
         if (area.parentPrivateArea) {
           const parentM2Total = Number(area.parentPrivateArea.m2Original ?? 0);
-          const parentIndiviso = totalM2Project > 0 ? (parentM2Total / totalM2Project) * 100 : 0;
+          const parentIndiviso = denominator > 0 ? (parentM2Total / denominator) * 100 : 0;
           const constructionChildren = Number(area.parentPrivateArea.m2ConstructionChildren ?? 0);
 
           if (constructionChildren > 0 && parentIndiviso > 0) {
-            percentage = parentIndiviso * (Number(area.m2Construction ?? 0) / constructionChildren);
-          } else if (totalM2Project > 0) {
-            percentage = (m2Total / totalM2Project) * 100;
+            percentage = parentIndiviso * (m2Const / constructionChildren);
+          } else if (denominator > 0) {
+            percentage = ((m2Total > 0 ? m2Total : m2Const) / denominator) * 100;
           }
-        } else if (totalM2Project > 0) {
-          percentage = (m2Total / totalM2Project) * 100;
+        } else if (denominator > 0) {
+          percentage = (m2Total / denominator) * 100;
         }
 
         if (percentage === 0 && area.indiviso) {
@@ -282,9 +308,16 @@ function computeParticipationBlocks(
           ? rentalCommerceNames
           : userCommerceNames;
 
+        const role = area.parentPrivateArea
+          ? "CHILD"
+          : (activeParentIdsWithActiveChildren?.has(area.id) ? "PARENT" : "SINGLE");
+        const privateAreaName = key === "moral"
+          ? toCanonicalAreaDisplayName(area.name, role)
+          : area.name;
+
         rows.push({
           entityType,
-          privateAreaName: area.name,
+          privateAreaName,
           percentage,
           hasCommerces: commerceNames.length > 0,
           commerceNames,
@@ -307,18 +340,11 @@ function computeParticipationSummary(
   const legalBlock = blocks.find(
     (b) => b.title.toLowerCase().includes("propietario legal") || b.title.toLowerCase().includes("legal")
   );
+
   if (legalBlock && legalBlock.totalAreas > 0) {
     return {
       totalPrivateAreas: legalBlock.totalAreas,
       indiviso: legalBlock.totalPercentage,
-    };
-  }
-
-  const activeBlock = blocks.find((b) => b.totalAreas > 0);
-  if (activeBlock) {
-    return {
-      totalPrivateAreas: activeBlock.totalAreas,
-      indiviso: activeBlock.totalPercentage,
     };
   }
 
@@ -464,7 +490,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           projects: {
             where: { isActive: true },
             take: 1,
-            select: { totalM2: true },
+            select: { totalM2: true, privateAreasM2: true },
           },
         },
       })) ??
@@ -478,7 +504,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           projects: {
             where: { isActive: true },
             take: 1,
-            select: { totalM2: true },
+            select: { totalM2: true, privateAreasM2: true },
           },
         },
       }));
@@ -488,6 +514,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
     }
 
     const totalM2Project = Number(condominium.projects[0]?.totalM2 ?? 0);
+    const privateAreasM2Project = Number(condominium.projects[0]?.privateAreasM2 ?? 0);
     const query = normalizeText(filters.query);
 
     const where: Prisma.UserWhereInput = {
@@ -573,6 +600,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
               select: {
                 id: true,
                 name: true,
+                isActive: true,
                 sortOrder: true,
                 indiviso: true,
                 m2CommonArea: true,
@@ -618,6 +646,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
     });
 
     const masterOrderMap = await getMasterAreaOrderMap(condominium.id);
+    const activeParentIds = await getActiveParentIdsWithActiveChildren(condominium.id);
     const requiresInvoiceByUserId = await this.getRequiresInvoiceByUserId(users.map((user) => user.id));
     const commercesByUserId = await this.getCommerceRowsByUserId(users.map((user) => user.id));
     const peopleExpanded = users
@@ -637,7 +666,14 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         );
         const commerces = commercesByUserId.get(user.id) ?? [];
         const userCommercesForSummary = commerces.map((c) => ({ commerceName: c.commerceName }));
-        const blocks = computeParticipationBlocks(user.assignments, totalM2Project, userCommercesForSummary, masterOrderMap);
+        const blocks = computeParticipationBlocks(
+          user.assignments,
+          totalM2Project,
+          userCommercesForSummary,
+          masterOrderMap,
+          activeParentIds,
+          privateAreasM2Project,
+        );
         const { totalPrivateAreas, indiviso } = computeParticipationSummary(blocks);
 
         const basePerson: Omit<DirectoryPerson, "id" | "commerceName"> = {
@@ -744,7 +780,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           projects: {
             where: { isActive: true },
             take: 1,
-            select: { totalM2: true },
+            select: { totalM2: true, privateAreasM2: true },
           },
         },
       })) ??
@@ -756,7 +792,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           projects: {
             where: { isActive: true },
             take: 1,
-            select: { totalM2: true },
+            select: { totalM2: true, privateAreasM2: true },
           },
         },
       }));
@@ -766,6 +802,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
     }
 
     const totalM2Project = Number(condominium.projects[0]?.totalM2 ?? 0);
+    const privateAreasM2Project = Number(condominium.projects[0]?.privateAreasM2 ?? 0);
 
     const user = await prisma.user.findFirst({
       where: {
@@ -842,6 +879,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
               select: {
                 id: true,
                 name: true,
+                isActive: true,
                 sortOrder: true,
                 indiviso: true,
                 m2CommonArea: true,
@@ -888,7 +926,15 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
     }
 
     const masterOrderMap = await getMasterAreaOrderMap(condominium.id);
-    const blocks = computeParticipationBlocks(user.assignments, totalM2Project, user.commerces, masterOrderMap);
+    const activeParentIds = await getActiveParentIdsWithActiveChildren(condominium.id);
+    const blocks = computeParticipationBlocks(
+      user.assignments,
+      totalM2Project,
+      user.commerces,
+      masterOrderMap,
+      activeParentIds,
+      privateAreasM2Project,
+    );
 
     return {
       id: user.id,

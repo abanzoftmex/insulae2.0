@@ -6,7 +6,7 @@ import { GetModulesUseCase } from "@/modules/role/application/role.use-cases";
 import { RoleForm } from "../components/role-form";
 
 export default async function NewRolePage() {
-  await requirePageAccess(MODULES.ROLES);
+  await requirePageAccess(MODULES.ROLES, "canCreate");
 
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },

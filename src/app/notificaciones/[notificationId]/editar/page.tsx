@@ -11,7 +11,7 @@ interface EditarNotificacionPageProps {
 }
 
 export default async function EditarNotificacionPage({ params }: EditarNotificacionPageProps) {
-  await requirePageAccess(MODULES.NOTIFICACIONES);
+  await requirePageAccess(MODULES.NOTIFICACIONES, "canUpdate");
 
   const { notificationId } = await params;
   const formData = await getNotificationFormUseCase.execute(notificationId);

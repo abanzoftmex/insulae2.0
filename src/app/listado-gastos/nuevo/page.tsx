@@ -5,7 +5,7 @@ import { prisma } from "@/shared/infrastructure/db/prisma";
 import { ExpenseCreatePage } from "./expense-create-page";
 
 export default async function NewExpensePage() {
-  await requirePageAccess(MODULES.GASTOS);
+  await requirePageAccess(MODULES.GASTOS, "canCreate");
 
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },

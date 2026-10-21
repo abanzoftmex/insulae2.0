@@ -23,7 +23,9 @@ export interface CondominiumOverviewVM {
   footerLogoUrl: string;
   privacyNoticePdfUrl: string;
   footerLeft: string;
+  footerLeftTitle: string;
   footerRight: string;
+  footerRightTitle: string;
   activePrivateAreas: string;
   inactivePrivateAreas: string;
   realActiveParentAreas: number;
@@ -110,7 +112,9 @@ export function toCondominiumOverviewVM(overview: CondominiumOverview): Condomin
     footerLogoUrl: overview.footerLogoUrl ?? "",
     privacyNoticePdfUrl: overview.privacyNoticePdfUrl ?? "",
     footerLeft: overview.footerLeft ?? "Sin texto configurado",
+    footerLeftTitle: overview.footerLeftTitle?.trim() || "Pie de Recibos (Izquierdo)",
     footerRight: overview.footerRight ?? "Sin texto configurado",
+    footerRightTitle: overview.footerRightTitle?.trim() || "Pie de Recibos (Derecho)",
     activePrivateAreas: overview.activePrivateAreas.toLocaleString("es-MX"),
     inactivePrivateAreas: overview.inactivePrivateAreas.toLocaleString("es-MX"),
     realActiveParentAreas: overview.activePrivateAreas,

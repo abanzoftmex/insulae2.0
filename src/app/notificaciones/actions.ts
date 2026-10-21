@@ -23,7 +23,11 @@ export interface SaveNotificationActionInput {
 export async function saveNotificationAction(
   input: SaveNotificationActionInput,
 ): Promise<{ ok: boolean; message: string; notificationId?: string }> {
+  if (input.id) {
     await assertPermission(MODULES.NOTIFICACIONES, "canUpdate");
+  } else {
+    await assertPermission(MODULES.NOTIFICACIONES, "canCreate");
+  }
   const result = await saveNotificationUseCase.execute(input);
 
   if (result.ok) {

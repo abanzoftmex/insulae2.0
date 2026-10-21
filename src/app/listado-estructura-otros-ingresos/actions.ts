@@ -20,7 +20,16 @@ async function getFirstCondo() {
 
 export async function saveMiscIncomeCatalogAction(concepts: SaveMiscIncomeConcept[]) {
   try {
-    await assertPermission(MODULES.OTROS_INGRESOS, "canUpdate");
+    const hasNew = concepts.some((c) => !c.id);
+    const hasExisting = concepts.some((c) => Boolean(c.id));
+    if (hasNew && hasExisting) {
+      await assertPermission(MODULES.OTROS_INGRESOS, "canCreate");
+      await assertPermission(MODULES.OTROS_INGRESOS, "canUpdate");
+    } else if (hasNew) {
+      await assertPermission(MODULES.OTROS_INGRESOS, "canCreate");
+    } else {
+      await assertPermission(MODULES.OTROS_INGRESOS, "canUpdate");
+    }
     const condoId = await getFirstCondo();
     await saveMiscIncomeCatalogUseCase.execute(condoId, concepts);
     revalidatePath("/listado-estructura-otros-ingresos");

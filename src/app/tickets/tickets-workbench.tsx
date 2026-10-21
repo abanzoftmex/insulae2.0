@@ -97,9 +97,18 @@ interface TicketsWorkbenchProps {
   condominiumSlug: string;
   departments: { id: string; name: string }[];
   privateAreas: { id: string; name: string }[];
+  canCreate?: boolean;
+  canUpdate?: boolean;
 }
 
-export function TicketsWorkbench({ initialRows, condominiumSlug, departments, privateAreas }: TicketsWorkbenchProps) {
+export function TicketsWorkbench({ 
+  initialRows, 
+  condominiumSlug, 
+  departments, 
+  privateAreas,
+  canCreate = true,
+  canUpdate = true,
+}: TicketsWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   
@@ -258,7 +267,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug, departments, pr
   };
 
   const handleSave = () => {
-    if (!formData) return;
+    if (!formData || !canUpdate) return;
     startTransition(async () => {
       let finalPdfUrl = responsePdfUrl;
       
@@ -300,6 +309,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug, departments, pr
   };
 
   const handleCreateSave = () => {
+    if (!canCreate) return;
     if (!createData.title) {
       alert("El título es obligatorio");
       return;
@@ -362,7 +372,7 @@ export function TicketsWorkbench({ initialRows, condominiumSlug, departments, pr
           className="h-8 px-4 text-[10px] font-bold uppercase gap-1.5 rounded-full shadow-md shadow-brand-deep/25"
         >
           <MessageSquare className="h-3.5 w-3.5" />
-          Atender
+          {canUpdate ? "Atender" : "Ver Detalle"}
         </Button>
       )
     }
@@ -387,8 +397,8 @@ export function TicketsWorkbench({ initialRows, condominiumSlug, departments, pr
         data={filteredRows}
         columns={columns}
         onSearch={setSearch}
-        onAdd={() => setIsCreateOpen(true)}
-        addLabel="Nuevo Ticket"
+        onAdd={canCreate ? () => setIsCreateOpen(true) : undefined}
+        addLabel={canCreate ? "Nuevo Ticket" : undefined}
       />
 
       <Modal
@@ -399,14 +409,18 @@ export function TicketsWorkbench({ initialRows, condominiumSlug, departments, pr
         footer={
           formData && !isLoadingForm && (
             <>
-              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">Cancelar</Button>
-              <Button 
-                disabled={isPending || !!uploading || !response} 
-                onClick={handleSave}
-                className="h-8 px-6 text-[10px] font-bold uppercase"
-              >
-                {isPending || uploading === 'pdf' ? "Guardando y Generando PDF..." : "Guardar Respuesta"}
+              <Button variant="ghost" onClick={() => setIsModalOpen(false)} className="h-8 text-[10px] font-bold uppercase">
+                {canUpdate ? "Cancelar" : "Cerrar"}
               </Button>
+              {canUpdate && (
+                <Button 
+                  disabled={isPending || !!uploading || !response} 
+                  onClick={handleSave}
+                  className="h-8 px-6 text-[10px] font-bold uppercase"
+                >
+                  {isPending || uploading === 'pdf' ? "Guardando y Generando PDF..." : "Guardar Respuesta"}
+                </Button>
+              )}
             </>
           )
         }

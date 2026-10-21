@@ -8,6 +8,8 @@ import {
 import { DirectoryForm } from "./directory-form";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export const metadata: Metadata = {
   title: "Expediente Maestro | Insulae 2.0",
   description: "Gestión centralizada de perfiles y expedientes del condominio.",
@@ -51,6 +53,9 @@ function isUuidReference(reference: string): boolean {
 
 export default async function DirectorioFormularioPage({ params, searchParams }: PageProps) {
   await requirePageAccess(MODULES.DIRECTORIO);
+  const permissions = await getUserPermissions();
+  const canUpdate = hasPermission(permissions, MODULES.DIRECTORIO, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.DIRECTORIO, "canDelete");
 
   const [{ reference }, rawSearchParams] = await Promise.all([params, searchParams]);
   const query = pickParam(rawSearchParams?.q).trim();
@@ -92,6 +97,8 @@ export default async function DirectorioFormularioPage({ params, searchParams }:
         initialData={detail}
         roleOptions={roles}
         backHref={backHref}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
       />
     </div>
   );

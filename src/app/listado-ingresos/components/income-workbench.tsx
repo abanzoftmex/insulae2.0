@@ -37,6 +37,9 @@ interface IncomeWorkbenchProps {
   areas: AreaItem[];
   condominiumSlug: string;
   projectId: string;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
@@ -86,7 +89,10 @@ export function IncomeWorkbench({
   chargeGroups,
   areas,
   condominiumSlug,
-  projectId
+  projectId,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
 }: IncomeWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
@@ -198,6 +204,7 @@ export function IncomeWorkbench({
   };
 
   const handleSave = () => {
+    if (editingId ? !canUpdate : !canCreate) return;
     startTransition(async () => {
       let areaIdToUse = formAreaId;
       if (!areaIdToUse && areaSearch.trim()) {
@@ -235,6 +242,7 @@ export function IncomeWorkbench({
   };
 
   const handleDelete = (id: string) => {
+    if (!canDelete) return;
     if (!confirm("¿Eliminar este ingreso?")) return;
     startTransition(async () => {
       const res = await deleteIncomeAction(id);
@@ -396,20 +404,27 @@ export function IncomeWorkbench({
       align: "right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => openEditModal(row)}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-            title="Editar"
-          >
-            <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
-            title="Eliminar"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => openEditModal(row)}
+              className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+              title="Editar"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => handleDelete(row.id)}
+              className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+              title="Eliminar"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {!canUpdate && !canDelete && (
+            <span className="text-[10px] text-ink-soft/40 italic">Solo lectura</span>
+          )}
         </div>
       )
     }
@@ -443,12 +458,16 @@ export function IncomeWorkbench({
           >
             <FileDown className="h-3 w-3 mr-1" /> Exportar
           </button>
-          <Link href="/listado-ingresos/plantilla" className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard">
-            <FileDown className="h-3 w-3 mr-1" /> Plantilla
-          </Link>
-          <Link href="/listado-ingresos/importar" className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard">
-            <Upload className="h-3 w-3 mr-1" /> Importar
-          </Link>
+          {canCreate && (
+            <>
+              <Link href="/listado-ingresos/plantilla" className="h-7 px-3 flex items-center justify-center rounded-pill border border-line text-ink-soft text-[9px] font-bold uppercase hover:bg-canvas transition-standard">
+                <FileDown className="h-3 w-3 mr-1" /> Plantilla
+              </Link>
+              <Link href="/listado-ingresos/importar" className="h-7 px-3 flex items-center justify-center rounded-pill border border-brand-accent text-brand-accent text-[9px] font-bold uppercase cursor-pointer hover:bg-brand-accent/5 transition-standard">
+                <Upload className="h-3 w-3 mr-1" /> Importar
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
@@ -458,8 +477,8 @@ export function IncomeWorkbench({
         data={filteredIncomes}
         columns={columns}
         onSearch={setSearch}
-        onAdd={openAddModal}
-        addLabel="Nuevo Ingreso"
+        onAdd={canCreate ? openAddModal : undefined}
+        addLabel={canCreate ? "Nuevo Ingreso" : undefined}
       />
 
       <Modal

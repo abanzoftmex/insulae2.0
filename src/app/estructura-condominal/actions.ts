@@ -29,7 +29,11 @@ export async function saveCondominiumOrganigramAction(
 export async function saveCondominiumStructureAction(
   input: SaveCondominiumStructureInput,
 ): Promise<{ ok: boolean; message: string; groupId?: string }> {
+  if (input.id) {
     await assertPermission(MODULES.ESTRUCTURA_CONDOMINAL, "canUpdate");
+  } else {
+    await assertPermission(MODULES.ESTRUCTURA_CONDOMINAL, "canCreate");
+  }
   const result = await saveCondominiumStructureUseCase.execute(input);
 
   if (result.ok) {

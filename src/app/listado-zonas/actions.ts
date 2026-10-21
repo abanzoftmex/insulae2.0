@@ -10,6 +10,7 @@ export interface SaveZoneActionInput {
   id?: string;
   name: string;
   initials?: string;
+  order?: number | null;
 }
 
 export async function getZoneFormDataAction(id: string) {
@@ -20,11 +21,16 @@ export async function getZoneFormDataAction(id: string) {
 export async function saveZoneAction(
   input: SaveZoneActionInput,
 ): Promise<{ ok: boolean; message: string; zoneId?: string }> {
+  if (input.id) {
     await assertPermission(MODULES.BARRIOS, "canUpdate");
+  } else {
+    await assertPermission(MODULES.BARRIOS, "canCreate");
+  }
   const response = await saveZoneUseCase.execute({
     id: input.id,
     name: input.name,
     initials: input.initials,
+    order: input.order,
   });
 
   if (response.ok) {

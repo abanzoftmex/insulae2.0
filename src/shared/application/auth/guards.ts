@@ -34,12 +34,15 @@ export class PermissionDeniedError extends Error {
   }
 }
 
-export async function requirePageAccess(module: ModuleName | readonly ModuleName[]): Promise<void> {
+export async function requirePageAccess(
+  module: ModuleName | readonly ModuleName[],
+  action: PermissionAction = "canRead",
+): Promise<void> {
   const session = await readAdminSession();
   if (!session) redirect("/login");
 
   const permissions = await getUserPermissions();
-  if (!hasPermission(permissions, module, "canRead")) {
+  if (!hasPermission(permissions, module, action)) {
     const label = Array.isArray(module) ? module[0] : String(module);
     redirect(`/acceso-denegado?modulo=${encodeURIComponent(label)}`);
   }

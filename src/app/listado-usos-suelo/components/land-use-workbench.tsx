@@ -21,7 +21,17 @@ import { StatCard } from "@/components/ui/stat-card";
 import { RowActions } from "@/components/ui/row-actions";
 import { cn } from "@/shared/utils/cn";
 
-export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM }) {
+export function LandUseWorkbench({ 
+  initialVm,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: { 
+  initialVm: LandUseListingVM;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
+}) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
 
@@ -44,6 +54,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
   }, [initialVm.rows, search]);
 
   const openAddModal = () => {
+    if (!canCreate) return;
     setEditingId(null);
     setFormName("");
     setFormInitials("");
@@ -59,6 +70,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
   };
 
   const openEditModal = async (id: string) => {
+    if (!canUpdate) return;
     setEditingId(id);
     setIsLoadingForm(true);
     setIsModalOpen(true);
@@ -107,6 +119,7 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
   };
 
   const handleDelete = (id: string) => {
+    if (!canDelete) return;
     if (window.confirm("¿Estás seguro de que deseas eliminar este uso de suelo? Ten en cuenta que si tiene unidades asignadas o se está utilizando en alguna fórmula, podría afectar cálculos posteriores. ¿Deseas continuar?")) {
       startTransition(async () => {
         const res = await deleteLandUseAction(id);
@@ -136,9 +149,11 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
           <div className="flex-1 max-w-xs">
             <Input label="Buscar Uso" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Nombre o iniciales..." className="h-9" />
           </div>
-          <Button onClick={openAddModal} className="h-9 px-6 text-[10px] font-bold uppercase gap-2">
-            <Plus className="h-4 w-4" /> Nuevo Uso
-          </Button>
+          {canCreate && (
+            <Button onClick={openAddModal} className="h-9 px-6 text-[10px] font-bold uppercase gap-2">
+              <Plus className="h-4 w-4" /> Nuevo Uso
+            </Button>
+          )}
         </div>
       </div>
 
@@ -185,7 +200,10 @@ export function LandUseWorkbench({ initialVm }: { initialVm: LandUseListingVM })
                       );
                     })}
                     <td className="px-4 py-3 text-right border-l border-black/10">
-                      <RowActions onEdit={() => openEditModal(row.id)} onDelete={() => handleDelete(row.id)} />
+                      <RowActions 
+                        onEdit={canUpdate ? () => openEditModal(row.id) : undefined} 
+                        onDelete={canDelete ? () => handleDelete(row.id) : undefined} 
+                      />
                     </td>
                   </tr>
                 ))}

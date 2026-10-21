@@ -65,6 +65,7 @@ export class PrismaZoneFormRepository implements ZoneFormRepository {
         id: true,
         name: true,
         initials: true,
+        order: true,
       },
     });
 
@@ -76,6 +77,7 @@ export class PrismaZoneFormRepository implements ZoneFormRepository {
       id: zone.id,
       name: zone.name,
       initials: zone.initials,
+      order: zone.order ?? null,
     };
   }
 
@@ -141,12 +143,17 @@ export class PrismaZoneFormRepository implements ZoneFormRepository {
         };
       }
 
+      const dataToUpdate: { name: string; initials: string; order?: number | null } = {
+        name,
+        initials,
+      };
+      if (input.order !== undefined) {
+        dataToUpdate.order = input.order;
+      }
+
       await prisma.zoneCatalog.update({
         where: { id: zoneId },
-        data: {
-          name,
-          initials,
-        },
+        data: dataToUpdate,
       });
 
       const userName = await getCurrentUser();
@@ -190,6 +197,7 @@ export class PrismaZoneFormRepository implements ZoneFormRepository {
         condominiumId,
         name,
         initials,
+        order: input.order !== undefined ? input.order : null,
         isActive: true,
       },
       select: {

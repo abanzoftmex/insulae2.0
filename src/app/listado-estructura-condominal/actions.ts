@@ -24,7 +24,11 @@ export interface SaveCondominiumStructureActionInput {
 export async function saveCondominiumStructureAction(
   input: SaveCondominiumStructureActionInput,
 ): Promise<{ ok: boolean; message: string; groupId?: string }> {
+  if (input.id) {
     await assertPermission(MODULES.ESTRUCTURA_CONDOMINAL, "canUpdate");
+  } else {
+    await assertPermission(MODULES.ESTRUCTURA_CONDOMINAL, "canCreate");
+  }
   const response = await saveCondominiumStructureUseCase.execute({
     id: input.id,
     name: input.name,

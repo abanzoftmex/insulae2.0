@@ -22,9 +22,17 @@ import { Input, Textarea } from "@/components/ui/input";
 
 interface WorkbenchProps {
   initialSanctions: Sanction[];
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
-export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
+export function SanctionWorkbench({ 
+  initialSanctions,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: WorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   
@@ -44,6 +52,7 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
   }, [initialSanctions, search]);
 
   const openAddModal = () => {
+    if (!canCreate) return;
     setEditingId(null);
     setFormName("");
     setFormArticle("");
@@ -51,6 +60,7 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
   };
 
   const openEditModal = (sanction: Sanction) => {
+    if (!canUpdate) return;
     setEditingId(sanction.id);
     setFormName(sanction.name);
     setFormArticle(sanction.article || "");
@@ -74,7 +84,9 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
   };
 
   const handleDelete = (id: string) => {
+    if (!canDelete) return;
     if (!confirm("¿Eliminar este tipo de sanción?")) return;
+
     startTransition(async () => {
       const res = await deleteSanctionAction(id);
       if (res.success) window.location.reload();
@@ -113,12 +125,19 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
       align: "right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
-          <button onClick={() => openEditModal(row)} className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors">
-            <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          <button onClick={() => handleDelete(row.id)} disabled={isPending} className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors disabled:opacity-40">
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {canUpdate && (
+            <button onClick={() => openEditModal(row)} className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors" title="Editar">
+              <Edit2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {canDelete && (
+            <button onClick={() => handleDelete(row.id)} disabled={isPending} className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors disabled:opacity-40" title="Eliminar">
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {!canUpdate && !canDelete && (
+            <span className="text-[11px] text-ink-soft/40 italic">Solo lectura</span>
+          )}
         </div>
       )
     }
@@ -136,8 +155,8 @@ export function SanctionWorkbench({ initialSanctions }: WorkbenchProps) {
         data={filteredSanctions}
         columns={columns}
         onSearch={setSearch}
-        onAdd={openAddModal}
-        addLabel="Nueva Sanción"
+        onAdd={canCreate ? openAddModal : undefined}
+        addLabel={canCreate ? "Nueva Sanción" : undefined}
       />
 
       <div className="p-4 bg-canvas/40 border border-line/30 rounded-md mt-4 flex gap-3">

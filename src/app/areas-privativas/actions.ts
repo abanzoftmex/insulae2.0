@@ -144,6 +144,9 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
     } else {
       resolvedZone = null;
     }
+  } else if (formData.has("zone")) {
+    const rawZone = toString(formData.get("zone"));
+    resolvedZone = rawZone.length > 0 ? rawZone : null;
   }
 
   let resolvedUseType: string | null | undefined;
@@ -162,6 +165,8 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
     } else {
       resolvedUseType = null;
     }
+  } else if (formData.has("useType")) {
+    resolvedUseType = useType.length > 0 ? useType : null;
   }
 
   let parentPrivateAreaId: string | null | undefined;
@@ -215,22 +220,20 @@ export async function updatePrivateAreaSnapshotAction(formData: FormData): Promi
     data: {
       ...(formData.has("name") ? { name: name.length > 0 ? name : privateArea.name } : {}),
       ...(formData.has("level") ? { level: level.length > 0 ? level : null } : {}),
-      ...(m2Updated !== null ? { m2Apole: m2Updated } : {}),
+      ...(formData.has("m2Updated") && m2Updated !== null ? { m2Apole: m2Updated } : {}),
       ...(formData.has("m2Original") && m2Original !== null ? { m2Original } : {}),
-      ...(indiviso !== null ? { indiviso } : {}),
+      ...(formData.has("indiviso") && indiviso !== null ? { indiviso } : {}),
       ...(formData.has("sortOrder") && sortOrder !== null ? { sortOrder } : {}),
       ...(resolvedZone !== undefined ? { zone: resolvedZone } : {}),
-      ...(resolvedUseType !== undefined
-        ? { useType: resolvedUseType }
-        : { useType: useType.length > 0 ? useType : null }),
+      ...(resolvedUseType !== undefined ? { useType: resolvedUseType } : {}),
       ...(status !== undefined ? { status } : {}),
       ...parentPrivateAreaUpdate,
       ...(formData.has("isFusion") ? { isFusion } : {}),
-      ...(m2Construction !== null ? { m2Construction } : {}),
-      ...(formData.has("m2ConstructionCommonArea") ? { m2ConstructionCommonArea } : {}),
-      m2CommonArea: calculatedM2CommonArea,
-      ...(m2ConstructionChildren !== null ? { m2ConstructionChildren } : {}),
-      ...(m2CommonAreaChildren !== null ? { m2CommonAreaChildren } : {}),
+      ...(formData.has("m2Construction") && m2Construction !== null ? { m2Construction } : {}),
+      ...(formData.has("m2ConstructionCommonArea") && m2ConstructionCommonArea !== null ? { m2ConstructionCommonArea } : {}),
+      ...(formData.has("m2Updated") || formData.has("parentPrivateAreaId") ? { m2CommonArea: calculatedM2CommonArea } : {}),
+      ...(formData.has("m2ConstructionChildren") && m2ConstructionChildren !== null ? { m2ConstructionChildren } : {}),
+      ...(formData.has("m2CommonAreaChildren") && m2CommonAreaChildren !== null ? { m2CommonAreaChildren } : {}),
       ...(vccc !== null ? { vccc } : {}),
       ...(formData.has("lucaPropertyCode") ? { lucaPropertyCode: lucaPropertyCode.length > 0 ? lucaPropertyCode : null } : {}),
       updatedBy: userName,
@@ -390,6 +393,24 @@ export async function createPrivateAreaRentalAction(formData: FormData): Promise
   revalidatePath("/areas-privativas/listado-arrendamientos");
 }
 
+export async function deletePrivateAreaRentalAction(formData: FormData): Promise<void> {
+  await assertPermission(MODULES.AREAS_PRIVATIVAS, "canDelete");
+  const privateAreaId = toString(formData.get("privateAreaId"));
+  const rentalId = toString(formData.get("rentalId"));
+
+  if (!privateAreaId || !rentalId) {
+    return;
+  }
+
+  await prisma.rental.delete({
+    where: { id: rentalId },
+  });
+
+  revalidatePath("/areas-privativas");
+  revalidatePath("/areas-privativas/listado-arrendamientos");
+  await revalidatePrivateAreaFormPath(privateAreaId);
+}
+
 function roleBucketToRoleName(roleBucket: string): string {
   if (roleBucket === "LEGAL") {
     return "Propietario legal";
@@ -465,7 +486,7 @@ export async function addPrivateAreaAssignmentAction(formData: FormData): Promis
 }
 
 export async function removePrivateAreaAssignmentAction(formData: FormData): Promise<void> {
-    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
+  await assertPermission(MODULES.AREAS_PRIVATIVAS, "canDelete");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const assignmentId = toString(formData.get("assignmentId"));
 
@@ -607,7 +628,7 @@ export async function setPrivateAreaRentalTenantAction(formData: FormData): Prom
 }
 
 export async function createPrivateAreaChargeAction(formData: FormData): Promise<void> {
-    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canCreate");
+  await assertPermission(MODULES.COBROS, "canCreate");
   const privateAreaId = toString(formData.get("privateAreaId"));
   const chargeGroupId = toString(formData.get("chargeGroupId"));
   const amount = toNumber(formData.get("amount"));
@@ -672,7 +693,7 @@ export async function createPrivateAreaChargeAction(formData: FormData): Promise
   revalidatePath("/reporte-cuotas-extraordinarias");
 }
 export async function updatePrivateAreaChargeAction(formData: FormData): Promise<void> {
-    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
+  await assertPermission(MODULES.COBROS, "canUpdate");
   const chargeId = toString(formData.get("chargeId"));
   const chargeGroupId = toString(formData.get("chargeGroupId"));
   const amount = toNumber(formData.get("amount"));
@@ -710,7 +731,7 @@ export async function updatePrivateAreaChargeAction(formData: FormData): Promise
 }
 
 export async function deletePrivateAreaChargeAction(chargeId: string): Promise<void> {
-    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canDelete");
+  await assertPermission(MODULES.COBROS, "canDelete");
   if (!chargeId) return;
   
   await prisma.charge.delete({
@@ -723,12 +744,192 @@ export async function deletePrivateAreaChargeAction(chargeId: string): Promise<v
   revalidatePath("/reporte-cuotas-extraordinarias");
 }
 
-export async function sendPrivateAreaStatementEmailAction(privateAreaId: string, opc: string): Promise<void> {
-    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canRead");
-  // TODO: Implement actual email sending logic via Resend / NodeMailer / Sendgrid.
-  // For now, this is a placeholder that simulates a successful email send.
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  console.log(`Email sent for private area ${privateAreaId} with opc ${opc}`);
+function resolveUserEffectiveEmail(
+  user?: {
+    email?: string | null;
+    personalEmail?: string | null;
+    businessEmail?: string | null;
+  } | null
+): string | null {
+  if (!user) return null;
+  const candidates = [user.email, user.personalEmail, user.businessEmail];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string") {
+      const trimmed = candidate.trim();
+      if (trimmed.length > 0 && trimmed.includes("@")) {
+        return trimmed;
+      }
+    }
+  }
+  return null;
+}
+
+function getEffectiveSenderEmail(condominiumName?: string | null): string {
+  const customSender = process.env.ADMIN_MAIL_FROM?.trim();
+  if (customSender && customSender.length > 0) {
+    return customSender;
+  }
+
+  const name =
+    condominiumName && condominiumName.trim().length > 0
+      ? condominiumName.trim()
+      : PROJECT_SCOPE.condominiumName;
+
+  return `Condominio ${name} <soporte@insulae.sistemasabanza.com>`;
+}
+
+export type SendStatementEmailResult = {
+  success: boolean;
+  message: string;
+};
+
+export async function sendPrivateAreaStatementEmailAction(
+  privateAreaId: string,
+  opc: string,
+  customRecipientEmail?: string | null
+): Promise<SendStatementEmailResult> {
+  await assertPermission(MODULES.AREAS_PRIVATIVAS, "canRead");
+
+  const area = await prisma.privateArea.findUnique({
+    where: { id: privateAreaId },
+    include: {
+      condominium: { select: { name: true, slug: true } },
+      assignments: {
+        where: { isActive: true },
+        include: { user: true },
+      },
+      childPrivateAreas: {
+        where: { isActive: true },
+        select: {
+          assignments: {
+            where: { isActive: true },
+            include: { user: true },
+          },
+        },
+      },
+      rentals: {
+        orderBy: [{ startsAt: { sort: "desc", nulls: "last" } }, { id: "desc" }],
+        include: { administrativeContactUser: true },
+      },
+    },
+  });
+
+  if (!area) {
+    return { success: false, message: "Área privativa no encontrada." };
+  }
+
+  // Resolve recipient email
+  let recipientEmail: string | null = null;
+  let recipientName: string = area.name;
+
+  // En Insulae 2.0: opc=1 es Comercio, opc=2 es Propietario
+  if (opc === "1") {
+    const activeRental = area.rentals.find((r) => r.administrativeContactUser != null) ?? area.rentals[0];
+    if (activeRental?.administrativeContactUser) {
+      recipientEmail = resolveUserEffectiveEmail(activeRental.administrativeContactUser);
+      recipientName =
+        [
+          activeRental.administrativeContactUser.firstName,
+          activeRental.administrativeContactUser.lastName,
+        ]
+          .filter(Boolean)
+          .join(" ") ||
+        activeRental.administrativeContactUser.businessName ||
+        activeRental.tenantName ||
+        area.name;
+    }
+  } else {
+    const allAssignments = [
+      ...area.assignments,
+      ...area.childPrivateAreas.flatMap((c) => c.assignments),
+    ];
+
+    const ownerAssignment =
+      allAssignments.find((a) =>
+        ((a.roleName || "").toLowerCase().includes("propietario") ||
+         (a.roleName || "").toLowerCase().includes("dueño")) &&
+        Boolean(resolveUserEffectiveEmail(a.user))
+      ) ??
+      allAssignments.find((a) =>
+        (a.roleName || "").toLowerCase().includes("propietario") ||
+        (a.roleName || "").toLowerCase().includes("dueño")
+      ) ??
+      allAssignments.find((a) =>
+        (a.roleName || "").toLowerCase().includes("administrador")
+      ) ??
+      allAssignments[0];
+
+    if (ownerAssignment?.user) {
+      recipientEmail = resolveUserEffectiveEmail(ownerAssignment.user);
+      recipientName =
+        [
+          ownerAssignment.user.firstName,
+          ownerAssignment.user.lastName,
+        ]
+          .filter(Boolean)
+          .join(" ") ||
+        ownerAssignment.user.businessName ||
+        area.name;
+    }
+  }
+
+  // Si se proporcionó un destinatario temporal para este envío puntual, se usa exclusivamente
+  // en el envío actual. Regla crítica: NUNCA se persiste en la entidad del área privativa ni en el usuario.
+  if (customRecipientEmail && typeof customRecipientEmail === "string") {
+    const cleanCustomEmail = customRecipientEmail.trim();
+    if (cleanCustomEmail.length > 0) {
+      recipientEmail = cleanCustomEmail;
+    }
+  }
+
+  if (!recipientEmail || !recipientEmail.includes("@")) {
+    return {
+      success: false,
+      message: "El área o destinatario no cuenta con una dirección de correo válida para el envío.",
+    };
+  }
+
+  const senderEmail = getEffectiveSenderEmail(area.condominium?.name);
+  if (!senderEmail || !senderEmail.includes("@")) {
+    return {
+      success: false,
+      message: "No existe una configuración efectiva de remitente institucional.",
+    };
+  }
+
+  const resendApiKey = process.env.RESEND_API_KEY;
+  if (!resendApiKey) {
+    return {
+      success: false,
+      message: "El servicio de correo no está configurado (falta la variable RESEND_API_KEY en el entorno).",
+    };
+  }
+
+  try {
+    const { Resend } = await import("resend");
+    const resend = new Resend(resendApiKey);
+
+    const condoName = area.condominium?.name || PROJECT_SCOPE.condominiumName;
+    const subject = `Estado de cuenta - ${area.name} (${condoName})`;
+
+    await resend.emails.send({
+      from: senderEmail,
+      to: recipientEmail,
+      subject,
+      html: `<p>Estimado(a) <strong>${recipientName}</strong>,</p><p>Adjuntamos la notificación de su estado de cuenta correspondiente al área privativa <strong>${area.name}</strong>.</p><p>Atentamente,<br/>Administración del Condominio ${condoName}</p>`,
+    });
+
+    return {
+      success: true,
+      message: `Estado de cuenta enviado exitosamente a ${recipientEmail}.`,
+    };
+  } catch (error: any) {
+    console.error("[sendPrivateAreaStatementEmailAction] Error sending email:", error);
+    return {
+      success: false,
+      message: `Error al enviar correo: ${error?.message || "Fallo en el servicio de correo."}`,
+    };
+  }
 }
 
 export async function createPrivateAreaAction(formData: FormData): Promise<void> {
@@ -1242,7 +1443,7 @@ export async function deletePrivateAreaImageAction(input: {
   privateAreaId: string;
   slotIndex: number;
 }): Promise<void> {
-    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canUpdate");
+  await assertPermission(MODULES.AREAS_PRIVATIVAS, "canDelete");
   await prisma.privateAreaImage.delete({
     where: {
       privateAreaId_slotIndex: {

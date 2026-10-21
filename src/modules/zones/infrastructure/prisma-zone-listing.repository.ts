@@ -42,6 +42,7 @@ export class PrismaZoneListingRepository implements ZoneListingRepository {
           id: true,
           name: true,
           initials: true,
+          order: true,
         },
         orderBy: [{ name: "asc" }, { initials: "asc" }],
       }),
@@ -67,21 +68,43 @@ export class PrismaZoneListingRepository implements ZoneListingRepository {
       subzoneCountByZoneId.set(subzone.zoneId, current + 1);
     }
 
+    const mappedZones = zones.map((zone) => {
+      const activeSubzonesCount = subzoneCountByZoneId.get(zone.id) ?? 0;
+
+      return {
+        id: zone.id,
+        name: zone.name,
+        initials: zone.initials,
+        order: zone.order ?? null,
+        activeSubzones: activeSubzonesCount,
+        canDelete: activeSubzonesCount === 0,
+      };
+    });
+
+    mappedZones.sort((a, b) => {
+      const aHasOrder = a.order !== null && a.order !== undefined;
+      const bHasOrder = b.order !== null && b.order !== undefined;
+
+      if (aHasOrder && bHasOrder) {
+        if (a.order !== b.order) {
+          return (a.order as number) - (b.order as number);
+        }
+      } else if (aHasOrder) {
+        return -1;
+      } else if (bHasOrder) {
+        return 1;
+      }
+
+      const nameComp = a.name.localeCompare(b.name, "es");
+      if (nameComp !== 0) return nameComp;
+      return (a.initials ?? "").localeCompare(b.initials ?? "", "es");
+    });
+
     return {
       condominiumId: condominium.id,
       condominiumSlug: condominium.slug,
       condominiumName: condominium.name,
-      zones: zones.map((zone) => {
-        const activeSubzonesCount = subzoneCountByZoneId.get(zone.id) ?? 0;
-
-        return {
-          id: zone.id,
-          name: zone.name,
-          initials: zone.initials,
-          activeSubzones: activeSubzonesCount,
-          canDelete: activeSubzonesCount === 0,
-        };
-      }),
+      zones: mappedZones,
     };
   }
 }

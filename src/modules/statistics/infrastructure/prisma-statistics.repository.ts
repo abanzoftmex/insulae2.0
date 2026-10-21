@@ -35,6 +35,24 @@ export function classifyUseType(useType: string | null): AreaCategory {
   return "Sin clasificar";
 }
 
+/**
+ * Determina si un uso de suelo es válido y registrado.
+ * Excluye null, undefined, cadenas vacías o con puros espacios, y placeholders de ausencia de uso.
+ */
+export function hasValidUseType(useType: string | null | undefined): boolean {
+  if (!useType) return false;
+  const trimmed = useType.trim();
+  if (trimmed.length === 0) return false;
+  if (
+    trimmed === "Sin uso asignado" ||
+    trimmed === "Sin uso de suelo" ||
+    trimmed === "Sin clasificar"
+  ) {
+    return false;
+  }
+  return true;
+}
+
 function toNameCounts(map: Map<string, number>, sortDesc = true): NameCount[] {
   const rows = [...map.entries()].map(([name, value]) => ({ name, value }));
   if (sortDesc) rows.sort((a, b) => b.value - a.value || a.name.localeCompare(b.name));
@@ -125,7 +143,7 @@ class PrismaStatisticsRepository implements StatisticsRepository {
 
     // Dimensiones disponibles (a partir de la data real)
     const availableZones = [...new Set(areas.map((a) => a.zone).filter((z): z is string => !!z))].sort();
-    const availableUseTypes = [...new Set(areas.map((a) => a.useType).filter((u): u is string => !!u))].sort();
+    const availableUseTypes = [...new Set(areas.map((a) => a.useType).filter((u): u is string => hasValidUseType(u)))].sort();
 
     // Conjunto de áreas dentro del filtro
     const filteredAreas = areas.filter(
@@ -133,6 +151,10 @@ class PrismaStatisticsRepository implements StatisticsRepository {
     );
     const areaIds = new Set(filteredAreas.map((a) => a.id));
     const zoneByAreaId = new Map(areas.map((a) => [a.id, a.zone] as const));
+
+    // Inmuebles elegibles: áreas activas con useType válido (excluye null, vacíos y ausencia de tipo)
+    const eligibleAreas = filteredAreas.filter((a) => hasValidUseType(a.useType));
+    const eligibleAreaIds = new Set(eligibleAreas.map((a) => a.id));
 
     // ---- Inmuebles ----
     const byZone = new Map<string, number>();
@@ -143,11 +165,11 @@ class PrismaStatisticsRepository implements StatisticsRepository {
     let parents = 0;
     let built = 0;
     let totalBuiltM2 = 0;
-    for (const area of filteredAreas) {
+    for (const area of eligibleAreas) {
       const zoneName = area.zone ?? "Sin barrio";
       const category = classifyUseType(area.useType);
       bump(byZone, zoneName);
-      bump(byUseType, area.useType ?? "Sin uso asignado");
+      bump(byUseType, area.useType!.trim());
       bump(byCategory, category);
       if (!matrixByZone.has(zoneName)) matrixByZone.set(zoneName, new Map());
       bump(matrixByZone.get(zoneName)!, category);
@@ -159,7 +181,7 @@ class PrismaStatisticsRepository implements StatisticsRepository {
         bump(builtM2ByZone, zoneName, Math.round(m2));
       }
     }
-    const categoryOrder = ["Habitacional", "Comercial / Servicios", "Lote / Suelo", "Sin clasificar"].filter(
+    const categoryOrder = ["Habitacional", "Comercial / Servicios", "Lote / Suelo"].filter(
       (name) => (byCategory.get(name) ?? 0) > 0,
     );
 
@@ -348,13 +370,13 @@ class PrismaStatisticsRepository implements StatisticsRepository {
       bump(ticketsByStatus, ticketStatusLabels[ticket.status] ?? ticket.status);
     }
 
-    const occupied = [...occupiedAreaIds].filter((id) => areaIds.has(id)).length;
-    const totalFiltered = filteredAreas.length;
+    const occupied = [...occupiedAreaIds].filter((id) => eligibleAreaIds.has(id)).length;
+    const totalFiltered = eligibleAreas.length;
 
     // Ocupación desglosada por barrio (para la barra apilada)
     const occupancyByZone = [...byZone.entries()]
       .map(([zone]) => {
-        const zoneAreas = filteredAreas.filter((a) => (a.zone ?? "Sin barrio") === zone);
+        const zoneAreas = eligibleAreas.filter((a) => (a.zone ?? "Sin barrio") === zone);
         const zoneOccupied = zoneAreas.filter((a) => occupiedAreaIds.has(a.id)).length;
         return {
           zone,
@@ -422,7 +444,7 @@ class PrismaStatisticsRepository implements StatisticsRepository {
       areasByUseType: toNameCounts(byUseType),
       areasByUseTypeCategorized: toNameCounts(byUseType).map((row) => ({
         ...row,
-        category: row.name === "Sin uso asignado" ? "Sin clasificar" : classifyUseType(row.name),
+        category: classifyUseType(row.name),
       })),
       areasByCategory: toNameCounts(byCategory),
       zoneCategoryMatrix: [...matrixByZone.entries()]

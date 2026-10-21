@@ -18,7 +18,9 @@ export interface CondominiumOverview {
   footerLogoUrl: string | null;
   privacyNoticePdfUrl: string | null;
   footerLeft: string | null;
+  footerLeftTitle: string | null;
   footerRight: string | null;
+  footerRightTitle: string | null;
   developedBy: string | null;
   usesLandUseFormula: boolean;
   hasVccc: boolean;

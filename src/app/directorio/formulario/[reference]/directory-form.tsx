@@ -40,6 +40,8 @@ interface DirectoryFormProps {
   initialData: DirectoryContactParticipation;
   roleOptions: Array<{ id: string; name: string }>;
   backHref: string;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 export function DirectoryForm({
@@ -48,6 +50,8 @@ export function DirectoryForm({
   initialData,
   roleOptions,
   backHref,
+  canUpdate = true,
+  canDelete = true,
 }: DirectoryFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -172,6 +176,7 @@ export function DirectoryForm({
   };
 
   const handleSave = () => {
+    if (!canUpdate) return;
     setMessage(null);
     startTransition(async () => {
       const result = await saveDirectoryContactAction(reference, {
@@ -192,6 +197,7 @@ export function DirectoryForm({
   };
 
   const handleUpdatePassword = () => {
+    if (!canUpdate) return;
     if (!password) {
       setMessage({ type: "error", text: "La contraseña no puede estar vacía." });
       return;
@@ -214,6 +220,7 @@ export function DirectoryForm({
   };
 
   const handleGenerateTempPassword = () => {
+    if (!canUpdate) return;
     setMessage(null);
     startPasswordTransition(async () => {
       const result = await generateTemporaryPasswordAction(reference);
@@ -260,19 +267,26 @@ export function DirectoryForm({
           </div>
         </div>
         <div className="flex items-center gap-3 shrink-0">
+          {!canUpdate && (
+            <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
+              Modo sólo lectura
+            </span>
+          )}
           <a
             href={backHref}
             className="flex items-center gap-2 h-9 px-6 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink hover:bg-canvas transition-colors"
           >
-            Cancelar
+            {canUpdate ? "Cancelar" : "Volver"}
           </a>
-          <button
-            onClick={handleSave}
-            disabled={isPending || isUploading}
-            className="flex items-center gap-2 h-9 px-6 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors disabled:opacity-50"
-          >
-            {isPending ? "Guardando..." : "Guardar cambios"}
-          </button>
+          {canUpdate && (
+            <button
+              onClick={handleSave}
+              disabled={isPending || isUploading}
+              className="flex items-center gap-2 h-9 px-6 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors disabled:opacity-50"
+            >
+              {isPending ? "Guardando..." : "Guardar cambios"}
+            </button>
+          )}
         </div>
       </div>
 
@@ -826,63 +840,76 @@ export function DirectoryForm({
           <div className="pb-3 border-b border-line">
             <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">Participación en el condominio</h2>
           </div>
-          {initialData.participationBlocks.map((block) => (
-            <div key={block.title} className={sectionCls}>
-              <div className={sectionHeaderCls}>
-                <p className={sectionTitleCls}>{block.title}</p>
-              </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-canvas border-b border-line">
-                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Tipo de entidad</th>
-                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Área privativa</th>
-                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-right">Porcentaje</th>
-                      <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-center">Comercios</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-line">
-                    <tr className="bg-brand-mint/10 font-bold">
-                      <td className="px-4 py-2 text-[10px] uppercase tracking-wider text-brand">TOTAL</td>
-                      <td className="px-4 py-2 text-[12px] text-brand">{block.totalAreas}</td>
-                      <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{block.totalPercentage.toFixed(4)}%</td>
-                      <td className="px-4 py-2 text-center text-[10px] font-bold text-brand">
-                        {Array.from(new Set(block.rows.flatMap((r) => r.commerceNames || []))).length}
-                      </td>
-                    </tr>
-                    {block.rows.length === 0 ? (
-                      <tr>
-                        <td colSpan={4} className="px-4 py-8 text-center text-ink-soft text-[11px]">
-                          Sin registros de participación en este bloque.
-                        </td>
+          {initialData.participationBlocks.map((block) => {
+            const isInitialOwnerBlock =
+              block.title === "Propietario Inicial" || block.title.toLowerCase().includes("inicial");
+
+            return (
+              <div key={block.title} className={sectionCls}>
+                <div className={sectionHeaderCls}>
+                  <p className={sectionTitleCls}>
+                    {isInitialOwnerBlock ? "Propietario inicial (BLOCKCHAIN) Historia" : block.title}
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-canvas border-b border-line">
+                        <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Tipo de entidad</th>
+                        <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Área privativa</th>
+                        <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-right">Porcentaje</th>
+                        {!isInitialOwnerBlock && (
+                          <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft text-center">Comercios</th>
+                        )}
                       </tr>
-                    ) : (
-                      block.rows.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-canvas/50 transition-colors">
-                          <td className="px-4 py-2 text-[11px] text-ink-soft">{row.entityType}</td>
-                          <td className="px-4 py-2 text-[12px] font-medium text-ink">{row.privateAreaName}</td>
-                          <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{row.percentage.toFixed(4)}%</td>
-                          <td className="px-4 py-2 text-center text-[11px] text-ink">
-                            {row.commerceNames && row.commerceNames.length > 0 ? (
-                              <div className="flex flex-wrap items-center justify-center gap-1">
-                                {row.commerceNames.map((name, i) => (
-                                  <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-brand-mint/20 border border-brand-mint/40 text-brand text-[10px] font-bold">
-                                    {name}
-                                  </span>
-                                ))}
-                              </div>
-                            ) : (
-                              <span className="text-ink-soft/40 text-[10px]">No</span>
-                            )}
+                    </thead>
+                    <tbody className="divide-y divide-line">
+                      <tr className="bg-brand-mint/10 font-bold">
+                        <td className="px-4 py-2 text-[10px] uppercase tracking-wider text-brand">TOTAL</td>
+                        <td className="px-4 py-2 text-[12px] text-brand">{block.totalAreas}</td>
+                        <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{block.totalPercentage.toFixed(4)}%</td>
+                        {!isInitialOwnerBlock && (
+                          <td className="px-4 py-2 text-center text-[10px] font-bold text-brand">
+                            {Array.from(new Set(block.rows.flatMap((r) => r.commerceNames || []))).length}
+                          </td>
+                        )}
+                      </tr>
+                      {block.rows.length === 0 ? (
+                        <tr>
+                          <td colSpan={isInitialOwnerBlock ? 3 : 4} className="px-4 py-8 text-center text-ink-soft text-[11px]">
+                            Sin registros de participación en este bloque.
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        block.rows.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-canvas/50 transition-colors">
+                            <td className="px-4 py-2 text-[11px] text-ink-soft">{row.entityType}</td>
+                            <td className="px-4 py-2 text-[12px] font-medium text-ink">{row.privateAreaName}</td>
+                            <td className="px-4 py-2 text-right font-mono text-[12px] text-brand-accent">{row.percentage.toFixed(4)}%</td>
+                            {!isInitialOwnerBlock && (
+                              <td className="px-4 py-2 text-center text-[11px] text-ink">
+                                {row.commerceNames && row.commerceNames.length > 0 ? (
+                                  <div className="flex flex-wrap items-center justify-center gap-1">
+                                    {row.commerceNames.map((name, i) => (
+                                      <span key={i} className="inline-flex items-center px-2 py-0.5 rounded-md bg-brand-mint/20 border border-brand-mint/40 text-brand text-[10px] font-bold">
+                                        {name}
+                                      </span>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <span className="text-ink-soft/40 text-[10px]">No</span>
+                                )}
+                              </td>
+                            )}
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

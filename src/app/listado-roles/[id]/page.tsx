@@ -5,13 +5,17 @@ import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.
 import { GetRoleUseCase, GetModulesUseCase } from "@/modules/role/application/role.use-cases";
 import { RoleForm } from "../components/role-form";
 import { notFound } from "next/navigation";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function EditRolePage(props: Props) {
   await requirePageAccess(MODULES.ROLES);
+
+  const permissions = await getUserPermissions();
+  const canUpdate = hasPermission(permissions, MODULES.ROLES, "canUpdate");
 
   const params = await props.params;
   const condominium = await prisma.condominium.findFirst({
@@ -35,5 +39,5 @@ export default async function EditRolePage(props: Props) {
     notFound();
   }
 
-  return <RoleForm initialData={role} modules={modules} condominiumId={condominium.id} />;
+  return <RoleForm initialData={role} modules={modules} condominiumId={condominium.id} canUpdate={canUpdate} />;
 }

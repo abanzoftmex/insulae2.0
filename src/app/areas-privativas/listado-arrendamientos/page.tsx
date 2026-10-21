@@ -1,5 +1,6 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import Link from "next/link";
 import { KeyRound } from "lucide-react";
 
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { StatCard } from "@/components/ui/stat-card";
 
-import { createPrivateAreaRentalAction } from "../actions";
+import { createPrivateAreaRentalAction, deletePrivateAreaRentalAction } from "../actions";
 import { PrivateAreaActionShell } from "../_components/private-area-action-shell";
 import {
   type ActionPageSearchParams,
@@ -40,6 +41,9 @@ function isRentalActive(
 
 export default async function ListadoArrendamientosPage({ searchParams }: PageProps) {
   await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canCreate");
+  const canDelete = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canDelete");
 
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);
@@ -127,12 +131,13 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
                     <th className="border-b border-line px-3 py-2.5">Inicio</th>
                     <th className="border-b border-line px-3 py-2.5">Fin</th>
                     <th className="border-b border-line px-3 py-2.5">Notas</th>
+                    {canDelete && <th className="border-b border-line px-3 py-2.5 text-right">Acciones</th>}
                   </tr>
                 </thead>
                 <tbody>
                   {area.rentals.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-3 py-8 text-center text-[11px] text-ink-soft">
+                      <td colSpan={canDelete ? 6 : 5} className="px-3 py-8 text-center text-[11px] text-ink-soft">
                         No hay arrendatarios o usuarios cargados para esta área.
                       </td>
                     </tr>
@@ -161,6 +166,22 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
                           <td className="border-b border-line/40 px-3 py-2 text-ink-soft">
                             {rental.notes ?? "—"}
                           </td>
+                          {canDelete && (
+                            <td className="border-b border-line/40 px-3 py-2 text-right">
+                              <form action={deletePrivateAreaRentalAction}>
+                                <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
+                                <input type="hidden" name="rentalId" value={rental.id} />
+                                <Button
+                                  type="submit"
+                                  variant="destructive"
+                                  size="sm"
+                                  className="h-7 text-[10px] font-bold uppercase tracking-widest"
+                                >
+                                  Eliminar
+                                </Button>
+                              </form>
+                            </td>
+                          )}
                         </tr>
                       );
                     })
@@ -172,46 +193,48 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
         </Card>
 
         {/* New rental form */}
-        <Card className="border-transparent shadow-layered">
-          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
-              Nuevo Arrendatario o Usuario
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 space-y-3">
-            <p className="text-[11px] text-ink-soft">
-              Alta rápida para registrar movimientos operativos de la unidad.
-            </p>
+        {canCreate && (
+          <Card className="border-transparent shadow-layered">
+            <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+              <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
+                Nuevo Arrendatario o Usuario
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3">
+              <p className="text-[11px] text-ink-soft">
+                Alta rápida para registrar movimientos operativos de la unidad.
+              </p>
 
-            <form action={createPrivateAreaRentalAction} className="space-y-3">
-              <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
+              <form action={createPrivateAreaRentalAction} className="space-y-3">
+                <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
 
-              <Input label="Arrendatario o Usuario" type="text" name="tenantName" required />
+                <Input label="Arrendatario o Usuario" type="text" name="tenantName" required />
 
-              <Input label="Estatus" type="text" name="status" placeholder="Activo" />
+                <Input label="Estatus" type="text" name="status" placeholder="Activo" />
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Input label="Inicio" type="date" name="startsAt" />
-                <Input label="Fin" type="date" name="endsAt" />
-              </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input label="Inicio" type="date" name="startsAt" />
+                  <Input label="Fin" type="date" name="endsAt" />
+                </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">
-                  Notas
-                </label>
-                <textarea
-                  name="notes"
-                  rows={4}
-                  className="w-full rounded-md border border-line bg-card px-3 py-2 text-[13px] font-medium text-ink transition-standard resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent"
-                />
-              </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">
+                    Notas
+                  </label>
+                  <textarea
+                    name="notes"
+                    rows={4}
+                    className="w-full rounded-md border border-line bg-card px-3 py-2 text-[13px] font-medium text-ink transition-standard resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent"
+                  />
+                </div>
 
-              <Button type="submit" variant="dark" size="md" className="w-full font-bold uppercase tracking-widest text-[11px]">
-                Guardar Arrendatario o Usuario
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                <Button type="submit" variant="dark" size="md" className="w-full font-bold uppercase tracking-widest text-[11px]">
+                  Guardar Arrendatario o Usuario
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </section>
     </PrivateAreaActionShell>
   );
