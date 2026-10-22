@@ -22,6 +22,8 @@ import {
   Info
 } from "lucide-react";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export const metadata: Metadata = {
   title: "Condominio | Insulae 2.0",
   description: "Configuración general, métricas de inventario y salud operativa del condominio.",
@@ -31,6 +33,8 @@ export const dynamic = "force-dynamic";
 
 export default async function CondominioPage() {
   await requirePageAccess(MODULES.CONDOMINIO);
+  const permissions = await getUserPermissions();
+  const canUpdate = hasPermission(permissions, MODULES.CONDOMINIO, "canUpdate");
 
   let overview: CondominiumOverviewVM | null = null;
   let editorInitialValues = {
@@ -171,9 +175,16 @@ export default async function CondominioPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
-              Configuración del Condominio
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
+                Configuración del Condominio
+              </h1>
+              {!canUpdate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">
               Ajustes Maestro
             </Badge>
@@ -373,6 +384,7 @@ export default async function CondominioPage() {
         <CondominioEditor
           condominiumSlug={overview?.condominiumSlug ?? PROJECT_SCOPE.condominiumCode}
           initialValues={editorInitialValues}
+          canUpdate={canUpdate}
         />
       </div>
 

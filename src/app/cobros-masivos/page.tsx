@@ -5,6 +5,9 @@ import type { Metadata } from "next";
 import { MassChargeWorkbench } from "./components/mass-charge-workbench";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+import { Badge } from "@/components/ui/badge";
+
 export const metadata: Metadata = {
   title: "Cobros Masivos | Insulae 2.0",
   description: "Generación masiva de cargos y cuotas por barrio y categoría.",
@@ -14,6 +17,9 @@ export const dynamic = "force-dynamic";
 
 export default async function MassChargePage() {
   await requirePageAccess(MODULES.COBROS_MASIVOS);
+
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.COBROS_MASIVOS, "canCreate");
 
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },
@@ -48,7 +54,14 @@ export default async function MassChargePage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Cobros Masivos</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Cobros Masivos</h1>
+              {!canCreate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {condominium.name} · Procesamiento por lote de cargos financieros.
             </p>
@@ -58,8 +71,9 @@ export default async function MassChargePage() {
 
       <MassChargeWorkbench
         condominiumId={condominium.id}
-        zones={zones.map((z) => z.name)}
+        zones={zones.map(z => z.name)}
         chargeGroups={chargeGroups}
+        canCreate={canCreate}
       />
     </div>
   );

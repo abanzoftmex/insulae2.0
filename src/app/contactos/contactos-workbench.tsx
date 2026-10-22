@@ -26,6 +26,9 @@ import { ExternalLinkButton } from "@/components/ui/external-link-button";
 interface ContactosWorkbenchProps {
   types: ContactDirectoryTypeVM[];
   entries: ContactDirectoryEntryVM[];
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 function createEmptyForm(types: ContactDirectoryTypeVM[]): ContactEntryInput {
@@ -46,7 +49,13 @@ function normalizeUrl(url: string): string {
   return `https://${trimmed}`;
 }
 
-export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) {
+export function ContactosWorkbench({ 
+  types, 
+  entries,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
+}: ContactosWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [typeFilter, setTypeFilter] = useState("all");
   const [search, setSearch] = useState("");
@@ -153,7 +162,12 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
       accessorKey: "id",
       align: "right",
       cell: (row) => (
-        <RowActions onEdit={() => openEditModal(row)} onDelete={() => handleDelete(row.id)} />
+        <RowActions 
+          onEdit={() => openEditModal(row)} 
+          onDelete={() => handleDelete(row.id)} 
+          canUpdate={canUpdate}
+          canDelete={canDelete}
+        />
       )
     }
   ];
@@ -190,8 +204,8 @@ export function ContactosWorkbench({ types, entries }: ContactosWorkbenchProps) 
         data={filteredEntries}
         columns={columns}
         onSearch={setSearch}
-        onAdd={openAddModal}
-        addLabel="Nuevo Contacto"
+        onAdd={canCreate ? openAddModal : undefined}
+        addLabel={canCreate ? "Nuevo Contacto" : undefined}
       />
 
       <Modal

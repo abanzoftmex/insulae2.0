@@ -1,7 +1,12 @@
 "use client";
 
 import { createContext, useContext, ReactNode } from "react";
-import type { UserPermissions } from "@/shared/application/auth/permissions";
+import { 
+  hasPermission, 
+  type UserPermissions, 
+  type ModulePermissions 
+} from "@/shared/application/auth/permission-utils";
+import type { ModuleName } from "@/shared/application/auth/modules";
 
 const PermissionsContext = createContext<UserPermissions | null>(null);
 
@@ -28,9 +33,22 @@ export function PermissionsProvider({
 export function usePermissions(): UserPermissions {
   const context = useContext(PermissionsContext);
   if (context === null) {
-    // Return empty permissions if used outside provider (or proxy in SuperAdmin case could be handled here if we passed it)
-    // The provider should always be at the root.
     return {};
   }
   return context;
+}
+
+/**
+ * Hook to access module permissions and read-only status in client components.
+ */
+export function useModulePermissions(
+  module: ModuleName | readonly ModuleName[],
+): ModulePermissions & { isReadOnly: boolean } {
+  const permissions = usePermissions();
+  const canRead = hasPermission(permissions, module, "canRead");
+  const canCreate = hasPermission(permissions, module, "canCreate");
+  const canUpdate = hasPermission(permissions, module, "canUpdate");
+  const canDelete = hasPermission(permissions, module, "canDelete");
+  const isReadOnly = canRead && !canCreate && !canUpdate && !canDelete;
+  return { canRead, canCreate, canUpdate, canDelete, isReadOnly };
 }

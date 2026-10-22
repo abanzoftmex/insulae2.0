@@ -579,7 +579,12 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                           )}
                         </td>
                         <td className="py-2 px-3 text-center">
-                          <input type="text" className="border border-[#ddd0be] rounded px-2 py-0.5 w-32 text-[10px]" />
+                          <input 
+                            type="text" 
+                            disabled={!canUpdateCharges}
+                            placeholder={!canUpdateCharges ? "Solo lectura" : ""}
+                            className="border border-[#ddd0be] rounded px-2 py-0.5 w-32 text-[10px] disabled:opacity-60 disabled:cursor-not-allowed bg-transparent" 
+                          />
                         </td>
                       </tr>
                     );

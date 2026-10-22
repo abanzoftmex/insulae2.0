@@ -10,6 +10,8 @@ import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export const dynamic = "force-dynamic";
 
 const TYPE_VARIANT: Record<string, "brand" | "warning" | "success"> = {
@@ -20,6 +22,11 @@ const TYPE_VARIANT: Record<string, "brand" | "warning" | "success"> = {
 
 export default async function NotificacionesPage() {
   await requirePageAccess(MODULES.NOTIFICACIONES);
+
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.NOTIFICACIONES, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.NOTIFICACIONES, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.NOTIFICACIONES, "canDelete");
 
   const submitDeleteNotification = async (formData: FormData): Promise<void> => {
     "use server";
@@ -47,19 +54,28 @@ export default async function NotificacionesPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Notificaciones</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Notificaciones</h1>
+              {!canCreate && !canUpdate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Comunicación Operativa</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">{vm.subtitle}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
-            <Link href="/notificaciones/nuevo">
-              <Plus className="h-3.5 w-3.5" />
-              Nueva notificación
-            </Link>
-          </Button>
-        </div>
+        {canCreate && (
+          <div className="flex items-center gap-2">
+            <Button size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+              <Link href="/notificaciones/nuevo">
+                <Plus className="h-3.5 w-3.5" />
+                Nueva notificación
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* ── Stat cards ───────────────────────────────────────── */}
@@ -78,13 +94,15 @@ export default async function NotificacionesPage() {
           <div className="p-10 text-center">
             <p className="text-sm font-semibold text-ink">No hay notificaciones registradas</p>
             <p className="text-xs text-ink-soft mt-1">Crea la primera notificación para iniciar la comunicación del condominio.</p>
-            <Link
-              href="/notificaciones/nuevo"
-              className="mt-4 inline-flex items-center gap-2 h-8 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Crear primera notificación
-            </Link>
+            {canCreate && (
+              <Link
+                href="/notificaciones/nuevo"
+                className="mt-4 inline-flex items-center gap-2 h-8 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Crear primera notificación
+              </Link>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -176,23 +194,30 @@ export default async function NotificacionesPage() {
 
                     <td className="px-4 py-3 border-l border-black/5">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Link
-                          href={`/notificaciones/${row.id}/editar`}
-                          className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-                          aria-label="Editar"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </Link>
-                        <form action={submitDeleteNotification}>
-                          <input type="hidden" name="notificationId" value={row.id} />
-                          <button
-                            type="submit"
-                            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
-                            aria-label="Eliminar"
+                        {canUpdate && (
+                          <Link
+                            href={`/notificaciones/${row.id}/editar`}
+                            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+                            aria-label="Editar"
                           >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </form>
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </Link>
+                        )}
+                        {canDelete && (
+                          <form action={submitDeleteNotification}>
+                            <input type="hidden" name="notificationId" value={row.id} />
+                            <button
+                              type="submit"
+                              className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+                              aria-label="Eliminar"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </form>
+                        )}
+                        {!canUpdate && !canDelete && (
+                          <span className="text-[11px] text-ink-soft/40 italic">Solo lectura</span>
+                        )}
                       </div>
                     </td>
                   </tr>

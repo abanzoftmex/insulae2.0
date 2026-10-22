@@ -37,9 +37,10 @@ interface BudgetGroupFormProps {
   initialData: any | null;
   year: number;
   existingGroups: any[];
+  canUpdate?: boolean;
 }
 
-export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGroupFormProps) {
+export function BudgetGroupForm({ initialData, year, existingGroups, canUpdate = true }: BudgetGroupFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -136,40 +137,50 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
             <Button variant="outline" onClick={() => router.push(`/listado-estructura-presupuesto?anio=${year}`)} className="h-8 px-4 text-[10px] font-bold uppercase gap-2">
               <ArrowLeft className="h-3.5 w-3.5" /> Volver
             </Button>
-            <Button 
-              disabled={isPending || !formName} 
-              onClick={handleSave}
-              className="h-8 px-6 text-[10px] font-bold uppercase bg-brand text-white hover:bg-brand/90"
-            >
-              {isPending ? "Guardando..." : "Guardar Estructura"}
-            </Button>
+            {canUpdate ? (
+              <Button 
+                disabled={isPending || !formName} 
+                onClick={handleSave}
+                className="h-8 px-6 text-[10px] font-bold uppercase bg-brand text-white hover:bg-brand/90"
+              >
+                {isPending ? "Guardando..." : "Guardar Estructura"}
+              </Button>
+            ) : (
+              <span className="px-3 py-1 text-[10px] font-bold uppercase tracking-widest bg-ink-soft/10 text-ink-soft border border-line rounded-full">
+                Modo Solo Lectura
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-line">
-            <Input label="Nombre del Grupo" value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Ej. Gastos de Limpieza" />
+            <Input label="Nombre del Grupo" disabled={!canUpdate} value={formName} onChange={(e) => setFormName(e.target.value)} placeholder="Ej. Gastos de Limpieza" />
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Categoría Contable</label>
-                <button 
-                  onClick={() => setIsCreatingCategory(!isCreatingCategory)} 
-                  className="text-[9px] font-bold text-brand-accent uppercase hover:underline"
-                >
-                  {isCreatingCategory ? "Seleccionar Existente" : "+ Nueva Categoría"}
-                </button>
+                {canUpdate && (
+                  <button 
+                    onClick={() => setIsCreatingCategory(!isCreatingCategory)} 
+                    className="text-[9px] font-bold text-brand-accent uppercase hover:underline"
+                  >
+                    {isCreatingCategory ? "Seleccionar Existente" : "+ Nueva Categoría"}
+                  </button>
+                )}
               </div>
               {isCreatingCategory ? (
                 <input
                   type="text"
+                  disabled={!canUpdate}
                   value={newCategoryName}
                   onChange={(e) => setNewCategoryName(e.target.value)}
                   placeholder="Escribe la nueva categoría..."
-                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                 />
               ) : (
                 <select
                   value={formCategory}
+                  disabled={!canUpdate}
                   onChange={(e) => setFormCategory(e.target.value)}
-                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none"
+                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none appearance-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {availableCategories.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -182,10 +193,11 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
               <input
                 type="number"
                 min={0}
+                disabled={!canUpdate}
                 value={formOrder}
                 onChange={(e) => setFormOrder(parseInt(e.target.value) || 0)}
                 placeholder="1"
-                className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none text-center"
+                className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none text-center disabled:opacity-60 disabled:cursor-not-allowed"
               />
               <p className="text-[9px] text-ink-soft/40 font-bold uppercase tracking-wide">1 = primero en la lista</p>
             </div>
@@ -197,22 +209,24 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
               <div className="flex gap-2">
                 <select
                   value={formStartsAt ? formStartsAt.split("-")[1] : ""}
+                  disabled={!canUpdate}
                   onChange={(e) => {
                     const y = formStartsAt ? formStartsAt.split("-")[0] : String(year);
                     setFormStartsAt(e.target.value ? `${y}-${e.target.value}` : "");
                   }}
-                  className="h-9 flex-1 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                  className="h-9 flex-1 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Mes</option>
                   {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
                 <select
                   value={formStartsAt ? formStartsAt.split("-")[0] : ""}
+                  disabled={!canUpdate}
                   onChange={(e) => {
                     const m = formStartsAt ? formStartsAt.split("-")[1] : "01";
                     setFormStartsAt(e.target.value && formStartsAt ? `${e.target.value}-${m}` : e.target.value ? `${e.target.value}-01` : "");
                   }}
-                  className="h-9 w-24 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                  className="h-9 w-24 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Año</option>
                   {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
@@ -225,36 +239,40 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
               <div className="flex gap-2">
                 <select
                   value={formEndsAt ? formEndsAt.split("-")[1] : ""}
+                  disabled={!canUpdate}
                   onChange={(e) => {
                     const y = formEndsAt ? formEndsAt.split("-")[0] : String(year);
                     setFormEndsAt(e.target.value ? `${y}-${e.target.value}` : "");
                   }}
-                  className="h-9 flex-1 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                  className="h-9 flex-1 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Mes</option>
                   {MONTHS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
                 <select
                   value={formEndsAt ? formEndsAt.split("-")[0] : ""}
+                  disabled={!canUpdate}
                   onChange={(e) => {
                     const m = formEndsAt ? formEndsAt.split("-")[1] : "01";
                     setFormEndsAt(e.target.value && formEndsAt ? `${e.target.value}-${m}` : e.target.value ? `${e.target.value}-01` : "");
                   }}
-                  className="h-9 w-24 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
+                  className="h-9 w-24 rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="">Año</option>
                   {YEARS.map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
+              </div>
             </div>
           </div>
-        </div>
 
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-line pb-2">
               <p className="text-[12px] font-bold uppercase tracking-widest text-brand">Conceptos / Partidas</p>
-              <button onClick={handleAddConcept} className="text-[10px] font-bold text-brand-accent flex items-center gap-1 uppercase hover:underline">
-                <Plus className="h-3.5 w-3.5" /> Agregar Partida
-              </button>
+              {canUpdate && (
+                <button onClick={handleAddConcept} className="text-[10px] font-bold text-brand-accent flex items-center gap-1 uppercase hover:underline">
+                  <Plus className="h-3.5 w-3.5" /> Agregar Partida
+                </button>
+              )}
             </div>
 
             {/* Encabezados de la tabla para Desktop */}
@@ -279,10 +297,11 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                     <label className="md:hidden text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 mb-1 block">Nombre</label>
                     <input 
                       type="text" 
+                      disabled={!canUpdate}
                       value={concept.name}
                       onChange={(e) => handleConceptChange(idx, "name", e.target.value)}
                       placeholder="Nombre del concepto..."
-                      className="h-9 w-full bg-card border border-line rounded px-3 text-[13px] font-medium focus:border-brand-accent outline-none transition-colors"
+                      className="h-9 w-full bg-card border border-line rounded px-3 text-[13px] font-medium focus:border-brand-accent outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -290,9 +309,10 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                     <label className="md:hidden text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 mb-1 block">Orden</label>
                     <input 
                       type="number" 
+                      disabled={!canUpdate}
                       value={concept.order}
                       onChange={(e) => handleConceptChange(idx, "order", parseInt(e.target.value) || 0)}
-                      className="h-9 w-full bg-card border border-line rounded px-3 text-[13px] font-medium text-center focus:border-brand-accent outline-none transition-colors"
+                      className="h-9 w-full bg-card border border-line rounded px-3 text-[13px] font-medium text-center focus:border-brand-accent outline-none transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                     />
                   </div>
 
@@ -307,6 +327,7 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                           <span className="text-[12px] font-medium text-ink-soft select-none">{t}</span>
                           <input 
                             type="radio" 
+                            disabled={!canUpdate}
                             name={`type-${idx}`} 
                             value={t} 
                             checked={concept.type === t}
@@ -318,12 +339,14 @@ export function BudgetGroupForm({ initialData, year, existingGroups }: BudgetGro
                     </div>
                   </div>
 
-                  <div className="w-full md:w-9 flex justify-end md:justify-center mt-2 md:mt-0">
-                    <button onClick={() => handleRemoveConcept(idx)} className="h-9 px-3 md:px-0 md:w-9 flex items-center justify-center rounded bg-danger/10 text-danger hover:bg-danger hover:text-white transition-colors text-[10px] font-bold uppercase md:normal-case">
-                      <span className="md:hidden mr-2">Eliminar</span>
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
+                  {canUpdate && (
+                    <div className="w-full md:w-9 flex justify-end md:justify-center mt-2 md:mt-0">
+                      <button onClick={() => handleRemoveConcept(idx)} className="h-9 px-3 md:px-0 md:w-9 flex items-center justify-center rounded bg-danger/10 text-danger hover:bg-danger hover:text-white transition-colors text-[10px] font-bold uppercase md:normal-case">
+                        <span className="md:hidden mr-2">Eliminar</span>
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
               {formConcepts.length === 0 && (

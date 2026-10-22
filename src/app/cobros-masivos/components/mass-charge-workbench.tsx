@@ -42,10 +42,12 @@ export function MassChargeWorkbench({
   condominiumId,
   zones,
   chargeGroups,
+  canCreate = true,
 }: {
   condominiumId: string;
   zones: string[];
   chargeGroups: { id: string; name: string; legacyId: number | null }[];
+  canCreate?: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   
@@ -302,14 +304,20 @@ export function MassChargeWorkbench({
                   {new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(selectedTotal)}
                 </p>
               </div>
-              <Button 
-                className="h-10 px-8 bg-brand-accent text-white font-bold uppercase text-[11px] gap-2"
-                onClick={handleConfirm}
-                disabled={isPending || selectedCount === 0}
-              >
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                Confirmar y Generar {selectedCount} Cargos
-              </Button>
+              {canCreate ? (
+                <Button 
+                  className="h-10 px-8 bg-brand-accent text-white font-bold uppercase text-[11px] gap-2"
+                  onClick={handleConfirm}
+                  disabled={isPending || selectedCount === 0}
+                >
+                  {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                  Confirmar y Generar {selectedCount} Cargos
+                </Button>
+              ) : (
+                <Badge variant="outline" className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Solo Lectura (Creación no autorizada)
+                </Badge>
+              )}
             </div>
           </div>
 

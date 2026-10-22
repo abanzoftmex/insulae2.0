@@ -38,11 +38,21 @@ interface EstructuraCondominalPageProps {
   searchParams: PageSearchParams;
 }
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+import { redirect } from "next/navigation";
+
 export default async function EstructuraCondominalPage({ searchParams }: EstructuraCondominalPageProps) {
   await requirePageAccess(MODULES.ESTRUCTURA_CONDOMINAL);
 
+  const permissions = await getUserPermissions();
+  const canUpdate = hasPermission(permissions, MODULES.ESTRUCTURA_CONDOMINAL, "canUpdate");
+
   const params = await searchParams;
-  const isEditMode = params.mode === "edit";
+  const isEditMode = params.mode === "edit" && canUpdate;
+
+  if (params.mode === "edit" && !canUpdate) {
+    redirect("/estructura-condominal");
+  }
 
   const snapshot = await getCondominiumOrganigramUseCase.execute();
 
@@ -64,7 +74,14 @@ export default async function EstructuraCondominalPage({ searchParams }: Estruct
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura Condominal</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura Condominal</h1>
+              {!canUpdate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Gobernanza</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {snapshot.condominiumName} · Estructura del Condominio.
@@ -72,18 +89,20 @@ export default async function EstructuraCondominalPage({ searchParams }: Estruct
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {!isEditMode && <StructureManagerButton />}
-          {isEditMode ? (
-            <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
-              <Link href="/estructura-condominal"><Eye className="h-3.5 w-3.5 shrink-0" aria-hidden /> Modo Lectura</Link>
-            </Button>
-          ) : (
-            <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
-              <Link href="/estructura-condominal?mode=edit"><Edit2 className="h-3.5 w-3.5 shrink-0" aria-hidden /> Editar Organigrama</Link>
-            </Button>
-          )}
-        </div>
+        {canUpdate && (
+          <div className="flex flex-wrap items-center gap-2">
+            {!isEditMode && <StructureManagerButton />}
+            {isEditMode ? (
+              <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+                <Link href="/estructura-condominal"><Eye className="h-3.5 w-3.5 shrink-0" aria-hidden /> Modo Lectura</Link>
+              </Button>
+            ) : (
+              <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+                <Link href="/estructura-condominal?mode=edit"><Edit2 className="h-3.5 w-3.5 shrink-0" aria-hidden /> Editar Organigrama</Link>
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* KPI Stats */}

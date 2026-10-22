@@ -40,6 +40,7 @@ interface DirectoryFormProps {
   initialData: DirectoryContactParticipation;
   roleOptions: Array<{ id: string; name: string }>;
   backHref: string;
+  canCreate?: boolean;
   canUpdate?: boolean;
   canDelete?: boolean;
 }
@@ -50,6 +51,7 @@ export function DirectoryForm({
   initialData,
   roleOptions,
   backHref,
+  canCreate = true,
   canUpdate = true,
   canDelete = true,
 }: DirectoryFormProps) {
@@ -238,7 +240,7 @@ export function DirectoryForm({
   const sectionHeaderCls = "px-5 py-4 border-b border-line bg-canvas/30 flex items-center justify-between";
   const sectionTitleCls = "text-xs font-extrabold uppercase tracking-widest text-brand-deep flex items-center gap-2";
   const sectionBodyCls = "p-6";
-  const fieldCls = "w-full h-9 px-3 rounded-md border border-line bg-white text-sm text-[#3a2f25] outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all duration-200";
+  const fieldCls = "w-full h-9 px-3 rounded-md border border-line bg-white text-sm text-[#3a2f25] outline-none focus:ring-1 focus:ring-brand focus:border-brand transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed";
   const labelCls = "text-[10px] font-extrabold uppercase tracking-widest text-ink-soft/80";
 
   const legalBlock = initialData.participationBlocks.find(
@@ -342,28 +344,30 @@ export function DirectoryForm({
                     <Settings className="w-4 h-4 text-brand" />
                     Configuración inicial
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setChildFirstName("");
-                      setChildLastNamePaterno("");
-                      setChildLastNameMaterno("");
-                      setChildCurp("");
-                      setChildPersonalPhone("");
-                      setChildPersonalEmail("");
-                      setChildBirthDate("");
-                      setChildGender("");
-                      setChildRegTypeCode("");
-                      setIsCreateChildOpen(true);
-                    }}
-                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-green-600 border border-green-700 text-white text-[10px] font-extrabold uppercase tracking-wider hover:bg-green-700 hover:border-green-800 transition-all shadow-sm active:scale-95 group shrink-0"
-                    title="Agregar usuario anidado"
-                  >
-                    <div className="h-3.5 w-3.5 rounded bg-white/20 flex items-center justify-center shrink-0">
-                      <Plus className="w-3 h-3 text-white stroke-[3]" />
-                    </div>
-                    <span>Agregar usuario anidado</span>
-                  </button>
+                  {canCreate && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setChildFirstName("");
+                        setChildLastNamePaterno("");
+                        setChildLastNameMaterno("");
+                        setChildCurp("");
+                        setChildPersonalPhone("");
+                        setChildPersonalEmail("");
+                        setChildBirthDate("");
+                        setChildGender("");
+                        setChildRegTypeCode("");
+                        setIsCreateChildOpen(true);
+                      }}
+                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-green-600 border border-green-700 text-white text-[10px] font-extrabold uppercase tracking-wider hover:bg-green-700 hover:border-green-800 transition-all shadow-sm active:scale-95 group shrink-0"
+                      title="Agregar usuario anidado"
+                    >
+                      <div className="h-3.5 w-3.5 rounded bg-white/20 flex items-center justify-center shrink-0">
+                        <Plus className="w-3 h-3 text-white stroke-[3]" />
+                      </div>
+                      <span>Agregar usuario anidado</span>
+                    </button>
+                  )}
                 </div>
                 <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-5`}>
                   <div className="space-y-1.5">
@@ -377,12 +381,14 @@ export function DirectoryForm({
                         <button
                           key={opt.value}
                           type="button"
-                          onClick={() => handleChange("userType", opt.value)}
+                          disabled={!canUpdate}
+                          onClick={() => canUpdate && handleChange("userType", opt.value)}
                           className={cn(
-                            "flex-1 h-9 px-2 rounded-md text-[10px] font-bold uppercase tracking-widest border transition-colors",
+                            "flex-1 h-9 px-2 rounded-md text-[10px] font-bold uppercase tracking-widest border transition-colors disabled:cursor-not-allowed",
                             formData.userType === opt.value
                               ? "bg-brand text-white border-brand"
-                              : "bg-white text-ink-soft border-line hover:border-brand/40"
+                              : "bg-white text-ink-soft border-line hover:border-brand/40",
+                            !canUpdate && formData.userType !== opt.value && "opacity-60"
                           )}
                         >
                           {opt.label}
@@ -398,12 +404,14 @@ export function DirectoryForm({
                         <button
                           key={String(opt.value)}
                           type="button"
-                          onClick={() => handleChange("requiresInvoice", opt.value)}
+                          disabled={!canUpdate}
+                          onClick={() => canUpdate && handleChange("requiresInvoice", opt.value)}
                           className={cn(
-                            "flex-1 h-9 px-4 rounded-md text-[10px] font-bold uppercase tracking-widest border transition-colors",
+                            "flex-1 h-9 px-4 rounded-md text-[10px] font-bold uppercase tracking-widest border transition-colors disabled:cursor-not-allowed",
                             formData.requiresInvoice === opt.value
                               ? "bg-brand text-white border-brand"
-                              : "bg-white text-ink-soft border-line hover:border-brand/40"
+                              : "bg-white text-ink-soft border-line hover:border-brand/40",
+                            !canUpdate && formData.requiresInvoice !== opt.value && "opacity-60"
                           )}
                         >
                           {opt.label}
@@ -416,6 +424,7 @@ export function DirectoryForm({
                     <label className={labelCls}>Rol inicial</label>
                     <select
                       value={formData.initialRole}
+                      disabled={!canUpdate}
                       onChange={(e) => handleChange("initialRole", e.target.value)}
                       className={fieldCls}
                     >
@@ -433,8 +442,12 @@ export function DirectoryForm({
                         <input
                           type="file"
                           accept="application/pdf"
+                          disabled={!canUpdate}
                           onChange={handleFileUpload}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                          className={cn(
+                            "absolute inset-0 w-full h-full opacity-0 z-10",
+                            canUpdate ? "cursor-pointer" : "cursor-not-allowed"
+                          )}
                         />
                         <div className={cn(
                           "flex items-center justify-between h-9 px-3 rounded-md border text-sm transition-colors",
@@ -463,6 +476,7 @@ export function DirectoryForm({
                     <label className={labelCls}>ApolFap a la que pertenece</label>
                     <select
                       value={formData.apolfap}
+                      disabled={!canUpdate}
                       onChange={(e) => handleChange("apolfap", e.target.value)}
                       className={fieldCls}
                     >
@@ -483,6 +497,7 @@ export function DirectoryForm({
                     <div className="flex gap-2">
                       <select
                         value={formData.registrationTypeCode}
+                        disabled={!canUpdate}
                         onChange={(e) => handleRegTypeChange(e.target.value)}
                         className={fieldCls}
                       >
@@ -493,14 +508,16 @@ export function DirectoryForm({
                           </option>
                         ))}
                       </select>
-                      <button
-                        type="button"
-                        onClick={() => setIsManagerOpen(true)}
-                        className="h-9 px-3 bg-canvas hover:bg-canvas/80 border border-line text-ink rounded-md transition-colors flex items-center justify-center shrink-0"
-                        title="Gestionar tipos"
-                      >
-                        <Settings className="w-4 h-4 text-ink-soft" />
-                      </button>
+                      {canUpdate && (
+                        <button
+                          type="button"
+                          onClick={() => setIsManagerOpen(true)}
+                          className="h-9 px-3 bg-canvas hover:bg-canvas/80 border border-line text-ink rounded-md transition-colors flex items-center justify-center shrink-0"
+                          title="Gestionar tipos"
+                        >
+                          <Settings className="w-4 h-4 text-ink-soft" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -604,24 +621,26 @@ export function DirectoryForm({
                                       <Eye className="w-3.5 h-3.5" />
                                       <span>Ver detalles</span>
                                     </button>
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        if (confirm(`¿Estás seguro de eliminar a ${fullChildName}?`)) {
-                                          startChildTransition(async () => {
-                                            const res = await deleteNestedUserAction(child.id);
-                                            if (res.ok) {
-                                              setChildren((prev) => prev.filter((c) => c.id !== child.id));
-                                            }
-                                          });
-                                        }
-                                      }}
-                                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-danger/30 text-danger hover:bg-danger hover:text-white transition-all text-xs font-bold shadow-xs"
-                                      title="Eliminar"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                      <span>Eliminar</span>
-                                    </button>
+                                    {canDelete && (
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          if (confirm(`¿Estás seguro de eliminar a ${fullChildName}?`)) {
+                                            startChildTransition(async () => {
+                                              const res = await deleteNestedUserAction(child.id);
+                                              if (res.ok) {
+                                                setChildren((prev) => prev.filter((c) => c.id !== child.id));
+                                              }
+                                            });
+                                          }
+                                        }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-danger/30 text-danger hover:bg-danger hover:text-white transition-all text-xs font-bold shadow-xs"
+                                        title="Eliminar"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                        <span>Eliminar</span>
+                                      </button>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -665,17 +684,18 @@ export function DirectoryForm({
                   </p>
                 </div>
                 <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-3 gap-4`}>
-                  <Input label="Nombre" value={formData.firstName} onChange={(e) => handleChange("firstName", e.target.value)} />
-                  <Input label="Apellido Paterno" value={formData.lastNamePaterno} onChange={(e) => handleChange("lastNamePaterno", e.target.value)} />
-                  <Input label="Apellido Materno" value={formData.lastNameMaterno} onChange={(e) => handleChange("lastNameMaterno", e.target.value)} />
-                  <Input label="CURP" value={formData.curp} onChange={(e) => handleChange("curp", e.target.value)} />
-                  <Input label="Teléfono" value={formData.personalPhone} onChange={(e) => handleChange("personalPhone", e.target.value)} />
-                  <Input label="Email Personal" value={formData.personalEmail} onChange={(e) => handleChange("personalEmail", e.target.value)} />
+                  <Input label="Nombre" disabled={!canUpdate} value={formData.firstName} onChange={(e) => handleChange("firstName", e.target.value)} />
+                  <Input label="Apellido Paterno" disabled={!canUpdate} value={formData.lastNamePaterno} onChange={(e) => handleChange("lastNamePaterno", e.target.value)} />
+                  <Input label="Apellido Materno" disabled={!canUpdate} value={formData.lastNameMaterno} onChange={(e) => handleChange("lastNameMaterno", e.target.value)} />
+                  <Input label="CURP" disabled={!canUpdate} value={formData.curp} onChange={(e) => handleChange("curp", e.target.value)} />
+                  <Input label="Teléfono" disabled={!canUpdate} value={formData.personalPhone} onChange={(e) => handleChange("personalPhone", e.target.value)} />
+                  <Input label="Email Personal" disabled={!canUpdate} value={formData.personalEmail} onChange={(e) => handleChange("personalEmail", e.target.value)} />
 
                   <div className="space-y-1.5">
                     <label className={labelCls}>Fecha de nacimiento</label>
                     <input
                       type="date"
+                      disabled={!canUpdate}
                       value={formData.birthDate}
                       onChange={(e) => handleChange("birthDate", e.target.value)}
                       className={fieldCls}
@@ -686,6 +706,7 @@ export function DirectoryForm({
                     <label className={labelCls}>Género</label>
                     <select
                       value={formData.gender}
+                      disabled={!canUpdate}
                       onChange={(e) => handleChange("gender", e.target.value)}
                       className={fieldCls}
                     >
@@ -697,7 +718,7 @@ export function DirectoryForm({
                     </select>
                   </div>
                   <div className="sm:col-span-3">
-                    <Input label="Dirección" value={formData.address} onChange={(e) => handleChange("address", e.target.value)} />
+                    <Input label="Dirección" disabled={!canUpdate} value={formData.address} onChange={(e) => handleChange("address", e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -715,13 +736,13 @@ export function DirectoryForm({
                   </p>
                 </div>
                 <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-4`}>
-                  <Input label="Nombre Comercial" value={formData.commercialName} onChange={(e) => handleChange("commercialName", e.target.value)} />
-                  <Input label="Razón Social" value={formData.businessName} onChange={(e) => handleChange("businessName", e.target.value)} />
-                  <Input label="RFC" value={formData.rfc} onChange={(e) => handleChange("rfc", e.target.value)} />
-                  <Input label="Teléfono Empresarial" value={formData.businessPhone} onChange={(e) => handleChange("businessPhone", e.target.value)} />
-                  <Input label="Email Empresarial" value={formData.businessEmail} onChange={(e) => handleChange("businessEmail", e.target.value)} />
+                  <Input label="Nombre Comercial" disabled={!canUpdate} value={formData.commercialName} onChange={(e) => handleChange("commercialName", e.target.value)} />
+                  <Input label="Razón Social" disabled={!canUpdate} value={formData.businessName} onChange={(e) => handleChange("businessName", e.target.value)} />
+                  <Input label="RFC" disabled={!canUpdate} value={formData.rfc} onChange={(e) => handleChange("rfc", e.target.value)} />
+                  <Input label="Teléfono Empresarial" disabled={!canUpdate} value={formData.businessPhone} onChange={(e) => handleChange("businessPhone", e.target.value)} />
+                  <Input label="Email Empresarial" disabled={!canUpdate} value={formData.businessEmail} onChange={(e) => handleChange("businessEmail", e.target.value)} />
                   <div className="sm:col-span-2">
-                    <Input label="Dirección Fiscal" value={formData.taxAddress} onChange={(e) => handleChange("taxAddress", e.target.value)} />
+                    <Input label="Dirección Fiscal" disabled={!canUpdate} value={formData.taxAddress} onChange={(e) => handleChange("taxAddress", e.target.value)} />
                   </div>
                 </div>
               </div>
@@ -757,6 +778,7 @@ export function DirectoryForm({
                           <input 
                             type={showPassword ? "text" : "password"} 
                             value={password} 
+                            disabled={!canUpdate}
                             onChange={(e) => setPassword(e.target.value)} 
                             className={fieldCls} 
                           />
@@ -776,6 +798,7 @@ export function DirectoryForm({
                           <input 
                             type={showConfirmPassword ? "text" : "password"} 
                             value={confirmPassword} 
+                            disabled={!canUpdate}
                             onChange={(e) => setConfirmPassword(e.target.value)} 
                             className={fieldCls} 
                           />
@@ -790,14 +813,16 @@ export function DirectoryForm({
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 pt-2">
-                      <button type="button" onClick={handleUpdatePassword} disabled={isPasswordPending} className="h-9 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors disabled:opacity-50">
-                        {isPasswordPending ? "Actualizando..." : "Actualizar contraseña"}
-                      </button>
-                      <button type="button" onClick={handleGenerateTempPassword} disabled={isPasswordPending} className="h-9 px-4 rounded-full bg-white border border-line text-ink text-[10px] font-bold uppercase tracking-widest hover:bg-canvas transition-all disabled:opacity-50">
-                        {isPasswordPending ? "Actualizando..." : "Generar y enviar contraseña provisional"}
-                      </button>
-                    </div>
+                    {canUpdate && (
+                      <div className="flex flex-wrap items-center gap-3 pt-2">
+                        <button type="button" onClick={handleUpdatePassword} disabled={isPasswordPending} className="h-9 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors disabled:opacity-50">
+                          {isPasswordPending ? "Actualizando..." : "Actualizar contraseña"}
+                        </button>
+                        <button type="button" onClick={handleGenerateTempPassword} disabled={isPasswordPending} className="h-9 px-4 rounded-full bg-white border border-line text-ink text-[10px] font-bold uppercase tracking-widest hover:bg-canvas transition-all disabled:opacity-50">
+                          {isPasswordPending ? "Actualizando..." : "Generar y enviar contraseña provisional"}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

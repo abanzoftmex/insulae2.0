@@ -621,8 +621,61 @@ export async function setPrivateAreaRentalTenantAction(formData: FormData): Prom
     });
   }
 
+  // Sincronizar asignaciones de Arrendatario en ResidentAssignment para mantener paridad con el Directorio
+  await prisma.residentAssignment.updateMany({
+    where: {
+      condominiumId: area.condominiumId,
+      privateAreaId: area.id,
+      isActive: true,
+      roleName: {
+        contains: "arrendatario",
+        mode: "insensitive",
+      },
+    },
+    data: {
+      isActive: false,
+      endsAt: new Date(),
+    },
+  });
+
+  if (tenantName.trim().length > 0) {
+    const candidateUsers = await prisma.user.findMany({
+      where: {
+        condominiumId: area.condominiumId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        businessName: true,
+      },
+    });
+
+    const target = tenantName.normalize("NFKD").toLowerCase().trim();
+    const matchingUser = candidateUsers.find((u) => {
+      const b = (u.businessName || "").normalize("NFKD").toLowerCase().trim();
+      const fn = `${u.firstName || ""} ${u.lastName || ""}`.normalize("NFKD").toLowerCase().trim();
+      return b === target || fn === target;
+    });
+
+    if (matchingUser) {
+      await prisma.residentAssignment.create({
+        data: {
+          condominiumId: area.condominiumId,
+          privateAreaId: area.id,
+          userId: matchingUser.id,
+          roleName: "Arrendatario",
+          startsAt: new Date(),
+          isActive: true,
+        },
+      });
+    }
+  }
+
   revalidatePath("/areas-privativas");
   revalidatePath("/areas-privativas/listado-arrendamientos");
+  revalidatePath("/directorio");
   await revalidatePrivateAreaFormPath(privateAreaId);
   redirect(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
 }

@@ -63,13 +63,16 @@ const LEFT_PROVEEDOR = LEFT_SALDO + COL_ANNUAL; // 640
 export default function BudgetTable({ 
   vm, 
   condominiumSlug, 
-  projectId 
+  projectId,
+  canUpdate = true,
 }: { 
   vm: BudgetVM; 
   condominiumSlug: string; 
   projectId: string; 
+  canUpdate?: boolean;
 }) {
   const isClosed = vm.status === "CLOSED";
+  const isEditable = !isClosed && canUpdate;
   const router = useRouter();
 
   const [activePopover, setActivePopover] = useState<string | null>(null);
@@ -218,7 +221,15 @@ export default function BudgetTable({
                       </span>
                     )}
                   </div>
-                  {isClosed && <Badge variant="danger" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">Lectura Protegida</Badge>}
+                  {!canUpdate ? (
+                    <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                      Solo Lectura
+                    </Badge>
+                  ) : isClosed ? (
+                    <Badge variant="danger" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">
+                      Lectura Protegida
+                    </Badge>
+                  ) : null}
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="overflow-x-auto no-scrollbar">
@@ -257,7 +268,7 @@ export default function BudgetTable({
                             </td>
                             {/* Sticky: Costo Unitario (editable) */}
                             <td className={cn("sticky", stickyCellBase, "px-2")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>
-                              {isClosed ? (
+                              {!isEditable ? (
                                 <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                                   {concept.unitCost != null ? formatMXN(concept.unitCost) : "—"}
                                 </div>
@@ -313,7 +324,7 @@ export default function BudgetTable({
                                         <LinkIcon className="h-3.5 w-3.5" />
                                       )}
                                     </a>
-                                    {!isClosed && (
+                                    {isEditable && (
                                       <button
                                         type="button"
                                         onClick={() => handleClearUrl(concept.conceptId)}
@@ -324,7 +335,7 @@ export default function BudgetTable({
                                       </button>
                                     )}
                                   </>
-                                ) : isClosed ? (
+                                ) : !isEditable ? (
                                   <span className="text-ink-soft/30 font-medium">—</span>
                                 ) : uploadingConceptId === concept.conceptId ? (
                                   <Loader2 className="h-4 w-4 animate-spin text-brand" />
@@ -420,7 +431,7 @@ export default function BudgetTable({
                                       <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/30 italic">
                                         —
                                       </div>
-                                    ) : isClosed ? (
+                                    ) : !isEditable ? (
                                       <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                                         {formatMXN(m.budgeted)}
                                       </div>
@@ -444,7 +455,7 @@ export default function BudgetTable({
                                       <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/30 italic">
                                         —
                                       </div>
-                                    ) : isClosed ? (
+                                    ) : !isEditable ? (
                                       <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                                         {m.units != null ? m.units : "—"}
                                       </div>

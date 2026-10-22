@@ -545,6 +545,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
             some: {
               isActive: true,
               roleName: { contains: filters.query, mode: "insensitive" },
+              privateArea: { isActive: true },
             },
           },
         },
@@ -554,6 +555,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
               isActive: true,
               privateArea: {
                 name: { contains: filters.query, mode: "insensitive" },
+                isActive: true,
               },
             },
           },
@@ -593,7 +595,10 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           },
         },
         assignments: {
-          where: { isActive: true },
+          where: {
+            isActive: true,
+            privateArea: { isActive: true },
+          },
           select: {
             roleName: true,
             privateArea: {
@@ -742,6 +747,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       where: {
         condominiumId: condominium.id,
         isActive: true,
+        privateArea: { isActive: true },
       },
     });
 
@@ -871,7 +877,10 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           },
         },
         assignments: {
-          where: { isActive: true },
+          where: {
+            isActive: true,
+            privateArea: { isActive: true },
+          },
           orderBy: [{ privateArea: { sortOrder: "asc" } }, { privateArea: { name: "asc" } }],
           select: {
             roleName: true,

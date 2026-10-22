@@ -8,6 +8,8 @@ import { MiscIncomeWorkbench } from "./components/misc-income-workbench";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export const metadata: Metadata = {
   title: "Estructura Ingresos | Insulae 2.0",
   description: "Configuración del catálogo de conceptos para otros ingresos.",
@@ -17,6 +19,11 @@ export const dynamic = "force-dynamic";
 
 export default async function MiscIncomeCatalogPage() {
   await requirePageAccess(MODULES.OTROS_INGRESOS);
+
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.OTROS_INGRESOS, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.OTROS_INGRESOS, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.OTROS_INGRESOS, "canDelete");
 
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },
@@ -58,7 +65,14 @@ export default async function MiscIncomeCatalogPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura de Ingresos</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura de Ingresos</h1>
+              {!canCreate && !canUpdate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Catálogo Financiero</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {condominium.name} · Definición de conceptos y categorías financieras.
@@ -71,6 +85,9 @@ export default async function MiscIncomeCatalogPage() {
         initialConcepts={concepts}
         ordinaryGroup={{ id: ordinaryGroup.id, name: ordinaryGroup.name }}
         extraordinaryGroup={{ id: extraordinaryGroup.id, name: extraordinaryGroup.name }}
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
       />
     </div>
   );

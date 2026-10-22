@@ -1,6 +1,7 @@
+import type { Metadata } from "next";
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
-import type { Metadata } from "next";
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import { getContactDirectoryUseCase } from "@/modules/contacts";
 import { toContactDirectoryVM } from "@/modules/contacts/presentation/contact-directory.vm";
 import { ContactosWorkbench } from "./contactos-workbench";
@@ -16,6 +17,10 @@ export const dynamic = "force-dynamic";
 
 export default async function ContactosPage() {
   await requirePageAccess(MODULES.CONTACTOS);
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.CONTACTOS, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.CONTACTOS, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.CONTACTOS, "canDelete");
 
   const directory = await getContactDirectoryUseCase.execute();
   const vm = directory ? toContactDirectoryVM(directory) : null;
@@ -44,7 +49,13 @@ export default async function ContactosPage() {
         </div>
       </div>
 
-      <ContactosWorkbench entries={vm.entries} types={vm.types} />
+      <ContactosWorkbench 
+        entries={vm.entries} 
+        types={vm.types} 
+        canCreate={canCreate}
+        canUpdate={canUpdate}
+        canDelete={canDelete}
+      />
     </div>
   );
 }

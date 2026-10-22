@@ -22,6 +22,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { hasValidUseType } from "@/modules/statistics/infrastructure/prisma-statistics.repository";
 
 import type {
   FeeReportFilter,
@@ -76,6 +77,7 @@ type AreaMeta = {
   code: string | null;
   name: string;
   zone: string | null;
+  useType: string | null;
   status: string;
   sortOrder: number;
   parentPrivateAreaId: string | null;
@@ -149,10 +151,24 @@ function buildSortedHierarchy(areas: AreaMeta[]): AreaMeta[] {
   }
 
   const sorted: AreaMeta[] = [];
+  const emittedIds = new Set<string>();
   for (const root of roots) {
     sorted.push(root);
-    sorted.push(...(childrenByParent.get(root.id) ?? []));
+    emittedIds.add(root.id);
+    for (const child of childrenByParent.get(root.id) ?? []) {
+      sorted.push(child);
+      emittedIds.add(child.id);
+    }
   }
+
+  // Conservar áreas válidas cuyo padre fue excluido del conteo
+  for (const area of areas) {
+    if (!emittedIds.has(area.id)) {
+      sorted.push(area);
+      emittedIds.add(area.id);
+    }
+  }
+
   return sorted;
 }
 
@@ -184,20 +200,24 @@ export class PrismaFeeReportRepository implements FeeReportRepository {
     if (targetGroups.length === 0) return null;
     const chargeGroupIds = targetGroups.map(g => g.id);
 
-    // ── Q3: Metadata ligera de TODAS las áreas (ordenar + paginar en memoria) ──
-    const allAreasMeta = (await prisma.privateArea.findMany({
+    // ── Q3: Metadata ligera de TODAS las áreas con uso de suelo válido ───────
+    const allRawAreas = (await prisma.privateArea.findMany({
       where: { condominiumId, isActive: true },
       select: {
         id: true,
         code: true,
         name: true,
         zone: true,
+        useType: true,
         status: true,
         sortOrder: true,
         parentPrivateAreaId: true,
         isFusion: true,
       },
     })) as AreaMeta[];
+
+    // Contabilizar únicamente las áreas cuyo useType sea válido para representar una unidad computable
+    const allAreasMeta = allRawAreas.filter((a) => hasValidUseType(a.useType));
 
     const totalAreas = allAreasMeta.length;
     if (totalAreas === 0) {

@@ -12,15 +12,8 @@ import { cookies } from "next/headers";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { ADMIN_SESSION_COOKIE, verifyAdminSession, type AdminSession } from "./admin-session";
 import type { ModuleName } from "./modules";
-
-export type PermissionAction = "canRead" | "canCreate" | "canUpdate" | "canDelete";
-export type ModulePermissions = {
-  canRead: boolean;
-  canCreate: boolean;
-  canUpdate: boolean;
-  canDelete: boolean;
-};
-export type UserPermissions = Record<string, ModulePermissions>;
+export * from "./permission-utils";
+import type { PermissionAction, ModulePermissions, UserPermissions } from "./permission-utils";
 
 /** Lee y verifica la cookie de sesión del panel. Devuelve null si no hay sesión válida. */
 export const readAdminSession = cache(async (): Promise<AdminSession | null> => {
@@ -139,20 +132,6 @@ export const getUserPermissions = cache(async (): Promise<UserPermissions> => {
     return {};
   }
 });
-
-export function hasPermission(
-  permissions: UserPermissions,
-  module: ModuleName | readonly ModuleName[],
-  action: PermissionAction = "canRead",
-): boolean {
-  const modules = Array.isArray(module) ? module : [module as ModuleName];
-  return modules.some((m) => permissions[m]?.[action] === true);
-}
-
-/** ¿Puede entrar al panel? Basta con leer al menos un módulo. */
-export function canAccessAdminPanel(permissions: UserPermissions): boolean {
-  return Object.values(permissions).some((p) => p.canRead);
-}
 
 /**
  * Todos los módulos activos con permisos completos. Se devuelve un objeto real (no un

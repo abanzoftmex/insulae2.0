@@ -10,10 +10,17 @@ import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export const dynamic = "force-dynamic";
 
 export default async function DepartamentosTicketsPage() {
   await requirePageAccess(MODULES.DEPARTAMENTOS_TICKETS);
+
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.DEPARTAMENTOS_TICKETS, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.DEPARTAMENTOS_TICKETS, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.DEPARTAMENTOS_TICKETS, "canDelete");
 
   const submitDeleteDepartment = async (formData: FormData): Promise<void> => {
     "use server";
@@ -41,19 +48,28 @@ export default async function DepartamentosTicketsPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Departamentos de Tickets</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Departamentos de Tickets</h1>
+              {!canCreate && !canUpdate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Mesa de Atención</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">{vm.subtitle}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
-            <Link href="/departamentos-tickets/nuevo">
-              <Plus className="h-3.5 w-3.5" />
-              Nuevo departamento
-            </Link>
-          </Button>
-        </div>
+        {canCreate && (
+          <div className="flex items-center gap-2">
+            <Button size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+              <Link href="/departamentos-tickets/nuevo">
+                <Plus className="h-3.5 w-3.5" />
+                Nuevo departamento
+              </Link>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* ── Stat cards ───────────────────────────────────────── */}
@@ -72,13 +88,15 @@ export default async function DepartamentosTicketsPage() {
             <div className="p-10 text-center">
               <p className="text-sm font-semibold text-ink">No hay departamentos registrados</p>
               <p className="text-xs text-ink-soft mt-1">Crea el primer departamento para canalizar tickets.</p>
-              <Link
-                href="/departamentos-tickets/nuevo"
-                className="mt-4 inline-flex items-center gap-2 h-8 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Crear primer departamento
-              </Link>
+              {canCreate && (
+                <Link
+                  href="/departamentos-tickets/nuevo"
+                  className="mt-4 inline-flex items-center gap-2 h-8 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Crear primer departamento
+                </Link>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -149,27 +167,35 @@ export default async function DepartamentosTicketsPage() {
 
                         <td className="px-4 py-3 border-l border-black/5">
                           <div className="flex items-center justify-end gap-1.5">
-                            <Link
-                              href={`/departamentos-tickets/${row.id}/editar`}
-                              className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-                              aria-label="Editar"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </Link>
+                            {canUpdate && (
+                              <Link
+                                href={`/departamentos-tickets/${row.id}/editar`}
+                                className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+                                aria-label="Editar"
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                              </Link>
+                            )}
 
-                            {row.canDelete ? (
-                              <form action={submitDeleteDepartment}>
-                                <input type="hidden" name="departmentId" value={row.id} />
-                                <button
-                                  type="submit"
-                                  className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
-                                  aria-label="Eliminar"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                </button>
-                              </form>
-                            ) : (
-                              <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">En uso</Badge>
+                            {canDelete && (
+                              row.canDelete ? (
+                                <form action={submitDeleteDepartment}>
+                                  <input type="hidden" name="departmentId" value={row.id} />
+                                  <button
+                                    type="submit"
+                                    className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+                                    aria-label="Eliminar"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </form>
+                              ) : (
+                                <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">En uso</Badge>
+                              )
+                            )}
+
+                            {!canUpdate && !canDelete && (
+                              <span className="text-[11px] text-ink-soft/40 italic">Solo lectura</span>
                             )}
                           </div>
                         </td>

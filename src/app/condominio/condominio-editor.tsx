@@ -36,6 +36,7 @@ type AssetKind = "condominium-logo" | "condominium-image" | "footer-logo" | "pri
 interface CondominioEditorProps {
   initialValues: UpdateCondominioSettingsInput;
   condominiumSlug: string;
+  canUpdate?: boolean;
 }
 
 function toNumericString(value: string): string {
@@ -60,7 +61,7 @@ function normalizeAssetLabel(field: AssetFieldKey): string {
   }
 }
 
-export function CondominioEditor({ initialValues, condominiumSlug }: CondominioEditorProps) {
+export function CondominioEditor({ initialValues, condominiumSlug, canUpdate = true }: CondominioEditorProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState<UpdateCondominioSettingsInput>({
@@ -138,26 +139,34 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
         <form onSubmit={onSubmit} className="space-y-8">
           {/* Section 1: Identity */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-line pb-1">
-              <span className="h-2 w-2 rounded-full bg-brand" />
-              <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Identidad y Formato</p>
+            <div className="flex items-center justify-between border-b border-line pb-1">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-brand" />
+                <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Identidad y Formato</p>
+              </div>
+              {!canUpdate && (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                  Modo sólo lectura
+                </span>
+              )}
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Input label="Nombre del Proyecto" value={form.projectName} onChange={(e) => onInput("projectName", e.target.value)} />
-              <Input label="Nomenclatura" value={form.projectInitials} onChange={(e) => onInput("projectInitials", e.target.value)} />
+              <Input label="Nombre del Proyecto" value={form.projectName} disabled={!canUpdate} onChange={(e) => onInput("projectName", e.target.value)} />
+              <Input label="Nomenclatura" value={form.projectInitials} disabled={!canUpdate} onChange={(e) => onInput("projectInitials", e.target.value)} />
               <div className="flex flex-col gap-1.5 w-full">
                 <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Tipo de condominio</label>
                 <select
                   value={form.condominiumFormatId}
+                  disabled={!canUpdate}
                   onChange={(e) => onInput("condominiumFormatId", e.target.value)}
-                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20"
+                  className="h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium outline-none appearance-none focus:ring-2 focus:ring-brand-accent/20 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <option value="1">Vertical</option>
                   <option value="2">Horizontal</option>
                   <option value="3">Mixto</option>
                 </select>
               </div>
-              <Input label="Año de Arranque" type="number" value={form.startYear} onChange={(e) => onInput("startYear", e.target.value)} />
+              <Input label="Año de Arranque" type="number" value={form.startYear} disabled={!canUpdate} onChange={(e) => onInput("startYear", e.target.value)} />
             </div>
           </div>
 
@@ -169,18 +178,18 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <Input label="Total M2 Terreno (Calculado)" type="number" step="any" value={form.totalM2} disabled className="bg-canvas/50 cursor-not-allowed opacity-80" />
-              <Input label="Total lotes" type="number" value={form.totalApoles} onChange={(e) => onInput("totalApoles", e.target.value)} />
-              <Input label="M2 Áreas Comunes" type="number" step="any" value={form.commonAreasM2} onChange={(e) => onInput("commonAreasM2", e.target.value)} onBlur={(e) => onInput("commonAreasM2", toMaxSixDecimalsString(e.target.value))} />
-              <Input label="M2 Áreas Privativas" type="number" step="any" value={form.privateAreasM2} onChange={(e) => onInput("privateAreasM2", e.target.value)} onBlur={(e) => onInput("privateAreasM2", toMaxSixDecimalsString(e.target.value))} />
-              <Input label="Desarrollador" value={form.developedBy} onChange={(e) => onInput("developedBy", e.target.value)} />
+              <Input label="Total lotes" type="number" value={form.totalApoles} disabled={!canUpdate} onChange={(e) => onInput("totalApoles", e.target.value)} />
+              <Input label="M2 Áreas Comunes" type="number" step="any" value={form.commonAreasM2} disabled={!canUpdate} onChange={(e) => onInput("commonAreasM2", e.target.value)} onBlur={(e) => onInput("commonAreasM2", toMaxSixDecimalsString(e.target.value))} />
+              <Input label="M2 Áreas Privativas" type="number" step="any" value={form.privateAreasM2} disabled={!canUpdate} onChange={(e) => onInput("privateAreasM2", e.target.value)} onBlur={(e) => onInput("privateAreasM2", toMaxSixDecimalsString(e.target.value))} />
+              <Input label="Desarrollador" value={form.developedBy} disabled={!canUpdate} onChange={(e) => onInput("developedBy", e.target.value)} />
             </div>
             <div className="flex items-center gap-6 pt-2">
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" checked={form.usesLandUseFormula} onChange={(e) => onInput("usesLandUseFormula", e.target.checked)} className="h-3.5 w-3.5 rounded border-line text-brand focus:ring-brand-accent/20" />
+                <input type="checkbox" checked={form.usesLandUseFormula} disabled={!canUpdate} onChange={(e) => onInput("usesLandUseFormula", e.target.checked)} className="h-3.5 w-3.5 rounded border-line text-brand focus:ring-brand-accent/20 disabled:cursor-not-allowed" />
                 <span className="text-[11px] font-bold uppercase text-ink-soft/60 group-hover:text-brand transition-colors">Activar Fórmula Uso Suelo</span>
               </label>
               <label className="flex items-center gap-2 cursor-pointer group">
-                <input type="checkbox" checked={form.hasVccc} onChange={(e) => onInput("hasVccc", e.target.checked)} className="h-3.5 w-3.5 rounded border-line text-brand focus:ring-brand-accent/20" />
+                <input type="checkbox" checked={form.hasVccc} disabled={!canUpdate} onChange={(e) => onInput("hasVccc", e.target.checked)} className="h-3.5 w-3.5 rounded border-line text-brand focus:ring-brand-accent/20 disabled:cursor-not-allowed" />
                 <span className="text-[11px] font-bold uppercase text-ink-soft/60 group-hover:text-brand transition-colors">Activar Manejo VCCC</span>
               </label>
             </div>
@@ -193,8 +202,8 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
               <p className="text-[10px] font-bold uppercase tracking-widest text-brand">Contenidos y Textos Legales</p>
             </div>
             <div className="flex flex-col gap-4">
-              <RichTextEditor label="Aviso de Privacidad (Simplificado)" value={form.projectDescription} onChange={(html) => onInput("projectDescription", html)} minHeight="120px" />
-              <RichTextEditor label="Aviso de Privacidad (Completo)" value={form.privacyNoticeText} onChange={(html) => onInput("privacyNoticeText", html)} minHeight="160px" />
+              <RichTextEditor label="Aviso de Privacidad (Simplificado)" value={form.projectDescription} disabled={!canUpdate} onChange={(html) => onInput("projectDescription", html)} minHeight="120px" />
+              <RichTextEditor label="Aviso de Privacidad (Completo)" value={form.privacyNoticeText} disabled={!canUpdate} onChange={(html) => onInput("privacyNoticeText", html)} minHeight="160px" />
               <RichTextEditor
                 label="Pie de Recibos (Izquierdo)"
                 editableTitle={{
@@ -203,6 +212,7 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
                   onChange: (val) => onInput("footerLeftTitle", val),
                 }}
                 value={form.footerLeft}
+                disabled={!canUpdate}
                 onChange={(html) => onInput("footerLeft", html)}
                 minHeight="120px"
               />
@@ -214,6 +224,7 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
                   onChange: (val) => onInput("footerRightTitle", val),
                 }}
                 value={form.footerRight}
+                disabled={!canUpdate}
                 onChange={(html) => onInput("footerRight", html)}
                 minHeight="120px"
               />
@@ -258,11 +269,13 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
                       )}
                     </div>
                     <div className="flex flex-col gap-2">
-                      <label className="h-8 px-4 flex items-center justify-center gap-2 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase cursor-pointer shadow-md shadow-brand-deep/25 hover:bg-brand transition-colors">
-                        <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                        {hasFile ? "Reemplazar" : "Subir Archivo"}
-                        <input type="file" className="hidden" accept={asset.accept} onChange={(e) => onUpload(asset.key, e.target.files?.[0] ?? null, asset.kind)} />
-                      </label>
+                      {canUpdate && (
+                        <label className="h-8 px-4 flex items-center justify-center gap-2 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase cursor-pointer shadow-md shadow-brand-deep/25 hover:bg-brand transition-colors">
+                          <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden />
+                          {hasFile ? "Reemplazar" : "Subir Archivo"}
+                          <input type="file" className="hidden" accept={asset.accept} onChange={(e) => onUpload(asset.key, e.target.files?.[0] ?? null, asset.kind)} />
+                        </label>
+                      )}
                       {hasFile && (
                         <a href={value} target="_blank" className="h-8 px-4 flex items-center justify-center gap-2 rounded-full bg-brand-deep text-white text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25 hover:bg-brand transition-colors">
                           <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
@@ -292,18 +305,26 @@ export function CondominioEditor({ initialValues, condominiumSlug }: CondominioE
               )}
             </div>
             <div className="flex items-center gap-3">
-              <div className="hidden sm:flex items-center gap-2 text-ink-soft/40 mr-2">
-                <Info className="h-3.5 w-3.5" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">Cambios afectan persistencia global</span>
-              </div>
-              <Button
-                type="submit"
-                disabled={isPending || uploadingField !== null}
-                className="h-10 px-10 text-[11px] font-bold uppercase gap-2 shadow-xl shadow-brand/20"
-              >
-                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                Guardar Configuración
-              </Button>
+              {canUpdate ? (
+                <>
+                  <div className="hidden sm:flex items-center gap-2 text-ink-soft/40 mr-2">
+                    <Info className="h-3.5 w-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Cambios afectan persistencia global</span>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={isPending || uploadingField !== null}
+                    className="h-10 px-10 text-[11px] font-bold uppercase gap-2 shadow-xl shadow-brand/20"
+                  >
+                    {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    Guardar Configuración
+                  </Button>
+                </>
+              ) : (
+                <div className="text-[11px] font-bold uppercase text-ink-soft/60 italic">
+                  Visualización de sólo lectura activada
+                </div>
+              )}
             </div>
           </div>
         </form>

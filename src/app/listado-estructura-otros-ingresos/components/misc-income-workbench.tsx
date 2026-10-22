@@ -39,12 +39,18 @@ interface MiscIncomeWorkbenchProps {
   initialConcepts: MiscIncomeConcept[];
   ordinaryGroup: { id: string; name: string };
   extraordinaryGroup: { id: string; name: string };
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 export function MiscIncomeWorkbench({ 
   initialConcepts, 
   ordinaryGroup, 
-  extraordinaryGroup 
+  extraordinaryGroup,
+  canCreate = true,
+  canUpdate = true,
+  canDelete = true,
 }: MiscIncomeWorkbenchProps) {
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
@@ -181,20 +187,24 @@ export function MiscIncomeWorkbench({
       align: "right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1.5">
-          <button
-            onClick={() => openEditModal(row)}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-            title="Editar"
-          >
-            <Edit2 className="h-3.5 w-3.5" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.id)}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
-            title="Eliminar"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+          {canUpdate && (
+            <button
+              onClick={() => openEditModal(row)}
+              className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+              title="Editar"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => handleDelete(row.id)}
+              className="h-8 w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors"
+              title="Eliminar"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
         </div>
       )
     }
@@ -218,8 +228,8 @@ export function MiscIncomeWorkbench({
         data={filteredConcepts}
         columns={columns}
         onSearch={setSearch}
-        onAdd={openAddModal}
-        addLabel="Nuevo Concepto"
+        onAdd={canCreate ? openAddModal : undefined}
+        addLabel={canCreate ? "Nuevo Concepto" : undefined}
       />
 
       <div className="flex items-center gap-2 p-3 bg-canvas/40 border border-line/30 rounded-md mt-4">

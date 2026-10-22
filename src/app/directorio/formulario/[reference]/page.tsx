@@ -54,6 +54,7 @@ function isUuidReference(reference: string): boolean {
 export default async function DirectorioFormularioPage({ params, searchParams }: PageProps) {
   await requirePageAccess(MODULES.DIRECTORIO);
   const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.DIRECTORIO, "canCreate");
   const canUpdate = hasPermission(permissions, MODULES.DIRECTORIO, "canUpdate");
   const canDelete = hasPermission(permissions, MODULES.DIRECTORIO, "canDelete");
 
@@ -97,6 +98,7 @@ export default async function DirectorioFormularioPage({ params, searchParams }:
         initialData={detail}
         roleOptions={roles}
         backHref={backHref}
+        canCreate={canCreate}
         canUpdate={canUpdate}
         canDelete={canDelete}
       />

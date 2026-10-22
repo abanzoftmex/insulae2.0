@@ -57,8 +57,13 @@ async function StatusToggle({ isClosed, budgetId }: { isClosed: boolean, budgetI
   );
 }
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export default async function PresupuestosPage(props: { searchParams: Promise<{ anio?: string }> }) {
   await requirePageAccess(MODULES.PRESUPUESTO);
+
+  const permissions = await getUserPermissions();
+  const canUpdate = hasPermission(permissions, MODULES.PRESUPUESTO, "canUpdate");
 
   const searchParams = await props.searchParams;
   const currentYear = new Date().getUTCFullYear();
@@ -88,6 +93,11 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
             <div className="flex items-center gap-2">
               <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Presupuesto {year}</h1>
               <YearSelector currentYear={currentYear} selectedYear={year} />
+              {!canUpdate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
             </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Planeación Financiera</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
@@ -97,8 +107,8 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <StatusToggle isClosed={isClosed} budgetId={vm.id} />
-          <ExcelImport year={year} isClosed={isClosed} />
+          {canUpdate && <StatusToggle isClosed={isClosed} budgetId={vm.id} />}
+          {canUpdate && <ExcelImport year={year} isClosed={isClosed} />}
           <PrintButton />
         </div>
       </div>
@@ -212,7 +222,7 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
 
       {/* Main Budget Table */}
       <div className="animate-in slide-in-from-bottom-4 duration-700 delay-300">
-        <BudgetTable vm={vm} condominiumSlug={condo.slug} projectId={condo.id} />
+        <BudgetTable vm={vm} condominiumSlug={condo.slug} projectId={condo.id} canUpdate={canUpdate} />
       </div>
     </div>
   );

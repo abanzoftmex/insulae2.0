@@ -14,10 +14,17 @@ import { Button } from "@/components/ui/button";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { StatCard } from "@/components/ui/stat-card";
 
+import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+
 export const dynamic = "force-dynamic";
 
 export default async function CategoriasNotificacionPage() {
   await requirePageAccess(MODULES.CATEGORIAS_NOTIFICACIONES);
+
+  const permissions = await getUserPermissions();
+  const canCreate = hasPermission(permissions, MODULES.CATEGORIAS_NOTIFICACIONES, "canCreate");
+  const canUpdate = hasPermission(permissions, MODULES.CATEGORIAS_NOTIFICACIONES, "canUpdate");
+  const canDelete = hasPermission(permissions, MODULES.CATEGORIAS_NOTIFICACIONES, "canDelete");
 
   const submitDeleteCategory = async (formData: FormData): Promise<void> => {
     "use server";
@@ -53,16 +60,25 @@ export default async function CategoriasNotificacionPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">{vm.title}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">{vm.title}</h1>
+              {!canCreate && !canUpdate && (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
+                  Modo Solo Lectura
+                </Badge>
+              )}
+            </div>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Catálogo Operativo</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">{vm.subtitle}</p>
           </div>
         </div>
-        <Button size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25 shrink-0">
-          <Link href="/categorias-notificacion/nuevo">
-            <Plus className="h-3.5 w-3.5" /> Nueva categoría
-          </Link>
-        </Button>
+        {canCreate && (
+          <Button size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25 shrink-0">
+            <Link href="/categorias-notificacion/nuevo">
+              <Plus className="h-3.5 w-3.5" /> Nueva categoría
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* ── Stat ─────────────────────────────────────────────── */}
@@ -81,9 +97,11 @@ export default async function CategoriasNotificacionPage() {
           <div className="p-10 text-center">
             <p className="text-sm font-semibold text-ink">No hay categorías registradas</p>
             <p className="mt-1 text-xs text-ink-soft">Crea la primera para clasificar notificaciones.</p>
-            <Button size="sm" asChild className="mt-4 h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full">
-              <Link href="/categorias-notificacion/nuevo"><Plus className="h-3.5 w-3.5" /> Nueva categoría</Link>
-            </Button>
+            {canCreate && (
+              <Button size="sm" asChild className="mt-4 h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full">
+                <Link href="/categorias-notificacion/nuevo"><Plus className="h-3.5 w-3.5" /> Nueva categoría</Link>
+              </Button>
+            )}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -113,14 +131,16 @@ export default async function CategoriasNotificacionPage() {
                     <td className="px-4 py-3 border-l border-black/5 text-xs text-ink-soft">{row.notificationsCountLabel}</td>
                     <td className="px-4 py-3 border-l border-black/5">
                       <div className="flex justify-end items-center gap-2">
-                        <Link
-                          href={`/categorias-notificacion/${row.id}/editar`}
-                          className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-                          title="Editar"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </Link>
-                        {row.canDelete ? (
+                        {canUpdate && (
+                          <Link
+                            href={`/categorias-notificacion/${row.id}/editar`}
+                            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+                            title="Editar"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                          </Link>
+                        )}
+                        {canDelete && row.canDelete ? (
                           <form action={submitDeleteCategory}>
                             <input type="hidden" name="categoryId" value={row.id} />
                             <button
@@ -131,9 +151,9 @@ export default async function CategoriasNotificacionPage() {
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                             </button>
                           </form>
-                        ) : (
+                        ) : !row.canDelete ? (
                           <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">En uso</Badge>
-                        )}
+                        ) : null}
                       </div>
                     </td>
                   </tr>

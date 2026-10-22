@@ -25,6 +25,8 @@ interface RichTextEditorProps {
   onChange: (html: string) => void;
   className?: string;
   minHeight?: string;
+  disabled?: boolean;
+  readOnly?: boolean;
 }
 
 export function RichTextEditor({
@@ -34,8 +36,12 @@ export function RichTextEditor({
   onChange,
   className,
   minHeight = "120px",
+  disabled = false,
+  readOnly = false,
 }: RichTextEditorProps) {
+  const isEditable = !disabled && !readOnly;
   const editor = useEditor({
+    editable: isEditable,
     extensions: [
       StarterKit.configure({
         heading: false,
@@ -62,7 +68,8 @@ export function RichTextEditor({
           "[&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-0.5",
           "[&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-0.5",
           "[&_a]:text-brand [&_a]:underline [&_a]:underline-offset-2 [&_a]:hover:text-brand-accent",
-          "[&_p]:min-h-[1em]"
+          "[&_p]:min-h-[1em]",
+          !isEditable && "opacity-75 cursor-not-allowed bg-canvas/30"
         ),
       },
     },
@@ -72,6 +79,11 @@ export function RichTextEditor({
     },
     immediatelyRender: false,
   });
+
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(isEditable);
+  }, [isEditable, editor]);
 
   // Sync external value changes (e.g. reset form)
   useEffect(() => {
@@ -147,9 +159,10 @@ export function RichTextEditor({
           <input
             type="text"
             value={editableTitle.value}
+            disabled={!isEditable}
             placeholder={editableTitle.placeholder || label}
             onChange={(e) => editableTitle.onChange(e.target.value)}
-            className="w-full max-w-sm rounded border border-line bg-card px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+            className="w-full max-w-sm rounded border border-line bg-card px-2.5 py-1 text-xs font-bold uppercase tracking-wider text-ink focus:outline-none focus:ring-1 focus:ring-brand disabled:opacity-60 disabled:cursor-not-allowed"
           />
         </div>
       ) : (
@@ -160,35 +173,39 @@ export function RichTextEditor({
 
       <div className="rounded-md border border-line bg-card focus-within:ring-2 focus-within:ring-brand-accent/30 focus-within:border-brand-accent transition-standard overflow-hidden">
         {/* Toolbar */}
-        <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-line/60 bg-canvas/50">
-          {tools.map((tool) => (
-            <button
-              key={tool.label}
-              type="button"
-              aria-label={tool.label}
-              title={tool.label}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                tool.action();
-              }}
-              className={cn(
-                "h-6 w-6 flex items-center justify-center rounded transition-standard",
-                tool.active
-                  ? "bg-brand text-white"
-                  : "text-ink-soft hover:bg-canvas hover:text-brand"
-              )}
-            >
-              {tool.icon}
-            </button>
-          ))}
-        </div>
+        {isEditable && (
+          <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-line/60 bg-canvas/50">
+            {tools.map((tool) => (
+              <button
+                key={tool.label}
+                type="button"
+                aria-label={tool.label}
+                title={tool.label}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  tool.action();
+                }}
+                className={cn(
+                  "h-6 w-6 flex items-center justify-center rounded transition-standard",
+                  tool.active
+                    ? "bg-brand text-white"
+                    : "text-ink-soft hover:bg-canvas hover:text-brand"
+                )}
+              >
+                {tool.icon}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Editor area */}
         <EditorContent
           editor={editor}
           style={{ minHeight }}
-          className="cursor-text"
-          onClick={() => editor.commands.focus()}
+          className={isEditable ? "cursor-text" : "cursor-default"}
+          onClick={() => {
+            if (isEditable) editor.commands.focus();
+          }}
         />
       </div>
     </div>

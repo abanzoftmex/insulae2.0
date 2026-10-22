@@ -27,6 +27,7 @@ import {
   Store
 } from "lucide-react";
 import { ProvisionalPasswordButton } from "./provisional-password-button";
+import { DeletePersonButton } from "./delete-person-button";
 
 export const metadata: Metadata = {
   title: "Directorio | Insulae 2.0",
@@ -294,6 +295,12 @@ export default async function DirectorioPage(props: PageProps) {
                               userName={person.legalNameLabel}
                             />
                           )}
+                          {canDelete && (
+                            <DeletePersonButton
+                              personId={person.id}
+                              personName={person.displayName || person.legalNameLabel}
+                            />
+                          )}
                           <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase shadow-md shadow-brand-deep/25">
                             <Link href={buildEditHref(person.reference)}>
                               Perfil <ArrowRight className="h-3.5 w-3.5" />
@@ -321,11 +328,20 @@ export default async function DirectorioPage(props: PageProps) {
                         <td className="px-4 py-2 text-xs text-ink-soft/60 italic">Usuario anidado</td>
                         <td className="px-4 py-2"><Badge variant="outline" className="px-2 py-0.5 text-[8px] text-ink-soft/60">Anidado</Badge></td>
                         <td className="px-4 py-2 text-right">
-                          <Button variant="dark" size="sm" asChild className="h-7 gap-1.5 px-3 text-[9px] font-bold uppercase shadow-sm">
-                            <Link href={buildEditHref(person.reference)}>
-                              Perfil <ArrowRight className="h-3 w-3" />
-                            </Link>
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            {canDelete && (
+                              <DeletePersonButton
+                                personId={child.id}
+                                personName={child.fullName}
+                                isNested
+                              />
+                            )}
+                            <Button variant="dark" size="sm" asChild className="h-7 gap-1.5 px-3 text-[9px] font-bold uppercase shadow-sm">
+                              <Link href={buildEditHref(person.reference)}>
+                                Perfil <ArrowRight className="h-3 w-3" />
+                              </Link>
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
