@@ -27,6 +27,7 @@ function mapToRecord(row: any): IncomeRecord {
     concept: row.concept,
     amount: decimalToNumber(row.amount),
     paymentMethod: row.paymentMethod ?? null,
+    reference: row.reference ?? null,
     notes: row.notes ?? null,
     receiptUrl: row.receiptUrl ?? null,
     isActive: row.isActive,
@@ -75,6 +76,7 @@ export class PrismaIncomeRepository implements IncomeRepository {
 
       where.OR = [
         { concept: { contains: term, mode: "insensitive" } },
+        { reference: { contains: term, mode: "insensitive" } },
         { notes: { contains: term, mode: "insensitive" } },
         { miscCatalog: { name: { contains: term, mode: "insensitive" } } },
         { chargeGroup: { name: { contains: term, mode: "insensitive" } } },
@@ -133,6 +135,7 @@ export class PrismaIncomeRepository implements IncomeRepository {
         concept: input.concept,
         amount: input.amount,
         paymentMethod: input.paymentMethod as any,
+        reference: input.reference ?? null,
         notes: input.notes ?? null,
         receiptUrl: input.receiptUrl ?? null,
         miscCatalogId: input.miscCatalogId ?? null,
@@ -155,6 +158,7 @@ export class PrismaIncomeRepository implements IncomeRepository {
         concept: input.concept,
         amount: input.amount,
         paymentMethod: input.paymentMethod as any,
+        reference: input.reference ?? null,
         notes: input.notes ?? null,
         receiptUrl: input.receiptUrl ?? null,
         miscCatalogId: input.miscCatalogId ?? null,

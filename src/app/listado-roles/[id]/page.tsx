@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default async function EditRolePage(props: Props) {
-  await requirePageAccess(MODULES.ROLES);
+  await requirePageAccess(MODULES.ROLES, "canUpdate");
 
   const permissions = await getUserPermissions();
   const canUpdate = hasPermission(permissions, MODULES.ROLES, "canUpdate");

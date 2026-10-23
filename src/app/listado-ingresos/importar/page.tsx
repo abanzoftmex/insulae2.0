@@ -15,7 +15,7 @@ import {
 import { ImportIncomeForm } from "./components/import-income-form";
 
 export default async function ImportarIngresosPage() {
-  await requirePageAccess(MODULES.COBROS);
+  await requirePageAccess(MODULES.COBROS, "canCreate");
 
   const condominium = await prisma.condominium.findFirst({
     where: { isActive: true },

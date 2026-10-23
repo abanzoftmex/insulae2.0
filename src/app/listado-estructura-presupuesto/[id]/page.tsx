@@ -9,11 +9,11 @@ import { PrismaBudgetRepository } from "@/modules/budget/infrastructure/prisma-b
 const budgetRepo = new PrismaBudgetRepository();
 
 export default async function EditBudgetGroupPage(props: { params: Promise<{ id: string }>, searchParams: Promise<{ anio?: string }> }) {
-  await requirePageAccess(MODULES.ESTRUCTURA_PRESUPUESTO);
-
   const params = await props.params;
   const searchParams = await props.searchParams;
   const id = params.id;
+  const isNew = id === "nuevo";
+  await requirePageAccess(MODULES.ESTRUCTURA_PRESUPUESTO, isNew ? "canCreate" : "canUpdate");
   const currentYear = new Date().getFullYear();
   const year = parseInt(searchParams.anio ?? "", 10) || currentYear;
 

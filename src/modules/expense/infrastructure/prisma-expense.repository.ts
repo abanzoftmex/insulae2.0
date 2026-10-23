@@ -26,6 +26,7 @@ function mapToRecord(row: PrismaExpenseWithIncludes): ExpenseRecord {
     concept: row.concept,
     amount: Number(row.amount),
     paymentMethod: row.paymentMethod,
+    reference: row.reference ?? null,
     notes: row.notes,
     receiptUrl: row.receiptUrl ?? null,
     projectName: row.projectName ?? row.legacyProjectName, // Fallback to legacy project
@@ -51,6 +52,7 @@ export class PrismaExpenseRepository implements ExpenseRepository {
 
       where.OR = [
         { concept: { contains: term, mode: "insensitive" } },
+        { reference: { contains: term, mode: "insensitive" } },
         { projectName: { contains: term, mode: "insensitive" } },
         { legacyProjectName: { contains: term, mode: "insensitive" } },
         { notes: { contains: term, mode: "insensitive" } },
@@ -116,6 +118,7 @@ export class PrismaExpenseRepository implements ExpenseRepository {
         concept: input.concept,
         amount: input.amount,
         paymentMethod: input.paymentMethod as any,
+        reference: input.reference ?? null,
         notes: input.notes ?? null,
         receiptUrl: input.receiptUrl ?? null,
         projectName: input.projectName ?? null,
@@ -134,6 +137,7 @@ export class PrismaExpenseRepository implements ExpenseRepository {
         concept: input.concept,
         amount: input.amount,
         paymentMethod: input.paymentMethod as any,
+        reference: input.reference ?? null,
         notes: input.notes ?? null,
         receiptUrl: input.receiptUrl ?? null,
         projectName: input.projectName ?? null,

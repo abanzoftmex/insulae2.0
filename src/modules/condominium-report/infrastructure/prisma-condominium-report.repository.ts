@@ -638,8 +638,11 @@ export class PrismaCondominiumReportRepository
     // que están clasificadas por su zona y no deben contarse como lotes privados.
     const realTotalApoles = apolCount;
 
-    const callesArea = reportableAreas.find((a) => a.name === "Áreas comunes Calles");
-    const callesCommonAreaM2 = callesArea ? decimalToNumber(callesArea.m2CommonAreaChildren) : 0;
+    const projectCommonAreasM2 = decimalToNumber(project?.commonAreasM2);
+    const projectPrivateAreasM2 = decimalToNumber(project?.privateAreasM2);
+    const projectTotalM2 =
+      decimalToNumber(project?.totalM2) ||
+      (projectPrivateAreasM2 + projectCommonAreasM2);
 
     return {
       condominiumId: condominium.id,
@@ -648,9 +651,9 @@ export class PrismaCondominiumReportRepository
       projectId: project?.id ?? null,
       projectName: project?.name ?? null,
       projectTotalApoles: realTotalApoles,
-      projectPrivateAreasM2: decimalToNumber(project?.privateAreasM2),
-      projectTotalM2: decimalToNumber(project?.privateAreasM2) + callesCommonAreaM2,
-      projectCommonAreasM2: callesCommonAreaM2,
+      projectPrivateAreasM2,
+      projectTotalM2,
+      projectCommonAreasM2,
       cus: project?.cus ? decimalToNumber(project.cus) : null,
       cusPermitido: project?.cusPermitido ? decimalToNumber(project.cusPermitido) : null,
       barrios: project?.barrios ?? null,

@@ -13,7 +13,14 @@ import type {
   YearCount,
 } from "../domain/statistics";
 
-const OWNER_ROLES = ["Dueño Legal", "Dueño Moral", "Dominio pleno"];
+const OWNER_ROLES = [
+  "Dueño Legal",
+  "Dueño Moral",
+  "Dominio pleno",
+  "Propietario legal",
+  "Dominio actual",
+  "Propietario",
+];
 const TENANT_ROLE = "Arrendatario";
 const ACTIVE_RENTAL_STATUS = "1";
 // Años placeholder del legacy (fecha_inicio 1901/2000) y typos (4200)
@@ -123,14 +130,22 @@ class PrismaStatisticsRepository implements StatisticsRepository {
             where: {
               condominiumId: cid,
               isActive: true,
-              OR: [{ email: { not: null } }, { personalEmail: { not: null } }],
+              OR: [
+                { email: { contains: "@" } },
+                { personalEmail: { contains: "@" } },
+                { businessEmail: { contains: "@" } },
+              ],
             },
           }),
           prisma.user.count({
             where: {
               condominiumId: cid,
               isActive: true,
-              OR: [{ phone: { not: null } }, { personalPhone: { not: null } }],
+              OR: [
+                { phone: { gt: "" } },
+                { personalPhone: { gt: "" } },
+                { businessPhone: { gt: "" } },
+              ],
             },
           }),
         ]),

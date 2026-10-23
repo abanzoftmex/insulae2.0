@@ -11,7 +11,7 @@ interface PageProps {
 }
 
 export default async function EditExpensePage({ params }: PageProps) {
-  await requirePageAccess(MODULES.GASTOS);
+  await requirePageAccess(MODULES.GASTOS, "canUpdate");
 
   const { id } = await params;
 

@@ -13,18 +13,14 @@ interface PageProps {
 }
 
 export default async function BudgetGroupPage({ params, searchParams }: PageProps) {
-  await requirePageAccess(MODULES.ESTRUCTURA_PRESUPUESTO);
+  const { id } = await params;
+  const { anio } = await searchParams;
+  const isNew = id === "nuevo";
+  await requirePageAccess(MODULES.ESTRUCTURA_PRESUPUESTO, isNew ? "canCreate" : "canUpdate");
 
   const permissions = await getUserPermissions();
   const canCreate = hasPermission(permissions, MODULES.ESTRUCTURA_PRESUPUESTO, "canCreate");
   const canUpdate = hasPermission(permissions, MODULES.ESTRUCTURA_PRESUPUESTO, "canUpdate");
-
-  const { id } = await params;
-  const { anio } = await searchParams;
-
-  if (id === "nuevo" && !canCreate) {
-    redirect("/listado-estructura-presupuesto");
-  }
 
   const repo = new PrismaBudgetRepository();
 

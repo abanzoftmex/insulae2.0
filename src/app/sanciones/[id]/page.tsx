@@ -16,7 +16,7 @@ interface Props {
 }
 
 export default async function EditSanctionPage({ params }: Props) {
-  await requirePageAccess(MODULES.CATALOGO_SANCIONES);
+  await requirePageAccess(MODULES.CATALOGO_SANCIONES, "canUpdate");
 
   const condominium = await prisma.condominium.findFirst({ where: { isActive: true } });
   if (!condominium) notFound();

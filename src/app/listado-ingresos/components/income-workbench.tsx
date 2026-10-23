@@ -11,7 +11,8 @@ import {
   Layers,
   ArrowRight,
   Loader2,
-  Filter
+  Filter,
+  FileText
 } from "lucide-react";
 import { createIncomeAction, updateIncomeAction, deleteIncomeAction } from "../actions";
 import { importIncomesAction } from "../import-actions";
@@ -83,6 +84,19 @@ function formatToShortDate(dateVal: Date | string | null): string {
   return `${day} ${month} ${year}`;
 }
 
+function extractFileName(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const pathSegment = parsed.pathname.split("/o/")[1] || parsed.pathname;
+    const decoded = decodeURIComponent(pathSegment);
+    const raw = decoded.split("/").pop() || "comprobante.pdf";
+    return raw.replace(/^\d{10,14}-/, "");
+  } catch {
+    const raw = decodeURIComponent(url.split("?")[0].split("/").pop() || "comprobante.pdf");
+    return raw.replace(/^\d{10,14}-/, "");
+  }
+}
+
 export function IncomeWorkbench({
   initialIncomes,
   catalogs,
@@ -108,6 +122,7 @@ export function IncomeWorkbench({
   const [formAmount, setFormAmount] = useState("");
   const [formMethod, setFormMethod] = useState("CASH");
   const [formNotes, setFormNotes] = useState("");
+  const [formReference, setFormReference] = useState("");
   const [formCatalogId, setFormCatalogId] = useState("");
   const [formChargeGroupId, setFormChargeGroupId] = useState("");
   const [formAreaId, setFormAreaId] = useState("");
@@ -157,6 +172,7 @@ export function IncomeWorkbench({
       }
       const bySearch = !term || [
         i.concept,
+        i.reference || "",
         i.miscCatalogName || "",
         i.chargeGroupName || "",
         i.privateAreaName || "",
@@ -180,6 +196,7 @@ export function IncomeWorkbench({
     setFormAmount("");
     setFormMethod("CASH");
     setFormNotes("");
+    setFormReference("");
     setFormCatalogId("");
     setFormChargeGroupId("");
     setFormAreaId("");
@@ -195,6 +212,7 @@ export function IncomeWorkbench({
     setFormAmount(String(income.amount));
     setFormMethod(income.paymentMethod || "CASH");
     setFormNotes(income.notes || "");
+    setFormReference(income.reference || "");
     setFormCatalogId(income.miscCatalogId || "");
     setFormChargeGroupId(income.chargeGroupId || "");
     setFormAreaId(income.privateAreaId || "");
@@ -221,6 +239,7 @@ export function IncomeWorkbench({
         concept: formConcept,
         amount: parseFloat(formAmount),
         paymentMethod: formMethod,
+        reference: formReference.trim() || undefined,
         notes: formNotes || undefined,
         miscCatalogId: formCatalogId || undefined,
         chargeGroupId: formChargeGroupId || undefined,
@@ -567,30 +586,113 @@ export function IncomeWorkbench({
           <Textarea label="Concepto del Ingreso" value={formConcept} onChange={(e) => setFormConcept(e.target.value)} className="min-h-15" />
           <Input label="Notas Internas" value={formNotes} onChange={(e) => setFormNotes(e.target.value)} />
 
-          <div className="pt-2 border-t border-line/50">
-            <p className="text-[10px] font-bold uppercase text-ink-soft/40 tracking-widest mb-2">Comprobante Digital</p>
+          <div className="pt-2 border-t border-line/50 space-y-2">
+            <Input
+              label="Ticket, factura o nota"
+              placeholder="No. de ticket, folio de factura o nota..."
+              value={formReference}
+              onChange={(e) => setFormReference(e.target.value)}
+            />
             {receiptUrl ? (
-              <div className="flex items-center justify-between p-2 bg-canvas rounded-md">
-                <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-[11px] font-bold text-brand-accent flex items-center gap-1 uppercase">
-                  Ver Comprobante <ArrowRight className="h-3 w-3" />
-                </a>
-                <button onClick={() => setReceiptUrl(null)} className="text-danger p-1 rounded hover:bg-danger/10 transition-colors">
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
+              <div className="flex items-center justify-between gap-3 p-2.5 bg-canvas border border-line rounded-md">
+                <div className="flex items-center gap-2 min-w-0">
+                  <FileText className="h-4 w-4 text-brand-accent shrink-0" />
+                  <span className="text-[12px] font-medium text-ink truncate" title={extractFileName(receiptUrl)}>
+                    {extractFileName(receiptUrl)}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={receiptUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[10px] font-bold text-brand-accent hover:underline flex items-center gap-1 uppercase tracking-wider"
+                  >
+                    Consultar <ArrowRight className="h-3 w-3" />
+                  </a>
+                  {canUpdate && (
+                    <>
+                      <span className="text-line">|</span>
+                      <label className="text-[10px] font-bold text-ink-soft hover:text-ink cursor-pointer uppercase tracking-wider">
+                        {uploading ? (
+                          <Loader2 className="h-3 w-3 animate-spin inline" />
+                        ) : (
+                          "Reemplazar"
+                        )}
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,application/pdf,image/*"
+                          disabled={uploading}
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (!file) return;
+                            if (file.size > 15 * 1024 * 1024) {
+                              alert("El archivo excede el tamaño máximo permitido de 15MB");
+                              return;
+                            }
+                            setUploading(true);
+                            try {
+                              const res = await uploadCondominiumAsset({
+                                file,
+                                condominiumSlug,
+                                projectId,
+                                kind: "income-receipt",
+                              });
+                              setReceiptUrl(res.url);
+                            } catch (err: any) {
+                              alert("Error al subir el comprobante: " + (err?.message || "Ocurrió un error"));
+                            } finally {
+                              setUploading(false);
+                            }
+                          }}
+                        />
+                      </label>
+                      <span className="text-line">|</span>
+                      <button
+                        type="button"
+                        onClick={() => setReceiptUrl(null)}
+                        className="text-[10px] font-bold text-danger hover:underline uppercase tracking-wider"
+                        disabled={uploading}
+                      >
+                        Quitar
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             ) : (
               <label className="h-9 flex items-center justify-center gap-2 border border-dashed border-line rounded-md cursor-pointer hover:bg-canvas transition-colors text-[10px] font-bold uppercase text-brand-accent">
                 {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
-                Subir PDF o Imagen
-                <input type="file" className="hidden" accept="image/*,application/pdf" onChange={async (e) => {
-                  if (!e.target.files?.[0]) return;
-                  const file = e.target.files[0];
-                  setUploading(true);
-                  try {
-                    const res = await uploadCondominiumAsset({ file, condominiumSlug, projectId, kind: "income-receipt" });
-                    setReceiptUrl(res.url);
-                  } finally { setUploading(false); }
-                }} />
+                {uploading ? "Subiendo archivo..." : "Adjuntar PDF o comprobante"}
+                <input
+                  type="file"
+                  className="hidden"
+                  accept=".pdf,application/pdf,image/*"
+                  disabled={uploading || !canUpdate}
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 15 * 1024 * 1024) {
+                      alert("El archivo excede el tamaño máximo permitido de 15MB");
+                      return;
+                    }
+                    setUploading(true);
+                    try {
+                      const res = await uploadCondominiumAsset({
+                        file,
+                        condominiumSlug,
+                        projectId,
+                        kind: "income-receipt",
+                      });
+                      setReceiptUrl(res.url);
+                    } catch (err: any) {
+                      alert("Error al subir el comprobante: " + (err?.message || "Ocurrió un error"));
+                    } finally {
+                      setUploading(false);
+                    }
+                  }}
+                />
               </label>
             )}
           </div>

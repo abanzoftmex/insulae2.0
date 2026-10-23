@@ -2,6 +2,7 @@ import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
 import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AlertCircle, Receipt, Wallet } from "lucide-react";
 
 import { getPrivateAreaActionPageDataUseCase } from "@/modules/private-area-actions";
@@ -52,9 +53,14 @@ function getPaymentMethodLabel(method: string): string {
 export default async function ListadoPagosPage({ searchParams }: PageProps) {
   await requirePageAccess([MODULES.AREAS_PRIVATIVAS, MODULES.COBROS]);
   const permissions = await getUserPermissions();
+  const canUpdateArea = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const canCreateCharges = hasPermission(permissions, MODULES.COBROS, "canCreate");
   const canUpdateCharges = hasPermission(permissions, MODULES.COBROS, "canUpdate");
   const canDeleteCharges = hasPermission(permissions, MODULES.COBROS, "canDelete");
+
+  if (!canUpdateArea && !canCreateCharges && !canUpdateCharges) {
+    redirect(`/acceso-denegado?modulo=${encodeURIComponent(MODULES.COBROS)}`);
+  }
 
   const resolvedSearchParams = (await searchParams) ?? {};
   const resolvedReference = await resolvePrivateAreaReference(resolvedSearchParams);

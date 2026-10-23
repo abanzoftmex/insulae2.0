@@ -85,13 +85,15 @@ export function RoleList({
       align: "right",
       cell: (row) => (
         <div className="flex items-center justify-end gap-1">
-          <Link
-            href={`/listado-roles/${row.id}`}
-            title={canUpdate ? "Editar rol" : "Ver permisos"}
-            className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
-          >
-            {canUpdate ? <Edit2 className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-          </Link>
+          {canUpdate && (
+            <Link
+              href={`/listado-roles/${row.id}`}
+              title="Editar rol"
+              className="h-8 w-8 flex items-center justify-center rounded-full bg-cyan-100 text-cyan-800 hover:bg-cyan-200 transition-colors"
+            >
+              <Edit2 className="h-3.5 w-3.5" />
+            </Link>
+          )}
           {canDelete && (
             <button
               onClick={() => handleDelete(row.id)}

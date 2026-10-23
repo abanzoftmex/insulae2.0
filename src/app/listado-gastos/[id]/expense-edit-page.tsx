@@ -40,6 +40,7 @@ export function ExpenseEditPage({ expense, budgetConcepts, condominiumSlug, proj
   const [formAmount, setFormAmount] = useState(String(expense.amount));
   const [formMethod, setFormMethod] = useState(expense.paymentMethod ?? "CASH");
   const [formNotes, setFormNotes] = useState(expense.notes ?? "");
+  const [formReference, setFormReference] = useState(expense.reference ?? "");
   const [formBudgetConceptId, setFormBudgetConceptId] = useState(expense.budgetConceptId ?? "");
   const [formProjectName, setFormProjectName] = useState(expense.projectName ?? "");
 
@@ -101,6 +102,7 @@ export function ExpenseEditPage({ expense, budgetConcepts, condominiumSlug, proj
         concept: formConcept,
         amount: parseFloat(formAmount),
         paymentMethod: formMethod,
+        reference: formReference.trim() || undefined,
         notes: formNotes || undefined,
         receiptUrl: finalReceiptUrl,
         budgetConceptId: formBudgetConceptId || undefined,
@@ -209,6 +211,12 @@ export function ExpenseEditPage({ expense, budgetConcepts, condominiumSlug, proj
                 <label className="block text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold mb-1.5">Concepto / Descripción</label>
                 <textarea required rows={3} value={formConcept} onChange={(e) => setFormConcept(e.target.value)} placeholder="Detalles del gasto..."
                   className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-2.5 text-sm text-[#2f221a] focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/30 resize-none" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold mb-1.5">Ticket, factura o nota</label>
+                <input type="text" value={formReference} onChange={(e) => setFormReference(e.target.value)} placeholder="No. de ticket, folio de factura o nota..."
+                  className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-2.5 text-sm text-[#2f221a] focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/30" />
               </div>
 
               <div>

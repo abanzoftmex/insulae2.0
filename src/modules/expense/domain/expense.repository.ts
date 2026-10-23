@@ -4,6 +4,7 @@ export interface ExpenseRecord {
   concept: string;
   amount: number;
   paymentMethod: string | null;
+  reference?: string | null;
   notes: string | null;
   receiptUrl: string | null;
   projectName: string | null;
@@ -28,6 +29,7 @@ export interface SaveExpenseInput {
   concept: string;
   amount: number;
   paymentMethod: string;
+  reference?: string | null;
   notes?: string;
   receiptUrl?: string | null;
   projectName?: string | null;

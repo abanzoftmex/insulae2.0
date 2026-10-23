@@ -4,6 +4,7 @@ export interface IncomeRecord {
   concept: string;
   amount: number;
   paymentMethod: string | null;
+  reference?: string | null;
   notes: string | null;
   receiptUrl: string | null;
   isActive: boolean;
@@ -31,6 +32,7 @@ export interface SaveIncomeInput {
   concept: string;
   amount: number;
   paymentMethod: string;
+  reference?: string | null;
   notes?: string;
   receiptUrl?: string | null;
   miscCatalogId?: string | null;

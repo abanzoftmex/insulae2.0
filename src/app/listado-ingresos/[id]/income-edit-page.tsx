@@ -44,6 +44,7 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
   const [formAmount, setFormAmount] = useState(String(income.amount));
   const [formMethod, setFormMethod] = useState(income.paymentMethod ?? "CASH");
   const [formNotes, setFormNotes] = useState(income.notes ?? "");
+  const [formReference, setFormReference] = useState(income.reference ?? "");
   const [formCatalogId, setFormCatalogId] = useState(income.miscCatalogId ?? "");
   const [formChargeGroupId, setFormChargeGroupId] = useState(income.chargeGroupId ?? "");
   const [formAreaId, setFormAreaId] = useState(income.privateAreaId ?? "");
@@ -118,6 +119,7 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
         concept: formConcept,
         amount: parseFloat(formAmount),
         paymentMethod: formMethod,
+        reference: formReference.trim() || undefined,
         notes: formNotes || undefined,
         receiptUrl: finalReceiptUrl,
         miscCatalogId: formCatalogId || undefined,
@@ -269,6 +271,13 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
                 <label className="block text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold mb-1.5">Concepto</label>
                 <textarea required rows={3} value={formConcept} onChange={(e) => setFormConcept(e.target.value)} placeholder="Descripción del ingreso"
                   className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-2.5 text-sm text-[#2f221a] focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/30 resize-none" />
+              </div>
+
+              {/* Ticket, factura o nota */}
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold mb-1.5">Ticket, factura o nota</label>
+                <input type="text" value={formReference} onChange={(e) => setFormReference(e.target.value)} placeholder="No. de ticket, folio de factura o nota..."
+                  className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-2.5 text-sm text-[#2f221a] focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/30" />
               </div>
 
               {/* Notas */}

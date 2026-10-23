@@ -17,7 +17,7 @@ const BUDGET_GROUP_LABELS: Record<string, string> = {
 };
 
 export default async function ImportExpensesPage() {
-  await requirePageAccess(MODULES.GASTOS);
+  await requirePageAccess(MODULES.GASTOS, "canCreate");
 
   const condo = await prisma.condominium.findFirst({
     where: { isActive: true },

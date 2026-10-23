@@ -11,7 +11,7 @@ interface PageProps {
 }
 
 export default async function EditIncomePage({ params }: PageProps) {
-  await requirePageAccess(MODULES.COBROS);
+  await requirePageAccess(MODULES.COBROS, "canUpdate");
 
   const { id } = await params;
 

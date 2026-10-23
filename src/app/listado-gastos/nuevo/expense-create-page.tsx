@@ -33,6 +33,7 @@ export function ExpenseCreatePage({ budgetConcepts, condominiumSlug, projectId }
   const [formAmount, setFormAmount] = useState("");
   const [formMethod, setFormMethod] = useState("CASH");
   const [formNotes, setFormNotes] = useState("");
+  const [formReference, setFormReference] = useState("");
   const [formBudgetConceptId, setFormBudgetConceptId] = useState("");
   const [formProjectName, setFormProjectName] = useState("");
 
@@ -87,6 +88,7 @@ export function ExpenseCreatePage({ budgetConcepts, condominiumSlug, projectId }
         concept: formConcept,
         amount: parseFloat(formAmount),
         paymentMethod: formMethod,
+        reference: formReference.trim() || undefined,
         notes: formNotes || undefined,
         receiptUrl: finalReceiptUrl,
         budgetConceptId: formBudgetConceptId || undefined,
@@ -195,6 +197,12 @@ export function ExpenseCreatePage({ budgetConcepts, condominiumSlug, projectId }
                 <label className="block text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold mb-1.5">Concepto / Descripción</label>
                 <textarea required rows={3} value={formConcept} onChange={(e) => setFormConcept(e.target.value)} placeholder="Detalles del gasto..."
                   className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-2.5 text-sm text-[#2f221a] focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/30 resize-none" />
+              </div>
+
+              <div>
+                <label className="block text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold mb-1.5">Ticket, factura o nota</label>
+                <input type="text" value={formReference} onChange={(e) => setFormReference(e.target.value)} placeholder="No. de ticket, folio de factura o nota..."
+                  className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-2.5 text-sm text-[#2f221a] focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/30" />
               </div>
 
               <div>

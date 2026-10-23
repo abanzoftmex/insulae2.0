@@ -9,8 +9,19 @@ import type {
   StatisticsFilters,
 } from "../domain/statistics";
 import { classifyUseType, hasValidUseType } from "./prisma-statistics.repository";
+import {
+  resolveUserEffectiveEmail,
+  resolveUserEffectivePhone,
+} from "@/shared/utils/user-contact";
 
-const OWNER_ROLES = ["Dueño Legal", "Dueño Moral", "Dominio pleno"];
+const OWNER_ROLES = [
+  "Dueño Legal",
+  "Dueño Moral",
+  "Dominio pleno",
+  "Propietario legal",
+  "Dominio actual",
+  "Propietario",
+];
 const ACTIVE_RENTAL_STATUS = "1";
 const MIN_VALID_YEAR = 2010;
 
@@ -142,8 +153,10 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
               commercialName: true,
               email: true,
               personalEmail: true,
+              businessEmail: true,
               phone: true,
               personalPhone: true,
+              businessPhone: true,
             },
           },
         },
@@ -218,8 +231,8 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
           id: assignment.user.id,
           name,
           isLegalEntity: assignment.user.userType === "LEGAL_ENTITY",
-          email: assignment.user.email?.trim() || assignment.user.personalEmail?.trim() || "—",
-          phone: assignment.user.phone?.trim() || assignment.user.personalPhone?.trim() || "—",
+          email: resolveUserEffectiveEmail(assignment.user) || "—",
+          phone: resolveUserEffectivePhone(assignment.user) || "—",
           roles: new Set<string>(),
           zones: new Set<string>(),
           areaIds: new Set<string>(),

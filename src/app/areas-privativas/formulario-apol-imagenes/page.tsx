@@ -23,7 +23,7 @@ type PageProps = {
 };
 
 export default async function FormularioApolImagenesPage({ searchParams }: PageProps) {
-  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const permissions = await getUserPermissions();
   const canUpdate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const canDelete = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canDelete");

@@ -263,8 +263,8 @@ export default async function CondominioPage() {
                     ? `${overview.realActiveParentAreas} registrados en sistema`
                     : null
                 },
-                { label: "Superficie Privativa", value: overview ? `${overview.privateAreasM2} m2` : null },
-                { label: "Superficie Común", value: overview ? `${overview.commonAreasM2} m2` : null },
+                { label: "m2 de areas privativas", value: overview ? `${overview.privateAreasM2} m2` : null },
+                { label: "m2 de areas comunes", value: overview ? `${overview.commonAreasM2} m2` : null },
               ].map((f, i) => (
                 <div key={i} className="bg-canvas border border-line/60 rounded-xl p-3">
                   <div className="flex justify-between items-center gap-2">

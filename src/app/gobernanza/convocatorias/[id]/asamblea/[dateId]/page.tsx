@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 export default async function AsambleaDashboardPage({ params }: PageProps) {
-  await requirePageAccess(MODULES.CONVOCATORIAS);
+  await requirePageAccess(MODULES.CONVOCATORIAS, "canUpdate");
 
   const { id, dateId } = await params;
 

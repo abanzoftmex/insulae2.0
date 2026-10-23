@@ -25,6 +25,7 @@ export async function createIncomeAction(input: {
   concept: string;
   amount: number;
   paymentMethod: string;
+  reference?: string;
   notes?: string;
   receiptUrl?: string;
   miscCatalogId?: string;
@@ -39,6 +40,7 @@ export async function createIncomeAction(input: {
       concept: input.concept,
       amount: input.amount,
       paymentMethod: input.paymentMethod,
+      reference: input.reference?.trim() || null,
       notes: input.notes,
       receiptUrl: input.receiptUrl || null,
       miscCatalogId: input.miscCatalogId || null,
@@ -67,6 +69,7 @@ export async function updateIncomeAction(
     concept: string;
     amount: number;
     paymentMethod: string;
+    reference?: string;
     notes?: string;
     receiptUrl?: string;
     miscCatalogId?: string;
@@ -98,6 +101,7 @@ export async function updateIncomeAction(
       concept: input.concept,
       amount: input.amount,
       paymentMethod: input.paymentMethod,
+      reference: input.reference?.trim() || null,
       notes: input.notes,
       receiptUrl: input.receiptUrl || null,
       miscCatalogId: input.miscCatalogId || null,

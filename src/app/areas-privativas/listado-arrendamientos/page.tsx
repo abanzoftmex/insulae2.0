@@ -40,7 +40,7 @@ function isRentalActive(
 }
 
 export default async function ListadoArrendamientosPage({ searchParams }: PageProps) {
-  await requirePageAccess(MODULES.AREAS_PRIVATIVAS);
+  await requirePageAccess(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const permissions = await getUserPermissions();
   const canCreate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canCreate");
   const canDelete = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canDelete");

@@ -25,6 +25,7 @@ export async function createExpenseAction(input: {
   concept: string;
   amount: number;
   paymentMethod: string;
+  reference?: string;
   notes?: string;
   receiptUrl?: string;
   projectName?: string;
@@ -38,6 +39,7 @@ export async function createExpenseAction(input: {
       concept: input.concept,
       amount: input.amount,
       paymentMethod: input.paymentMethod,
+      reference: input.reference?.trim() || null,
       notes: input.notes,
       receiptUrl: input.receiptUrl || null,
       projectName: input.projectName || null,
@@ -59,6 +61,7 @@ export async function updateExpenseAction(
     concept: string;
     amount: number;
     paymentMethod: string;
+    reference?: string;
     notes?: string;
     receiptUrl?: string;
     projectName?: string;
@@ -89,6 +92,7 @@ export async function updateExpenseAction(
       concept: input.concept,
       amount: input.amount,
       paymentMethod: input.paymentMethod,
+      reference: input.reference?.trim() || null,
       notes: input.notes,
       receiptUrl: input.receiptUrl || null,
       projectName: input.projectName || null,

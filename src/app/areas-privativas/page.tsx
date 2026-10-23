@@ -289,6 +289,10 @@ export default async function AreasPrivativasPage(props: PageProps) {
   const permissions = await getUserPermissions();
   const canCreate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canCreate");
   const canUpdate = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS, "canUpdate");
+  const canCobros = hasPermission(permissions, MODULES.COBROS, "canCreate") || hasPermission(permissions, MODULES.COBROS, "canUpdate");
+  const canSeguridad = hasPermission(permissions, MODULES.AREAS_PRIVATIVAS_CASETA, "canRead");
+  const canReporte = hasPermission(permissions, MODULES.REPORTE_CONDOMINIO, "canRead");
+  const canCondominio = hasPermission(permissions, MODULES.CONDOMINIO, "canRead");
 
   const searchParams = await props.searchParams;
   const params = searchParams ?? {};
@@ -424,25 +428,24 @@ export default async function AreasPrivativasPage(props: PageProps) {
               </Link>
             </Button>
           )}
-          <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
-            <Link href="/listado-seguridad"><Shield className="h-3.5 w-3.5 shrink-0" aria-hidden /> Seguridad</Link>
-          </Button>
-          <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
-            <Link href="/reporte-condominio"><FileText className="h-3.5 w-3.5 shrink-0" aria-hidden /> Reporte</Link>
-          </Button>
-          <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
-            <Link href="/condominio"><Settings className="h-3.5 w-3.5 shrink-0" aria-hidden /> Configuración</Link>
-          </Button>
+          {canSeguridad && (
+            <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+              <Link href="/listado-seguridad"><Shield className="h-3.5 w-3.5 shrink-0" aria-hidden /> Seguridad</Link>
+            </Button>
+          )}
+          {canReporte && (
+            <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+              <Link href="/reporte-condominio"><FileText className="h-3.5 w-3.5 shrink-0" aria-hidden /> Reporte</Link>
+            </Button>
+          )}
+          {canCondominio && (
+            <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
+              <Link href="/condominio"><Settings className="h-3.5 w-3.5 shrink-0" aria-hidden /> Configuración</Link>
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* Comparisons / Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard accent="brand" label="Lotes Totales" value={vm.summary.projectTotalApoles} icon={<Layers className="h-3.5 w-3.5" />} />
-        <StatCard accent="cyan" label="M2 Privativos" value={vm.summary.projectTotalM2} icon={<MapPin className="h-3.5 w-3.5" />} />
-        <StatCard accent="lime" label="Lotes Construidos" value={vm.summary.legacyBuiltLots} icon={<Home className="h-3.5 w-3.5" />} />
-        <StatCard accent="gold" label="Cuotas Ord. 2025 (Anual)" value={formattedAnnualSum} icon={<Wallet className="h-3.5 w-3.5" />} />
-      </div>
 
       {reportVm && (
         <Card className="shadow-layered border-transparent">
@@ -718,7 +721,17 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     {/* Sticky Column 1: Acciones */}
                     <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
                       <div className="flex flex-wrap gap-1 w-[80px]">
-                        {actions.map((act) => renderLegacyAction(!canCreate && act.id === "ADD_FAP" ? { ...act, isEnabled: false } : act))}
+                        {actions.map((act) => {
+                          let isEnabled = act.isEnabled;
+                          if (act.id === "EDIT_BASE" || act.id === "EDIT_IMAGES" || act.id === "RENTALS") {
+                            if (!canUpdate) isEnabled = false;
+                          } else if (act.id === "ADD_FAP") {
+                            if (!canCreate) isEnabled = false;
+                          } else if (act.id === "OWNER_PAYMENTS" || act.id === "COMMERCE_PAYMENTS") {
+                            if (!canUpdate && !canCobros) isEnabled = false;
+                          }
+                          return renderLegacyAction({ ...act, isEnabled });
+                        })}
                       </div>
                     </td>
 

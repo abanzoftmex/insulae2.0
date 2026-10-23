@@ -10,6 +10,7 @@ import { toPrivateAreaStatus, toPrivateAreaStatusFromLegacy, type PrivateAreaSta
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getCurrentUser } from "@/app/actions/auth";
 import { PROJECT_SCOPE } from "@/config/project-scope";
+import { generateAccountStatementPdf } from "./_lib/statement-pdf";
 
 function toNumber(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string") {
@@ -958,6 +959,22 @@ export async function sendPrivateAreaStatementEmailAction(
     };
   }
 
+  // 1. Generar el PDF real del estado de cuenta con datos y movimientos
+  let pdfAttachment: { buffer: Buffer; filename: string };
+  try {
+    const normalizedOpc: "1" | "2" = opc === "2" ? "2" : "1";
+    pdfAttachment = await generateAccountStatementPdf(privateAreaId, normalizedOpc);
+    if (!pdfAttachment.buffer || pdfAttachment.buffer.length === 0) {
+      throw new Error("El archivo PDF generado está vacío.");
+    }
+  } catch (pdfError: any) {
+    console.error("[sendPrivateAreaStatementEmailAction] Error generando PDF de estado de cuenta:", pdfError);
+    return {
+      success: false,
+      message: `No se pudo generar el PDF del estado de cuenta: ${pdfError?.message || "Fallo en la generación del documento"}. El correo no fue enviado.`,
+    };
+  }
+
   try {
     const { Resend } = await import("resend");
     const resend = new Resend(resendApiKey);
@@ -970,6 +987,13 @@ export async function sendPrivateAreaStatementEmailAction(
       to: recipientEmail,
       subject,
       html: `<p>Estimado(a) <strong>${recipientName}</strong>,</p><p>Adjuntamos la notificación de su estado de cuenta correspondiente al área privativa <strong>${area.name}</strong>.</p><p>Atentamente,<br/>Administración del Condominio ${condoName}</p>`,
+      attachments: [
+        {
+          filename: pdfAttachment.filename,
+          content: pdfAttachment.buffer,
+          contentType: "application/pdf",
+        },
+      ],
     });
 
     return {
