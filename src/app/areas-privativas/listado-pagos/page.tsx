@@ -123,7 +123,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
 
   const configuredSenderEmail =
     process.env.ADMIN_MAIL_FROM?.trim() ||
-    `Condominio ${areaCondo?.condominium?.name || PROJECT_SCOPE.condominiumName} <soporte@insulae.sistemasabanza.com>`;
+    `Condominio ${areaCondo?.condominium?.name || PROJECT_SCOPE.condominiumName} <finanzas@valquirico.com>`;
 
   const chargeGroups = areaCondo?.condominiumId
     ? await prisma.chargeGroup.findMany({

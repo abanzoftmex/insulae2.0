@@ -15,7 +15,6 @@ import type {
 
 const OWNER_ROLES = [
   "Dueño Legal",
-  "Dueño Moral",
   "Dominio pleno",
   "Propietario legal",
   "Dominio actual",
@@ -201,6 +200,9 @@ class PrismaStatisticsRepository implements StatisticsRepository {
     );
 
     // ---- Propietarios y ocupación ----
+    const parentIdsWithChildren = new Set(
+      areas.map((a) => a.parentPrivateAreaId).filter((id): id is string => Boolean(id)),
+    );
     const filteredAssignments = assignments.filter((a) => areaIds.has(a.privateAreaId));
     const ownershipByRole = new Map<string, number>();
     const areasPerOwner = new Map<string, Set<string>>();
@@ -211,8 +213,10 @@ class PrismaStatisticsRepository implements StatisticsRepository {
       bump(ownershipByRole, role);
       occupiedAreaIds.add(assignment.privateAreaId);
       if (OWNER_ROLES.includes(role)) {
-        if (!areasPerOwner.has(assignment.userId)) areasPerOwner.set(assignment.userId, new Set());
-        areasPerOwner.get(assignment.userId)!.add(assignment.privateAreaId);
+        if (!parentIdsWithChildren.has(assignment.privateAreaId)) {
+          if (!areasPerOwner.has(assignment.userId)) areasPerOwner.set(assignment.userId, new Set());
+          areasPerOwner.get(assignment.userId)!.add(assignment.privateAreaId);
+        }
       }
       if (role === TENANT_ROLE) tenantUserIds.add(assignment.userId);
     }

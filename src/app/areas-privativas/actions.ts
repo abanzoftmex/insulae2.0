@@ -829,7 +829,7 @@ function getEffectiveSenderEmail(condominiumName?: string | null): string {
       ? condominiumName.trim()
       : PROJECT_SCOPE.condominiumName;
 
-  return `Condominio ${name} <soporte@insulae.sistemasabanza.com>`;
+  return `Condominio ${name} <finanzas@valquirico.com>`;
 }
 
 export type SendStatementEmailResult = {

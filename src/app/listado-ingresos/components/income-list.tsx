@@ -380,6 +380,7 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
                 <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold">Propiedad</th>
                 <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold text-right">Monto</th>
                 <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold">Fecha</th>
+                <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold">Ticket, factura o nota</th>
                 <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold text-center w-32">Acciones</th>
               </tr>
             </thead>
@@ -405,6 +406,42 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
                   </td>
                   <td className="px-6 py-4">
                     <span className="text-xs text-[#5f4b3f]">{formatDate(income.date)}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    {(() => {
+                      const reference = income.reference?.trim();
+                      const hasReceipt = Boolean(
+                        income.receiptUrl &&
+                          (income.receiptUrl.startsWith("http") ||
+                            income.receiptUrl.startsWith("/") ||
+                            income.receiptUrl.includes("firebasestorage"))
+                      );
+
+                      if (!reference && !hasReceipt) {
+                        return <span className="text-[#9a6a4a]/40 text-xs font-bold">—</span>;
+                      }
+
+                      return (
+                        <div className="flex items-center gap-2 max-w-[180px]">
+                          {reference && (
+                            <span className="text-xs text-[#2f221a] font-medium truncate" title={reference}>
+                              {reference}
+                            </span>
+                          )}
+                          {hasReceipt && (
+                            <a
+                              href={income.receiptUrl!}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#5a7b56] hover:text-[#4a6b46] transition-colors inline-flex items-center"
+                              title="Ver comprobante"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2">

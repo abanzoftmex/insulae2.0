@@ -16,7 +16,6 @@ import {
 
 const OWNER_ROLES = [
   "Dueño Legal",
-  "Dueño Moral",
   "Dominio pleno",
   "Propietario legal",
   "Dominio actual",
@@ -24,6 +23,54 @@ const OWNER_ROLES = [
 ];
 const ACTIVE_RENTAL_STATUS = "1";
 const MIN_VALID_YEAR = 2010;
+
+function resolveOwnerFigura(roles: Set<string>): string {
+  const norm = Array.from(roles).map((r) => r.toLowerCase().trim());
+  if (norm.some((r) => r.includes("legal") || r.includes("dueño legal") || r.includes("propietario legal"))) {
+    return "Propietario legal";
+  }
+  if (norm.some((r) => r.includes("pleno") || r.includes("dominio actual") || r.includes("dominio pleno"))) {
+    return "Dominio actual";
+  }
+  const first = Array.from(roles)[0];
+  return first ? first.trim() : "—";
+}
+
+function computeAreaIndiviso(
+  area: {
+    m2Original: any;
+    indiviso: any;
+    m2Construction: any;
+    parentPrivateArea?: {
+      m2Original: any;
+      m2ConstructionChildren: any;
+    } | null;
+  },
+  totalM2Project: number,
+): number {
+  let percentage = 0;
+  const m2Total = Number(area.m2Original ?? 0);
+
+  if (area.parentPrivateArea) {
+    const parentM2Total = Number(area.parentPrivateArea.m2Original ?? 0);
+    const parentIndiviso = totalM2Project > 0 ? (parentM2Total / totalM2Project) * 100 : 0;
+    const constructionChildren = Number(area.parentPrivateArea.m2ConstructionChildren ?? 0);
+
+    if (constructionChildren > 0 && parentIndiviso > 0) {
+      percentage = parentIndiviso * (Number(area.m2Construction ?? 0) / constructionChildren);
+    } else if (totalM2Project > 0) {
+      percentage = (m2Total / totalM2Project) * 100;
+    }
+  } else if (totalM2Project > 0) {
+    percentage = (m2Total / totalM2Project) * 100;
+  }
+
+  if (percentage === 0 && area.indiviso) {
+    percentage = Number(area.indiviso);
+  }
+
+  return percentage;
+}
 
 const numberFormat = new Intl.NumberFormat("es-MX");
 const decimalFormat = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 });
@@ -104,6 +151,7 @@ interface DetailDataset {
     zones: Set<string>;
     areaIds: Set<string>;
     areaLabels: string[];
+    indiviso: number;
   }[];
   businesses: {
     name: string;
@@ -120,60 +168,83 @@ interface DetailDataset {
 
 /** Carga una sola vez todo lo que necesitan los 8 detalles, respetando los filtros. */
 async function loadDataset(cid: string, filters: StatisticsFilters): Promise<DetailDataset> {
-  const areaRows = await prisma.privateArea.findMany({
-    where: {
-      condominiumId: cid,
-      isActive: true,
-      ...(filters.zone ? { zone: filters.zone } : {}),
-      ...(filters.useType ? { useType: filters.useType } : {}),
-    },
-    select: {
-      id: true,
-      name: true,
-      code: true,
-      zone: true,
-      subzone: true,
-      useType: true,
-      parentPrivateAreaId: true,
-      m2Construction: true,
-      m2Original: true,
-      assignments: {
-        where: { isActive: true },
-        select: {
-          roleName: true,
-          user: {
-            select: {
-              id: true,
-              userType: true,
-              firstName: true,
-              lastName: true,
-              lastNamePaterno: true,
-              lastNameMaterno: true,
-              businessName: true,
-              commercialName: true,
-              email: true,
-              personalEmail: true,
-              businessEmail: true,
-              phone: true,
-              personalPhone: true,
-              businessPhone: true,
+  const [areaRows, project] = await Promise.all([
+    prisma.privateArea.findMany({
+      where: {
+        condominiumId: cid,
+        isActive: true,
+        ...(filters.zone ? { zone: filters.zone } : {}),
+        ...(filters.useType ? { useType: filters.useType } : {}),
+      },
+      select: {
+        id: true,
+        name: true,
+        code: true,
+        zone: true,
+        subzone: true,
+        useType: true,
+        parentPrivateAreaId: true,
+        m2Construction: true,
+        m2Original: true,
+        indiviso: true,
+        parentPrivateArea: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            m2Original: true,
+            m2ConstructionChildren: true,
+          },
+        },
+        assignments: {
+          where: { isActive: true },
+          select: {
+            roleName: true,
+            user: {
+              select: {
+                id: true,
+                userType: true,
+                firstName: true,
+                lastName: true,
+                lastNamePaterno: true,
+                lastNameMaterno: true,
+                businessName: true,
+                commercialName: true,
+                email: true,
+                personalEmail: true,
+                businessEmail: true,
+                phone: true,
+                personalPhone: true,
+                businessPhone: true,
+              },
             },
           },
         },
-      },
-      rentals: {
-        select: {
-          id: true,
-          tenantName: true,
-          status: true,
-          startsAt: true,
-          businessClass: true,
-          commerce: { select: { name: true } },
+        rentals: {
+          select: {
+            id: true,
+            tenantName: true,
+            status: true,
+            startsAt: true,
+            businessClass: true,
+            commerce: { select: { name: true } },
+          },
         },
       },
-    },
-    orderBy: [{ zone: "asc" }, { name: "asc" }],
-  });
+      orderBy: [{ zone: "asc" }, { name: "asc" }],
+    }),
+    prisma.project.findFirst({
+      where: { condominiumId: cid, isActive: true },
+      select: { totalM2: true },
+    }),
+  ]);
+
+  const totalM2Project = Number(project?.totalM2 ?? 0);
+  const parentIdsWithChildren = new Set(
+    areaRows
+      .map((a) => a.parentPrivateAreaId)
+      .filter((id): id is string => Boolean(id)),
+  );
 
   // Giros: tabla opcional (migración 'business_lines_catalogs'). Se consulta
   // aparte para que su ausencia no rompa el detalle completo.
@@ -208,6 +279,7 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
   let totalRentals = 0;
 
   for (const area of areaRows) {
+    const isParentWithChildren = parentIdsWithChildren.has(area.id);
     const label = area.code?.trim() || area.name;
     const zone = area.zone?.trim() || "Sin barrio";
     const useType = area.useType?.trim() || "Sin uso asignado";
@@ -237,11 +309,23 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
           zones: new Set<string>(),
           areaIds: new Set<string>(),
           areaLabels: [] as string[],
+          indiviso: 0,
         };
       owner.roles.add(role);
-      owner.zones.add(zone);
-      owner.areaIds.add(area.id);
-      if (!owner.areaLabels.includes(label)) owner.areaLabels.push(label);
+
+      // Si el predio está fraccionado (tiene hijas activas), la asignación sobre el lote
+      // matriz no se cuenta como un área privativa individual para evitar duplicar
+      // el predio con sus fracciones ni duplicar el porcentaje de indiviso.
+      if (!isParentWithChildren) {
+        if (!owner.areaIds.has(area.id)) {
+          owner.areaIds.add(area.id);
+          owner.zones.add(zone);
+          if (!owner.areaLabels.includes(label)) owner.areaLabels.push(label);
+          owner.indiviso += computeAreaIndiviso(area, totalM2Project);
+        }
+      } else if (owner.areaIds.size === 0) {
+        owner.zones.add(zone);
+      }
       if (!existing) ownersById.set(assignment.user.id, owner);
     }
 
@@ -302,9 +386,11 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
     });
   }
 
-  const owners = [...ownersById.values()].sort(
-    (a, b) => b.areaIds.size - a.areaIds.size || a.name.localeCompare(b.name),
-  );
+  const owners = [...ownersById.values()]
+    .filter((o) => o.areaIds.size > 0)
+    .sort(
+      (a, b) => b.areaIds.size - a.areaIds.size || a.name.localeCompare(b.name, "es-MX", { sensitivity: "base" }),
+    );
 
   return { areas, owners, businesses, totalRentals };
 }
@@ -380,13 +466,13 @@ export async function loadKpiDetail(
         else bump(buckets, "6 o más inmuebles");
         if (owner.email !== "—") withEmail += 1;
         for (const zone of owner.zones) bump(byZone, zone);
-        for (const role of owner.roles) bump(byRole, role);
+        bump(byRole, resolveOwnerFigura(owner.roles));
       }
 
       return {
         key,
         title: "Propietarios",
-        subtitle: "Personas y sociedades con al menos un inmueble asignado como Dueño Legal, Dueño Moral o Dominio pleno.",
+        subtitle: "Personas y sociedades con al menos un inmueble asignado como Dueño Legal o Dominio pleno.",
         headline: [
           { label: "Propietarios", value: fmt(owners.length) },
           { label: "Con más de un inmueble", value: fmt(multi), hint: owners.length ? `${((multi / owners.length) * 100).toFixed(1)}% del total` : undefined },
@@ -409,7 +495,7 @@ export async function loadKpiDetail(
             data: toNameCounts(byRole),
             kind: "donut",
             palette: "category",
-            centerLabel: "asignaciones",
+            centerLabel: "propietarios",
           },
           {
             title: "Presencia por barrio",
@@ -421,9 +507,10 @@ export async function loadKpiDetail(
         ],
         columns: [
           { key: "propietario", label: "Propietario", width: "w-[220px]" },
-          { key: "inmuebles", label: "Inmuebles", numeric: true },
+          { key: "inmuebles", label: "Áreas privativas", numeric: true },
           { key: "barrios", label: "Barrios", clamp: true },
           { key: "figura", label: "Figura de propiedad", clamp: true },
+          { key: "indiviso", label: "Indiviso", numeric: true },
           { key: "detalle", label: "Inmuebles asignados", clamp: true },
           { key: "email", label: "Correo", nowrap: true },
           { key: "telefono", label: "Teléfono", nowrap: true },
@@ -431,9 +518,10 @@ export async function loadKpiDetail(
         rows: owners.map((owner) => ({
           propietario: owner.name,
           inmuebles: owner.areaIds.size,
-          barrios: [...owner.zones].sort().join(", "),
-          figura: [...owner.roles].sort().join(", "),
-          detalle: owner.areaLabels.join(", "),
+          barrios: [...owner.zones].sort().join(", ") || "—",
+          figura: resolveOwnerFigura(owner.roles),
+          indiviso: `${owner.indiviso.toFixed(4)}%`,
+          detalle: owner.areaLabels.join(", ") || "—",
           email: owner.email,
           telefono: owner.phone,
         })),

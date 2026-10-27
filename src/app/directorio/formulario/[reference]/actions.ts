@@ -141,7 +141,7 @@ export async function generateTemporaryPasswordAction(id: string) {
     const resend = new Resend(resendApiKey);
 
     await resend.emails.send({
-      from: `Condominio ${condominiumName} <soporte@insulae.sistemasabanza.com>`,
+      from: `Condominio ${condominiumName} <finanzas@valquirico.com>`,
       to: emailRecipient,
       subject,
       html: emailBody,

@@ -418,6 +418,51 @@ export function IncomeWorkbench({
       )
     },
     {
+      header: "Ticket, factura o nota",
+      accessorKey: "reference",
+      cell: (row) => {
+        const reference = row.reference?.trim();
+        const hasReceipt = Boolean(
+          row.receiptUrl &&
+            (row.receiptUrl.startsWith("http") ||
+              row.receiptUrl.startsWith("/") ||
+              row.receiptUrl.includes("firebasestorage"))
+        );
+
+        if (!reference && !hasReceipt) {
+          return <span className="text-[11px] text-ink-soft/40 font-bold uppercase">—</span>;
+        }
+
+        const fileName = hasReceipt ? extractFileName(row.receiptUrl!) : "";
+
+        return (
+          <div className="flex items-center gap-2 max-w-[200px]">
+            {reference && (
+              <span className="text-[12px] font-medium text-ink truncate" title={reference}>
+                {reference}
+              </span>
+            )}
+            {hasReceipt && (
+              <a
+                href={row.receiptUrl!}
+                target="_blank"
+                rel="noreferrer"
+                className="h-7 w-7 shrink-0 inline-flex items-center justify-center rounded-full bg-brand-mint/30 text-brand hover:bg-brand-mint/60 transition-colors"
+                title={fileName ? `Ver comprobante (${fileName})` : "Ver comprobante"}
+              >
+                <FileText className="h-3.5 w-3.5" />
+              </a>
+            )}
+            {!reference && hasReceipt && (
+              <span className="text-[11px] text-ink-soft/70 font-medium truncate" title={fileName}>
+                {fileName || "PDF"}
+              </span>
+            )}
+          </div>
+        );
+      }
+    },
+    {
       header: "Acciones",
       accessorKey: "id",
       align: "right",
