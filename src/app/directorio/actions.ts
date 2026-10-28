@@ -276,38 +276,6 @@ export async function getPersonRelationsForDeletionAction(
       }
     }
 
-    const namesToMatch = [
-      user.businessName?.trim(),
-      `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim(),
-      user.commercialName?.trim(),
-    ].filter(Boolean) as string[];
-
-    if (namesToMatch.length > 0) {
-      const rentalsByTenant = await prisma.rental.findMany({
-        where: {
-          condominiumId: user.condominiumId,
-          OR: namesToMatch.map((n) => ({
-            tenantName: { equals: n, mode: "insensitive" },
-          })),
-          privateArea: { isActive: true },
-        },
-        select: {
-          id: true,
-          privateArea: { select: { name: true } },
-        },
-      });
-
-      for (const r of rentalsByTenant) {
-        if (!rentalList.some((existing) => existing.id === r.id)) {
-          rentalList.push({
-            id: r.id,
-            areaName: r.privateArea.name,
-            relationType: "Arrendatario",
-          });
-        }
-      }
-    }
-
     // 4. Usuarios anidados
     const nestedUsers = user.children.map((child) => ({
       id: child.id,
@@ -457,7 +425,7 @@ export async function deleteDirectoryPersonAction(
         }
       }
 
-      // 2. Desvincular contactos y tenant en Rentals
+      // 2. Desvincular referencias de contacto en Rentals (relaciones FK explícitas)
       await tx.rental.updateMany({
         where: { administrativeContactUserId: targetUserId },
         data: { administrativeContactUserId: null },
@@ -467,26 +435,6 @@ export async function deleteDirectoryPersonAction(
         where: { operativeContactUserId: targetUserId },
         data: { operativeContactUserId: null },
       });
-
-      const namesToMatch = [
-        user.businessName?.trim(),
-        `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim(),
-        user.commercialName?.trim(),
-      ].filter(Boolean) as string[];
-
-      if (namesToMatch.length > 0) {
-        await tx.rental.updateMany({
-          where: {
-            condominiumId: user.condominiumId,
-            OR: namesToMatch.map((n) => ({
-              tenantName: { equals: n, mode: "insensitive" },
-            })),
-          },
-          data: {
-            tenantName: null,
-          },
-        });
-      }
 
       // 3. Desvincular contactos en Comercios y desactivar UserCommerces
       await tx.commerce.updateMany({

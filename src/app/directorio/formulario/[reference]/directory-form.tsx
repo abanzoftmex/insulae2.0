@@ -15,8 +15,10 @@ import {
   Trash2,
   Eye,
   EyeOff,
+  Store,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
@@ -31,8 +33,10 @@ import {
   createNestedUserAction,
   deleteNestedUserAction,
   generateTemporaryPasswordAction,
+  unlinkCommerceFromPersonAction,
+  saveCommerceForPersonAction,
 } from "./actions";
-import type { DirectoryContactParticipation } from "@/modules/directory/domain/directory";
+import type { DirectoryContactParticipation, LinkedCommerce } from "@/modules/directory/domain/directory";
 
 interface DirectoryFormProps {
   reference: string;
@@ -40,6 +44,7 @@ interface DirectoryFormProps {
   initialData: DirectoryContactParticipation;
   roleOptions: Array<{ id: string; name: string }>;
   backHref: string;
+  contactOptions?: Array<{ id: string; name: string }>;
   canCreate?: boolean;
   canUpdate?: boolean;
   canDelete?: boolean;
@@ -51,6 +56,7 @@ export function DirectoryForm({
   initialData,
   roleOptions,
   backHref,
+  contactOptions = [],
   canCreate = true,
   canUpdate = true,
   canDelete = true,
@@ -90,6 +96,126 @@ export function DirectoryForm({
   const uniqueAssignments = Array.from(
     new Map((initialData.assignments || []).map((a) => [a.privateAreaId, a])).values()
   );
+
+  const [linkedCommerces, setLinkedCommerces] = useState<LinkedCommerce[]>(initialData.linkedCommerces || []);
+  const [isCommercePending, startCommerceTransition] = useTransition();
+  const [isAddCommerceOpen, setIsAddCommerceOpen] = useState(false);
+  const [newCommerceData, setNewCommerceData] = useState({
+    name: "",
+    businessName: "",
+    rfc: "",
+    phone: "",
+    email: "",
+    administrativeContactUserId: "",
+    operativeContactUserId: "",
+  });
+  const [editingCommerceId, setEditingCommerceId] = useState<string | null>(null);
+  const [editingCommerceValues, setEditingCommerceValues] = useState<Record<string, {
+    name: string;
+    businessName: string;
+    rfc: string;
+    phone: string;
+    email: string;
+    administrativeContactUserId: string;
+    operativeContactUserId: string;
+  }>>({});
+
+  useEffect(() => {
+    setLinkedCommerces(initialData.linkedCommerces || []);
+    const initialMap: Record<string, any> = {};
+    (initialData.linkedCommerces || []).forEach((c) => {
+      initialMap[c.id] = {
+        name: c.name || "",
+        businessName: c.businessName || "",
+        rfc: c.rfc || "",
+        phone: c.phone || "",
+        email: c.email || "",
+        administrativeContactUserId: c.administrativeContact?.id || "",
+        operativeContactUserId: c.operativeContact?.id || "",
+      };
+    });
+    setEditingCommerceValues(initialMap);
+  }, [initialData.linkedCommerces]);
+
+  const handleUnlinkCommerce = (userCommerceId: string, commerceName: string) => {
+    if (!confirm(`¿Estás seguro de que deseas desvincular el comercio "${commerceName}" de esta persona? El comercio y sus demás relaciones en el sistema no se eliminarán.`)) {
+      return;
+    }
+    startCommerceTransition(async () => {
+      const res = await unlinkCommerceFromPersonAction(userCommerceId);
+      if (res.ok) {
+        setLinkedCommerces((prev) => prev.filter((c) => c.id !== userCommerceId));
+        setMessage({ type: "success", text: res.message });
+        router.refresh();
+      } else {
+        setMessage({ type: "error", text: res.message });
+      }
+    });
+  };
+
+  const handleSaveNewCommerce = () => {
+    if (!newCommerceData.name.trim()) {
+      alert("Por favor ingrese el nombre comercial.");
+      return;
+    }
+    startCommerceTransition(async () => {
+      const res = await saveCommerceForPersonAction({
+        userId: initialData.id,
+        name: newCommerceData.name,
+        businessName: newCommerceData.businessName,
+        rfc: newCommerceData.rfc,
+        phone: newCommerceData.phone,
+        email: newCommerceData.email,
+        administrativeContactUserId: newCommerceData.administrativeContactUserId || null,
+        operativeContactUserId: newCommerceData.operativeContactUserId || null,
+      });
+      if (res.ok) {
+        setMessage({ type: "success", text: res.message });
+        setIsAddCommerceOpen(false);
+        setNewCommerceData({
+          name: "",
+          businessName: "",
+          rfc: "",
+          phone: "",
+          email: "",
+          administrativeContactUserId: "",
+          operativeContactUserId: "",
+        });
+        router.refresh();
+      } else {
+        setMessage({ type: "error", text: res.message });
+      }
+    });
+  };
+
+  const handleSaveEditCommerce = (commerceItem: LinkedCommerce) => {
+    const values = editingCommerceValues[commerceItem.id];
+    if (!values || !values.name.trim()) {
+      alert("El nombre comercial no puede estar vacío.");
+      return;
+    }
+    startCommerceTransition(async () => {
+      const res = await saveCommerceForPersonAction({
+        userId: initialData.id,
+        userCommerceId: commerceItem.id,
+        commerceId: commerceItem.commerceId,
+        name: values.name,
+        businessName: values.businessName,
+        rfc: values.rfc,
+        phone: values.phone,
+        email: values.email,
+        administrativeContactUserId: values.administrativeContactUserId || null,
+        operativeContactUserId: values.operativeContactUserId || null,
+      });
+      if (res.ok) {
+        setMessage({ type: "success", text: res.message });
+        setEditingCommerceId(null);
+        router.refresh();
+      } else {
+        setMessage({ type: "error", text: res.message });
+      }
+    });
+  };
 
   const [formData, setFormData] = useState({
     userType: initialData.userType,
@@ -856,6 +982,397 @@ export function DirectoryForm({
 
         </div>
 
+      </div>
+
+
+      {/* Comercios con los que cuenta */}
+      <div className="space-y-4 pt-4">
+        <div className="pb-3 border-b border-line flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Store className="w-4 h-4 text-brand" />
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">
+              Comercios con los que cuenta ({linkedCommerces.length})
+            </h2>
+          </div>
+          {canUpdate && (
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={isAddCommerceOpen}
+                onChange={(e) => setIsAddCommerceOpen(e.target.checked)}
+                className="rounded border-[#c59b27] text-brand focus:ring-brand h-4 w-4 accent-[#c59b27]"
+              />
+              <span className="text-xs font-semibold text-ink-soft hover:text-brand transition-colors">
+                Agregar comercio
+              </span>
+            </label>
+          )}
+        </div>
+
+        {/* Formulario para agregar comercio */}
+        {isAddCommerceOpen && (
+          <div className="p-5 rounded-xl border border-[#c59b27]/60 bg-white shadow-sm space-y-4 animate-in fade-in duration-300">
+            <div className="flex items-center justify-between pb-2 border-b border-line/60">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-brand">Nuevo comercio para vincular</h3>
+              <span className="text-[10px] text-ink-soft">Complete los datos del comercio</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Nombre comercial *</label>
+                <Input
+                  value={newCommerceData.name}
+                  onChange={(e) => setNewCommerceData({ ...newCommerceData, name: e.target.value })}
+                  placeholder="Ej. Baños del Centro"
+                  className="h-9 border-[#c59b27]/40 focus:border-brand"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Razón social</label>
+                <Input
+                  value={newCommerceData.businessName}
+                  onChange={(e) => setNewCommerceData({ ...newCommerceData, businessName: e.target.value })}
+                  placeholder="Ej. Administradora Val'Quirico A.C."
+                  className="h-9 border-[#c59b27]/40 focus:border-brand"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">RFC</label>
+                <Input
+                  value={newCommerceData.rfc}
+                  onChange={(e) => setNewCommerceData({ ...newCommerceData, rfc: e.target.value })}
+                  placeholder="Ej. AVA1706221G3"
+                  className="h-9 border-[#c59b27]/40 focus:border-brand uppercase"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Teléfono</label>
+                <Input
+                  value={newCommerceData.phone}
+                  onChange={(e) => setNewCommerceData({ ...newCommerceData, phone: e.target.value })}
+                  placeholder="Ej. 2223622750"
+                  className="h-9 border-[#c59b27]/40 focus:border-brand"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Email</label>
+                <Input
+                  value={newCommerceData.email}
+                  onChange={(e) => setNewCommerceData({ ...newCommerceData, email: e.target.value })}
+                  placeholder="Ej. finanzas@valquirico.com"
+                  className="h-9 border-[#c59b27]/40 focus:border-brand"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Contacto administrativo</label>
+                <select
+                  value={newCommerceData.administrativeContactUserId}
+                  onChange={(e) => setNewCommerceData({ ...newCommerceData, administrativeContactUserId: e.target.value })}
+                  className="w-full h-9 rounded-md border border-[#c59b27]/40 bg-white px-3 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
+                >
+                  <option value="">Seleccionar contacto...</option>
+                  {contactOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Contacto operativo</label>
+                <select
+                  value={newCommerceData.operativeContactUserId}
+                  onChange={(e) => setNewCommerceData({ ...newCommerceData, operativeContactUserId: e.target.value })}
+                  className="w-full h-9 rounded-md border border-[#c59b27]/40 bg-white px-3 text-xs focus:outline-none focus:ring-1 focus:ring-brand"
+                >
+                  <option value="">Seleccionar contacto...</option>
+                  {contactOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-end gap-2">
+                <Button
+                  type="button"
+                  disabled={isCommercePending}
+                  onClick={handleSaveNewCommerce}
+                  className="h-9 px-4 bg-brand hover:bg-brand-accent text-white text-xs font-bold uppercase tracking-wider flex-1"
+                >
+                  Guardar comercio
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsAddCommerceOpen(false)}
+                  className="h-9 px-3 text-xs"
+                >
+                  Cancelar
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Cuadrícula de comercios vinculados */}
+        {linkedCommerces.length === 0 ? (
+          <div className="p-8 text-center bg-white rounded-xl border border-line text-ink-soft text-xs">
+            Sin comercios vinculados actualmente a este contacto.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+            {linkedCommerces.map((commerce) => {
+              const isEditing = editingCommerceId === commerce.id;
+              const vals = editingCommerceValues[commerce.id] || {
+                name: commerce.name,
+                businessName: commerce.businessName || "",
+                rfc: commerce.rfc || "",
+                phone: commerce.phone || "",
+                email: commerce.email || "",
+                administrativeContactUserId: commerce.administrativeContact?.id || "",
+                operativeContactUserId: commerce.operativeContact?.id || "",
+              };
+
+              return (
+                <div
+                  key={commerce.id}
+                  className="bg-white border border-[#c59b27]/70 rounded-xl p-4 shadow-sm flex flex-col justify-between space-y-3 relative hover:border-[#c59b27] transition-all"
+                >
+                  <div className="space-y-3">
+                    {/* Nombre comercial */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Nombre comercial</label>
+                      <div className="relative">
+                        <Input
+                          disabled={!isEditing}
+                          value={vals.name}
+                          onChange={(e) => {
+                            setEditingCommerceValues((prev) => ({
+                              ...prev,
+                              [commerce.id]: { ...vals, name: e.target.value },
+                            }));
+                          }}
+                          className={cn(
+                            "h-8 text-xs font-semibold pr-7 border-[#c59b27]/40 rounded-lg",
+                            !isEditing && "bg-[#faf9f6] text-ink cursor-default"
+                          )}
+                        />
+                        {vals.name && (
+                          <Check className="w-3.5 h-3.5 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Razón social */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Razón social</label>
+                      <div className="relative">
+                        <Input
+                          disabled={!isEditing}
+                          value={vals.businessName}
+                          onChange={(e) => {
+                            setEditingCommerceValues((prev) => ({
+                              ...prev,
+                              [commerce.id]: { ...vals, businessName: e.target.value },
+                            }));
+                          }}
+                          placeholder="Sin razón social"
+                          className={cn(
+                            "h-8 text-xs font-medium pr-7 border-[#c59b27]/40 rounded-lg",
+                            !isEditing && "bg-[#faf9f6] text-ink cursor-default"
+                          )}
+                        />
+                        {vals.businessName && (
+                          <Check className="w-3.5 h-3.5 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* RFC */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">RFC</label>
+                      <div className="relative">
+                        <Input
+                          disabled={!isEditing}
+                          value={vals.rfc}
+                          onChange={(e) => {
+                            setEditingCommerceValues((prev) => ({
+                              ...prev,
+                              [commerce.id]: { ...vals, rfc: e.target.value },
+                            }));
+                          }}
+                          placeholder="Sin RFC"
+                          className={cn(
+                            "h-8 text-xs font-mono uppercase pr-7 border-[#c59b27]/40 rounded-lg",
+                            !isEditing && "bg-[#faf9f6] text-ink cursor-default"
+                          )}
+                        />
+                        {vals.rfc && (
+                          <Check className="w-3.5 h-3.5 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Teléfono */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Teléfono</label>
+                      <div className="relative">
+                        <Input
+                          disabled={!isEditing}
+                          value={vals.phone}
+                          onChange={(e) => {
+                            setEditingCommerceValues((prev) => ({
+                              ...prev,
+                              [commerce.id]: { ...vals, phone: e.target.value },
+                            }));
+                          }}
+                          placeholder="Sin teléfono"
+                          className={cn(
+                            "h-8 text-xs pr-7 border-[#c59b27]/40 rounded-lg",
+                            !isEditing && "bg-[#faf9f6] text-ink cursor-default"
+                          )}
+                        />
+                        {vals.phone && (
+                          <Check className="w-3.5 h-3.5 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Email</label>
+                      <div className="relative">
+                        <Input
+                          disabled={!isEditing}
+                          value={vals.email}
+                          onChange={(e) => {
+                            setEditingCommerceValues((prev) => ({
+                              ...prev,
+                              [commerce.id]: { ...vals, email: e.target.value },
+                            }));
+                          }}
+                          placeholder="Sin email"
+                          className={cn(
+                            "h-8 text-xs pr-7 border-[#c59b27]/40 rounded-lg",
+                            !isEditing && "bg-[#faf9f6] text-ink cursor-default"
+                          )}
+                        />
+                        {vals.email && (
+                          <Check className="w-3.5 h-3.5 text-emerald-600 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none stroke-[2.5]" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Contacto administrativo */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Contacto administrativo</label>
+                      {isEditing ? (
+                        <select
+                          value={vals.administrativeContactUserId}
+                          onChange={(e) => {
+                            setEditingCommerceValues((prev) => ({
+                              ...prev,
+                              [commerce.id]: { ...vals, administrativeContactUserId: e.target.value },
+                            }));
+                          }}
+                          className="w-full h-8 rounded-lg border border-[#c59b27]/40 bg-white px-2.5 text-xs text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+                        >
+                          <option value="">Seleccionar contacto...</option>
+                          {contactOptions.map((opt) => (
+                            <option key={opt.id} value={opt.id}>{opt.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="h-8 px-2.5 flex items-center justify-between rounded-lg border border-[#c59b27]/40 bg-[#faf9f6] text-xs text-ink truncate">
+                          <span className="truncate">{commerce.administrativeContact?.name || "Sin contacto"}</span>
+                          {commerce.administrativeContact && (
+                            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 stroke-[2.5]" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Contacto operativo */}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-ink-soft">Contacto operativo</label>
+                      {isEditing ? (
+                        <select
+                          value={vals.operativeContactUserId}
+                          onChange={(e) => {
+                            setEditingCommerceValues((prev) => ({
+                              ...prev,
+                              [commerce.id]: { ...vals, operativeContactUserId: e.target.value },
+                            }));
+                          }}
+                          className="w-full h-8 rounded-lg border border-[#c59b27]/40 bg-white px-2.5 text-xs text-ink focus:outline-none focus:ring-1 focus:ring-brand"
+                        >
+                          <option value="">Seleccionar contacto...</option>
+                          {contactOptions.map((opt) => (
+                            <option key={opt.id} value={opt.id}>{opt.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="h-8 px-2.5 flex items-center justify-between rounded-lg border border-[#c59b27]/40 bg-[#faf9f6] text-xs text-ink truncate">
+                          <span className="truncate">{commerce.operativeContact?.name || "Sin contacto"}</span>
+                          {commerce.operativeContact && (
+                            <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0 stroke-[2.5]" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="pt-2 flex items-center gap-2">
+                    {canUpdate && (
+                      isEditing ? (
+                        <>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={isCommercePending}
+                            onClick={() => handleSaveEditCommerce(commerce)}
+                            className="flex-1 h-7 text-[10px] font-bold uppercase bg-brand hover:bg-brand-accent text-white"
+                          >
+                            Guardar
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setEditingCommerceId(null)}
+                            className="h-7 text-[10px] px-2"
+                          >
+                            Cancelar
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setEditingCommerceId(commerce.id)}
+                          className="flex-1 h-7 text-[10px] font-bold uppercase border-brand/30 text-brand hover:bg-brand hover:text-white"
+                        >
+                          <Edit3 className="w-3 h-3 mr-1" /> Editar
+                        </Button>
+                      )
+                    )}
+
+                    {canUpdate && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={isCommercePending}
+                        onClick={() => handleUnlinkCommerce(commerce.id, commerce.name)}
+                        className="h-7 px-3 bg-[#bfa255] hover:bg-[#a6893e] text-white text-[10px] font-bold uppercase gap-1 shrink-0"
+                        title="Desvincular comercio de esta persona"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Eliminar
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
 

@@ -236,6 +236,7 @@ model UserCommerce {
   id            String      @id @default(uuid())
   condominiumId String
   userId        String
+  commerceId    String?
   commerceName  String
   sortOrder     Int         @default(0)
   isActive      Boolean     @default(true)
@@ -243,26 +244,33 @@ model UserCommerce {
   updatedAt     DateTime    @updatedAt
   condominium   Condominium @relation(fields: [condominiumId], references: [id])
   user          User        @relation(fields: [userId], references: [id])
+  commerce      Commerce?   @relation(fields: [commerceId], references: [id])
 
   @@index([condominiumId])
   @@index([userId])
   @@index([userId, isActive])
+  @@index([commerceId])
 }
 
 model Commerce {
-  id                          String      @id @default(uuid())
+  id                          String         @id @default(uuid())
   condominiumId               String
   legacyId                    Int?
   name                        String?
+  businessName                String?
+  rfc                         String?
+  phone                       String?
+  email                       String?
   administrativeContactUserId String?
   operativeContactUserId      String?
-  isActive                    Boolean     @default(true)
-  createdAt                   DateTime    @default(now())
-  updatedAt                   DateTime    @updatedAt
-  administrativeContactUser   User?       @relation("CommerceAdministrativeContact", fields: [administrativeContactUserId], references: [id])
-  condominium                 Condominium @relation(fields: [condominiumId], references: [id])
-  operativeContactUser        User?       @relation("CommerceOperativeContact", fields: [operativeContactUserId], references: [id])
+  isActive                    Boolean        @default(true)
+  createdAt                   DateTime       @default(now())
+  updatedAt                   DateTime       @updatedAt
+  administrativeContactUser   User?          @relation("CommerceAdministrativeContact", fields: [administrativeContactUserId], references: [id])
+  condominium                 Condominium    @relation(fields: [condominiumId], references: [id])
+  operativeContactUser        User?          @relation("CommerceOperativeContact", fields: [operativeContactUserId], references: [id])
   rentals                     Rental[]
+  userCommerces               UserCommerce[]
 
   @@unique([condominiumId, legacyId])
   @@index([condominiumId])

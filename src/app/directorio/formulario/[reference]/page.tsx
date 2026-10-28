@@ -9,6 +9,7 @@ import { DirectoryForm } from "./directory-form";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 
 import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
+import { prisma } from "@/shared/infrastructure/db/prisma";
 
 export const metadata: Metadata = {
   title: "Expediente Maestro | Insulae 2.0",
@@ -62,11 +63,27 @@ export default async function DirectorioFormularioPage({ params, searchParams }:
   const query = pickParam(rawSearchParams?.q).trim();
   const page = pickParam(rawSearchParams?.page).trim() || "1";
   
-  const [detail, roles] = await Promise.all([
+  const [detail, roles, availableContacts] = await Promise.all([
     isUuidReference(reference)
       ? await getDirectoryContactParticipationUseCase.execute(reference)
       : null,
-    getDirectoryRolesUseCase.execute()
+    getDirectoryRolesUseCase.execute(),
+    prisma.user.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        lastNamePaterno: true,
+        lastNameMaterno: true,
+        businessName: true,
+      },
+      orderBy: [{ firstName: "asc" }, { businessName: "asc" }],
+      take: 1000,
+    }).then(users => users.map(u => ({
+      id: u.id,
+      name: `${u.firstName ?? ""} ${u.lastNamePaterno ?? u.lastName ?? ""} ${u.lastNameMaterno ?? ""}`.trim() || u.businessName || "Sin nombre"
+    })))
   ]);
 
   const backHref = (() => {
@@ -97,6 +114,7 @@ export default async function DirectorioFormularioPage({ params, searchParams }:
         condominiumSlug={PROJECT_SCOPE.condominiumCode}
         initialData={detail}
         roleOptions={roles}
+        contactOptions={availableContacts}
         backHref={backHref}
         canCreate={canCreate}
         canUpdate={canUpdate}

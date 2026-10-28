@@ -37,6 +37,7 @@ export function DeletePersonButton({
   const [isLoadingRelations, setIsLoadingRelations] = useState(false);
   const [relationsData, setRelationsData] = useState<PersonRelationsSummary | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [hasConfirmedConsequences, setHasConfirmedConsequences] = useState(false);
   const [isDeleting, startDeleteTransition] = useTransition();
 
   const handleOpenModal = (e: React.MouseEvent) => {
@@ -44,6 +45,7 @@ export function DeletePersonButton({
     e.stopPropagation();
     setIsOpen(true);
     setErrorMessage(null);
+    setHasConfirmedConsequences(false);
     setIsLoadingRelations(true);
 
     getPersonRelationsForDeletionAction(personId)
@@ -64,6 +66,7 @@ export function DeletePersonButton({
     setIsOpen(false);
     setRelationsData(null);
     setErrorMessage(null);
+    setHasConfirmedConsequences(false);
   };
 
   const handleConfirmDelete = () => {
@@ -287,7 +290,7 @@ export function DeletePersonButton({
                                     <span className="text-[10px] text-[#6b5847] font-medium">
                                       {r.relationType} ·{" "}
                                       <span className="text-amber-700 font-bold">
-                                        Quedará sin asignar
+                                        Se desvincula como contacto
                                       </span>
                                     </span>
                                   </li>
@@ -346,6 +349,21 @@ export function DeletePersonButton({
                           </span>
                         </div>
                       </div>
+
+                      {/* Confirmación expresa */}
+                      <label className="flex items-start gap-2.5 p-3 rounded-xl border border-amber-300 bg-amber-50/90 cursor-pointer select-none hover:bg-amber-100/70 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={hasConfirmedConsequences}
+                          onChange={(e) => setHasConfirmedConsequences(e.target.checked)}
+                          className="mt-0.5 rounded border-amber-400 text-brand focus:ring-brand h-4 w-4 shrink-0 accent-[#c59b27]"
+                        />
+                        <span className="text-[11px] font-semibold text-amber-950 leading-snug">
+                          Confirmo expresamente que deseo eliminar a esta persona y entiendo que se desactivarán sus{" "}
+                          <strong>{relationsData?.relations.privateAreas.length ?? 0}</strong> asignaciones activas de áreas privativas, se desvincularán sus{" "}
+                          <strong>{relationsData?.relations.commerces.length ?? 0}</strong> comercios y se limpiarán sus referencias de contacto.
+                        </span>
+                      </label>
                     </div>
                   ) : (
                     /* CASO: SIN RELACIONES (CONFIRMACIÓN SENCILLA) */
@@ -389,7 +407,7 @@ export function DeletePersonButton({
               <Button
                 type="button"
                 variant="destructive"
-                disabled={isDeleting || isLoadingRelations}
+                disabled={isDeleting || isLoadingRelations || (hasRelations && !hasConfirmedConsequences)}
                 onClick={handleConfirmDelete}
                 className="h-9 px-5 text-[10px] font-bold uppercase rounded-full gap-1.5 shadow-md shadow-rose-950/15 bg-rose-700 hover:bg-rose-800 text-white border-0 disabled:opacity-50"
               >

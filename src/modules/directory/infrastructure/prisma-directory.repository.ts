@@ -23,11 +23,11 @@ function normalizeText(value: string): string {
 }
 
 function displayNameFrom(input: {
-  businessName: string | null;
-  firstName: string | null;
-  lastName: string | null;
-  email: string | null;
-  phone: string | null;
+  businessName?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  email?: string | null;
+  phone?: string | null;
 }): string {
   const businessName = input.businessName?.trim();
   if (businessName) {
@@ -655,7 +655,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
     const requiresInvoiceByUserId = await this.getRequiresInvoiceByUserId(users.map((user) => user.id));
     const commercesByUserId = await this.getCommerceRowsByUserId(users.map((user) => user.id));
     const peopleExpanded = users
-      .flatMap<DirectoryPerson>((user) => {
+      .map<DirectoryPerson>((user) => {
         const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
         const displayName = displayNameFrom(user);
         const roles = uniqueSorted(
@@ -705,33 +705,16 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           })),
         };
 
-        if (commerces.length === 0) {
-          return [
-            {
-              id: user.id,
-              commerceName: null,
-              ...basePerson,
-            },
-          ];
-        }
+        const commerceNames = commerces.map((c) => c.commerceName).filter(Boolean);
 
-        return commerces.map((commerce) => ({
-          id: `${user.id}:commerce:${commerce.id}`,
-          commerceName: commerce.commerceName,
+        return {
+          id: user.id,
+          commerceName: commerceNames.length > 0 ? commerceNames.join(", ") : null,
           ...basePerson,
-        }));
+        };
       })
       .sort((a, b) => {
-        const byName = a.displayName.localeCompare(b.displayName, "es", {
-          sensitivity: "base",
-          numeric: true,
-        });
-
-        if (byName !== 0) {
-          return byName;
-        }
-
-        return (a.commerceName ?? "").localeCompare(b.commerceName ?? "", "es", {
+        return a.displayName.localeCompare(b.displayName, "es", {
           sensitivity: "base",
           numeric: true,
         });
@@ -921,10 +904,41 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         },
         commerces: {
           where: { isActive: true },
-          orderBy: { commerceName: "asc" },
+          orderBy: [{ sortOrder: "asc" }, { commerceName: "asc" }],
           select: {
             id: true,
+            commerceId: true,
             commerceName: true,
+            commerce: {
+              select: {
+                id: true,
+                name: true,
+                businessName: true,
+                rfc: true,
+                phone: true,
+                email: true,
+                administrativeContactUser: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    lastNamePaterno: true,
+                    lastNameMaterno: true,
+                    businessName: true,
+                  },
+                },
+                operativeContactUser: {
+                  select: {
+                    id: true,
+                    firstName: true,
+                    lastName: true,
+                    lastNamePaterno: true,
+                    lastNameMaterno: true,
+                    businessName: true,
+                  },
+                },
+              },
+            },
           },
         },
       },
@@ -981,10 +995,33 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           .map((item) => item.role.name),
       ),
       participationBlocks: blocks,
-      linkedCommerces: user.commerces.map((c) => ({
-        id: c.id,
-        name: c.commerceName,
-      })),
+      linkedCommerces: user.commerces.map((c) => {
+        const comm = c.commerce;
+        const adminContact = comm?.administrativeContactUser;
+        const operContact = comm?.operativeContactUser;
+
+        return {
+          id: c.id,
+          commerceId: comm?.id ?? c.commerceId ?? null,
+          name: comm?.name ?? c.commerceName,
+          businessName: comm?.businessName ?? null,
+          rfc: comm?.rfc ?? null,
+          phone: comm?.phone ?? null,
+          email: comm?.email ?? null,
+          administrativeContact: adminContact
+            ? {
+                id: adminContact.id,
+                name: displayNameFrom(adminContact),
+              }
+            : null,
+          operativeContact: operContact
+            ? {
+                id: operContact.id,
+                name: displayNameFrom(operContact),
+              }
+            : null,
+        };
+      }),
       assignments: user.assignments.map((assignment) => ({
         privateAreaId: assignment.privateArea.id,
         privateAreaName: assignment.privateArea.name,

@@ -53,9 +53,21 @@ export interface ParticipationBlock {
   rows: ParticipationRow[];
 }
 
-export interface LinkedCommerce {
+export interface LinkedCommerceContact {
   id: string;
   name: string;
+}
+
+export interface LinkedCommerce {
+  id: string;
+  commerceId?: string | null;
+  name: string;
+  businessName?: string | null;
+  rfc?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  administrativeContact?: LinkedCommerceContact | null;
+  operativeContact?: LinkedCommerceContact | null;
 }
 
 export interface NestedUser {

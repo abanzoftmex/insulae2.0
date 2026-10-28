@@ -155,6 +155,8 @@ interface DetailDataset {
   }[];
   businesses: {
     name: string;
+    areaId: string;
+    areaSortIndex: number;
     areaLabel: string;
     zone: string;
     lines: string[];
@@ -164,6 +166,80 @@ interface DetailDataset {
     startLabel: string;
   }[];
   totalRentals: number;
+}
+
+const legacyNameCollator = new Intl.Collator("es", {
+  numeric: true,
+  sensitivity: "base",
+});
+
+function sanitizeAreaIdentifier(value: string): string {
+  return value
+    .trim()
+    .replace(/^ap\s*:\s*/i, "")
+    .replace(/^ap\s+/i, "")
+    .replace(/^fap\s*:\s*/i, "")
+    .replace(/^fap\s+/i, "")
+    .replace(/\s+/g, " ");
+}
+
+function toLegacySortableName(name: string): string {
+  const sanitized = sanitizeAreaIdentifier(name).toUpperCase();
+  return sanitized.split("/")[0]?.trim() ?? sanitized;
+}
+
+function compareAreasLegacyOrder(
+  a: { sortOrder: number; name: string; id: string },
+  b: { sortOrder: number; name: string; id: string },
+): number {
+  if (a.sortOrder !== b.sortOrder) {
+    return a.sortOrder - b.sortOrder;
+  }
+  const byName = legacyNameCollator.compare(
+    toLegacySortableName(a.name),
+    toLegacySortableName(b.name),
+  );
+  if (byName !== 0) return byName;
+  return a.id.localeCompare(b.id, "es");
+}
+
+function sortAreasHierarchical<
+  T extends {
+    id: string;
+    name: string;
+    sortOrder: number;
+    parentPrivateAreaId: string | null;
+  },
+>(items: T[]): T[] {
+  const childMap = new Map<string, T[]>();
+  for (const item of items) {
+    if (item.parentPrivateAreaId) {
+      const list = childMap.get(item.parentPrivateAreaId) ?? [];
+      list.push(item);
+      childMap.set(item.parentPrivateAreaId, list);
+    }
+  }
+
+  const result: T[] = [];
+  const visited = new Set<string>();
+
+  const pushWithDescendants = (node: T) => {
+    if (visited.has(node.id)) return;
+    visited.add(node.id);
+    result.push(node);
+    const children = (childMap.get(node.id) ?? []).sort(compareAreasLegacyOrder);
+    for (const child of children) {
+      pushWithDescendants(child);
+    }
+  };
+
+  const topLevel = items.filter((item) => !item.parentPrivateAreaId).sort(compareAreasLegacyOrder);
+  for (const item of topLevel) pushWithDescendants(item);
+
+  const remaining = items.filter((item) => !visited.has(item.id)).sort(compareAreasLegacyOrder);
+  for (const item of remaining) pushWithDescendants(item);
+
+  return result;
 }
 
 /** Carga una sola vez todo lo que necesitan los 8 detalles, respetando los filtros. */
@@ -180,6 +256,7 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
         id: true,
         name: true,
         code: true,
+        sortOrder: true,
         zone: true,
         subzone: true,
         useType: true,
@@ -273,14 +350,15 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
     // Catálogo de giros no disponible: las columnas de giro quedan vacías.
   }
 
+  const sortedAreaRows = sortAreasHierarchical(areaRows);
   const areas: EnrichedArea[] = [];
   const ownersById = new Map<string, DetailDataset["owners"][number]>();
   const businesses: DetailDataset["businesses"] = [];
   let totalRentals = 0;
 
-  for (const area of areaRows) {
+  for (const [areaIndex, area] of sortedAreaRows.entries()) {
     const isParentWithChildren = parentIdsWithChildren.has(area.id);
-    const label = area.code?.trim() || area.name;
+    const label = area.code?.trim() || area.name.trim();
     const zone = area.zone?.trim() || "Sin barrio";
     const useType = area.useType?.trim() || "Sin uso asignado";
     const ownerNames: string[] = [];
@@ -345,6 +423,8 @@ async function loadDataset(cid: string, filters: StatisticsFilters): Promise<Det
       const validYear = year !== null && year >= MIN_VALID_YEAR && year <= new Date().getFullYear() + 1 ? year : null;
       businesses.push({
         name,
+        areaId: area.id,
+        areaSortIndex: areaIndex,
         areaLabel: label,
         zone,
         lines,
@@ -511,7 +591,6 @@ export async function loadKpiDetail(
           { key: "barrios", label: "Barrios", clamp: true },
           { key: "figura", label: "Figura de propiedad", clamp: true },
           { key: "indiviso", label: "Indiviso", numeric: true },
-          { key: "detalle", label: "Inmuebles asignados", clamp: true },
           { key: "email", label: "Correo", nowrap: true },
           { key: "telefono", label: "Teléfono", nowrap: true },
         ],
@@ -521,7 +600,6 @@ export async function loadKpiDetail(
           barrios: [...owner.zones].sort().join(", ") || "—",
           figura: resolveOwnerFigura(owner.roles),
           indiviso: `${owner.indiviso.toFixed(4)}%`,
-          detalle: owner.areaLabels.join(", ") || "—",
           email: owner.email,
           telefono: owner.phone,
         })),
@@ -658,7 +736,7 @@ export async function loadKpiDetail(
         ],
         columns: [
           { key: "negocio", label: "Negocio", width: "w-[220px]" },
-          { key: "inmueble", label: "Inmueble" },
+          { key: "fapa", label: "FAPA" },
           { key: "barrio", label: "Barrio" },
           { key: "giro", label: "Giro", clamp: true },
           { key: "categoria", label: "Categoría", clamp: true },
@@ -667,10 +745,14 @@ export async function loadKpiDetail(
         ],
         rows: businesses
           .slice()
-          .sort((a, b) => a.name.localeCompare(b.name))
+          .sort(
+            (a, b) =>
+              a.areaSortIndex - b.areaSortIndex ||
+              a.name.localeCompare(b.name, "es-MX", { sensitivity: "base" }),
+          )
           .map((business) => ({
             negocio: business.name,
-            inmueble: business.areaLabel,
+            fapa: business.areaLabel,
             barrio: business.zone,
             giro: business.lines.join(", ") || "Sin giro",
             categoria: business.categories.join(", ") || "—",

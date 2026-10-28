@@ -381,4 +381,164 @@ export async function deleteNestedUserAction(id: string) {
   }
 }
 
+export async function unlinkCommerceFromPersonAction(userCommerceId: string) {
+  try {
+    await assertPermission(MODULES.DIRECTORIO, "canUpdate");
+    await prisma.userCommerce.update({
+      where: { id: userCommerceId },
+      data: { isActive: false }
+    });
+    return { ok: true, message: "Comercio desvinculado de la persona correctamente." };
+  } catch (error) {
+    console.error("[unlinkCommerceFromPersonAction] failed", error);
+    return { ok: false, message: "No se pudo desvincular el comercio." };
+  }
+}
+
+export interface SaveCommerceInput {
+  userId: string;
+  userCommerceId?: string | null;
+  commerceId?: string | null;
+  name: string;
+  businessName?: string | null;
+  rfc?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  administrativeContactUserId?: string | null;
+  operativeContactUserId?: string | null;
+}
+
+export async function saveCommerceForPersonAction(data: SaveCommerceInput) {
+  try {
+    await assertPermission(MODULES.DIRECTORIO, "canUpdate");
+    const targetUserId = cleanUserId(data.userId);
+
+    const user = await prisma.user.findUnique({
+      where: { id: targetUserId },
+      select: { condominiumId: true }
+    });
+
+    if (!user) {
+      return { ok: false, message: "Usuario no encontrado." };
+    }
+
+    const trimmedName = data.name.trim();
+    if (!trimmedName) {
+      return { ok: false, message: "El nombre comercial es obligatorio." };
+    }
+
+    let targetCommerceId = data.commerceId ?? null;
+
+    // 1. If commerceId exists, update the Commerce entity
+    if (targetCommerceId) {
+      await prisma.commerce.update({
+        where: { id: targetCommerceId },
+        data: {
+          name: trimmedName,
+          businessName: data.businessName?.trim() || null,
+          rfc: data.rfc?.trim() || null,
+          phone: data.phone?.trim() || null,
+          email: data.email?.trim() || null,
+          administrativeContactUserId: data.administrativeContactUserId || null,
+          operativeContactUserId: data.operativeContactUserId || null,
+        }
+      });
+    } else {
+      // Check if commerce already exists with this name
+      const existing = await prisma.commerce.findFirst({
+        where: {
+          condominiumId: user.condominiumId,
+          name: { equals: trimmedName, mode: "insensitive" }
+        }
+      });
+
+      if (existing) {
+        targetCommerceId = existing.id;
+        await prisma.commerce.update({
+          where: { id: existing.id },
+          data: {
+            businessName: data.businessName?.trim() || existing.businessName,
+            rfc: data.rfc?.trim() || existing.rfc,
+            phone: data.phone?.trim() || existing.phone,
+            email: data.email?.trim() || existing.email,
+            administrativeContactUserId: data.administrativeContactUserId !== undefined 
+              ? data.administrativeContactUserId 
+              : existing.administrativeContactUserId,
+            operativeContactUserId: data.operativeContactUserId !== undefined 
+              ? data.operativeContactUserId 
+              : existing.operativeContactUserId,
+          }
+        });
+      } else {
+        const newCommerce = await prisma.commerce.create({
+          data: {
+            condominiumId: user.condominiumId,
+            name: trimmedName,
+            businessName: data.businessName?.trim() || null,
+            rfc: data.rfc?.trim() || null,
+            phone: data.phone?.trim() || null,
+            email: data.email?.trim() || null,
+            administrativeContactUserId: data.administrativeContactUserId || null,
+            operativeContactUserId: data.operativeContactUserId || null,
+            isActive: true,
+          }
+        });
+        targetCommerceId = newCommerce.id;
+      }
+    }
+
+    // 2. Link or update UserCommerce
+    if (data.userCommerceId) {
+      await prisma.userCommerce.update({
+        where: { id: data.userCommerceId },
+        data: {
+          commerceName: trimmedName,
+          commerceId: targetCommerceId,
+          isActive: true,
+        }
+      });
+    } else {
+      // Find if UserCommerce already exists for this user and commerce
+      const existingUC = await prisma.userCommerce.findFirst({
+        where: {
+          userId: targetUserId,
+          OR: [
+            { commerceId: targetCommerceId },
+            { commerceName: { equals: trimmedName, mode: "insensitive" } }
+          ]
+        }
+      });
+
+      if (existingUC) {
+        await prisma.userCommerce.update({
+          where: { id: existingUC.id },
+          data: {
+            commerceName: trimmedName,
+            commerceId: targetCommerceId,
+            isActive: true,
+          }
+        });
+      } else {
+        const count = await prisma.userCommerce.count({ where: { userId: targetUserId } });
+        await prisma.userCommerce.create({
+          data: {
+            condominiumId: user.condominiumId,
+            userId: targetUserId,
+            commerceId: targetCommerceId,
+            commerceName: trimmedName,
+            sortOrder: count + 1,
+            isActive: true,
+          }
+        });
+      }
+    }
+
+    return { ok: true, message: "Comercio guardado y vinculado correctamente." };
+  } catch (error) {
+    console.error("[saveCommerceForPersonAction] failed", error);
+    return { ok: false, message: "No se pudo guardar el comercio." };
+  }
+}
+
+
 
