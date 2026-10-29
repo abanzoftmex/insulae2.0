@@ -1,20 +1,34 @@
 /**
- * Token de sesión para el portal de condóminos (minisitio).
- * HMAC-SHA256 firmado por insulae2.0; el minisitio lo guarda y lo reenvía como Bearer.
- * Sin dependencias externas (solo crypto de Node).
+ * Tokens del portal de condóminos (minisitio, `/minisitio`).
  *
- * El token solo prueba identidad y vigencia (1 día). La autorización (usuario activo y
- * rol "Solo Minisitio") se revalida en cada petición con requireCondomino()
- * (ver condomino-session.ts), de modo que revocar el rol surte efecto de inmediato.
+ * - Sesión: viaja en la cookie httpOnly `minisitio_session` (ver condomino-session.ts).
+ *   Solo prueba identidad y vigencia (1 día); la autorización (usuario activo y con acceso
+ *   al portal) se revalida contra la base en cada página y acción con
+ *   requireCondominoSession(), de modo que revocar el acceso surte efecto de inmediato.
+ * - Restablecimiento de contraseña: token de propósito acotado que dura 1 hora.
+ *
+ * Web Crypto (signed-token.ts) para que el middleware también pueda verificar la firma.
  */
-import crypto from "crypto";
+import { signToken, verifyToken } from "./signed-token";
 
-const SECRET =
-  process.env.CONDOMINO_API_SECRET ||
-  process.env.NEXTAUTH_SECRET ||
-  "dev-condomino-secret-change-me";
+/** Cookie httpOnly de la sesión del condómino y prefijo del portal (los usa también el middleware). */
+export const CONDOMINO_SESSION_COOKIE = "minisitio_session";
+export const MINISITIO_BASE_PATH = "/minisitio";
 
-const TTL_SECONDS = 60 * 60 * 24; // 1 día
+const DEFAULT_DEV_SECRET = "dev-condomino-secret-change-me";
+
+function getSecret(): string {
+  const secret =
+    process.env.MINISITIO_SESSION_SECRET || process.env.CONDOMINO_API_SECRET || process.env.NEXTAUTH_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    console.warn("[condomino-token] MINISITIO_SESSION_SECRET no está definido; se usa el secreto de desarrollo.");
+  }
+  return DEFAULT_DEV_SECRET;
+}
+
+export const CONDOMINO_SESSION_TTL_SECONDS = 60 * 60 * 24; // 1 día
+const RESET_TTL_SECONDS = 60 * 60; // 1 hora
 
 export interface CondominoTokenPayload {
   userId: string;
@@ -22,42 +36,22 @@ export interface CondominoTokenPayload {
   exp: number; // unix seconds
 }
 
-function b64url(input: string): string {
-  return Buffer.from(input).toString("base64url");
-}
-
-export function signCondominoToken(input: { userId: string; condominiumId: string }): string {
+export async function signCondominoToken(input: { userId: string; condominiumId: string }): Promise<string> {
   const payload: CondominoTokenPayload = {
     userId: input.userId,
     condominiumId: input.condominiumId,
-    exp: Math.floor(Date.now() / 1000) + TTL_SECONDS,
+    exp: Math.floor(Date.now() / 1000) + CONDOMINO_SESSION_TTL_SECONDS,
   };
-  const body = b64url(JSON.stringify(payload));
-  const sig = crypto.createHmac("sha256", SECRET).update(body).digest("base64url");
-  return `${body}.${sig}`;
+  return signToken(payload, getSecret());
 }
 
-export function verifyCondominoToken(token: string | null | undefined): CondominoTokenPayload | null {
-  if (!token) return null;
-  const parts = token.split(".");
-  if (parts.length !== 2) return null;
-  const [body, sig] = parts;
-  const expected = crypto.createHmac("sha256", SECRET).update(body).digest("base64url");
-  const sigBuf = Buffer.from(sig);
-  const expBuf = Buffer.from(expected);
-  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return null;
-  try {
-    const payload = JSON.parse(Buffer.from(body, "base64url").toString()) as CondominoTokenPayload;
-    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
-    if (!payload.userId || !payload.condominiumId) return null;
-    return payload;
-  } catch {
-    return null;
-  }
+export async function verifyCondominoToken(token: string | null | undefined): Promise<CondominoTokenPayload | null> {
+  const payload = await verifyToken<CondominoTokenPayload & { p?: string }>(token, getSecret());
+  if (!payload || payload.p || !payload.userId || !payload.condominiumId) return null;
+  return { userId: payload.userId, condominiumId: payload.condominiumId, exp: payload.exp };
 }
 
 // ---- Tokens de restablecimiento de contraseña (purpose-scoped, 1h) ----
-const RESET_TTL_SECONDS = 60 * 60;
 
 export interface ResetTokenPayload {
   p: "reset";
@@ -66,42 +60,18 @@ export interface ResetTokenPayload {
   exp: number;
 }
 
-export function signResetToken(input: { userId: string; email: string }): string {
+export async function signResetToken(input: { userId: string; email: string }): Promise<string> {
   const payload: ResetTokenPayload = {
     p: "reset",
     userId: input.userId,
     email: input.email,
     exp: Math.floor(Date.now() / 1000) + RESET_TTL_SECONDS,
   };
-  const body = b64url(JSON.stringify(payload));
-  const sig = crypto.createHmac("sha256", SECRET).update(body).digest("base64url");
-  return `${body}.${sig}`;
+  return signToken(payload, getSecret());
 }
 
-export function verifyResetToken(token: string | null | undefined): ResetTokenPayload | null {
-  if (!token) return null;
-  const parts = token.split(".");
-  if (parts.length !== 2) return null;
-  const [body, sig] = parts;
-  const expected = crypto.createHmac("sha256", SECRET).update(body).digest("base64url");
-  const sigBuf = Buffer.from(sig);
-  const expBuf = Buffer.from(expected);
-  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) return null;
-  try {
-    const payload = JSON.parse(Buffer.from(body, "base64url").toString()) as ResetTokenPayload;
-    if (payload.p !== "reset" || !payload.userId || !payload.email) return null;
-    if (!payload.exp || payload.exp < Math.floor(Date.now() / 1000)) return null;
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
-/** Extrae y valida el token del header Authorization: Bearer <token>. */
-export function getCondominoFromRequest(request: Request): CondominoTokenPayload | null {
-  const auth = request.headers.get("authorization") || request.headers.get("Authorization");
-  if (!auth) return null;
-  const m = auth.match(/^Bearer\s+(.+)$/i);
-  if (!m) return null;
-  return verifyCondominoToken(m[1].trim());
+export async function verifyResetToken(token: string | null | undefined): Promise<ResetTokenPayload | null> {
+  const payload = await verifyToken<ResetTokenPayload>(token, getSecret());
+  if (!payload || payload.p !== "reset" || !payload.userId || !payload.email) return null;
+  return payload;
 }

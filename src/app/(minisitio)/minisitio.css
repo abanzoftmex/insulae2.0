@@ -1,0 +1,391 @@
+@import "tailwindcss";
+
+/* Force-include dynamic accent classes used in StatCard accentMap */
+@source inline("{bg,text,border}-{cyan,lime,amber,emerald}-{50,100,200,600,700,800,900,950}{,/70,/60,/30}");
+@source inline("bg-{cyan,lime,amber,emerald}-{50,900,950}/70");
+@source inline("shadow-{cyan,lime,amber,emerald}-{100,200}");
+
+/* ============================================================
+   Estilos del portal de condóminos (/minisitio). Solo los carga el
+   layout raíz de (minisitio); el panel admin usa src/app/globals.css.
+   Tokens de diseño alineados con el admin: generan utilidades
+   bg-brand, text-ink, bg-canvas, rounded-pill, etc.
+   ============================================================ */
+@theme {
+  --color-canvas: #ffffff;
+  --color-canvas-2: #f3f4f6;
+  --color-card: #ffffff;
+  --color-brand: #5d5b35;
+  --color-brand-accent: #b58c42;
+  --color-brand-deep: #3d3c22;
+  --color-brand-uplift: #757242;
+  --color-brand-mint: #f1eac1;
+  --color-gold: #b58c42;
+  --color-gold-soft: #fbf8f0;
+  --color-ink: rgb(0 0 0 / 0.87);
+  --color-ink-soft: rgb(0 0 0 / 0.58);
+  --color-line: rgb(0 0 0 / 0.06);
+  --color-danger: #c82014;
+  --color-terracotta: #922f12;
+
+  /* ── Plano de contenido: rampa neutra de Fluent 2 (Microsoft Teams) ───────
+     Portado de insulae2.0 — ver `docs/fluent-teams-design-analysis.md` allí.
+     El rail vive en la rampa "pergamino" (olivo desaturado); el CONTENIDO vive
+     en la rampa neutra de Fluent, acromática por definición: grey[N] donde N es
+     el % de luminancia. El olivo entra en el contenido sólo como acento
+     (acción primaria, banner), nunca como superficie.
+
+     Valores verbatim de @fluentui/tokens (tema claro). */
+  --color-surface: #ffffff;    /* colorNeutralBackground1 — tarjetas y paneles */
+  --color-surface-2: #fafafa;  /* colorNeutralBackground2 — cabeceras, zebra   */
+  --color-surface-3: #f5f5f5;  /* colorNeutralBackground3 — hover de fila      */
+  --color-surface-4: #f0f0f0;  /* colorNeutralBackground4 — chips neutros      */
+  --color-fg: #242424;         /* colorNeutralForeground1 — texto primario     */
+  --color-fg-2: #424242;       /* colorNeutralForeground2 — secundario, iconos */
+  --color-fg-3: #616161;       /* colorNeutralForeground3 — metadatos, labels  */
+  --color-fg-4: #707070;       /* colorNeutralForeground4 — deshabilitado      */
+  --color-stroke: #d1d1d1;     /* colorNeutralStroke1 — borde de control       */
+  --color-stroke-2: #e0e0e0;   /* colorNeutralStroke2 — borde de tarjeta       */
+  --color-stroke-3: #f0f0f0;   /* colorNeutralStroke3 — divisor entre filas    */
+
+  --color-success: #107c10;
+  --color-critical: #d13438;
+
+
+  /* ── Chrome / navegación ────────────────────────────────────────────────
+     Portado desde insulae2.0 (src/app/globals.css). Rampa "pergamino": mismo
+     hue que --color-brand (olivo) pero desaturado y elevado. El rail queda un
+     escalón POR DEBAJO del plano blanco del contenido, de modo que la app se
+     lee en capas (rail → ítem activo blanco → contenido) y no como una hoja
+     plana. Todos los estados son escalones de esta rampa: nunca hexes sueltos.
+     Los deltas están calibrados en OKLab; ver el histórico de insulae2.0. */
+  --color-nav: #f6f4ec;             /* superficie del rail                    */
+  --color-nav-sunken: #e7e4d5;      /* módulos hundidos, buscador, footer     */
+  --color-nav-hover: #dcd8c6;       /* hover de ítem DENTRO del módulo        */
+  --color-nav-pressed: #d1ccb7;     /* siguiente escalón, sin uso hoy         */
+  --color-nav-line: #d9d4be;        /* hairline legible DENTRO del módulo     */
+  --color-nav-line-soft: #e4e0cf;   /* hairline de separación suave           */
+
+  /* Tinta del rail: negro-olivo, no negro puro — iguala la temperatura.
+     Calibrada contra el fondo de módulo (#e7e4d5), no contra el pergamino. */
+  --color-nav-ink: rgb(61 60 34 / 0.92);       /* 7.17:1 — AAA, etiquetas       */
+  --color-nav-ink-soft: rgb(61 60 34 / 0.74);  /* 4.45:1 — iconos/chevrons      */
+  --color-nav-ink-faint: rgb(61 60 34 / 0.55); /* 2.81:1 — solo decorativo      */
+  --color-nav-label: rgb(61 60 34 / 0.78);     /* 4.95:1 — títulos de módulo    */
+
+  /* Pulgar del scroll: mismo olivo translúcido, no el gris del sistema */
+  --color-nav-scroll: rgb(61 60 34 / 0.16);
+  --color-nav-scroll-strong: rgb(61 60 34 / 0.32);
+
+  --radius-card: 12px;
+  --radius-pill: 9999px;
+
+  /* Radios Fluent: 2 / 4 / 6 / 8 y nada más. Sin píldoras fuera del badge
+     circular de conteo — es parte de por qué se lee como herramienta. */
+  --radius-ctrl: 4px;      /* borderRadiusMedium — botones, inputs, badges     */
+  --radius-surface: 6px;   /* borderRadiusLarge                                */
+  --radius-panel: 8px;     /* borderRadiusXLarge — tarjetas y paneles          */
+
+  --shadow-card: 0 0 0.5px rgb(0 0 0 / 0.14), 0 1px 1px rgb(0 0 0 / 0.24);
+
+  /* Elevación Fluent: halo ambiental fijo de 2px + capa "key" que crece con el
+     nivel. Regla clave: la tarjeta en reposo NO lleva sombra — la define el
+     hairline (--color-stroke-2). La sombra sólo entra al elevar de verdad. */
+  --shadow-2: 0 0 2px rgb(0 0 0 / 0.12), 0 1px 2px rgb(0 0 0 / 0.14);
+  --shadow-4: 0 0 2px rgb(0 0 0 / 0.12), 0 2px 4px rgb(0 0 0 / 0.14);
+  --shadow-8: 0 0 2px rgb(0 0 0 / 0.12), 0 4px 8px rgb(0 0 0 / 0.14);
+  --shadow-16: 0 0 2px rgb(0 0 0 / 0.12), 0 8px 16px rgb(0 0 0 / 0.14);
+
+  /* Sombras teñidas de olivo (nunca negro puro) y siempre en dos capas:
+     un contacto de 1px + un halo ambiental. Es lo que da volumen físico. */
+  --shadow-nav-item: 0 1px 2px rgb(93 91 53 / 0.10), 0 0 0 1px rgb(93 91 53 / 0.06);
+  --shadow-nav-flyout: 0 16px 40px -12px rgb(61 60 34 / 0.28), 0 3px 8px rgb(61 60 34 / 0.08), 0 0 0 1px rgb(61 60 34 / 0.07);
+  --shadow-nav-rail: inset -1px 0 0 rgb(61 60 34 / 0.07);
+
+  /* Canal tallado: sombra interior ARRIBA + reflejo exterior ABAJO. Esa segunda
+     capa simula el labio del canal atrapando la luz cenital — sin ella un fondo
+     más oscuro solo se ve como una caja, no como algo incrustado. */
+  --shadow-nav-well:
+    inset 0 1px 3px rgb(61 60 34 / 0.13),
+    inset 0 0 0 1px rgb(61 60 34 / 0.07),
+    0 1px 0 rgb(255 255 255 / 0.9);
+
+  /* Curvas: `smooth` para geometría (ancho, alto), `out-quint` para opacidad */
+  --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+
+  /* Design tokens — named --space-N to avoid overriding Tailwind's utility scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 16px;
+  --space-4: 24px;
+  --space-5: 32px;
+  --space-6: 40px;
+  --space-7: 48px;
+  --space-8: 56px;
+  --space-9: 64px;
+}
+
+/* Utilidades compartidas con el admin */
+@utility shadow-layered {
+  box-shadow: var(--shadow-card);
+}
+
+@utility transition-standard {
+  transition-property: all;
+  transition-timing-function: ease;
+  transition-duration: 200ms;
+}
+
+@utility active-scale {
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+
+/* Marca de agua de los módulos. El glifo escala con la altura del módulo, pero
+   su trazo NO: sin esto, un icono de 24px llevado a 130px renderiza la línea a
+   ~7px y la marca de agua pesa como un dibujo. */
+@utility watermark-glyph {
+  & * {
+    vector-effect: non-scaling-stroke;
+  }
+}
+
+/* Sin barra de scroll pero con scroll funcional. En el rail colapsado la barra
+   robaría 10px del ancho de contenido y los módulos dejarían de ir a sangre. */
+@utility scrollbar-hidden {
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Scroll delgado y teñido. Sustituye a la clase .sidebar-scroll de más abajo.
+   El pulgar se dibuja con `background-clip: content-box` dentro de un borde
+   transparente de 3px → se VE de 4px pero se AGARRA en 10px. */
+@utility scrollbar-slim {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  overscroll-behavior: contain;
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: var(--color-nav-scroll) transparent;
+  }
+
+  &::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: var(--radius-pill);
+    transition: background-color 200ms ease;
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:focus-within::-webkit-scrollbar-thumb {
+    background-color: var(--color-nav-scroll);
+  }
+
+  &::-webkit-scrollbar-thumb:hover,
+  &::-webkit-scrollbar-thumb:active {
+    background-color: var(--color-nav-scroll-strong);
+  }
+}
+
+/* Submenú animado SIN framer-motion: el truco grid 0fr→1fr consigue una
+   transición de alto real sin medir nada en JS. */
+@utility submenu-collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 260ms var(--ease-smooth), opacity 160ms ease;
+  opacity: 0;
+
+  & > * {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  &[data-open="true"] {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+
+@layer base {
+  :root {
+    /* Colores personalizados del proyecto — re-apuntados a la paleta del admin */
+    --primary-dark: #5d5b35;  /* brand (olivo) */
+    --primary-light: #b58c42; /* gold (dorado) */
+    --primary-dark-rgb: 93, 91, 53;
+    --primary-light-rgb: 181, 140, 66;
+
+    /* Colores de fondo y texto */
+    --background: #ffffff;     /* canvas */
+    --foreground: rgb(0 0 0 / 0.87); /* ink */
+    --surface: #ffffff;        /* card */
+    --border: rgb(0 0 0 / 0.06); /* line */
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+}
+
+@layer utilities {
+  .bg-primary-dark {
+    background-color: var(--primary-dark);
+  }
+  
+  .bg-primary-light {
+    background-color: var(--primary-light);
+  }
+  
+  .text-primary-dark {
+    color: var(--primary-dark);
+  }
+  
+  .text-primary-light {
+    color: var(--primary-light);
+  }
+  
+  .border-primary-dark {
+    border-color: var(--primary-dark);
+  }
+  
+  .border-primary-light {
+    border-color: var(--primary-light);
+  }
+  
+  /* Marca de agua de expirado - REMOVIDA */
+  
+  .hover\:bg-primary-dark:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  .hover\:bg-primary-light:hover {
+    background-color: var(--primary-light);
+  }
+}
+
+/* Estilos para Embla Carousel */
+.embla {
+  overflow: hidden;
+  width: 100%;
+}
+
+.embla__container {
+  backface-visibility: hidden;
+  display: flex;
+  touch-action: pan-y;
+  margin-left: calc(1rem * -1);
+  width: 100%;
+}
+
+.embla__slide {
+  flex: 0 0 auto;
+  min-width: 0;
+  padding-left: 1rem;
+}
+
+/* En móvil, mostrar 1 slide completo */
+@media (max-width: 767px) {
+  .embla__slide {
+    flex: 0 0 100%;
+  }
+}
+
+/* En tablet y desktop, mostrar 3 slides */
+@media (min-width: 768px) {
+  .embla__slide {
+    flex: 0 0 50%;
+  }
+  
+  .embla__container {
+    margin-left: calc(1rem * -1);
+  }
+}
+
+@media (min-width: 1200px) {
+  .embla__slide {
+    flex: 0 0 33.333%;
+  }
+  
+  .embla__container {
+    margin-left: calc(1rem * -1);
+  }
+}
+
+/* Utilidad para truncar texto en múltiples líneas */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Scrollbar personalizado para el sidebar */
+.sidebar-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Para Firefox */
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+}
+
+/* Estilos del HTML del aviso de privacidad (renderizado, no como texto) */
+.aviso-privacidad-html { color: #374151; line-height: 1.7; }
+.aviso-privacidad-html h1,
+.aviso-privacidad-html h2,
+.aviso-privacidad-html h3,
+.aviso-privacidad-html h4 { font-weight: 700; color: #111827; margin: 1.25rem 0 0.5rem; line-height: 1.3; }
+.aviso-privacidad-html h1 { font-size: 1.5rem; }
+.aviso-privacidad-html h2 { font-size: 1.25rem; }
+.aviso-privacidad-html h3 { font-size: 1.125rem; }
+.aviso-privacidad-html p { margin: 0 0 0.85rem; }
+.aviso-privacidad-html ul,
+.aviso-privacidad-html ol { margin: 0 0 0.85rem 1.25rem; padding-left: 1rem; list-style-position: outside; }
+.aviso-privacidad-html ul { list-style-type: disc; }
+.aviso-privacidad-html ol { list-style-type: decimal; }
+.aviso-privacidad-html li { margin: 0.25rem 0; }
+.aviso-privacidad-html strong,
+.aviso-privacidad-html b { font-weight: 700; color: #111827; }
+.aviso-privacidad-html em,
+.aviso-privacidad-html i { font-style: italic; }
+.aviso-privacidad-html a { color: #b45309; text-decoration: underline; }
+.aviso-privacidad-html a:hover { color: #92400e; }
+.aviso-privacidad-html table { width: 100%; border-collapse: collapse; margin: 0.85rem 0; }
+.aviso-privacidad-html th,
+.aviso-privacidad-html td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }

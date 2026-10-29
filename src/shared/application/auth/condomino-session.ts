@@ -1,37 +1,41 @@
 /**
- * Guardia de sesión para las rutas /api/condomino/* (portal de condóminos).
+ * Sesión del portal de condóminos (`/minisitio`).
  *
- * En CADA petición: verifica la firma y vigencia del token y, además, consulta la base
- * para confirmar que el usuario sigue activo y conserva el rol "Solo Minisitio".
- * Así, si el administrador de Insulae revoca el rol o desactiva la cuenta, el acceso
- * cae en la siguiente petición, sin esperar a que expire el token.
+ * El token firmado vive en la cookie httpOnly `minisitio_session`, acotada a `/minisitio`
+ * y sin Max-Age: es una cookie de sesión que el navegador descarta al cerrarse, igual que
+ * el sessionStorage del minisitio independiente. El token caduca de todos modos al día.
  *
- * Contrato con el minisitio: cualquier 401 se interpreta como "sesión terminada" y
- * el cliente cierra sesión. Por eso un acceso revocado también responde 401, con
- * `code: "ACCESS_REVOKED"` para poder distinguirlo de un token inválido.
+ * - `readCondominoSession()`  → solo verifica firma y vigencia (sin tocar la base).
+ * - `requireCondominoSession()` → además confirma en la base que el usuario sigue activo y
+ *   con acceso al portal. Úsalo al inicio de cada page.tsx y de cada server action: si el
+ *   administrador revoca el acceso, la siguiente petición manda al login.
  */
-import { NextResponse } from "next/server";
+import { cache } from "react";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { getCondominoFromRequest, type CondominoTokenPayload } from "./condomino-token";
-import { MINISITIO_ACCESS_DENIED_MESSAGE, minisitioRoleWhere } from "./condomino-access";
+import {
+  CONDOMINO_SESSION_COOKIE,
+  MINISITIO_BASE_PATH,
+  verifyCondominoToken,
+  type CondominoTokenPayload,
+} from "./condomino-token";
+import { minisitioRoleWhere } from "./condomino-access";
 
-export type CondominoAuthResult =
-  | { ok: true; session: CondominoTokenPayload }
-  | { ok: false; response: NextResponse };
+export { CONDOMINO_SESSION_COOKIE, MINISITIO_BASE_PATH };
 
-export async function requireCondomino(request: Request): Promise<CondominoAuthResult> {
-  const session = getCondominoFromRequest(request);
-  if (!session) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { success: false, code: "INVALID_TOKEN", message: "Token inválido o expirado." },
-        { status: 401 },
-      ),
-    };
-  }
+/** Verifica la cookie de sesión (firma + vigencia). No consulta la base. */
+export const readCondominoSession = cache(async (): Promise<CondominoTokenPayload | null> => {
+  const cookieStore = await cookies();
+  return verifyCondominoToken(cookieStore.get(CONDOMINO_SESSION_COOKIE)?.value);
+});
 
-  const stillAllowed = await prisma.user.count({
+/**
+ * ¿Sigue teniendo acceso al portal? Misma regla que el login: cuenta activa y (ADMIN, rol del
+ * minisitio o al menos una asignación de área privativa activa).
+ */
+async function hasPortalAccess(session: CondominoTokenPayload): Promise<boolean> {
+  const allowed = await prisma.user.count({
     where: {
       id: session.userId,
       condominiumId: session.condominiumId,
@@ -43,16 +47,31 @@ export async function requireCondomino(request: Request): Promise<CondominoAuthR
       ],
     },
   });
+  return allowed > 0;
+}
 
-  if (stillAllowed === 0) {
-    return {
-      ok: false,
-      response: NextResponse.json(
-        { success: false, code: "ACCESS_REVOKED", message: MINISITIO_ACCESS_DENIED_MESSAGE },
-        { status: 401 },
-      ),
-    };
-  }
+/**
+ * Sesión verificada contra la base. Sin sesión redirige al login; con el acceso revocado
+ * pasa por `/minisitio/logout` para borrar la cookie antes de llegar al login.
+ */
+export const requireCondominoSession = cache(async (): Promise<CondominoTokenPayload> => {
+  const session = await readCondominoSession();
+  if (!session) redirect(`${MINISITIO_BASE_PATH}/login`);
+  if (!(await hasPortalAccess(session))) redirect(`${MINISITIO_BASE_PATH}/logout?reason=revoked`);
+  return session;
+});
 
-  return { ok: true, session };
+export async function setCondominoSessionCookie(token: string): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(CONDOMINO_SESSION_COOKIE, token, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: MINISITIO_BASE_PATH,
+  });
+}
+
+export async function clearCondominoSessionCookie(): Promise<void> {
+  const cookieStore = await cookies();
+  cookieStore.set(CONDOMINO_SESSION_COOKIE, "", { path: MINISITIO_BASE_PATH, maxAge: 0 });
 }
