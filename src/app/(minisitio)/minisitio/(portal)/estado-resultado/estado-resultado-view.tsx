@@ -132,9 +132,12 @@ const formatCurrency = (amount: number | null | undefined) => {
 export function EstadoResultadoView({
   initialData,
   initialError,
+  aniosConDatos = [],
 }: {
   initialData: EstadoResultadoInitialData | null;
   initialError: string | null;
+  /** Años con movimientos reales (getFinancialYears): se suman a las opciones fijas del selector. */
+  aniosConDatos?: number[];
 }) {
   // El año sigue viviendo en la URL (?anio=): el selector la actualiza y el cambio recarga los datos.
   const searchParams = useSearchParams();
@@ -416,9 +419,9 @@ export function EstadoResultadoView({
                 }}
                 className="border border-gray-300 rounded px-3 py-2 text-sm bg-white"
               >
-                {/* Mismas opciones fijas que el minisitio, más el año mostrado si no está entre
-                    ellas (el año por defecto es el más reciente con datos, p. ej. 2026). */}
-                {Array.from(new Set([Number(anio), 2025, 2024, 2023]))
+                {/* Mismas opciones fijas que el minisitio, más los años con datos y el año
+                    mostrado (el año por defecto es el más reciente con datos, p. ej. 2026). */}
+                {Array.from(new Set([Number(anio), ...aniosConDatos, 2025, 2024, 2023]))
                   .filter((y) => Number.isFinite(y))
                   .sort((a, b) => b - a)
                   .map((y) => (

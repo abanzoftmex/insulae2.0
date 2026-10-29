@@ -21,10 +21,11 @@ export default async function EstadoResultadoPage({
 
   const { anio } = await searchParams;
 
-  // Año: el de la URL si viene, o el más reciente con datos reales (igual que la pantalla vieja)
+  // Año: el de la URL si viene, o el más reciente con datos reales (igual que la pantalla vieja).
+  // Los años con datos también alimentan el selector, para poder volver al año por defecto.
+  const yr = await getFinancialYears(session).catch(() => null);
   let year = parseInt(String(Array.isArray(anio) ? anio[0] : (anio ?? "")), 10);
   if (!year || Number.isNaN(year)) {
-    const yr = await getFinancialYears(session).catch(() => null);
     year = yr?.latest || new Date().getFullYear();
   }
 
@@ -53,6 +54,7 @@ export default async function EstadoResultadoPage({
     <EstadoResultadoView
       initialData={initialData}
       initialError={initialData ? null : "Error al obtener totales"}
+      aniosConDatos={yr?.anios ?? []}
     />
   );
 }

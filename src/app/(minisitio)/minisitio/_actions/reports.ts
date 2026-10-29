@@ -16,6 +16,18 @@ import {
   getResumenFinanciero,
 } from "@/modules/minisitio/infrastructure/queries/financials.queries";
 import { getFeesReport, getGeneralReport, type FeesReportType } from "@/modules/minisitio/infrastructure/queries/reports.queries";
+import { requirePropietario } from "../(portal)/_reportes/require-propietario";
+
+/**
+ * Estado de resultados, reportes de cuotas y reporte general son solo para propietarios: la
+ * misma regla que aplican sus page.tsx, también aquí para que no se salte llamando la acción.
+ * El resumen financiero y los años disponibles siguen abiertos a todo condómino (como antes).
+ */
+async function requirePropietarioSession() {
+  const session = await requireCondominoSession();
+  await requirePropietario(session);
+  return session;
+}
 
 function toYear(anio: number | string | null | undefined): number {
   const n = typeof anio === "number" ? anio : parseInt(String(anio ?? ""), 10);
@@ -28,33 +40,33 @@ export async function getFinancialYearsAction() {
 }
 
 export async function getEstadoResultadoTotalesAction(anio: number | string) {
-  const session = await requireCondominoSession();
+  const session = await requirePropietarioSession();
   return getEstadoResultadoTotales(session, toYear(anio));
 }
 
 export async function getEstadoResultadoIngresosAction(anio: number | string) {
-  const session = await requireCondominoSession();
+  const session = await requirePropietarioSession();
   return getEstadoResultadoIngresos(session, toYear(anio));
 }
 
 export async function getEstadoResultadoEgresosGruposAction(anio: number | string) {
-  const session = await requireCondominoSession();
+  const session = await requirePropietarioSession();
   return getEstadoResultadoEgresosGrupos(session, toYear(anio));
 }
 
 export async function getEstadoResultadoEgresosOpcionesAction(_grupoId: string, _anio: number | string) {
-  await requireCondominoSession();
+  await requirePropietarioSession();
   return getEstadoResultadoEgresosOpciones();
 }
 
 export async function getEstadoResultadoEgresosConceptosAction(opcionId: string | null, anio: number | string) {
-  await requireCondominoSession();
+  await requirePropietarioSession();
   return getEstadoResultadoEgresosConceptos(opcionId, toYear(anio));
 }
 
 /** Conceptos de egreso de un grupo presupuestal (modal de conceptos del estado de resultados). */
 export async function getExpenseConceptsAction(grupoId: string, anio: number | string) {
-  const session = await requireCondominoSession();
+  const session = await requirePropietarioSession();
   return getExpenseConcepts(session, grupoId || "", toYear(anio));
 }
 
@@ -65,11 +77,11 @@ export async function getResumenFinancieroAction(anio: number | string, fondoRes
 }
 
 export async function getFeesReportAction(input: { tipo: FeesReportType; page?: number; limit?: number }) {
-  const session = await requireCondominoSession();
+  const session = await requirePropietarioSession();
   return getFeesReport(session, input);
 }
 
 export async function getGeneralReportAction() {
-  const session = await requireCondominoSession();
+  const session = await requirePropietarioSession();
   return getGeneralReport(session);
 }

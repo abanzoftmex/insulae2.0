@@ -57,7 +57,7 @@ Pantallas (`/minisitio/...`): bienvenida (`/minisitio`), `dashboard`, `propiedad
 
 ## Correcciones respecto al minisitio independiente
 
-- **Estado de resultados** siempre caía en "Error al cargar datos" (leía `totales.balance`, que la API no devolvía) y pedía ingresos/egresos con el año actual: ahora funciona y las tres secciones usan el año elegido. El selector incluye el año mostrado (antes 2026 aparecía como "2025").
+- **Estado de resultados** siempre caía en "Error al cargar datos" (leía `totales.balance`, que la API no devolvía) y pedía ingresos/egresos con el año actual: ahora funciona y las tres secciones usan el año elegido. El selector suma los años con datos reales a sus opciones fijas (antes 2026 aparecía como "2025" y no se podía volver a él).
 - **Notificaciones** fallaba al cargar (usaba un `<Layout>` sin importarlo).
 - **Mis Propiedades** ocultaba las FAP y fusiones: el organizador comparaba los ids con `> 0` y en insulae2.0 son UUID. Ahora salen todas (Cristóbal Encinas: 6 → 9 filas) y a las FAP se les suma `m2_construccion` como pretendía el código, así que la tarjeta de m² puede diferir del dashboard (2,234.28 vs 2,390.6 en ese caso). Revertible en `propiedades/propiedades-organizer.ts` (`tieneReferencia`).
 - URLs de Firebase: logos, documentos y constancias ya vienen completas; el minisitio les anteponía la ruta legacy de sistemasabanza y quedaban rotas.
@@ -65,7 +65,7 @@ Pantallas (`/minisitio/...`): bienvenida (`/minisitio`), `dashboard`, `propiedad
 - Tickets: tras crear uno, los contadores quedaban en (0) hasta cambiar de pestaña.
 - CSV de los modales de egresos salía en una sola línea.
 - PDF del reporte general: con jspdf-autotable 5 el minisitio caía en la tabla manual de respaldo; ahora usa autoTable.
-- Reportes de condominio (estado de resultados, cuotas, general): la restricción a propietarios se valida en el servidor (antes solo en el cliente, después de descargar los datos).
+- Reportes de condominio (estado de resultados, cuotas, general): la restricción a propietarios se valida en el servidor, en la página y en sus server actions (antes solo en el cliente, después de descargar los datos).
 - Rail colapsado: los íconos salían de dos en dos.
 - Rendimiento: `getFinancialYears` ya no trae todas las filas de cargos/pagos (SQL de años distintos) y `getFinancials` se memoriza por petición (estado de resultados de ~4-5 s a ~1.5 s).
 
