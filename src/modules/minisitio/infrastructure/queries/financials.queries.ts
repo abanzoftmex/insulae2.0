@@ -261,7 +261,8 @@ export function getEstadoResultadoEgresosOpciones() {
 }
 
 /** Conceptos por opción de egreso: sin equivalente en insulae2.0 (vacío válido). */
-export function getEstadoResultadoEgresosConceptos(opcionId: string | null, anio: number) {
+export function getEstadoResultadoEgresosConceptos(opcionIdInput: string | null, anio: number) {
+  const opcionId = opcionIdInput || null;
   return {
     success: true as const,
     opcionId,
