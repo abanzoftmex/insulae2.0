@@ -68,7 +68,7 @@ export function ResetPasswordView({
       } else {
         setError(data.message || 'Error al actualizar la contraseña');
       }
-    } catch (error) {
+    } catch {
       setError('Error de conexión. Intenta nuevamente.');
     } finally {
       setLoading(false);

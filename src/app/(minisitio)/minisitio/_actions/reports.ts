@@ -54,8 +54,10 @@ export async function getEstadoResultadoEgresosGruposAction(anio: number | strin
   return getEstadoResultadoEgresosGrupos(session, toYear(anio));
 }
 
-export async function getEstadoResultadoEgresosOpcionesAction(_grupoId: string, _anio: number | string) {
+export async function getEstadoResultadoEgresosOpcionesAction(grupoId: string, anio: number | string) {
   await requirePropietarioSession();
+  void grupoId; // sin equivalente en insulae2.0: siempre vacío, como antes
+  void anio;
   return getEstadoResultadoEgresosOpciones();
 }
 

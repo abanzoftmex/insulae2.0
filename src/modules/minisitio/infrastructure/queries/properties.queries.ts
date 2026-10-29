@@ -118,7 +118,12 @@ export async function getPropertyDetail(session: CondominoTokenPayload, id: stri
 
   const project = await getActiveProject(session.condominiumId);
   const bal = computeBalance(area.charges);
-  const { parent_ordenamiento: _omit, ...propiedad } = toPropiedad(area, project?.totalM2 ?? null);
+  // El detalle de la API vieja no traía `parent_ordenamiento` (el listado sí).
+  const propiedad: Omit<Propiedad, "parent_ordenamiento"> & { parent_ordenamiento?: null } = toPropiedad(
+    area,
+    project?.totalM2 ?? null,
+  );
+  delete propiedad.parent_ordenamiento;
 
   return {
     success: true as const,

@@ -35,8 +35,9 @@ export async function updateRequiresInvoiceAction(requiereFactura: boolean): Pro
  * La constancia fiscal la administra el personal en insulae2.0 (Firebase Storage); el
  * minisitio independiente también respondía 501 aquí.
  */
-export async function uploadConstanciaFiscalAction(_formData?: FormData): Promise<ActionResult> {
+export async function uploadConstanciaFiscalAction(formData?: FormData): Promise<ActionResult> {
   await requireCondominoSession();
+  void formData; // se recibe por compatibilidad con la pantalla; aún no se procesa
   return {
     success: false,
     message: "La actualización de la constancia fiscal se realiza por el administrador en insulae2.0.",

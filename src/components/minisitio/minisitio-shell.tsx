@@ -123,7 +123,7 @@ export function MinisitioShell({
   const clearData = useMinisitioStore((s) => s.clearData);
   const override = useMinisitioLayoutStore((s) => s.override);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [loadingPath, setLoadingPath] = useState<string | null>(null);
+  const [, setLoadingPath] = useState<string | null>(null);
   const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
   const [collapsedMenuOpen, setCollapsedMenuOpen] = useState(false);
   const [collapsedMenuItem, setCollapsedMenuItem] = useState<NavEntry | null>(null);

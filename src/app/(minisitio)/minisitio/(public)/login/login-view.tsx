@@ -53,7 +53,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
       } else {
         setError(data.message || "Error al iniciar sesión");
       }
-    } catch (error) {
+    } catch {
       setError("Error de conexión. Intenta nuevamente.");
     } finally {
       setLoading(false);

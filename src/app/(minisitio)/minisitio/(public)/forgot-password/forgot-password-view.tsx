@@ -36,7 +36,7 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
       } else {
         setError(data.message || 'Error al procesar la solicitud');
       }
-    } catch (error) {
+    } catch {
       setError('Error de conexión. Intenta nuevamente.');
     } finally {
       setLoading(false);
