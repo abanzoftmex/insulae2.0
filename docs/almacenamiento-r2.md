@@ -50,11 +50,14 @@ una conversación.
 
 ## Migración de los archivos de Firebase
 
-**Estado al 2026-10-29:**
+**Estado: migrado el 2026-10-29.**
 
 - Los 50 objetos de Firebase (42.8 MB) están copiados a R2 con la misma clave y verificados por MD5.
-- La base todavía guarda URLs de Firebase: 25 referencias en logos, reglamentos, comunicados, una convocatoria y una respuesta de ticket.
+- Producción corre este código desde el 2026-10-29 (`b3afd08`). Ese mismo día `--apply` reescribió las 25 referencias de la base: logos, reglamentos, comunicados, una convocatoria y una respuesta de ticket.
+- Las 25 abren en producción desde R2 y la simulación da `Total a reescribir: 0`.
+- El respaldo para `--rollback` (`urls-firebase-2026-10-29T22-55-59-998Z.json`) quedó en la máquina que corrió el script.
 - 1 referencia no se puede migrar: `Income` 9f4b1bf8, `…/income-receipt/1777241223309-ghf.pdf`, ya no existe en Firebase.
+- Falta el paso 6 del orden de abajo: apagar Firebase Storage y borrar la clave de la cuenta de servicio.
 
 `src/scripts/migrate-storage-firebase-to-r2.ts`:
 
