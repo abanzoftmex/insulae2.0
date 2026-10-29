@@ -3,14 +3,18 @@
  */
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import type { CondominoTokenPayload } from "@/shared/application/auth/condomino-token";
+import { STORAGE_ROOT_PREFIX, isUsableFileUrl, storedFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 import { getActiveProject } from "../condominium";
 
-function resolveDocUrl(bucket: string, path: string): string {
+/**
+ * URL del documento: la guardada (`/api/archivos/...` o absoluta), la de una ruta suelta de
+ * objeto (`condominiums/...`, servida desde R2) o el nombre legacy, al que la vista le
+ * antepone la ruta de la 1.0.
+ */
+function resolveDocUrl(path: string): string {
   const p = (path || "").trim();
-  if (!p) return "";
-  if (p.startsWith("http://") || p.startsWith("https://")) return p;
-  if (!bucket || bucket === "legacy-import") return p;
-  return `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(p)}?alt=media`;
+  if (!p || isUsableFileUrl(p)) return p;
+  return p.startsWith(STORAGE_ROOT_PREFIX) ? storedFileUrl(p) : p;
 }
 
 export async function listDocuments(session: CondominoTokenPayload) {
@@ -20,13 +24,13 @@ export async function listDocuments(session: CondominoTokenPayload) {
   const docs = await prisma.projectDocument.findMany({
     where: { projectId: project.id, isActive: true },
     orderBy: { uploadedAt: "desc" },
-    select: { id: true, fileName: true, documentType: true, storageBucket: true, storagePath: true },
+    select: { id: true, fileName: true, documentType: true, storagePath: true },
   });
 
   const documentos = docs.map((d) => ({
     id_proyectos_documentos: d.id,
     nombre: d.fileName,
-    archivo: resolveDocUrl(d.storageBucket, d.storagePath),
+    archivo: resolveDocUrl(d.storagePath),
     descripcion: null as string | null,
     activo: 1,
     id_proyectos: project.id,

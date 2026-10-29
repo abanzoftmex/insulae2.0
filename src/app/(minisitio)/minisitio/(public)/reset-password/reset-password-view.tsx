@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { resetPasswordAction } from '../../_actions/auth';
 import type { ProjectInfo } from '@/modules/minisitio/infrastructure/queries/project.queries';
 import { msPath } from '@/components/minisitio/paths';
+import { isUsableFileUrl } from '@/shared/infrastructure/storage/storage-paths';
 
-/** Logo del proyecto: insulae2.0 guarda la URL completa (Firebase); se conserva la ruta legacy por si llega solo el nombre. */
+/** Logo del proyecto: insulae2.0 guarda la URL del archivo (`/api/archivos/...`); se conserva la ruta legacy por si llega solo el nombre. */
 function projectLogoUrl(proyecto: ProjectInfo | null): string {
   if (!proyecto?.logo) return "https://encuesta.sistemasabanza.com/logo_dark.png";
-  return /^https?:\/\//.test(proyecto.logo)
+  return isUsableFileUrl(proyecto.logo)
     ? proyecto.logo
     : `https://sistemasabanza.com/insulae/imagenes/proyectos/logo/${proyecto.logo}`;
 }

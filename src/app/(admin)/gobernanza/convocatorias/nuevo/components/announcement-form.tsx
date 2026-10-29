@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createAnnouncementAction, updateAnnouncementAction } from "../actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 import { Upload, Check, Plus, Trash2 } from "lucide-react";
 
 interface SpecialGuest {

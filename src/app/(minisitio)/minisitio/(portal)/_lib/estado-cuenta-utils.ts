@@ -4,6 +4,7 @@
  * PDF. Solo para código de cliente: usa el DOM y llama a una server action.
  */
 import { fetchImageAsDataUrlAction } from "@/app/(minisitio)/minisitio/_actions/account";
+import { isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 export function formatCurrency(amount: unknown): string {
   // Verificar que el amount sea un número válido
@@ -68,20 +69,18 @@ const LEGACY_DOCUMENTS_BASE = "https://sistemasabanza.com/insulae/imagenes/docum
 /** Logo de los PDF cuando el proyecto no tiene uno (el mismo que usaba el minisitio). */
 const DEFAULT_PDF_LOGO_URL = "https://encuesta.sistemasabanza.com/logo_dark.png";
 
-const isAbsoluteUrl = (value: string) => /^https?:\/\//.test(value);
-
 /**
- * URL del logo del proyecto. insulae2.0 guarda la URL completa (Firebase); el minisitio le
- * anteponía la ruta legacy, que se conserva por si llega solo el nombre del archivo.
+ * URL del logo del proyecto. insulae2.0 guarda la URL del archivo (`/api/archivos/...`); el
+ * minisitio le anteponía la ruta legacy, que se conserva por si llega solo el nombre del archivo.
  */
 export function projectLogoUrl(logo: string | null | undefined): string | null {
   if (!logo) return null;
-  return isAbsoluteUrl(logo) ? logo : `${LEGACY_PROJECT_LOGO_BASE}${logo}`;
+  return isUsableFileUrl(logo) ? logo : `${LEGACY_PROJECT_LOGO_BASE}${logo}`;
 }
 
 /** URL de un documento/reglamento: completa en insulae2.0; ruta legacy si solo llega el archivo. */
 export function documentUrl(archivo: string): string {
-  return isAbsoluteUrl(archivo) ? archivo : `${LEGACY_DOCUMENTS_BASE}${archivo}`;
+  return isUsableFileUrl(archivo) ? archivo : `${LEGACY_DOCUMENTS_BASE}${archivo}`;
 }
 
 function loadImage(url: string): Promise<HTMLImageElement> {

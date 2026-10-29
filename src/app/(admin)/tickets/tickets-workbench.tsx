@@ -17,7 +17,7 @@ import { Modal } from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
 import { Textarea, Input } from "@/components/ui/input";
 import { getTicketResponseFormDataAction, saveTicketResponseAction, createTicketAction } from "./actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 import { cn } from "@/shared/utils/cn";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { generateForm86Pdf, type Form86Data } from "./pdf-generator";

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createExpenseAction } from "../actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 
 type BudgetConceptItem = { id: string; name: string; budgetGroup: string };
 

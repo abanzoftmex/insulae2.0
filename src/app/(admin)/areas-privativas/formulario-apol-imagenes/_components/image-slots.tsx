@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Loader2, FileText, Trash2, Download, Upload } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 import { savePrivateAreaImageAction, deletePrivateAreaImageAction } from "../../actions";
 import { cn } from "@/shared/utils/cn";
 
@@ -49,7 +49,7 @@ export function ImageSlots({
 
     setUploading((prev) => ({ ...prev, [slotIndex]: true }));
     try {
-      // 1. Upload to Firebase Storage
+      // 1. Upload to storage (Cloudflare R2, presigned URL)
       const { url } = await uploadCondominiumAsset({
         file,
         condominiumSlug,
@@ -97,14 +97,14 @@ export function ImageSlots({
 
     setUploading((prev) => ({ ...prev, [slotIndex]: true }));
     try {
-      // 1. Delete from Firebase Storage
-      await deleteCondominiumAsset(target.url);
-
-      // 2. Delete from Postgres database via server action
+      // 1. Delete from Postgres database via server action
       await deletePrivateAreaImageAction({
         privateAreaId,
         slotIndex,
       });
+
+      // 2. Delete from storage afterwards, so a failed DB delete never leaves a dangling row
+      await deleteCondominiumAsset(target.url);
 
       // 3. Update local state
       setImages((prev) => {

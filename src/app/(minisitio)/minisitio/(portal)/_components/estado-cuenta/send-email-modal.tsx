@@ -12,12 +12,10 @@ interface UseStatementEmailOptions {
   generatePdf: () => Promise<Blob | null>;
   propertyName: string;
   userName: string;
-  /** Logo del correo; `null` usa el logo de Val'Quirico servido por esta app. */
-  logoUrl: string | null;
 }
 
 /** Estado y envío del estado de cuenta por correo (modal "Enviar por Email"). */
-export function useStatementEmail({ userEmail, generatePdf, propertyName, userName, logoUrl }: UseStatementEmailOptions) {
+export function useStatementEmail({ userEmail, generatePdf, propertyName, userName }: UseStatementEmailOptions) {
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailAddress, setEmailAddress] = useState(userEmail || "");
   const [useCustomEmail, setUseCustomEmail] = useState(false);
@@ -65,7 +63,6 @@ export function useStatementEmail({ userEmail, generatePdf, propertyName, userNa
         propertyName,
         userName,
         pdfData: pdfBase64,
-        logoUrl,
       });
 
       if (result.success) {

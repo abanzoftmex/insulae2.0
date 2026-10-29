@@ -21,6 +21,7 @@ import {
   uploadConstanciaFiscalAction,
 } from "@/app/(minisitio)/minisitio/_actions/account";
 import type { Profile } from "@/modules/minisitio/infrastructure/queries/profile.queries";
+import { isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 import { SidePanel } from "./side-panel";
 import { AsignacionesList, type Asignacion } from "./asignaciones-list";
 
@@ -55,9 +56,9 @@ const EMPTY_PERFIL: PerfilData = {
 
 const CONSTANCIA_LEGACY_BASE = "https://sistemasabanza.com/insulae/imagenes/constanciaFiscal/";
 
-/** insulae2.0 guarda URLs completas (Firebase); se conserva la ruta legacy si llega solo el nombre. */
+/** insulae2.0 guarda la URL del archivo (`/api/archivos/...`); se conserva la ruta legacy si llega solo el nombre. */
 function constanciaFiscalUrl(archivo: string) {
-  return /^https?:\/\//.test(archivo) ? archivo : `${CONSTANCIA_LEGACY_BASE}${archivo}`;
+  return isUsableFileUrl(archivo) ? archivo : `${CONSTANCIA_LEGACY_BASE}${archivo}`;
 }
 
 const formatTelefono = (telefono: string | null | undefined) => {

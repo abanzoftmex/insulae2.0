@@ -18,7 +18,8 @@ import {
   type UpdateCondominioSettingsInput,
   updateCondominioSettingsAction,
 } from "./actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import { isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -241,7 +242,8 @@ export function CondominioEditor({ initialValues, condominiumSlug, canUpdate = t
               {assets.map((asset) => {
                 const value = form[asset.key] as string;
                 const isUploading = uploadingField === asset.key;
-                const hasFile = value && value.startsWith("http");
+                // Las URLs de la app (/api/archivos/...) o absolutas; los nombres sueltos de la 1.0 no se pueden mostrar.
+                const hasFile = isUsableFileUrl(value);
 
                 return (
                   <div key={asset.key} className="p-3 bg-canvas/30 rounded-lg border border-line/50 flex flex-col gap-3">

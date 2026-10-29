@@ -7,13 +7,14 @@ import type { ProjectInfo } from "@/modules/minisitio/infrastructure/queries/pro
 import { fetchImageAsDataUrlAction } from "@/app/(minisitio)/minisitio/_actions/account";
 import { organizarPropiedadesHierarquicamente } from "./propiedades-organizer";
 import { parseNum, type PropiedadView } from "./propiedades-format";
+import { isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 type RGB = [number, number, number];
 
-/** Logo del proyecto: insulae2.0 guarda la URL completa (Firebase); se conserva la ruta legacy por si llega solo el nombre. */
+/** Logo del proyecto: insulae2.0 guarda la URL del archivo (`/api/archivos/...`); se conserva la ruta legacy por si llega solo el nombre. */
 function projectLogoUrl(proyecto: ProjectInfo | null): string {
   if (!proyecto?.logo) return "https://encuesta.sistemasabanza.com/logo_dark.png";
-  return /^https?:\/\//.test(proyecto.logo)
+  return isUsableFileUrl(proyecto.logo)
     ? proyecto.logo
     : `https://sistemasabanza.com/insulae/imagenes/proyectos/logo/${proyecto.logo}`;
 }

@@ -2,9 +2,10 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getBudgetByYearUseCase } from "@/modules/budget";
 import { utils, write } from "xlsx";
+import { absoluteFileUrl, isStoredFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url);
+  const { searchParams, origin } = new URL(request.url);
   const yearStr = searchParams.get("anio");
   const year = yearStr ? parseInt(yearStr, 10) : new Date().getFullYear();
 
@@ -44,7 +45,10 @@ export async function GET(request: Request) {
         concept.conceptId,
         concept.conceptName,
         concept.unitCost ?? 0,
-        concept.supplierUrl ?? ""
+        // Los documentos subidos se guardan como /api/archivos/...: en Excel hace falta la URL completa.
+        concept.supplierUrl && isStoredFileUrl(concept.supplierUrl)
+          ? absoluteFileUrl(concept.supplierUrl, origin)
+          : concept.supplierUrl ?? ""
       ];
       for (let m = 1; m <= 12; m++) {
         const mVM = concept.months.find(x => x.month === m);

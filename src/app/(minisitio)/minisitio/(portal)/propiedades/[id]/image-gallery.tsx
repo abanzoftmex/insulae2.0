@@ -88,7 +88,7 @@ export function ImageGallery({
               className="relative group cursor-pointer aspect-square bg-gray-100 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-200"
               onClick={() => openModal(image, index)}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- URLs remotas (Firebase) sin optimizar, como el legacy */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- archivos de /api/archivos (redirigen a R2) sin optimizar, como el legacy */}
               <img
                 src={image.full_url}
                 alt={image.descripcion || `Imagen ${index + 1}`}
@@ -140,7 +140,7 @@ export function ImageGallery({
 
             {/* Imagen principal */}
             <div className="relative max-w-full max-h-full">
-              {/* eslint-disable-next-line @next/next/no-img-element -- URLs remotas (Firebase) sin optimizar, como el legacy */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- archivos de /api/archivos (redirigen a R2) sin optimizar, como el legacy */}
               <img
                 src={selectedImage.full_url}
                 alt={selectedImage.descripcion || "Imagen ampliada"}

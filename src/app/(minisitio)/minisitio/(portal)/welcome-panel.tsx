@@ -39,6 +39,7 @@ import { msPath } from "@/components/minisitio/paths";
 import type { ComunicadoReciente } from "@/modules/minisitio/infrastructure/queries/communications.queries";
 import type { CampoContacto } from "@/modules/minisitio/infrastructure/queries/documents.queries";
 import { useDisplayTimeZone } from "./_lib/client-dates";
+import { comunicadoFileUrl } from "./_lib/comunicado-file-url";
 
 // lucide-react 1.x ya no incluye iconos de marcas: mismos trazos que la 0.540 del minisitio.
 const Facebook = createLucideIcon("facebook", [
@@ -118,12 +119,8 @@ function formatComunicadosRecientes(comunicados: ComunicadoReciente[]): Comunica
     fecha: comunicado.fechaPublicar,
     fechaVigencia: comunicado.fechaVigencia,
     categoria: comunicado.categoria,
-    imagen: comunicado.imagen
-      ? (comunicado.imagen && comunicado.imagen.startsWith('http') ? comunicado.imagen : `https://sistemasabanza.com/insulae${comunicado.imagen}`)
-      : null,
-    pdf: comunicado.pdf
-      ? (comunicado.pdf && comunicado.pdf.startsWith('http') ? comunicado.pdf : `https://sistemasabanza.com/insulae${comunicado.pdf}`)
-      : null,
+    imagen: comunicado.imagen ? comunicadoFileUrl(comunicado.imagen) : null,
+    pdf: comunicado.pdf ? comunicadoFileUrl(comunicado.pdf) : null,
   }));
 }
 

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 import { createFullDirectoryContactAction } from "./actions";
 
 interface CreateDirectoryFormProps {

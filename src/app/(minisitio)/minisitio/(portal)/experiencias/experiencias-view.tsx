@@ -10,6 +10,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { Bell, Image as ImageIcon, Star, FileText, Clock } from "lucide-react";
 import type { ComunicadoDestacado } from "@/modules/minisitio/infrastructure/queries/communications.queries";
 import { isPastCalendarDay, useDisplayTimeZone } from "../_lib/client-dates";
+import { comunicadoFileUrl } from "../_lib/comunicado-file-url";
 
 interface ExperienciaSlide {
   id: string;
@@ -40,12 +41,8 @@ function formatExperiencias(comunicados: ComunicadoDestacado[]): ExperienciaSlid
           : categoriaId === 2
             ? "Comercios"
             : "Todos",
-      imagen: comunicado.imagen
-        ? (comunicado.imagen && comunicado.imagen.startsWith('http') ? comunicado.imagen : `https://sistemasabanza.com/insulae${comunicado.imagen}`)
-        : null,
-      pdf: comunicado.pdf
-        ? (comunicado.pdf && comunicado.pdf.startsWith('http') ? comunicado.pdf : `https://sistemasabanza.com/insulae${comunicado.pdf}`)
-        : null,
+      imagen: comunicado.imagen ? comunicadoFileUrl(comunicado.imagen) : null,
+      pdf: comunicado.pdf ? comunicadoFileUrl(comunicado.pdf) : null,
     };
   });
 }

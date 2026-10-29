@@ -1,5 +1,5 @@
 /**
- * Comunicados / notificaciones del condominio (URLs de Firebase ya completas) en las
+ * Comunicados / notificaciones del condominio (con la URL guardada de su imagen y PDF) en las
  * distintas formas que consume cada pantalla del portal.
  */
 import { prisma } from "@/shared/infrastructure/db/prisma";

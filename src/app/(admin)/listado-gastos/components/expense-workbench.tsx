@@ -17,7 +17,8 @@ import {
 } from "lucide-react";
 import { createExpenseAction, updateExpenseAction, deleteExpenseAction } from "../actions";
 import { importExpensesAction } from "../import-actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import { fileNameFromStoredUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import { read, utils } from "xlsx";
 import type { ExpenseRecord } from "@/modules/expense";
 
@@ -64,6 +65,9 @@ const BUDGET_GROUP_LABELS: Record<string, string> = {
 };
 
 function extractFileName(url: string): string {
+  if (storageKeyFromUrl(url)) {
+    return fileNameFromStoredUrl(url) || "comprobante.pdf";
+  }
   try {
     const parsed = new URL(url);
     const pathSegment = parsed.pathname.split("/o/")[1] || parsed.pathname;

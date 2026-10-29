@@ -37,7 +37,7 @@ Uso recomendado de MongoDB (opcional, no core):
 
 - Source of truth: PostgreSQL.
 - ORM/migrations: Prisma.
-- Archivos/PDF: Firebase Storage.
+- Archivos/PDF: Cloudflare R2 (antes Firebase Storage).
 - Bus de eventos (opcional): cola para notificaciones y procesos async.
 
 Esta decision maximiza integridad, trazabilidad y capacidad de evolucion del dominio condominal SaaS.

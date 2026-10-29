@@ -3,9 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      // El minisitio (/minisitio) manda por server action la constancia fiscal (hasta 10 MB,
-      // validado en el cliente) y el PDF del estado de cuenta en base64 para el correo.
-      // El límite por defecto de Next es 1 MB.
+      // El minisitio (/minisitio) manda por server action el PDF del estado de cuenta en base64
+      // para el correo; el límite por defecto de Next es 1 MB. Los archivos no pasan por aquí:
+      // el navegador los sube directo a R2 con una URL prefirmada. En Vercel el cuerpo de una
+      // función se corta en 4.5 MB de todos modos.
       bodySizeLimit: "10mb",
     },
   },

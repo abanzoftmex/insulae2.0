@@ -1,11 +1,12 @@
 import { BookOpen, FileText, ExternalLink } from "lucide-react";
 import type { Documento } from "@/modules/minisitio/infrastructure/queries/documents.queries";
+import { isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 const DOCUMENTOS_LEGACY_BASE = "https://sistemasabanza.com/insulae/imagenes/documentos/";
 
-/** insulae2.0 guarda URLs completas (Firebase); se conserva la ruta legacy si llega solo el nombre. */
+/** insulae2.0 guarda la URL del archivo (`/api/archivos/...`); se conserva la ruta legacy si llega solo el nombre. */
 function documentoUrl(archivo: string) {
-  return /^https?:\/\//.test(archivo) ? archivo : `${DOCUMENTOS_LEGACY_BASE}${archivo}`;
+  return isUsableFileUrl(archivo) ? archivo : `${DOCUMENTOS_LEGACY_BASE}${archivo}`;
 }
 
 /**

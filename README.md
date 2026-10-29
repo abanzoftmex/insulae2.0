@@ -35,6 +35,12 @@ npm install
 
 ```env
 DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DB"
+
+# Archivos (Cloudflare R2, solo servidor; ver docs/almacenamiento-r2.md)
+R2_ACCOUNT_ID="..."
+R2_BUCKET="..."
+R2_ACCESS_KEY_ID="..."
+R2_SECRET_ACCESS_KEY="..."
 ```
 
 3. Ejecutar entorno local:

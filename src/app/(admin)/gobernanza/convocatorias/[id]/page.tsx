@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { absoluteFileUrl, isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -43,7 +45,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       select: { condominiumLogoUrl: true }
     });
 
-    const logoUrl = project?.condominiumLogoUrl || undefined;
+    // Las vistas previas (WhatsApp, redes) necesitan URL absoluta; los nombres sueltos de la 1.0 no sirven.
+    const rawLogo = project?.condominiumLogoUrl?.trim();
+    let logoUrl: string | undefined;
+    if (rawLogo && isUsableFileUrl(rawLogo)) {
+      const host = (await headers()).get("host");
+      logoUrl = host ? absoluteFileUrl(rawLogo, `${host.includes("localhost") ? "http" : "https"}://${host}`) : rawLogo;
+    }
 
     return {
       title: `${annDb.name} - Convocatoria`,

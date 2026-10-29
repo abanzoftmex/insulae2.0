@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { deleteExpenseAction } from "../actions";
-import { deleteCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { deleteCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 import type { ExpenseRecord } from "@/modules/expense";
 
 type BudgetConceptItem = { id: string; name: string; budgetGroup: string };

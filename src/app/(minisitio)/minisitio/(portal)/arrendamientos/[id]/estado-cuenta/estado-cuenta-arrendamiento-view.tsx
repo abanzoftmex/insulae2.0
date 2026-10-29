@@ -16,7 +16,6 @@ import {
   formatDate,
   movementBadgeStatus,
   movementBalance,
-  projectLogoUrl,
   statementFileName,
 } from "@/app/(minisitio)/minisitio/(portal)/_lib/estado-cuenta-utils";
 import { ButtonSpinner } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/button-spinner";
@@ -110,7 +109,6 @@ export function EstadoCuentaArrendamientoView({
     generatePdf: generatePDFForEmail,
     propertyName: comercioName,
     userName: [user?.nombre, user?.apaterno, user?.amaterno].filter(Boolean).join(" ") || "Usuario",
-    logoUrl: projectLogoUrl(proyecto?.logo),
   });
   const { sendingEmail } = email;
 

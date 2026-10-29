@@ -41,3 +41,7 @@ yarn-error.log*
 next-env.d.ts
 
 /src/generated/prisma
+
+# credenciales de Firebase/Google y respaldos de la migración a R2
+*-firebase-adminsdk-*.json
+/.storage-migration

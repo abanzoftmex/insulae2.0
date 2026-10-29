@@ -1,5 +1,6 @@
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { isFirebaseStorageUrl, isStoredFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 import type {
   NotificationCategoryOption,
@@ -30,20 +31,6 @@ function normalizeOptionalText(value: string | null | undefined): string | null 
   return normalized || null;
 }
 
-function isFirebaseAssetUrl(value: string): boolean {
-  try {
-    const parsed = new URL(value);
-    const host = parsed.host.toLowerCase();
-
-    return (
-      host.includes("firebasestorage.googleapis.com") ||
-      host === "storage.googleapis.com" ||
-      host.endsWith(".firebasestorage.app")
-    );
-  } catch {
-    return false;
-  }
-}
 
 function isLegacyNotificationAssetUrl(value: string): boolean {
   const normalized = value.toLowerCase();
@@ -62,7 +49,8 @@ function normalizeRuntimeAssetUrl(value: string | null | undefined): string | nu
     return null;
   }
 
-  if (isFirebaseAssetUrl(normalized)) {
+  // Archivos de la app (/api/archivos/...) y URLs de Firebase aún no reescritas por la migración.
+  if (isStoredFileUrl(normalized) || isFirebaseStorageUrl(normalized)) {
     return normalized;
   }
 

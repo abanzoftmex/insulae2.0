@@ -4,7 +4,8 @@ import React, { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { updateIncomeAction } from "../actions";
-import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import { fileNameFromStoredUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import type { IncomeRecord } from "@/modules/income";
 
 type CatalogItem = { id: string; name: string };
@@ -54,7 +55,7 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
   const [receiptUrl, setReceiptUrl] = useState(income.receiptUrl ?? "");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
-  // Track original URL to know when to clean up Firebase Storage
+  // URL original, para borrar el archivo anterior cuando se reemplace o se quite
   const originalReceiptUrl = income.receiptUrl ?? "";
 
   const filteredAreas = useMemo(() => {
@@ -105,13 +106,10 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
       }
     }
 
-    // Delete old file from Firebase Storage if receipt was removed or replaced
+    // El comprobante anterior se borra solo si se quitó o reemplazó, y después de guardar:
+    // si la actualización falla, el registro sigue apuntando a él.
     const oldUrl = originalReceiptUrl;
-    const willHaveNewUrl = !!finalReceiptUrl;
     const receiptChanged = oldUrl && (oldUrl !== finalReceiptUrl);
-    if (receiptChanged) {
-      await deleteCondominiumAsset(oldUrl);
-    }
 
     try {
       const res = await updateIncomeAction(income.id, {
@@ -128,6 +126,9 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
       });
 
       if (res?.success) {
+        if (receiptChanged) {
+          await deleteCondominiumAsset(oldUrl);
+        }
         router.push("/listado-ingresos");
         router.refresh();
       } else {
@@ -143,8 +144,8 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
   // Determine the image to display
   const displayImageUrl = receiptPreview || (receiptUrl && !receiptFile ? receiptUrl : null);
 
-  // Firebase URLs look like: .../file.pdf?alt=media&token=...
-  // endsWith(".pdf") fails because of query params, so we check the path portion
+  // Las URLs pueden traer parámetros (?alt=media&token=... en las antiguas de Firebase),
+  // así que se revisa la ruta y no el final de la cadena
   function urlIsPdf(url: string | null): boolean {
     if (!url) return false;
     try {
@@ -156,9 +157,10 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
   }
   const isPdf = urlIsPdf(receiptUrl) || receiptFile?.type === "application/pdf";
 
-  // Extract filename from Firebase URL for display
+  // Nombre del archivo para mostrarlo
   function extractFilename(url: string | null): string {
     if (!url) return "";
+    if (storageKeyFromUrl(url)) return fileNameFromStoredUrl(url) || "archivo";
     try {
       const pathname = decodeURIComponent(new URL(url).pathname);
       const segments = pathname.split("/");

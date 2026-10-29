@@ -8,8 +8,11 @@ import { requireCondominoSession } from "@/shared/application/auth/condomino-ses
 import { getProfile, updateRequiresInvoice } from "@/modules/minisitio/infrastructure/queries/profile.queries";
 import { listNotificaciones } from "@/modules/minisitio/infrastructure/queries/communications.queries";
 import { getPrivacyNotice } from "@/modules/minisitio/infrastructure/queries/project.queries";
+import { getActiveProject } from "@/modules/minisitio/infrastructure/condominium";
 import { MINISITIO_STATEMENT_MAIL_FROM, sendMinisitioEmail } from "@/modules/minisitio/infrastructure/mailer";
 import { requestOrigin } from "@/modules/minisitio/infrastructure/request-origin";
+import { getObject } from "@/shared/infrastructure/storage/r2";
+import { absoluteFileUrl, isUsableFileUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import type { ActionResult } from "@/modules/minisitio/domain/types";
 
 export async function getProfileAction() {
@@ -32,8 +35,8 @@ export async function updateRequiresInvoiceAction(requiereFactura: boolean): Pro
 }
 
 /**
- * La constancia fiscal la administra el personal en insulae2.0 (Firebase Storage); el
- * minisitio independiente también respondía 501 aquí.
+ * La constancia fiscal la administra el personal en insulae2.0 (directorio); el minisitio
+ * independiente también respondía 501 aquí.
  */
 export async function uploadConstanciaFiscalAction(formData?: FormData): Promise<ActionResult> {
   await requireCondominoSession();
@@ -49,26 +52,30 @@ export async function listNotificacionesAction(input: { limit?: number; offset?:
   return listNotificaciones(session, input);
 }
 
-const ALLOWED_IMAGE_PREFIXES = [
-  "https://sistemasabanza.com/",
-  "https://encuesta.sistemasabanza.com/",
-  "https://firebasestorage.googleapis.com/",
-  "https://storage.googleapis.com/",
-];
+/** Hosts de la 1.0 de donde aún pueden venir logos (nombres de archivo legacy). */
+const ALLOWED_IMAGE_PREFIXES = ["https://sistemasabanza.com/", "https://encuesta.sistemasabanza.com/"];
 
 /**
- * Descarga una imagen remota (logo del proyecto en Firebase) y la devuelve como data URL,
- * para incrustarla en los PDF sin problemas de CORS. Sustituye a /api/proxy-image.
+ * Descarga una imagen (logo del proyecto) y la devuelve como data URL, para incrustarla en
+ * los PDF sin problemas de CORS. Los archivos de la app se leen directo de R2 (también las
+ * URLs antiguas de Firebase, copiadas con la misma clave). Sustituye a /api/proxy-image.
  */
 export async function fetchImageAsDataUrlAction(url: string): Promise<string | null> {
   await requireCondominoSession();
-  if (!url || !ALLOWED_IMAGE_PREFIXES.some((prefix) => url.startsWith(prefix))) return null;
+  if (!url) return null;
+  const key = storageKeyFromUrl(url);
+  if (!key && !ALLOWED_IMAGE_PREFIXES.some((prefix) => url.startsWith(prefix))) return null;
   try {
-    const response = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
-    });
-    if (!response.ok) return null;
+    const response = key
+      ? await getObject(key)
+      : await fetch(url, { headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" } });
+    if (!response?.ok) return null;
     const contentType = response.headers.get("content-type") || "image/png";
+    if (!contentType.startsWith("image/")) {
+      // Sin await: con el fetch de Next la cancelación puede no resolverse nunca.
+      response.body?.cancel().catch(() => undefined);
+      return null;
+    }
     const buffer = Buffer.from(await response.arrayBuffer());
     return `data:${contentType};base64,${buffer.toString("base64")}`;
   } catch (error) {
@@ -97,20 +104,32 @@ export interface SendStatementEmailInput {
   userName: string;
   /** PDF en base64 (con o sin prefijo `data:application/pdf;base64,`). */
   pdfData: string;
-  logoUrl?: string | null;
+}
+
+const LEGACY_PROJECT_LOGO_BASE = "https://sistemasabanza.com/insulae/imagenes/proyectos/logo/";
+
+/**
+ * Logo del correo, resuelto en el servidor desde el proyecto (no se acepta del cliente: va
+ * dentro del HTML). Los correos necesitan URLs absolutas; si no hay logo, el de Val'Quirico
+ * servido por esta misma app.
+ */
+async function statementEmailLogoUrl(condominiumId: string): Promise<string> {
+  const origin = await requestOrigin();
+  const logo = (await getActiveProject(condominiumId))?.condominiumLogoUrl?.trim();
+  if (!logo) return `${origin}/valquirico-logo.png`;
+  return isUsableFileUrl(logo) ? absoluteFileUrl(logo, origin) : `${LEGACY_PROJECT_LOGO_BASE}${logo}`;
 }
 
 /** Envía el estado de cuenta (PDF generado en el navegador) por correo con Resend. */
 export async function sendAccountStatementEmailAction(input: SendStatementEmailInput): Promise<ActionResult<{ emailId: string | null }>> {
-  await requireCondominoSession();
-  const { email, propertyName, userName, pdfData, logoUrl } = input || ({} as SendStatementEmailInput);
+  const session = await requireCondominoSession();
+  const { email, propertyName, userName, pdfData } = input || ({} as SendStatementEmailInput);
   if (!email || !propertyName || !userName || !pdfData) {
     return { success: false, message: "Missing required fields: email, propertyName, userName, pdfData" };
   }
 
   const pdfBase64 = pdfData.startsWith("data:application/pdf;base64,") ? pdfData.split(",")[1] : pdfData;
-  // Logo del proyecto o, si no hay, el de Val'Quirico servido por esta misma app.
-  const emailLogoUrl = logoUrl || `${await requestOrigin()}/valquirico-logo.png`;
+  const emailLogoUrl = await statementEmailLogoUrl(session.condominiumId);
 
   let avisoPrivacidad = "";
   try {
@@ -155,7 +174,7 @@ function statementEmailHtml(emailLogoUrl: string, avisoPrivacidad: string): stri
                 <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-collapse: collapse;">
                   <tr>
                     <td style="background-color: #ffffff; padding: 30px 20px; text-align: center; border-bottom: 4px solid #1E3932;">
-                      <img src="${emailLogoUrl}" alt="Val'Quirico" style="max-width: 200px; height: auto;">
+                      <img src="${emailLogoUrl.replace(/"/g, "&quot;")}" alt="Val'Quirico" style="max-width: 200px; height: auto;">
                     </td>
                   </tr>
                   <tr>

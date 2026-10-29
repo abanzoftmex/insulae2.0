@@ -5,7 +5,7 @@
 - Frontend/Backend BFF: Next.js 15+ (App Router)
 - ORM: Prisma
 - BD principal: PostgreSQL
-- Storage documentos: Firebase Storage
+- Storage documentos: Cloudflare R2 (API S3; antes Firebase Storage). Ver `docs/almacenamiento-r2.md`
 - Auth: NextAuth/Auth.js + RBAC multi-condominio
 - Jobs async: cola (BullMQ o equivalente)
 
@@ -37,7 +37,7 @@
 
 4. Adapters
 - Prisma adapters (PostgreSQL).
-- FirebaseStorage adapter.
+- Adapter de almacenamiento R2 (`src/shared/infrastructure/storage/r2.ts`).
 - HTTP adapter (Route Handlers de Next.js).
 - Queue adapter para procesos en background.
 
@@ -77,14 +77,14 @@ Buenas practicas:
 - Logs de auditoria por tenant y usuario.
 - Row-level security opcional en PostgreSQL (fase avanzada).
 
-## 5) Documentos PDF en Firebase Storage
+## 5) Documentos PDF en Cloudflare R2
 
 Convencion de paths:
 - condominiums/{condominiumId}/projects/{projectId}/{fileId}.pdf
 - condominiums/{condominiumId}/receipts/{year}/{month}/{fileId}.pdf
 
 Guardar en PostgreSQL:
-- storage_provider = firebase
+- storage_provider = r2 (la URL que se guarda es `/api/archivos/<clave>`)
 - bucket
 - object_path
 - mime_type
@@ -121,7 +121,7 @@ Guardar en PostgreSQL:
 2. Luego Directory + Roles.
 3. Luego Governance (convocatorias/votaciones).
 4. Luego Tickets/Notificaciones.
-5. Integrar Projects/Documents con Firebase.
+5. Integrar Projects/Documents con el almacenamiento (R2).
 
 ## 9) KPIs de exito tecnico
 

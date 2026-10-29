@@ -1,6 +1,6 @@
 # Plan de migracion: Insulae legacy -> Insulae 2.0
 
-Objetivo: reescribir desde cero en Next.js + PostgreSQL + Prisma + Firebase Storage, preservando datos utiles y eliminando deuda historica.
+Objetivo: reescribir desde cero en Next.js + PostgreSQL + Prisma + Cloudflare R2 (al inicio Firebase Storage), preservando datos utiles y eliminando deuda historica.
 
 ## 1) Principios
 
@@ -109,7 +109,7 @@ Objetivo: reescribir desde cero en Next.js + PostgreSQL + Prisma + Firebase Stor
 
 ### Fase F - Documental
 - Migrar metadatos de PROYECTOS_DOCUMENTOS a PostgreSQL.
-- Subir binarios/PDF a Firebase Storage con path por condominio.
+- Subir binarios/PDF al almacenamiento (hoy Cloudflare R2) con path por condominio.
 
 ## 5) Reglas de calidad de migracion
 

@@ -125,7 +125,7 @@ export default async function FormularioApolImagenesPage({ searchParams }: PageP
             <ol className="space-y-3">
               {[
                 "Definir entidad de imágenes por área privativa en dominio y Prisma.",
-                "Conectar upload a Firebase Storage (bucket por módulo).",
+                "Conectar upload a Cloudflare R2 (bucket por módulo).",
                 "Agregar reorder, pie de imagen y borrado con auditoría.",
               ].map((item, i) => (
                 <li key={i} className="flex items-start gap-2.5">

@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getCurrentUser } from "@/app/actions/auth";
+import { STORAGE_ROOT_PREFIX, isUsableFileUrl, storedFileUrl, isStoredFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 import type {
   CreateRegulationDocumentInput,
@@ -15,6 +16,14 @@ import type { RegulationDirectoryRepository } from "../domain/regulation-directo
 
 function trimSafe(value: string): string {
   return value.trim();
+}
+
+/**
+ * Etiqueta de `storageBucket`: la recibida o, si no, "r2" para los archivos de la app
+ * (`/api/archivos/...`, la misma que pone la migración) y "firebase" para las URLs antiguas.
+ */
+function storageBucketLabel(fileUrl: string, requested: string | undefined): string {
+  return trimSafe(requested ?? "") || (isStoredFileUrl(fileUrl) ? "r2" : "firebase");
 }
 
 interface ProjectDocumentCapabilities {
@@ -51,8 +60,15 @@ function resolvePublicUrl(storageBucket: string, storagePath: string): string {
     return "";
   }
 
-  if (normalizedPath.startsWith("http://") || normalizedPath.startsWith("https://")) {
+  // URL de la app (/api/archivos/...) o absoluta: antes que la rama legacy, que también
+  // recibiría valores que empiezan con "/".
+  if (isUsableFileUrl(normalizedPath)) {
     return normalizedPath;
+  }
+
+  // Ruta suelta de un objeto de R2 (misma clave que tenía en Firebase).
+  if (normalizedPath.startsWith(STORAGE_ROOT_PREFIX)) {
+    return storedFileUrl(normalizedPath);
   }
 
   if (storageBucket === "legacy-import") {
@@ -241,7 +257,7 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
     }
 
     const capabilities = await getProjectDocumentCapabilities();
-    const storageBucket = trimSafe(input.storageBucket) || "firebase";
+    const storageBucket = storageBucketLabel(fileUrl, input.storageBucket);
 
     const userName = await getCurrentUser();
 
@@ -442,7 +458,7 @@ export class PrismaRegulationDirectoryRepository implements RegulationDirectoryR
         UPDATE "ProjectDocument"
         SET
           "storagePath" = ${fileUrl},
-          "storageBucket" = ${trimSafe(input.storageBucket ?? "") || "firebase"},
+          "storageBucket" = ${storageBucketLabel(fileUrl, input.storageBucket)},
           "mimeType" = ${input.mimeType ?? "application/pdf"},
           "sizeBytes" = ${input.sizeBytes ?? null},
           "checksum" = ${input.storageObjectPath ?? null}

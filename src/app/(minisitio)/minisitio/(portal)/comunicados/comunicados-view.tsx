@@ -6,6 +6,7 @@ import { useRequireAuth } from '@/components/minisitio/use-minisitio-auth';
 import type { Comunicado } from '@/modules/minisitio/infrastructure/queries/communications.queries';
 import { Bell, Users, Building, FileText, Image as ImageIcon, Calendar, Filter, CheckCircle, Clock, X } from 'lucide-react';
 import { isPastCalendarDay, useDisplayTimeZone } from '../_lib/client-dates';
+import { comunicadoFileUrl } from '../_lib/comunicado-file-url';
 
 type Filtro = 'todos' | 'propietarios' | 'comercios' | 'propietarios-comercios';
 
@@ -203,7 +204,7 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
                     <div className="flex space-x-2">
                       {comunicado.pdf && (
                         <a
-                          href={(comunicado.pdf && comunicado.pdf.startsWith('http') ? comunicado.pdf : `https://sistemasabanza.com/insulae${comunicado.pdf}`)}
+                          href={comunicadoFileUrl(comunicado.pdf)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all duration-200 group/btn"
@@ -215,7 +216,7 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
 
                       {comunicado.imagen && (
                         <button
-                          onClick={() => setModalImage((comunicado.imagen && comunicado.imagen.startsWith('http') ? comunicado.imagen : `https://sistemasabanza.com/insulae${comunicado.imagen}`))}
+                          onClick={() => setModalImage(comunicadoFileUrl(comunicado.imagen ?? ""))}
                           className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 group/btn"
                         >
                           <ImageIcon className="w-4 h-4 mr-2" />

@@ -7,7 +7,8 @@ import { useMemo, useState, useTransition } from "react";
 import { Bell, FileText, ImageIcon, X, ExternalLink } from "lucide-react";
 
 import { saveNotificationAction } from "./actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import { fileNameFromStoredUrl, isStoredFileUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -76,6 +77,10 @@ function isLegacyNotificationAssetUrl(value: string): boolean {
 }
 
 function canUseAssetUrlInRuntime(value: string): boolean {
+  if (isStoredFileUrl(value)) {
+    return true;
+  }
+
   if (!isHttpUrl(value)) {
     return false;
   }
@@ -90,6 +95,10 @@ function canUseAssetUrlInRuntime(value: string): boolean {
 function getAssetDisplayName(value: string): string {
   if (!value) {
     return "Sin archivo cargado";
+  }
+
+  if (storageKeyFromUrl(value)) {
+    return fileNameFromStoredUrl(value) || "archivo";
   }
 
   if (!isHttpUrl(value)) {
@@ -172,7 +181,7 @@ export function NotificacionFormShell({
 
       setImageUrl(uploaded.url);
       setImagePath(uploaded.fullPath);
-      setMessageState("Imagen cargada en Firebase.");
+      setMessageState("Imagen cargada.");
     } catch (error) {
       console.error("[NotificacionFormShell] image upload failed", error);
       setMessageState("No se pudo subir la imagen.");
@@ -204,7 +213,7 @@ export function NotificacionFormShell({
 
       setPdfUrl(uploaded.url);
       setPdfPath(uploaded.fullPath);
-      setMessageState("PDF cargado en Firebase.");
+      setMessageState("PDF cargado.");
     } catch (error) {
       console.error("[NotificacionFormShell] pdf upload failed", error);
       setMessageState("No se pudo subir el PDF.");

@@ -16,7 +16,8 @@ import {
 } from "lucide-react";
 import { createIncomeAction, updateIncomeAction, deleteIncomeAction } from "../actions";
 import { importIncomesAction } from "../import-actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import { fileNameFromStoredUrl, isUsableFileUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import { read, utils, writeFile } from "xlsx";
 import type { IncomeRecord } from "@/modules/income";
 
@@ -85,6 +86,9 @@ function formatToShortDate(dateVal: Date | string | null): string {
 }
 
 function extractFileName(url: string): string {
+  if (storageKeyFromUrl(url)) {
+    return fileNameFromStoredUrl(url) || "comprobante.pdf";
+  }
   try {
     const parsed = new URL(url);
     const pathSegment = parsed.pathname.split("/o/")[1] || parsed.pathname;
@@ -422,12 +426,7 @@ export function IncomeWorkbench({
       accessorKey: "reference",
       cell: (row) => {
         const reference = row.reference?.trim();
-        const hasReceipt = Boolean(
-          row.receiptUrl &&
-            (row.receiptUrl.startsWith("http") ||
-              row.receiptUrl.startsWith("/") ||
-              row.receiptUrl.includes("firebasestorage"))
-        );
+        const hasReceipt = isUsableFileUrl(row.receiptUrl);
 
         if (!reference && !hasReceipt) {
           return <span className="text-[11px] text-ink-soft/40 font-bold uppercase">—</span>;

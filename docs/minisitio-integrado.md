@@ -26,7 +26,7 @@ src/app/
 │       ├── (public)/   login, forgot-password, reset-password, privacy, superadmin-insulae
 │       ├── (portal)/   layout con sesión + shell; las 21 pantallas
 │       ├── _actions/   server actions (auth, superadmin, tickets, reports, account)
-│       ├── archivos/descarga   descarga forzada de adjuntos de Firebase (requiere sesión)
+│       ├── archivos/descarga   descarga forzada de adjuntos (redirige a R2; requiere sesión)
 │       └── logout      borra la cookie y vuelve al login (?reason=inactivity|revoked)
 ├── actions/, api/      sin cambios (salvo lo eliminado)
 src/modules/minisitio/  ← dominio, auth.service, consultas (infrastructure/queries/*), mailer
@@ -44,6 +44,7 @@ Pantallas (`/minisitio/...`): bienvenida (`/minisitio`), `dashboard`, `propiedad
 - `MINISITIO_SESSION_SECRET` — **definir** (firma las cookies de sesión del condómino y los enlaces de restablecimiento). Si falta usa `CONDOMINO_API_SECRET` → `NEXTAUTH_SECRET` → un default de desarrollo (con aviso en el log).
 - `SUPERADMIN_USER`, `SUPERADMIN_PASSWORD`, `SUPERADMIN_KEY` — modo superadministrador. Sin `SUPERADMIN_KEY` el modo queda deshabilitado (antes tumbaba toda la app).
 - `RESEND_API_KEY` — ya existía; la usan "olvidé mi contraseña" y el envío del estado de cuenta.
+- `R2_ACCOUNT_ID`, `R2_BUCKET`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY` — archivos en Cloudflare R2 (ver `docs/almacenamiento-r2.md`).
 - `MINISITIO_SEND_EMAILS=1` — solo desarrollo: fuera de producción los correos del minisitio NO se envían (se registran en el log) salvo que se defina.
 - Ya no se usan: `INSULAE_V2_API_URL`, `SUPERADMIN_IMPERSONATE_SECRET`.
 
@@ -51,16 +52,17 @@ Pantallas (`/minisitio/...`): bienvenida (`/minisitio`), `dashboard`, `propiedad
 
 ## Despliegue
 
-1. Definir `MINISITIO_SESSION_SECRET` y las `SUPERADMIN_*` en Vercel.
+1. Definir `MINISITIO_SESSION_SECRET`, las `SUPERADMIN_*` y las `R2_*` en Vercel.
 2. Desplegar la rama y probar `/minisitio/login` con un condómino real (y "¿Olvidaste tu contraseña?": el enlace llega a `/minisitio/reset-password`).
 3. Redirigir el dominio del minisitio viejo (`insulae-minisitio.vercel.app/*`) a `https://<dominio insulae>/minisitio/*` y apagar ese proyecto.
+4. Reescribir las URLs de archivos de Firebase a R2 (`npm run storage:migrate-to-r2 -- --apply`, ver `docs/almacenamiento-r2.md`).
 
 ## Correcciones respecto al minisitio independiente
 
 - **Estado de resultados** siempre caía en "Error al cargar datos" (leía `totales.balance`, que la API no devolvía) y pedía ingresos/egresos con el año actual: ahora funciona y las tres secciones usan el año elegido. El selector suma los años con datos reales a sus opciones fijas (antes 2026 aparecía como "2025" y no se podía volver a él).
 - **Notificaciones** fallaba al cargar (usaba un `<Layout>` sin importarlo).
 - **Mis Propiedades** ocultaba las FAP y fusiones: el organizador comparaba los ids con `> 0` y en insulae2.0 son UUID. Ahora salen todas (Cristóbal Encinas: 6 → 9 filas) y a las FAP se les suma `m2_construccion` como pretendía el código, así que la tarjeta de m² puede diferir del dashboard (2,234.28 vs 2,390.6 en ese caso). Revertible en `propiedades/propiedades-organizer.ts` (`tieneReferencia`).
-- URLs de Firebase: logos, documentos y constancias ya vienen completas; el minisitio les anteponía la ruta legacy de sistemasabanza y quedaban rotas.
+- URLs de archivos: logos, documentos y constancias ya vienen completas (hoy `/api/archivos/...`, servidas desde R2); el minisitio les anteponía la ruta legacy de sistemasabanza y quedaban rotas.
 - Restablecer contraseña sin token se quedaba en "Verificando enlace" para siempre.
 - Tickets: tras crear uno, los contadores quedaban en (0) hasta cambiar de pestaña.
 - CSV de los modales de egresos salía en una sola línea.
@@ -81,7 +83,7 @@ Pantallas (`/minisitio/...`): bienvenida (`/minisitio`), `dashboard`, `propiedad
 
 ## Pendientes y avisos
 
-- **Firebase Storage responde 402** (cuenta de facturación cerrada) para `insulae2-0.firebasestorage.app`: logos en PDF/correo, reglamentos y adjuntos no cargan. Afecta también a producción y no es de esta rama.
+- **Archivos en Cloudflare R2**: Firebase Storage (que respondía 402 por la facturación cerrada) se sustituyó por R2; al desplegar hay que copiar lo nuevo y reescribir las URLs de la base. Ver `docs/almacenamiento-r2.md`.
 - **Token de GitHub Packages caducado** en `.npmrc`: `npm install` falla en `@abanzoftmex/luca-insulae-contract`. Vercel usa `NPM_TOKEN`, revisar que siga vigente.
 - `/presupuesto-pdf` responde 500 ("Event handlers cannot be passed to Client Component props") también en `main`.
 - `npm run guard:runtime-db-boundary` falla por dos archivos del admin que ya fallaban en `main`.

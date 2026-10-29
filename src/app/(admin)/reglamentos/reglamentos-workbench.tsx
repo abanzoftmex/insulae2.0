@@ -19,7 +19,7 @@ import {
   updateRegulationDocumentAction, 
   archiveRegulationDocumentAction 
 } from "./actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import { Badge } from "@/components/ui/badge";

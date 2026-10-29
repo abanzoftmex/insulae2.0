@@ -46,7 +46,8 @@ export async function createRegulationDocumentAction(
     fileUrl,
     mimeType: input.mimeType ?? "application/pdf",
     sizeBytes: input.sizeBytes ?? null,
-    storageBucket: trimSafe(input.storageBucket ?? "") || "firebase",
+    // Sin etiqueta, el repositorio pone "r2" para los archivos de la app.
+    storageBucket: trimSafe(input.storageBucket ?? ""),
     storageObjectPath: input.storageObjectPath ?? null,
   });
 

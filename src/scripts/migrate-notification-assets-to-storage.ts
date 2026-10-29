@@ -3,16 +3,18 @@ import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import { config as loadDotenv } from "dotenv";
-import { getApp, getApps, initializeApp, type FirebaseOptions } from "firebase/app";
-import { getDownloadURL, getStorage, ref, uploadBytes, type FirebaseStorage } from "firebase/storage";
 
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { headObject, putObject } from "@/shared/infrastructure/storage/r2";
+import { isFirebaseStorageUrl, isStoredFileUrl, storageKeyFromUrl, storedFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 loadDotenv({ path: path.resolve(process.cwd(), ".env") });
 
 const LEGACY_NOTIFICATION_BASE_URL = "https://sistemasabanza.com/insulae";
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
+/** Objetos inmutables: cada asset migrado vive en una clave propia. */
+const OBJECT_CACHE_CONTROL = "private, max-age=31536000, immutable";
 
 type AssetKind = "image" | "pdf";
 
@@ -36,7 +38,7 @@ type MigrationFailure = {
 
 type AssetMigrationResult =
   | {
-      status: "skipped_already_firebase" | "skipped_missing_source" | "dry_run_candidate";
+      status: "skipped_already_stored" | "skipped_missing_source" | "dry_run_candidate";
       nextUrl: string | null;
       nextPath: string | null;
     }
@@ -91,57 +93,13 @@ function parseArgs(argv: string[]): ParsedArgs {
   };
 }
 
-function getRequiredEnv(name: string): string {
-  const value = process.env[name]?.trim();
-  if (!value) {
-    throw new Error(`Falta variable de entorno requerida: ${name}`);
-  }
-
-  return value;
-}
-
-function getFirebaseStorageClient(): FirebaseStorage {
-  const firebaseConfig: FirebaseOptions = {
-    apiKey: getRequiredEnv("NEXT_PUBLIC_FIREBASE_API_KEY"),
-    projectId: getRequiredEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID"),
-    storageBucket: getRequiredEnv("NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"),
-    appId: getRequiredEnv("NEXT_PUBLIC_FIREBASE_APP_ID"),
-    authDomain:
-      process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN?.trim() ||
-      `${getRequiredEnv("NEXT_PUBLIC_FIREBASE_PROJECT_ID")}.firebaseapp.com`,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID?.trim() || undefined,
-  };
-
-  const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  return getStorage(app);
-}
-
-function isFirebaseAssetUrl(url: string | null | undefined): boolean {
+/**
+ * Ya está en el almacenamiento de la app: URL /api/archivos/... o URL de Firebase Storage
+ * (esas las copia a R2 y reescribe `npm run storage:migrate-to-r2`).
+ */
+function isStoredAssetUrl(url: string | null | undefined): boolean {
   const normalized = trimSafe(url);
-  if (!normalized) {
-    return false;
-  }
-
-  try {
-    const parsed = new URL(normalized);
-    const host = parsed.host.toLowerCase();
-
-    if (host.includes("firebasestorage.googleapis.com")) {
-      return true;
-    }
-
-    if (host === "storage.googleapis.com") {
-      return true;
-    }
-
-    if (host.endsWith(".firebasestorage.app")) {
-      return true;
-    }
-
-    return false;
-  } catch {
-    return false;
-  }
+  return normalized.length > 0 && (isStoredFileUrl(normalized) || isFirebaseStorageUrl(normalized));
 }
 
 function isLegacyAssetValue(value: string | null | undefined): boolean {
@@ -179,33 +137,6 @@ function normalizeLegacySourceUrl(source: string | null | undefined): string | n
   }
 
   return `${LEGACY_NOTIFICATION_BASE_URL}/imagenes/notificaciones/${withoutLeadingSlash}`;
-}
-
-function decodeFirebasePathFromUrl(url: string): string | null {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.host.toLowerCase();
-
-    if (host.includes("firebasestorage.googleapis.com")) {
-      const marker = "/o/";
-      const index = parsed.pathname.indexOf(marker);
-      if (index >= 0) {
-        const encodedPath = parsed.pathname.slice(index + marker.length);
-        return decodeURIComponent(encodedPath);
-      }
-    }
-
-    if (host === "storage.googleapis.com") {
-      const parts = parsed.pathname.split("/").filter(Boolean);
-      if (parts.length >= 2) {
-        return parts.slice(1).join("/");
-      }
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
 }
 
 function inferFileNameFromSource(sourceRef: string, kind: AssetKind): string {
@@ -306,7 +237,6 @@ async function fetchBinary(sourceUrl: string): Promise<{ bytes: Uint8Array; mime
 }
 
 async function migrateAsset(input: {
-  storage: FirebaseStorage;
   dryRun: boolean;
   condominiumSlug: string;
   notification: NotificationAssetRow;
@@ -315,12 +245,11 @@ async function migrateAsset(input: {
   const currentUrl = input.kind === "image" ? input.notification.imageUrl : input.notification.pdfUrl;
   const currentPath = input.kind === "image" ? input.notification.imagePath : input.notification.pdfPath;
 
-  if (isFirebaseAssetUrl(currentUrl)) {
-    const decodedPath = decodeFirebasePathFromUrl(trimSafe(currentUrl));
+  if (isStoredAssetUrl(currentUrl)) {
     return {
-      status: "skipped_already_firebase",
+      status: "skipped_already_stored",
       nextUrl: trimSafe(currentUrl),
-      nextPath: trimSafe(currentPath) || decodedPath,
+      nextPath: trimSafe(currentPath) || storageKeyFromUrl(currentUrl),
     };
   }
 
@@ -366,17 +295,12 @@ async function migrateAsset(input: {
       kind: input.kind,
       mimeType: null,
     });
-    const objectRef = ref(input.storage, firstPathGuess);
-
-    try {
-      const existingUrl = await getDownloadURL(objectRef);
+    if (await headObject(firstPathGuess)) {
       return {
         status: "reused_existing",
-        nextUrl: existingUrl,
+        nextUrl: storedFileUrl(firstPathGuess),
         nextPath: firstPathGuess,
       };
-    } catch {
-      // If object does not exist yet, continue with upload.
     }
 
     const binary = await fetchBinary(sourceUrl);
@@ -387,17 +311,14 @@ async function migrateAsset(input: {
       kind: input.kind,
       mimeType: binary.mimeType,
     });
-    const finalRef = ref(input.storage, finalPath);
-
-    await uploadBytes(finalRef, binary.bytes, {
-      contentType: binary.mimeType || undefined,
+    await putObject(finalPath, binary.bytes, {
+      contentType: binary.mimeType || "application/octet-stream",
+      cacheControl: OBJECT_CACHE_CONTROL,
     });
-
-    const migratedUrl = await getDownloadURL(finalRef);
 
     return {
       status: "migrated",
-      nextUrl: migratedUrl,
+      nextUrl: storedFileUrl(finalPath),
       nextPath: finalPath,
     };
   } catch (error) {
@@ -418,7 +339,7 @@ async function migrateAsset(input: {
 
 function isLegacyUrl(value: string | null | undefined): boolean {
   const normalized = trimSafe(value);
-  return normalized.length > 0 && isLegacyAssetValue(normalized) && !isFirebaseAssetUrl(normalized);
+  return normalized.length > 0 && isLegacyAssetValue(normalized) && !isStoredAssetUrl(normalized);
 }
 
 async function main(): Promise<void> {
@@ -466,8 +387,6 @@ async function main(): Promise<void> {
     take: args.limit ?? undefined,
   })) as NotificationAssetRow[];
 
-  const storage = args.dryRun ? null : getFirebaseStorageClient();
-
   const failures: MigrationFailure[] = [];
 
   const counters = {
@@ -476,7 +395,7 @@ async function main(): Promise<void> {
     assetsScanned: 0,
     migrated: 0,
     reusedExisting: 0,
-    skippedAlreadyFirebase: 0,
+    skippedAlreadyStored: 0,
     skippedMissingSource: 0,
     dryRunCandidates: 0,
     failed: 0,
@@ -492,7 +411,6 @@ async function main(): Promise<void> {
       counters.assetsScanned += 1;
 
       const result = await migrateAsset({
-        storage: storage as FirebaseStorage,
         dryRun: args.dryRun,
         condominiumSlug: condominium.slug,
         notification,
@@ -509,8 +427,8 @@ async function main(): Promise<void> {
           updateData.imageUrl = result.nextUrl;
           updateData.imagePath = result.nextPath;
         }
-      } else if (result.status === "skipped_already_firebase") {
-        counters.skippedAlreadyFirebase += 1;
+      } else if (result.status === "skipped_already_stored") {
+        counters.skippedAlreadyStored += 1;
         if (result.nextPath && trimSafe(notification.imagePath) !== result.nextPath) {
           updateData.imagePath = result.nextPath;
         }
@@ -529,7 +447,6 @@ async function main(): Promise<void> {
       counters.assetsScanned += 1;
 
       const result = await migrateAsset({
-        storage: storage as FirebaseStorage,
         dryRun: args.dryRun,
         condominiumSlug: condominium.slug,
         notification,
@@ -546,8 +463,8 @@ async function main(): Promise<void> {
           updateData.pdfUrl = result.nextUrl;
           updateData.pdfPath = result.nextPath;
         }
-      } else if (result.status === "skipped_already_firebase") {
-        counters.skippedAlreadyFirebase += 1;
+      } else if (result.status === "skipped_already_stored") {
+        counters.skippedAlreadyStored += 1;
         if (result.nextPath && trimSafe(notification.pdfPath) !== result.nextPath) {
           updateData.pdfPath = result.nextPath;
         }
@@ -595,16 +512,16 @@ async function main(): Promise<void> {
 
   const consistency = {
     imageUrlsTotal: consistencyRows.filter((row) => trimSafe(row.imageUrl).length > 0).length,
-    imageUrlsFirebase: consistencyRows.filter((row) => isFirebaseAssetUrl(row.imageUrl)).length,
+    imageUrlsStored: consistencyRows.filter((row) => isStoredAssetUrl(row.imageUrl)).length,
     imageUrlsLegacyRemaining: consistencyRows.filter((row) => isLegacyUrl(row.imageUrl)).length,
-    imagePathMissingForFirebaseUrl: consistencyRows.filter(
-      (row) => isFirebaseAssetUrl(row.imageUrl) && trimSafe(row.imagePath).length === 0,
+    imagePathMissingForStoredUrl: consistencyRows.filter(
+      (row) => isStoredAssetUrl(row.imageUrl) && trimSafe(row.imagePath).length === 0,
     ).length,
     pdfUrlsTotal: consistencyRows.filter((row) => trimSafe(row.pdfUrl).length > 0).length,
-    pdfUrlsFirebase: consistencyRows.filter((row) => isFirebaseAssetUrl(row.pdfUrl)).length,
+    pdfUrlsStored: consistencyRows.filter((row) => isStoredAssetUrl(row.pdfUrl)).length,
     pdfUrlsLegacyRemaining: consistencyRows.filter((row) => isLegacyUrl(row.pdfUrl)).length,
-    pdfPathMissingForFirebaseUrl: consistencyRows.filter(
-      (row) => isFirebaseAssetUrl(row.pdfUrl) && trimSafe(row.pdfPath).length === 0,
+    pdfPathMissingForStoredUrl: consistencyRows.filter(
+      (row) => isStoredAssetUrl(row.pdfUrl) && trimSafe(row.pdfPath).length === 0,
     ).length,
     legacySamples: consistencyRows
       .filter((row) => isLegacyUrl(row.imageUrl) || isLegacyUrl(row.pdfUrl))

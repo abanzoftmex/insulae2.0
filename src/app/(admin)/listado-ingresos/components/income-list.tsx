@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createIncomeAction, updateIncomeAction, deleteIncomeAction } from "../actions";
 import { importIncomesAction } from "../import-actions";
-import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 import { read, utils } from "xlsx";
 import type { IncomeRecord } from "@/modules/income";
 

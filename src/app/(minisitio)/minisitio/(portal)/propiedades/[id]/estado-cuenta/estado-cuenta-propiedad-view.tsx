@@ -15,7 +15,6 @@ import {
   formatDate,
   movementBadgeStatus,
   movementBalance,
-  projectLogoUrl,
   sancionArticulo,
   statementFileName,
 } from "@/app/(minisitio)/minisitio/(portal)/_lib/estado-cuenta-utils";
@@ -111,7 +110,6 @@ function EstadoCuentaPropiedad({
     propertyName: propiedad.nombre,
     // El usuario de sesión nunca tuvo `name`: el minisitio siempre mandaba "Usuario".
     userName: "Usuario",
-    logoUrl: projectLogoUrl(proyecto.logo),
   });
   const { sendingEmail } = email;
 

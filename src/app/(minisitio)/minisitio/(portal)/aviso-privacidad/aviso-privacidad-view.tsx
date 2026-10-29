@@ -1,10 +1,11 @@
 import { Shield, FileText } from "lucide-react";
+import { isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 const AVISO_PDF_LEGACY_BASE = "https://sistemasabanza.com/insulae/imagenes/proyectos/aviso_privacidad/";
 
-/** Hoy llega solo el nombre del archivo legacy; si insulae2.0 guarda la URL completa (Firebase), se usa tal cual. */
+/** Hoy llega solo el nombre del archivo legacy; si insulae2.0 guarda la URL del archivo, se usa tal cual. */
 function avisoPdfUrl(archivo: string) {
-  return /^https?:\/\//.test(archivo) ? archivo : `${AVISO_PDF_LEGACY_BASE}${archivo}`;
+  return isUsableFileUrl(archivo) ? archivo : `${AVISO_PDF_LEGACY_BASE}${archivo}`;
 }
 
 /**

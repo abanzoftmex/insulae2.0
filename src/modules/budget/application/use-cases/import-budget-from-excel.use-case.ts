@@ -1,6 +1,7 @@
 import { read, utils } from "xlsx";
 import { BudgetRepository } from "../../domain/budget.repository";
 import { prisma } from "../../../../shared/infrastructure/db/prisma";
+import { storageKeyFromUrl, isStoredFileUrl, storedFileUrl } from "../../../../shared/infrastructure/storage/storage-paths";
 
 export class ImportBudgetFromExcelUseCase {
   constructor(private readonly repo: BudgetRepository) {}
@@ -152,6 +153,11 @@ export class ImportBudgetFromExcelUseCase {
       if (supplierIdx !== -1) {
         if (row[supplierIdx] !== undefined && row[supplierIdx] !== null) {
           supplierUrl = String(row[supplierIdx]).trim() || null;
+          // La plantilla exporta los documentos subidos con URL completa: se guardan relativos otra vez.
+          const storedKey = supplierUrl && isStoredFileUrl(supplierUrl) ? storageKeyFromUrl(supplierUrl) : null;
+          if (storedKey) {
+            supplierUrl = storedFileUrl(storedKey);
+          }
         } else {
           supplierUrl = null;
         }

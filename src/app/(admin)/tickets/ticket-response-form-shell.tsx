@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { saveTicketResponseAction } from "./actions";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import { fileNameFromStoredUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import type { TicketStatusValue } from "@/modules/tickets/domain/ticket";
 
 interface TicketResponseFormShellProps {
@@ -53,6 +54,10 @@ function getAssetLabel(url: string, path: string): string {
   const candidate = trimSafe(url) || trimSafe(path);
   if (!candidate) {
     return "Sin archivo cargado";
+  }
+
+  if (storageKeyFromUrl(candidate)) {
+    return fileNameFromStoredUrl(candidate) || "archivo";
   }
 
   if (candidate.startsWith("http://") || candidate.startsWith("https://")) {
@@ -109,7 +114,7 @@ export function TicketResponseFormShell({
 
       setResponseImageUrl(uploaded.url);
       setResponseImagePath(uploaded.fullPath);
-      setMessage("Imagen cargada en Firebase.");
+      setMessage("Imagen cargada correctamente.");
     } catch (error) {
       console.error("[TicketResponseFormShell] image upload failed", error);
       setMessage("No se pudo subir la imagen.");
@@ -141,7 +146,7 @@ export function TicketResponseFormShell({
 
       setResponsePdfUrl(uploaded.url);
       setResponsePdfPath(uploaded.fullPath);
-      setMessage("PDF cargado en Firebase.");
+      setMessage("PDF cargado correctamente.");
     } catch (error) {
       console.error("[TicketResponseFormShell] pdf upload failed", error);
       setMessage("No se pudo subir el PDF.");
@@ -279,14 +284,15 @@ export function TicketResponseFormShell({
                   />
                   <p className="text-xs text-[#6b594c]">{getAssetLabel(responseImageUrl, responseImagePath)}</p>
                   {trimSafe(responseImageUrl) ? (
-                    <Link
+                    // <a> y no <Link>: next/link prefetchearía /api/archivos como si fuera una página.
+                    <a
                       href={responseImageUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex rounded-lg border border-[#c8ae97] bg-[#fff7ed] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b4b39]"
                     >
                       Ver imagen
-                    </Link>
+                    </a>
                   ) : null}
                 </div>
 
@@ -303,14 +309,14 @@ export function TicketResponseFormShell({
                   />
                   <p className="text-xs text-[#6b594c]">{getAssetLabel(responsePdfUrl, responsePdfPath)}</p>
                   {trimSafe(responsePdfUrl) ? (
-                    <Link
+                    <a
                       href={responsePdfUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="inline-flex rounded-lg border border-[#c8ae97] bg-[#fff7ed] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#6b4b39]"
                     >
                       Ver PDF
-                    </Link>
+                    </a>
                   ) : null}
                 </div>
               </div>

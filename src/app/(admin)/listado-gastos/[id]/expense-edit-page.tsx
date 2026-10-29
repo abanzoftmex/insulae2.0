@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { updateExpenseAction } from "../actions";
-import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import { fileNameFromStoredUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import type { ExpenseRecord } from "@/modules/expense";
 
 type BudgetConceptItem = { id: string; name: string; budgetGroup: string };
@@ -90,11 +91,10 @@ export function ExpenseEditPage({ expense, budgetConcepts, condominiumSlug, proj
       }
     }
 
+    // El comprobante anterior se borra después de guardar: si la actualización falla, el
+    // registro sigue apuntando a él.
     const oldUrl = originalReceiptUrl;
     const receiptChanged = oldUrl && (oldUrl !== finalReceiptUrl);
-    if (receiptChanged) {
-      await deleteCondominiumAsset(oldUrl);
-    }
 
     try {
       const res = await updateExpenseAction(expense.id, {
@@ -110,6 +110,9 @@ export function ExpenseEditPage({ expense, budgetConcepts, condominiumSlug, proj
       });
 
       if (res?.success) {
+        if (receiptChanged) {
+          await deleteCondominiumAsset(oldUrl);
+        }
         router.push("/listado-gastos");
         router.refresh();
       } else {
@@ -137,6 +140,7 @@ export function ExpenseEditPage({ expense, budgetConcepts, condominiumSlug, proj
 
   function extractFilename(url: string | null): string {
     if (!url) return "";
+    if (storageKeyFromUrl(url)) return fileNameFromStoredUrl(url) || "archivo";
     try {
       const pathname = decodeURIComponent(new URL(url).pathname);
       const segments = pathname.split("/");

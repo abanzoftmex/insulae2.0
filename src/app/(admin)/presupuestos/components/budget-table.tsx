@@ -8,7 +8,8 @@ import { cn } from "@/shared/utils/cn";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Link as LinkIcon, Trash2, Plus, Upload, X, Loader2 } from "lucide-react";
-import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/firebase-client";
+import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import { isFirebaseStorageUrl, isStoredFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 function formatMXN(num: number) {
   return new Intl.NumberFormat("es-MX", {
@@ -112,7 +113,7 @@ export default function BudgetTable({
   const handleSaveLink = async (conceptId: string, url: string) => {
     try {
       let finalUrl = url.trim();
-      if (finalUrl && !/^https?:\/\//i.test(finalUrl)) {
+      if (finalUrl && !/^https?:\/\//i.test(finalUrl) && !isStoredFileUrl(finalUrl)) {
         finalUrl = "https://" + finalUrl;
       }
       const actionRes = await updateSupplierUrlAction(vm.year, conceptId, finalUrl || null);
@@ -318,7 +319,7 @@ export default function BudgetTable({
                                       title="Ver archivo / link"
                                       className="flex items-center justify-center w-7 h-7 rounded-full bg-brand-mint/25 text-brand hover:bg-brand-mint/40 transition-colors"
                                     >
-                                      {concept.supplierUrl.includes("firebasestorage") ? (
+                                      {isStoredFileUrl(concept.supplierUrl) || isFirebaseStorageUrl(concept.supplierUrl) ? (
                                         <FileText className="h-3.5 w-3.5" />
                                       ) : (
                                         <LinkIcon className="h-3.5 w-3.5" />

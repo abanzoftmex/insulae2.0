@@ -49,8 +49,8 @@ function cleanDescripcion(text: string | null | undefined) {
     .trim();
 }
 
-// Descarga un archivo a través del proxy server-side (fuerza la descarga con
-// Content-Disposition: attachment y evita problemas de CORS con Firebase).
+// Descarga un archivo con el nombre indicado: la ruta del servidor redirige a R2 forzando
+// Content-Disposition: attachment.
 function descargarArchivo(url: string, filename?: string) {
   const name = filename || "documento.pdf";
   const proxied = `${msPath("/archivos/descarga")}?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}`;
