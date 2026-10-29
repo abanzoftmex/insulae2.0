@@ -7,7 +7,7 @@ a
 - Migrar datos y procesos críticos del legacy de forma incremental.
 - Mantener alcance exclusivo Valquirico (sin multi-sitio).sa
 - Estabilizar dominio y casos de uso antes de construir vistas finales.
-
+a
 ## Stack
 
 - Next.js App Router + TypeScript
