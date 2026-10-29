@@ -8,7 +8,7 @@
  * La verificación de sesión ya no vive aquí: la hacen el middleware y cada página en el
  * servidor (requireCondominoSession), así que el shell solo pinta.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import type { LucideIcon } from "lucide-react";
@@ -71,7 +71,7 @@ const ROUTE_TITLES: [RegExp, string][] = [
   [/^\/propiedades\/[^/]+$/, "Propiedad"],
   [/^\/arrendamientos$/, "Mis Comercios"],
   [/^\/arrendamientos\/[^/]+\/estado-cuenta$/, "Estado de Cuenta"],
-  [/^\/arrendamientos\/[^/]+$/, "Mis Comercios"],
+  [/^\/arrendamientos\/[^/]+$/, "Detalle de Comercio"],
   [/^\/comunicados$/, "Comunicados"],
   [/^\/notificaciones$/, "Notificaciones"],
   [/^\/experiencias$/, "Experiencias"],
@@ -130,8 +130,11 @@ export function MinisitioShell({
   const [showPrivacyModal, setShowPrivacyModal] = useState(Boolean(user && !user.aceptoAvisoPrivacidad));
 
   // Preferencias persistidas (sessionStorage): se rehidratan tras montar para que el primer
-  // render coincida con el HTML del servidor.
-  useEffect(() => {
+  // render coincida con el HTML del servidor. Layout effect (no effect) a propósito: corre
+  // antes que los useEffect de las páginas, que escriben al store al montar; si una página
+  // escribiera antes de rehidratar, persist guardaría las preferencias por defecto encima
+  // de las del usuario.
+  useLayoutEffect(() => {
     useMinisitioStore.persist.rehydrate();
   }, []);
 

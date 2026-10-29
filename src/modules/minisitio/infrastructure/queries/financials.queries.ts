@@ -4,6 +4,7 @@
  * transforma a los shapes que esperan las pantallas (antes `lib/financialMappers.js` del
  * minisitio sobre GET /api/condomino/financials).
  */
+import { cache } from "react";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import type { CondominoTokenPayload } from "@/shared/application/auth/condomino-token";
 import { num, round2 } from "../scope";
@@ -53,12 +54,22 @@ function currentYear(): number {
 export async function getFinancials(session: CondominoTokenPayload, yearsInput: number[]): Promise<Financials> {
   const years = yearsInput.filter((y) => Number.isFinite(y));
   if (years.length === 0) years.push(currentYear());
+  return loadFinancials(session.condominiumId, years.join(","));
+}
+
+/**
+ * Memorizado por petición: una pantalla (p. ej. el estado de resultados) pide totales,
+ * ingresos y egresos del mismo año y antes eso eran tres lecturas completas.
+ * Los consumidores no mutan el resultado (los mappers construyen objetos nuevos).
+ */
+const loadFinancials = cache(async (condominiumId: string, yearsKey: string): Promise<Financials> => {
+  const years = yearsKey.split(",").map(Number);
   const start = new Date(Math.min(...years), 0, 1);
   const end = new Date(Math.max(...years) + 1, 0, 1);
 
   const [incomes, expenses] = await Promise.all([
     prisma.income.findMany({
-      where: { condominiumId: session.condominiumId, isActive: true, date: { gte: start, lt: end } },
+      where: { condominiumId, isActive: true, date: { gte: start, lt: end } },
       select: {
         date: true,
         amount: true,
@@ -67,7 +78,7 @@ export async function getFinancials(session: CondominoTokenPayload, yearsInput: 
       },
     }),
     prisma.expense.findMany({
-      where: { condominiumId: session.condominiumId, isActive: true, date: { gte: start, lt: end } },
+      where: { condominiumId, isActive: true, date: { gte: start, lt: end } },
       select: {
         date: true,
         amount: true,
@@ -110,7 +121,7 @@ export async function getFinancials(session: CondominoTokenPayload, yearsInput: 
     },
     expense: { groups: [...expGroups.values()] },
   };
-}
+});
 
 /**
  * Años que realmente tienen movimientos (ingresos, egresos, cargos o pagos), acotados a un
@@ -118,25 +129,29 @@ export async function getFinancials(session: CondominoTokenPayload, yearsInput: 
  */
 export async function getFinancialYears(session: CondominoTokenPayload) {
   const cid = session.condominiumId;
-  const [incomes, expenses, charges, payments] = await Promise.all([
-    prisma.income.findMany({ where: { condominiumId: cid, isActive: true }, select: { date: true } }),
-    prisma.expense.findMany({ where: { condominiumId: cid, isActive: true }, select: { date: true } }),
-    prisma.charge.findMany({ where: { condominiumId: cid }, select: { periodYear: true, dueDate: true } }),
-    prisma.payment.findMany({ where: { condominiumId: cid }, select: { paidAt: true } }),
+  // Antes se traían TODAS las filas de las cuatro tablas solo para leer el año; ahora la base
+  // devuelve los años distintos. EXTRACT trabaja en UTC, igual que el servidor en producción.
+  const [yearRows, anyIncome, anyExpense, anyCharge, anyPayment] = await Promise.all([
+    prisma.$queryRaw<{ y: number }[]>`
+      SELECT DISTINCT y FROM (
+        SELECT EXTRACT(YEAR FROM "date")::int AS y FROM "Income" WHERE "condominiumId" = ${cid} AND "isActive" = true
+        UNION SELECT EXTRACT(YEAR FROM "date")::int FROM "Expense" WHERE "condominiumId" = ${cid} AND "isActive" = true
+        UNION SELECT "periodYear" FROM "Charge" WHERE "condominiumId" = ${cid} AND "periodYear" <> 0
+        UNION SELECT EXTRACT(YEAR FROM "dueDate")::int FROM "Charge" WHERE "condominiumId" = ${cid} AND "dueDate" IS NOT NULL
+        UNION SELECT EXTRACT(YEAR FROM "paidAt")::int FROM "Payment" WHERE "condominiumId" = ${cid}
+      ) AS t`,
+    prisma.income.findFirst({ where: { condominiumId: cid, isActive: true }, select: { id: true } }),
+    prisma.expense.findFirst({ where: { condominiumId: cid, isActive: true }, select: { id: true } }),
+    prisma.charge.findFirst({ where: { condominiumId: cid }, select: { id: true } }),
+    prisma.payment.findFirst({ where: { condominiumId: cid }, select: { id: true } }),
   ]);
-
-  const years = new Set<number>();
-  incomes.forEach((i) => i.date && years.add(i.date.getFullYear()));
-  expenses.forEach((e) => e.date && years.add(e.date.getFullYear()));
-  charges.forEach((c) => {
-    if (c.periodYear) years.add(c.periodYear);
-    if (c.dueDate) years.add(c.dueDate.getFullYear());
-  });
-  payments.forEach((p) => p.paidAt && years.add(p.paidAt.getFullYear()));
 
   const thisYear = currentYear();
   const MAX_YEARS = 3;
-  const sane = [...years].filter((y) => y >= 2015 && y <= thisYear + 1).sort((a, b) => a - b);
+  const sane = yearRows
+    .map((r) => Number(r.y))
+    .filter((y) => Number.isFinite(y) && y >= 2015 && y <= thisYear + 1)
+    .sort((a, b) => a - b);
   const sorted = (sane.length ? sane : [thisYear]).slice(-MAX_YEARS);
 
   return {
@@ -145,7 +160,7 @@ export async function getFinancialYears(session: CondominoTokenPayload) {
     // El año por defecto = el más reciente con datos.
     latest: sorted[sorted.length - 1],
     currentYear: thisYear,
-    hasData: incomes.length + expenses.length + charges.length + payments.length > 0,
+    hasData: Boolean(anyIncome || anyExpense || anyCharge || anyPayment),
   };
 }
 
