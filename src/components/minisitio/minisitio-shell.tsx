@@ -391,7 +391,7 @@ export function MinisitioShell({
     if (hasChildren) {
       if (collapsed) {
         return (
-          <Tooltip title={item.name} position="right">
+          <Tooltip title={item.name} position="right" className="block">
             <div
               onClick={() => handleCollapsedMenuClick(item)}
               className={`group relative flex h-9 w-full cursor-pointer items-center justify-center rounded-lg transition-colors duration-150 ${
@@ -466,14 +466,17 @@ export function MinisitioShell({
       </div>
     );
 
+    // En el rail colapsado cada ítem ocupa su fila: con el contenedor inline-block del
+    // tooltip los íconos se acomodaban de dos en dos (defecto heredado del minisitio).
     return (
       <Link
         href={item.href!}
         onClick={() => handleNavClick(item.href!)}
+        className="block"
         {...(item.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
       >
         {collapsed ? (
-          <Tooltip title={item.name} position="right">
+          <Tooltip title={item.name} position="right" className="block">
             {fila}
           </Tooltip>
         ) : (

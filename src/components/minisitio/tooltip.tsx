@@ -8,10 +8,13 @@ export function Tooltip({
   children,
   title,
   position = "right",
+  className = "inline-block",
 }: {
   children: React.ReactNode;
   title: React.ReactNode;
   position?: TooltipPosition;
+  /** Clases del contenedor (por defecto `inline-block`). */
+  className?: string;
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ top: 0, left: 0 });
@@ -44,7 +47,7 @@ export function Tooltip({
   };
 
   return (
-    <div ref={triggerRef} onMouseEnter={handleMouseEnter} onMouseLeave={() => setIsVisible(false)} className="inline-block">
+    <div ref={triggerRef} onMouseEnter={handleMouseEnter} onMouseLeave={() => setIsVisible(false)} className={className}>
       {children}
 
       {isVisible && (
