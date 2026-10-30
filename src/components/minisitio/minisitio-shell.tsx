@@ -25,7 +25,7 @@ import { useMinisitioLayoutStore } from "@/stores/minisitio-layout.store";
 import { esAvisoNuevo, useMinisitioNavStore } from "@/stores/minisitio-nav.store";
 import { useMinisitioSession } from "./session-provider";
 import { useInactivityLogout } from "./use-inactivity-logout";
-import PrivacyNoticeModal from "./privacy-notice-modal";
+import { PrivacyNoticeModal } from "./privacy-notice-modal";
 import { CONTENT_ID, msPath, stripMinisitioBase } from "./paths";
 import { buildNavModel, resolveRouteTitle, type NavItem } from "./shell/nav-config";
 import { Sidebar } from "./shell/sidebar";
@@ -262,16 +262,15 @@ export function MinisitioShell({
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} model={model} onSelect={onSelect} />
       <Toaster />
 
-      {showPrivacyModal && (
-        <PrivacyNoticeModal
-          notice={privacyNotice}
-          onAccept={() => setShowPrivacyModal(false)}
-          onCancel={async () => {
-            setShowPrivacyModal(false);
-            await handleLogout();
-          }}
-        />
-      )}
+      <PrivacyNoticeModal
+        open={showPrivacyModal}
+        notice={privacyNotice}
+        onAccept={() => setShowPrivacyModal(false)}
+        onCancel={async () => {
+          setShowPrivacyModal(false);
+          await handleLogout();
+        }}
+      />
     </MotionConfig>
   );
 }

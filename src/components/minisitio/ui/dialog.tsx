@@ -5,9 +5,11 @@
  * contenido con 28 px a los lados (16 en el celular) y pie con las acciones a la derecha. Entra
  * de .95 a 1 en 80 ms sobre un velo. En el celular ocupa la pantalla.
  *
- * Atrapa el foco, Esc cierra y el foco vuelve a donde estaba.
+ * Atrapa el foco, Esc cierra y el foco vuelve a donde estaba. Con `dismissible={false}` no hay X
+ * y ni Esc ni el velo lo cierran: hay que elegir una de las acciones (aceptar el aviso de
+ * privacidad o salir, por ejemplo).
  */
-import { useEffect, useId, useRef, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useId, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
@@ -22,6 +24,7 @@ export function Dialog({
   title,
   description,
   footer,
+  dismissible = true,
   children,
 }: {
   open: boolean;
@@ -30,12 +33,19 @@ export function Dialog({
   description?: string;
   /** Acciones (a la derecha). Si el contenido es un <form>, los botones pueden ir dentro. */
   footer?: React.ReactNode;
+  /** false: sin X, Esc ni clic en el velo. */
+  dismissible?: boolean;
   children: React.ReactNode;
 }) {
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const descriptionId = useId();
+  // Fuera de las dependencias del efecto: onClose suele cambiar en cada render del dueño (p. ej. al
+  // escribir en un campo cuyo estado vive afuera) y reiniciarlo mandaba el foco al primer campo.
+  const closeOnEscape = useEffectEvent(() => {
+    if (dismissible) onClose();
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -50,7 +60,7 @@ export function Dialog({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        onClose();
+        closeOnEscape();
       } else if (e.key === "Tab" && panelRef.current) {
         const focusables = Array.from(panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE));
         const first = focusables[0];
@@ -70,14 +80,14 @@ export function Dialog({
       document.body.style.overflow = previousOverflow;
       restore?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!mounted) return null;
   return createPortal(
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-[55] flex items-center justify-center sm:p-6">
-          <motion.div {...scrim} aria-hidden className="absolute inset-0 bg-chrome-strong/60" onClick={onClose} />
+          <motion.div {...scrim} aria-hidden className="absolute inset-0 bg-chrome-strong/60" onClick={dismissible ? onClose : undefined} />
           <motion.div
             {...dialog}
             ref={panelRef}
@@ -99,15 +109,17 @@ export function Dialog({
                   </p>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Cerrar"
-                title="Cerrar (Esc)"
-                className="-mt-0.5 -mr-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-panel text-fg-2 outline-none hover:bg-surface-3 active:bg-surface-4 focus-visible:ring-2 focus-visible:ring-brand"
-              >
-                <X className="h-5 w-5" aria-hidden />
-              </button>
+              {dismissible && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Cerrar"
+                  title="Cerrar (Esc)"
+                  className="-mt-0.5 -mr-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-panel text-fg-2 outline-none hover:bg-surface-3 active:bg-surface-4 focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  <X className="h-5 w-5" aria-hidden />
+                </button>
+              )}
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-2 sm:px-7">{children}</div>
             {footer && (

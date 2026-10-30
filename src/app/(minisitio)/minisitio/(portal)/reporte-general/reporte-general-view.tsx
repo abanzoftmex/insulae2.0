@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
 import type { GeneralReport } from "@/modules/minisitio/infrastructure/queries/reports.queries";
+import { toast } from "@/stores/minisitio-toast.store";
 import { getGeneralReportAction } from "../../_actions/reports";
 import { buildReporteGeneralPdf, formatCurrency, meses, reporteGeneralPdfFileName } from "./reporte-general-pdf";
 
@@ -95,7 +96,7 @@ export function ReporteGeneralView({
       doc.save(reporteGeneralPdfFileName());
     } catch (error) {
       console.error("Error al generar PDF:", error);
-      alert("Error al generar el PDF. Por favor, intenta de nuevo.");
+      toast("No se pudo generar el PDF. Inténtalo otra vez.", "error");
     }
   };
 

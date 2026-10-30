@@ -5,7 +5,7 @@
  * centrada, "Abrir original" y cerrar. Esc, el botón o un clic fuera de la imagen cierran; el foco
  * vuelve a la miniatura.
  */
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useEffectEvent, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpRight, X } from "lucide-react";
@@ -23,6 +23,8 @@ export function ImageViewer({ image, onClose }: { image: ViewerImage | null; onC
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
   const closeRef = useRef<HTMLButtonElement>(null);
   const open = image !== null;
+  // Fuera de las dependencias: si el dueño se vuelve a pintar, el efecto no se reinicia (ni el foco salta).
+  const closeOnEscape = useEffectEvent(onClose);
 
   useEffect(() => {
     if (!open) return;
@@ -33,7 +35,7 @@ export function ImageViewer({ image, onClose }: { image: ViewerImage | null; onC
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        onClose();
+        closeOnEscape();
       } else if (e.key === "Tab") {
         // Solo hay dos controles; el foco no sale del visor.
         const controls = Array.from(document.querySelectorAll<HTMLElement>("[data-image-viewer] a, [data-image-viewer] button"));
@@ -48,7 +50,7 @@ export function ImageViewer({ image, onClose }: { image: ViewerImage | null; onC
       document.body.style.overflow = previousOverflow;
       restore?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!mounted) return null;
   return createPortal(

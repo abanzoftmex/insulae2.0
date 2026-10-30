@@ -4,7 +4,7 @@
  * Navegación del celular, como Slack móvil: barra de pestañas abajo para lo que más se usa y el
  * menú completo en una hoja que entra desde la izquierda.
  */
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent, useRef } from "react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { Home, Megaphone, Menu, MessageSquareText, X } from "lucide-react";
@@ -55,6 +55,8 @@ export function MobileTabBar({ path, solicitudes, onOpenMenu, menuOpen }: { path
 
 export function MobileSheet({ open, onClose, children }: { open: boolean; onClose: () => void; children: React.ReactNode }) {
   const panelRef = useRef<HTMLDivElement>(null);
+  // Fuera de las dependencias: si el dueño se vuelve a pintar, el efecto no se reinicia (ni el foco salta).
+  const closeOnEscape = useEffectEvent(onClose);
 
   useEffect(() => {
     if (!open) return;
@@ -66,7 +68,7 @@ export function MobileSheet({ open, onClose, children }: { open: boolean; onClos
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
-        onClose();
+        closeOnEscape();
       } else if (e.key === "Tab" && panelRef.current) {
         // El foco no sale de la hoja.
         const focusables = Array.from(panelRef.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])"));
@@ -87,7 +89,7 @@ export function MobileSheet({ open, onClose, children }: { open: boolean; onClos
       document.body.style.overflow = previousOverflow;
       restore?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   return (
     <AnimatePresence>

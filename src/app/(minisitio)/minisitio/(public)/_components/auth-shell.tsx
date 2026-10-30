@@ -7,6 +7,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { msPath } from "@/components/minisitio/paths";
 
+/** Sello y nombre; lleva a iniciar sesión. También lo usa la aceptación del aviso de privacidad. */
+export function AuthBrand() {
+  return (
+    <Link href={msPath("/login")} className="flex items-center gap-2.5 self-start rounded-panel outline-none focus-visible:ring-2 focus-visible:ring-brand">
+      <Image src="/logo-mono.png" alt="" width={34} height={35} className="h-[35px] w-auto" priority />
+      <span className="text-body-lg font-bold tracking-[-0.01em]">Val&apos;Quirico</span>
+    </Link>
+  );
+}
+
 export function AuthShell({
   title,
   description,
@@ -19,10 +29,7 @@ export function AuthShell({
   return (
     <div className="flex min-h-dvh bg-surface text-fg">
       <main className="flex min-w-0 flex-1 flex-col px-6 pt-8 pb-10 sm:px-12">
-        <Link href={msPath("/login")} className="flex items-center gap-2.5 self-start rounded-panel outline-none focus-visible:ring-2 focus-visible:ring-brand">
-          <Image src="/logo-mono.png" alt="" width={34} height={35} className="h-[35px] w-auto" priority />
-          <span className="text-body-lg font-bold tracking-[-0.01em]">Val&apos;Quirico</span>
-        </Link>
+        <AuthBrand />
         <div className="flex flex-1 items-center py-10">
           <div className="w-full max-w-[400px]">
             <h1 className="text-display font-bold text-fg">{title}</h1>

@@ -156,12 +156,18 @@ Notas:
 - **Diálogo** (`ui/dialog.tsx`): el modal de Slack.
   - Medidas: 520 px y radio 8; encabezado de 70 px con título 22/30; contenido con 28 px a los lados (16 en el celular); acciones a la derecha, con una sola primaria.
   - Entra de .95 a 1 en 80 ms sobre un velo olivo al 60 % y en el celular ocupa la pantalla.
-  - Atrapa el foco y Esc lo cierra.
+  - Atrapa el foco y Esc lo cierra. Con `dismissible={false}` (aceptar el aviso de privacidad) no hay X y ni Esc ni el velo lo cierran: hay que elegir una acción.
+  - Su efecto depende solo de `open`: `onClose` suele cambiar en cada render del dueño, y si fuera dependencia el foco saltaría al primer campo con cada tecla. El visor de imagen y la hoja del celular siguen la misma regla.
 - **Campos** (`ui/field.ts`): 40 px, radio 8, borde de 1 px y anillo olivo. En el celular el texto va a 16 px: con menos, iOS hace zoom.
 - **Toasts** (`toast("…")` de `stores/minisitio-toast.store.ts`, que pinta `ui/toaster.tsx` en el shell):
   - sustituyen a `alert()`;
   - suben 20 px en 80 ms, se van a los 5 s y se pausan al pasar el cursor;
   - van abajo al centro.
+  - Fuera del portal (acceso, superadmin) no hay `Toaster`: ahí el error va en línea con `role="alert"`.
+- **Texto del aviso de privacidad** (`components/minisitio/aviso-privacidad-texto.tsx`):
+  - en la base es texto plano de un textarea, no HTML; se reconstruyen título, secciones ("1. SECCIÓN"), párrafos e incisos ("I." y "a)" con sangría colgante) y los correos se vuelven enlaces;
+  - si un proyecto guarda HTML de verdad, se pinta con `.aviso-privacidad-html` (tokens del portal);
+  - lo usan la pantalla del portal, la ventana de aceptación y `/privacy`.
 - **Visor de imagen** (`ui/image-viewer.tsx`): pantalla completa sobre olivo casi negro, con "Abrir original" y cerrar.
 - **Hilo** (Solicitudes):
   - mensajes de 36 px separados por una línea "N respuestas";
@@ -235,6 +241,19 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - `alert()`.
 
 ## 10. Estado
+
+**Hecho (2026-10-29), undécima vuelta:**
+- **Aviso de privacidad:**
+  - el texto se leía como un solo bloque: está guardado como texto plano y se pintaba como HTML, así que se perdían todos los saltos de línea. Ahora se lee como documento, con título, secciones, incisos con sangría y el correo de derechos ARCO como enlace;
+  - en el portal, el PDF va arriba ("Abrir") y el texto con ancho de lectura de 720 px. Sin aviso publicado se dice así, y no se muestra un texto genérico que parecía el aviso;
+  - la ventana de aceptación usa el diálogo compartido sin modo descartable ("Cerrar sesión" / "Acepto");
+  - `/privacy` es un documento con las dos acciones fijas abajo, y "Cerrar sesión" ahora sí cierra la sesión (antes solo llevaba al login).
+- **Superadmin:** el marco de acceso, con los campos del portal y "Mostrar". Se quitaron el degradado, las manchas difuminadas y las MAYÚSCULAS.
+- **Diálogo:** se corrigió que, en "Enviar por correo", cada tecla mandara el foco al primer radio (ver §6).
+- **Limpieza:**
+  - los últimos `alert()`: un toast en el reporte general y un error en línea en la burbuja de superadmin;
+  - los esqueletos de reportes pasan al pulso plano del portal; las tablas respetan su número de columnas (antes, 6 fijas);
+  - se borró `StatusBadge`, que no se usaba.
 
 **Hecho (2026-10-29), décima vuelta:**
 - **Acceso:** entrar, olvidé y nueva contraseña usan un marco compartido (`(public)/_components/auth-shell.tsx`):
@@ -353,15 +372,21 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Etiquetas:** unificadas ("Mis saldos", "Avisos", "Solicitudes"…).
 - **Solicitudes:** acepta `?nueva=1`.
 
-**Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
-1. **Reportes, lo que falta:**
-   - las cifras de Estado de resultados siguen con sombra e ícono (pasarlas a `StatStrip`);
+**Pendiente**, en orden:
+1. **Estado de resultados** (vista y modales de conceptos y egresos):
+   - cifras con sombra e ícono (pasarlas a `StatStrip`);
+   - subtotales en verde, resaltados naranja y botones rojo, verde y azul;
+   - la columna "Concepto" parte los nombres en tres renglones;
    - los encabezados beige de `compact-financial-table`.
-   - **Dato, no interfaz:** el Resumen financiero y el Estado de resultados no coinciden en 2025 (balance de −$12.1 M frente a −$10.8 M), porque cada uno calcula distinto.
-2. **Aviso de privacidad** (pantalla, modal y `/privacy`) **y el acceso de superadmin.**
+2. **Reporte general:**
+   - tarjeta con "Exportar PDF" rojo y "Actualizar" pizarra, cifras con borde de color y filtros dentro de otra tarjeta;
+   - el estado sale en inglés, tal como viene de la base ("AVAILABLE");
+   - un saldo de $0.00 se pinta en rojo.
 3. **Limpieza:**
-   - 41 clases que no existen en Tailwind v4;
-   - 16 `alert()`;
-   - unas 825 clases `gray-*`.
+   - 114 clases `gray-*` (todas en esas dos pantallas);
+   - 6 clases de Tailwind v3 que en v4 no existen (`flex-shrink-0`), cuatro de ellas en la burbuja de superadmin;
+   - la burbuja de superadmin sigue en pizarra (`slate-*`): es interna, pero desentona.
+
+**Dato, no interfaz:** el Resumen financiero y el Estado de resultados no coinciden en 2025 (balance de −$12.1 M frente a −$10.8 M), porque cada uno calcula distinto.
 
 **Datos que no son de la interfaz:** la imagen guardada del aviso "13va Asamblea General Ordinaria" es un WebP negro de 600 × 776 (894 bytes); el contenido real está en su PDF.

@@ -517,27 +517,30 @@
   scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
 }
 
-/* Estilos del HTML del aviso de privacidad (renderizado, no como texto) */
-.aviso-privacidad-html { color: #374151; line-height: 1.7; }
+/* Aviso de privacidad cuando un proyecto lo guarda como HTML (hoy es texto plano y lo estructura
+   AvisoPrivacidadTexto): mismos tokens y ritmo que el resto del portal. */
+.aviso-privacidad-html { color: var(--color-fg-2); }
+.aviso-privacidad-html > :first-child { margin-top: 0; }
 .aviso-privacidad-html h1,
 .aviso-privacidad-html h2,
 .aviso-privacidad-html h3,
-.aviso-privacidad-html h4 { font-weight: 700; color: #111827; margin: 1.25rem 0 0.5rem; line-height: 1.3; }
-.aviso-privacidad-html h1 { font-size: 1.5rem; }
-.aviso-privacidad-html h2 { font-size: 1.25rem; }
-.aviso-privacidad-html h3 { font-size: 1.125rem; }
-.aviso-privacidad-html p { margin: 0 0 0.85rem; }
+.aviso-privacidad-html h4 { font-weight: 700; color: var(--color-fg); margin: 1.75rem 0 0.5rem; line-height: 1.35; }
+.aviso-privacidad-html h1 { font-size: 1.25rem; }
+.aviso-privacidad-html h2 { font-size: 1.0625rem; }
+.aviso-privacidad-html h3,
+.aviso-privacidad-html h4 { font-size: 0.9375rem; }
+.aviso-privacidad-html p { margin: 0 0 0.625rem; }
 .aviso-privacidad-html ul,
-.aviso-privacidad-html ol { margin: 0 0 0.85rem 1.25rem; padding-left: 1rem; list-style-position: outside; }
+.aviso-privacidad-html ol { margin: 0 0 0.625rem; padding-left: 1.5rem; list-style-position: outside; }
 .aviso-privacidad-html ul { list-style-type: disc; }
 .aviso-privacidad-html ol { list-style-type: decimal; }
 .aviso-privacidad-html li { margin: 0.25rem 0; }
 .aviso-privacidad-html strong,
-.aviso-privacidad-html b { font-weight: 700; color: #111827; }
+.aviso-privacidad-html b { font-weight: 700; color: var(--color-fg); }
 .aviso-privacidad-html em,
 .aviso-privacidad-html i { font-style: italic; }
-.aviso-privacidad-html a { color: #b45309; text-decoration: underline; }
-.aviso-privacidad-html a:hover { color: #92400e; }
-.aviso-privacidad-html table { width: 100%; border-collapse: collapse; margin: 0.85rem 0; }
+.aviso-privacidad-html a { color: var(--color-brand); font-weight: 500; text-decoration: underline; text-underline-offset: 2px; }
+.aviso-privacidad-html a:hover { color: var(--color-brand-hover); }
+.aviso-privacidad-html table { width: 100%; border-collapse: collapse; margin: 0.625rem 0; }
 .aviso-privacidad-html th,
-.aviso-privacidad-html td { border: 1px solid #e5e7eb; padding: 0.5rem 0.75rem; text-align: left; }
+.aviso-privacidad-html td { border: 1px solid var(--color-stroke-2); padding: 0.5rem 0.75rem; text-align: left; }

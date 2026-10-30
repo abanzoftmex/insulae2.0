@@ -54,6 +54,8 @@ export function SuperAdminBubble({
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
   const [impersonating, setImpersonating] = useState(false);
+  // En línea y no con toast: la burbuja también aparece fuera del portal (en el login), sin Toaster.
+  const [impersonateError, setImpersonateError] = useState("");
   const [timeRemaining, setTimeRemaining] = useState("");
   const [showExtend, setShowExtend] = useState(false);
   const [extendPassword, setExtendPassword] = useState("");
@@ -145,6 +147,7 @@ export function SuperAdminBubble({
   // Suplantar usuario
   const handleImpersonate = async (user: BubbleUser) => {
     setImpersonating(true);
+    setImpersonateError("");
     try {
       const data = await impersonateAction(user.id_directorio);
       if (data.success) {
@@ -153,11 +156,11 @@ export function SuperAdminBubble({
         // Navegación completa: el servidor vuelve a leer la cookie del usuario suplantado.
         window.location.href = msPath("/");
       } else {
-        alert(data.message || "Error al suplantar usuario");
+        setImpersonateError(data.message || "No se pudo entrar como ese usuario.");
       }
     } catch (error) {
       console.error("Error suplantando usuario:", error);
-      alert("Error de conexión");
+      setImpersonateError("No hay conexión. Inténtalo otra vez.");
     } finally {
       setImpersonating(false);
     }
@@ -394,6 +397,12 @@ export function SuperAdminBubble({
               />
             </div>
           </div>
+
+          {impersonateError && (
+            <p role="alert" className="mx-3 mb-2 rounded-md bg-critical-bg px-3 py-2 text-xs font-medium text-overdue">
+              {impersonateError}
+            </p>
+          )}
 
           {/* Lista de usuarios */}
           <div className="flex-1 overflow-y-auto max-h-[40vh]">
