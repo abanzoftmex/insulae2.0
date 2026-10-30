@@ -5,7 +5,7 @@ import { MODULES } from "@/shared/application/auth/modules";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
-import { headers } from "next/headers";
+import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { absoluteFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 /**
@@ -267,9 +267,8 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
       `;
     }
 
-    const hostHeader = (await headers()).get("host") || "insulae.sistemasabanza.com";
-    const proto = hostHeader.includes("localhost") ? "http" : "https";
-    const portalUrl = `${proto}://${hostHeader}/gobernanza/convocatorias/${announcementId}`;
+    const origin = await appOrigin();
+    const portalUrl = `${origin}/gobernanza/convocatorias/${announcementId}`;
 
     const emailSubject = `${condominiumName} - ${documentLabelCap}: ${announcementName}`;
 
@@ -311,7 +310,7 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
                     announcement.pdfUrl
                       ? `
                         <div style="margin-top: 20px; text-align: center;">
-                          <a href="${absoluteFileUrl(announcement.pdfUrl, `${proto}://${hostHeader}`)}" target="_blank" style="background-color: #ffffff; border: 1px solid #e8dbcc; color: #6d422a; text-decoration: none; padding: 10px 20px; font-size: 13px; font-weight: bold; border-radius: 9999px; display: inline-block; box-shadow: 0 2px 6px rgba(109, 66, 42, 0.04);">
+                          <a href="${absoluteFileUrl(announcement.pdfUrl, origin)}" target="_blank" style="background-color: #ffffff; border: 1px solid #e8dbcc; color: #6d422a; text-decoration: none; padding: 10px 20px; font-size: 13px; font-weight: bold; border-radius: 9999px; display: inline-block; box-shadow: 0 2px 6px rgba(109, 66, 42, 0.04);">
                             Ver PDF de la ${documentLabel}
                           </a>
                         </div>
@@ -454,9 +453,8 @@ export async function getAnnouncementWhatsAppTextAction(announcementId: string) 
 
     const documentLabel = isReunion ? "Reunión" : "Convocatoria";
 
-    const hostHeader = (await headers()).get("host") || "sassi-v2.vercel.app";
-    const proto = hostHeader.includes("localhost") ? "http" : "https";
-    const portalUrl = `${proto}://${hostHeader}/gobernanza/convocatorias/${announcementId}`;
+    const origin = await appOrigin();
+    const portalUrl = `${origin}/gobernanza/convocatorias/${announcementId}`;
 
     const emojiHouse = String.fromCodePoint(0x1F3E0);
     const emojiCalendar = String.fromCodePoint(0x1F4C5);
@@ -481,7 +479,7 @@ export async function getAnnouncementWhatsAppTextAction(announcementId: string) 
 
     // Los PDF de la app se guardan como /api/archivos/...: en WhatsApp hace falta la URL completa.
     const pdfText = announcement.pdfUrl
-      ? `\n\n${emojiPage} PDF: ${absoluteFileUrl(announcement.pdfUrl, `${proto}://${hostHeader}`)}`
+      ? `\n\n${emojiPage} PDF: ${absoluteFileUrl(announcement.pdfUrl, origin)}`
       : "";
 
     const text =

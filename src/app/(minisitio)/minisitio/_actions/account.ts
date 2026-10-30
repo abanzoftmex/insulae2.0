@@ -10,7 +10,7 @@ import { listNotificaciones } from "@/modules/minisitio/infrastructure/queries/c
 import { getPrivacyNotice } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { getActiveProject } from "@/modules/minisitio/infrastructure/condominium";
 import { MINISITIO_STATEMENT_MAIL_FROM, sendMinisitioEmail } from "@/modules/minisitio/infrastructure/mailer";
-import { requestOrigin } from "@/modules/minisitio/infrastructure/request-origin";
+import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { getObject } from "@/shared/infrastructure/storage/r2";
 import { absoluteFileUrl, isUsableFileUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import type { ActionResult } from "@/modules/minisitio/domain/types";
@@ -114,7 +114,7 @@ const LEGACY_PROJECT_LOGO_BASE = "https://sistemasabanza.com/insulae/imagenes/pr
  * servido por esta misma app.
  */
 async function statementEmailLogoUrl(condominiumId: string): Promise<string> {
-  const origin = await requestOrigin();
+  const origin = await appOrigin();
   const logo = (await getActiveProject(condominiumId))?.condominiumLogoUrl?.trim();
   if (!logo) return `${origin}/valquirico-logo.png`;
   return isUsableFileUrl(logo) ? absoluteFileUrl(logo, origin) : `${LEGACY_PROJECT_LOGO_BASE}${logo}`;

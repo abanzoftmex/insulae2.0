@@ -16,7 +16,20 @@ export const MINISITIO_ROLE = {
 export const MINISITIO_ACCESS_DENIED_MESSAGE =
   "Tu cuenta no tiene acceso al portal de condóminos. Contacta a la administración.";
 
-/** Filtro Prisma que identifica al rol del minisitio dentro de un condominio. */
+/**
+ * Solo el rol "Solo Minisitio", para vincularlo a una cuenta. No usar minisitioRoleWhere para
+ * eso: también abarca Master y Dirección INSULAE, y el login le daba Master (todo el panel) al
+ * propietario que entraba sin el rol, porque Master es el más antiguo.
+ */
+export function minisitioOnlyRoleWhere(condominiumId: string): Prisma.RoleWhereInput {
+  return {
+    condominiumId,
+    isActive: true,
+    OR: [{ legacyIdGral: MINISITIO_ROLE.legacyIdGral }, { name: { equals: MINISITIO_ROLE.name, mode: "insensitive" } }],
+  };
+}
+
+/** Filtro Prisma de los roles que dan acceso al minisitio dentro de un condominio. */
 export function minisitioRoleWhere(condominiumId: string): Prisma.RoleWhereInput {
   return {
     condominiumId,

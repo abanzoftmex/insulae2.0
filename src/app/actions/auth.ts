@@ -12,6 +12,7 @@
 import { cookies } from "next/headers";
 import crypto from "crypto";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { findUserIdsByEmail } from "@/shared/infrastructure/db/user-email-lookup";
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_TTL_SECONDS,
@@ -37,10 +38,13 @@ function hashMD5(text: string): string {
   return crypto.createHash("md5").update(text).digest("hex");
 }
 
-/** Acepta los formatos heredados del legacy (SHA-256 estándar, MD5 y texto plano). */
+/**
+ * Acepta SHA-256 (el estándar) y MD5 (heredado del legacy). Ya no compara en texto plano: con
+ * eso el hash guardado servía como contraseña, y en la base no quedan contraseñas en claro.
+ */
 function passwordMatches(storedHash: string | null, password: string): boolean {
   if (!storedHash) return false;
-  return storedHash === hashSHA256(password) || storedHash === hashMD5(password) || storedHash === password;
+  return storedHash === hashSHA256(password) || storedHash === hashMD5(password);
 }
 
 export async function loginAction(
@@ -56,14 +60,9 @@ export async function loginAction(
 
   try {
     // Un correo puede estar compartido por varias cuentas (dato legacy): desambiguamos por contraseña.
+    const ids = await findUserIdsByEmail(email);
     const candidates = await prisma.user.findMany({
-      where: {
-        OR: [
-          { email: { equals: email, mode: "insensitive" } },
-          { personalEmail: { equals: email, mode: "insensitive" } },
-          { businessEmail: { equals: email, mode: "insensitive" } },
-        ],
-      },
+      where: { id: { in: ids } },
       select: {
         id: true,
         isActive: true,

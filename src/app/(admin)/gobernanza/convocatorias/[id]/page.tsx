@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { absoluteFileUrl, isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
 interface PageProps {
@@ -49,8 +49,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const rawLogo = project?.condominiumLogoUrl?.trim();
     let logoUrl: string | undefined;
     if (rawLogo && isUsableFileUrl(rawLogo)) {
-      const host = (await headers()).get("host");
-      logoUrl = host ? absoluteFileUrl(rawLogo, `${host.includes("localhost") ? "http" : "https"}://${host}`) : rawLogo;
+      logoUrl = absoluteFileUrl(rawLogo, await appOrigin());
     }
 
     return {

@@ -117,8 +117,8 @@ export function ResetPasswordView({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Token expirado</h2>
-          <p className="text-gray-600 mb-6">Este enlace ha expirado por razones de seguridad.</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Enlace no válido</h2>
+          <p className="text-gray-600 mb-6">Este enlace expiró o ya se usó. Por seguridad, cada enlace sirve una sola vez.</p>
           <Link href={msPath("/forgot-password")} className="text-[#cba258] hover:text-[#bca065] font-medium">
             Solicitar nuevo enlace →
           </Link>

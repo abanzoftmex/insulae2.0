@@ -5,11 +5,12 @@
  *   Solo prueba identidad y vigencia (1 día); la autorización (usuario activo y con acceso
  *   al portal) se revalida contra la base en cada página y acción con
  *   requireCondominoSession(), de modo que revocar el acceso surte efecto de inmediato.
- * - Restablecimiento de contraseña: token de propósito acotado que dura 1 hora.
+ * - Restablecimiento de contraseña: token de propósito acotado que dura 1 hora y sirve una
+ *   sola vez (lleva una huella de la contraseña guardada).
  *
  * Web Crypto (signed-token.ts) para que el middleware también pueda verificar la firma.
  */
-import { signToken, verifyToken } from "./signed-token";
+import { hmacDigest, signToken, verifyToken } from "./signed-token";
 
 /** Cookie httpOnly de la sesión del condómino y prefijo del portal (los usa también el middleware). */
 export const CONDOMINO_SESSION_COOKIE = "minisitio_session";
@@ -53,25 +54,48 @@ export async function verifyCondominoToken(token: string | null | undefined): Pr
 
 // ---- Tokens de restablecimiento de contraseña (purpose-scoped, 1h) ----
 
+const RESET_PURPOSE = "reset-2";
+
 export interface ResetTokenPayload {
-  p: "reset";
+  p: typeof RESET_PURPOSE;
   userId: string;
   email: string;
+  pv: string; // huella de la contraseña al emitirlo (ver passwordVersion)
   exp: number;
 }
 
-export async function signResetToken(input: { userId: string; email: string }): Promise<string> {
+/**
+ * Huella de la contraseña guardada (HMAC: no se puede calcular ni revertir sin el secreto). El
+ * token la lleva, así que deja de valer en cuanto la contraseña cambia: sirve una sola vez.
+ */
+async function passwordVersion(passwordHash: string | null): Promise<string> {
+  return (await hmacDigest(getSecret(), `pv:${passwordHash ?? ""}`)).slice(0, 22);
+}
+
+export async function signResetToken(input: { userId: string; email: string; passwordHash: string | null }): Promise<string> {
   const payload: ResetTokenPayload = {
-    p: "reset",
+    p: RESET_PURPOSE,
     userId: input.userId,
     email: input.email,
+    pv: await passwordVersion(input.passwordHash),
     exp: Math.floor(Date.now() / 1000) + RESET_TTL_SECONDS,
   };
   return signToken(payload, getSecret());
 }
 
-export async function verifyResetToken(token: string | null | undefined): Promise<ResetTokenPayload | null> {
+/**
+ * Firma, vigencia y propósito. Falta comprobar con resetTokenIsCurrent que la contraseña no
+ * cambió. Los tokens del formato anterior (sin `pv`, emitidos también por despliegues viejos
+ * y por la API /api/condomino que ya no existe) se rechazan.
+ */
+export async function readResetToken(token: string | null | undefined): Promise<ResetTokenPayload | null> {
   const payload = await verifyToken<ResetTokenPayload>(token, getSecret());
-  if (!payload || payload.p !== "reset" || !payload.userId || !payload.email) return null;
+  if (!payload || payload.p !== RESET_PURPOSE || !payload.userId || !payload.email || typeof payload.pv !== "string") {
+    return null;
+  }
   return payload;
+}
+
+export async function resetTokenIsCurrent(payload: ResetTokenPayload, passwordHash: string | null): Promise<boolean> {
+  return payload.pv === (await passwordVersion(passwordHash));
 }

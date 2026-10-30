@@ -14,7 +14,7 @@ export function ForgotPasswordForm() {
     const email = String(new FormData(e.currentTarget).get("email") || "");
     startTransition(async () => {
       try {
-        const result = await requestPasswordResetAction(email, window.location.origin);
+        const result = await requestPasswordResetAction(email);
         setMessage({ kind: result.success ? "ok" : "error", text: result.message });
       } catch {
         setMessage({ kind: "error", text: "Error de conexión. Inténtalo de nuevo." });

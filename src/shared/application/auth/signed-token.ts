@@ -75,6 +75,11 @@ export async function verifyToken<T extends { exp?: number }>(
   }
 }
 
+/** HMAC-SHA256 de `body` en base64url, para huellas que no deben poder calcularse sin el secreto. */
+export async function hmacDigest(secret: string, body: string): Promise<string> {
+  return toBase64Url(await hmac(secret, body));
+}
+
 /** Comparación de strings en tiempo constante (credenciales leídas de variables de entorno). */
 export function safeEqual(a: string, b: string): boolean {
   return constantTimeEqual(encoder.encode(String(a)), encoder.encode(String(b)));

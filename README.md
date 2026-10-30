@@ -41,6 +41,12 @@ R2_ACCOUNT_ID="..."
 R2_BUCKET="..."
 R2_ACCESS_KEY_ID="..."
 R2_SECRET_ACCESS_KEY="..."
+
+# Opcional: dominio público de los enlaces de correos y WhatsApp (restablecer contraseña,
+# convocatorias). Nunca se toma de la petición. En Vercel sale de sus variables de sistema:
+# el dominio de producción del proyecto, o el de la rama en previews. En local es localhost.
+# Definirlo al agregar un dominio propio, o para abrir los enlaces desde otro equipo o un túnel.
+# APP_BASE_URL="https://insulae.ejemplo.com"
 ```
 
 3. Ejecutar entorno local:

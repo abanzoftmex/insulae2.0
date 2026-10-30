@@ -16,7 +16,7 @@ import {
   resetPassword,
   validateResetToken,
 } from "@/modules/minisitio/application/auth.service";
-import { requestOrigin } from "@/modules/minisitio/infrastructure/request-origin";
+import { appOrigin } from "@/shared/infrastructure/app-origin";
 import type { ActionResult, MinisitioSessionInfo } from "@/modules/minisitio/domain/types";
 
 export async function loginAction(input: { email: string; password: string }): Promise<ActionResult<MinisitioSessionInfo>> {
@@ -40,7 +40,7 @@ export async function logoutAction(): Promise<{ success: true }> {
 export async function forgotPasswordAction(email: string): Promise<ActionResult> {
   if (!(email || "").trim()) return { success: false, message: "Email es requerido" };
   try {
-    await requestPasswordReset(email, await requestOrigin());
+    await requestPasswordReset(email, await appOrigin());
     // Nunca revelar si el correo existe.
     return { success: true, message: FORGOT_PASSWORD_GENERIC_MESSAGE };
   } catch (error) {

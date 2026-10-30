@@ -65,13 +65,15 @@ export default async function ParticiparAsambleaPage({ params }: PageProps) {
   
   const matchedAssignments = userAssignments.filter(ua => invitedPositionIds.includes(ua.positionId));
 
-  const matchedGuests = await prisma.specialGuest.findMany({
-    where: {
-      announcementId: id,
-      email: { equals: session.email, mode: "insensitive" },
-      isActive: true
-    }
-  });
+  // Correo exacto salvo mayúsculas (`equals` con `mode: "insensitive"` es ILIKE: `_` y `%` serían
+  // comodines). Esto solo decide qué ofrece la pantalla: registerVoteAction y
+  // toggleAttendanceAction todavía aceptan cualquier clave (falta validarlo en el servidor).
+  const sessionEmail = (session.email ?? "").trim().toLowerCase();
+  const matchedGuests = sessionEmail
+    ? (await prisma.specialGuest.findMany({ where: { announcementId: id, isActive: true } })).filter(
+        (guest) => guest.email?.trim().toLowerCase() === sessionEmail,
+      )
+    : [];
 
   // Build represented keys array
   const representedKeys: { key: string; name: string; type: "POSITION" | "GUEST" }[] = [];

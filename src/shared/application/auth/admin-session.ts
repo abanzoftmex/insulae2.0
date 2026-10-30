@@ -33,9 +33,12 @@ export interface AdminSession {
   exp: number; // unix seconds
 }
 
+const ADMIN_RESET_PURPOSE = "admin-reset-2";
+
 export interface AdminResetToken {
-  p: "admin-reset";
+  p: typeof ADMIN_RESET_PURPOSE;
   userId: string;
+  pv: string; // huella de la contraseña al emitirlo (ver passwordVersion)
   exp: number;
 }
 
@@ -122,24 +125,47 @@ export async function signAdminSession(input: { userId: string; email: string | 
 }
 
 export async function verifyAdminSession(token: string | null | undefined): Promise<AdminSession | null> {
-  const payload = await verifyPayload<AdminSession>(token);
-  if (!payload || typeof payload.userId !== "string" || !payload.userId) return null;
+  const payload = await verifyPayload<AdminSession & { p?: unknown; condominiumId?: unknown }>(token);
+  // Un token con propósito no es una sesión: antes un enlace de restablecimiento servía como
+  // cookie. Tampoco una sesión del minisitio (lleva condominiumId), por si los secretos coincidieran.
+  if (!payload || payload.p !== undefined || payload.condominiumId !== undefined) return null;
+  if (typeof payload.userId !== "string" || !payload.userId) return null;
   return payload;
 }
 
-// ---- token de restablecimiento de contraseña (1 h, propósito acotado) ----
+// ---- token de restablecimiento de contraseña (1 h, propósito acotado, un solo uso) ----
 
-export async function signAdminResetToken(userId: string): Promise<string> {
+/**
+ * Huella de la contraseña guardada (HMAC: no se puede calcular ni revertir sin el secreto). El
+ * token la lleva, así que deja de valer en cuanto la contraseña cambia: sirve una sola vez.
+ */
+async function passwordVersion(passwordHash: string | null): Promise<string> {
+  return toBase64Url(await hmac(`pv:${passwordHash ?? ""}`)).slice(0, 22);
+}
+
+export async function signAdminResetToken(userId: string, passwordHash: string | null): Promise<string> {
   const payload: AdminResetToken = {
-    p: "admin-reset",
+    p: ADMIN_RESET_PURPOSE,
     userId,
+    pv: await passwordVersion(passwordHash),
     exp: Math.floor(Date.now() / 1000) + ADMIN_RESET_TTL_SECONDS,
   };
   return signPayload(payload);
 }
 
-export async function verifyAdminResetToken(token: string | null | undefined): Promise<AdminResetToken | null> {
+/**
+ * Firma, vigencia y propósito. Falta comprobar con adminResetTokenIsCurrent que la contraseña
+ * no cambió. Los tokens del formato anterior (sin `pv`, emitidos también por despliegues
+ * viejos) se rechazan.
+ */
+export async function readAdminResetToken(token: string | null | undefined): Promise<AdminResetToken | null> {
   const payload = await verifyPayload<AdminResetToken>(token);
-  if (!payload || payload.p !== "admin-reset" || typeof payload.userId !== "string") return null;
+  if (!payload || payload.p !== ADMIN_RESET_PURPOSE || typeof payload.userId !== "string" || typeof payload.pv !== "string") {
+    return null;
+  }
   return payload;
+}
+
+export async function adminResetTokenIsCurrent(payload: AdminResetToken, passwordHash: string | null): Promise<boolean> {
+  return payload.pv === (await passwordVersion(passwordHash));
 }

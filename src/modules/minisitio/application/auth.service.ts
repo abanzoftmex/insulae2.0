@@ -9,8 +9,18 @@
  */
 import crypto from "crypto";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { MINISITIO_ACCESS_DENIED_MESSAGE, minisitioRoleWhere } from "@/shared/application/auth/condomino-access";
-import { signResetToken, verifyResetToken, type CondominoTokenPayload } from "@/shared/application/auth/condomino-token";
+import {
+  MINISITIO_ACCESS_DENIED_MESSAGE,
+  minisitioOnlyRoleWhere,
+  minisitioRoleWhere,
+} from "@/shared/application/auth/condomino-access";
+import {
+  readResetToken,
+  resetTokenIsCurrent,
+  signResetToken,
+  type CondominoTokenPayload,
+} from "@/shared/application/auth/condomino-token";
+import { findUserIdsByEmail, storedEmailMatching } from "@/shared/infrastructure/db/user-email-lookup";
 import { getMinisitioCondominium } from "../infrastructure/condominium";
 import { MINISITIO_MAIL_FROM, sendMinisitioEmail } from "../infrastructure/mailer";
 import type { MinisitioSessionInfo, MinisitioUserType, UserIndicators } from "../domain/types";
@@ -79,15 +89,9 @@ export async function authenticateCondomino(
   const password = (passwordInput || "").trim();
   if (!email || !password) return { ok: false, message: "Ingresa tu correo y contraseña." };
 
+  const ids = await findUserIdsByEmail(email);
   const candidates = await prisma.user.findMany({
-    where: {
-      condominiumId: condo.id,
-      OR: [
-        { email: { equals: email, mode: "insensitive" } },
-        { personalEmail: { equals: email, mode: "insensitive" } },
-        { businessEmail: { equals: email, mode: "insensitive" } },
-      ],
-    },
+    where: { condominiumId: condo.id, id: { in: ids } },
     select: {
       id: true,
       isActive: true,
@@ -110,8 +114,8 @@ export async function authenticateCondomino(
   const activos = candidates.filter((u) => u.isActive);
   if (activos.length === 0) return { ok: false, message: "Tu cuenta está inactiva. Contacta al administrador." };
 
-  const matchPassword = (h: string | null) =>
-    !!h && (h === password || h === hashSHA256(password) || h === hashMD5(password));
+  // SHA-256 o MD5 heredado. Sin comparar en texto plano: el hash guardado servía como contraseña.
+  const matchPassword = (h: string | null) => !!h && (h === hashSHA256(password) || h === hashMD5(password));
 
   const matched = activos.filter((u) => matchPassword(u.passwordHash));
   if (matched.length === 0) {
@@ -135,11 +139,12 @@ export async function authenticateCondomino(
   }
   if (!user) return { ok: false, message: MINISITIO_ACCESS_DENIED_MESSAGE };
 
-  // Auto-sanación: acceso legítimo sin la fila en UserRole → se vincula el rol del minisitio.
+  // Auto-sanación: acceso legítimo sin la fila en UserRole → se vincula "Solo Minisitio" (nunca
+  // el filtro amplio, que incluye Master).
   if (user.userRoles.length === 0) {
     try {
       const minisitioRole = await prisma.role.findFirst({
-        where: minisitioRoleWhere(condo.id),
+        where: minisitioOnlyRoleWhere(condo.id),
         orderBy: { createdAt: "asc" },
       });
       if (minisitioRole) {
@@ -208,9 +213,12 @@ export async function getImpersonationTarget(
 export const FORGOT_PASSWORD_GENERIC_MESSAGE =
   "Se ha enviado un enlace a tu correo electrónico para cambiar tu contraseña. Revisa tu bandeja de entrada y sigue las instrucciones.";
 
+const INVALID_RESET_LINK = "El enlace es inválido, expiró o ya se usó. Solicita uno nuevo.";
+
 /**
- * Si existe un usuario activo con ese correo y con el rol del minisitio, le envía el enlace
- * de restablecimiento (1 h). Nunca revela si el correo existe.
+ * Si existe un usuario activo con ese correo exacto y con el rol del minisitio, le envía el
+ * enlace de restablecimiento (1 h, un solo uso) a la dirección guardada que coincidió, no a la
+ * tecleada. Nunca revela si el correo existe.
  */
 export async function requestPasswordReset(emailInput: string, origin: string): Promise<void> {
   const email = (emailInput || "").trim();
@@ -219,29 +227,28 @@ export async function requestPasswordReset(emailInput: string, origin: string): 
   const condominium = await getMinisitioCondominium();
   if (!condominium) return;
 
+  const ids = await findUserIdsByEmail(email);
+  if (ids.length === 0) return;
   const user = await prisma.user.findFirst({
     where: {
+      id: { in: ids },
       condominiumId: condominium.id,
       isActive: true,
       userRoles: { some: { role: minisitioRoleWhere(condominium.id) } },
-      OR: [
-        { email: { equals: email, mode: "insensitive" } },
-        { personalEmail: { equals: email, mode: "insensitive" } },
-        { businessEmail: { equals: email, mode: "insensitive" } },
-      ],
     },
-    select: { id: true, email: true, personalEmail: true, businessEmail: true },
+    select: { id: true, email: true, personalEmail: true, businessEmail: true, passwordHash: true },
   });
-  if (!user) return;
+  const to = user && storedEmailMatching(user, email);
+  if (!user || !to) return;
 
-  const loginEmail = user.email || user.personalEmail || user.businessEmail || email;
-  const token = await signResetToken({ userId: user.id, email: loginEmail });
+  const loginEmail = user.email || user.personalEmail || user.businessEmail || to;
+  const token = await signResetToken({ userId: user.id, email: loginEmail, passwordHash: user.passwordHash });
   const resetLink = `${origin}/minisitio/reset-password?token=${encodeURIComponent(token)}`;
 
   try {
     await sendMinisitioEmail({
       from: MINISITIO_MAIL_FROM,
-      to: [email],
+      to: [to],
       subject: "Restablecer tu contraseña - Val'Quirico",
       html: resetEmailHtml(resetLink),
     });
@@ -252,22 +259,33 @@ export async function requestPasswordReset(emailInput: string, origin: string): 
 }
 
 export async function validateResetToken(token: string): Promise<{ valid: true; email: string } | { valid: false; message: string }> {
-  const payload = await verifyResetToken(token);
-  if (!payload) return { valid: false, message: "El enlace es inválido o expiró. Solicita uno nuevo." };
+  const payload = await readResetToken(token);
+  if (!payload) return { valid: false, message: INVALID_RESET_LINK };
+  const user = await prisma.user.findUnique({ where: { id: payload.userId }, select: { passwordHash: true } });
+  if (!user || !(await resetTokenIsCurrent(payload, user.passwordHash))) return { valid: false, message: INVALID_RESET_LINK };
   return { valid: true, email: payload.email };
 }
 
 export async function resetPassword(token: string, newPasswordInput: string): Promise<{ ok: true; message: string } | AuthFailure> {
-  const payload = await verifyResetToken(token);
-  if (!payload) return { ok: false, message: "El enlace es inválido o expiró. Solicita uno nuevo." };
+  const payload = await readResetToken(token);
+  if (!payload) return { ok: false, message: INVALID_RESET_LINK };
 
   const newPassword = (newPasswordInput || "").trim();
   if (newPassword.length < 8) return { ok: false, message: "La contraseña debe tener al menos 8 caracteres" };
 
-  const user = await prisma.user.findUnique({ where: { id: payload.userId }, select: { id: true } });
+  const user = await prisma.user.findUnique({ where: { id: payload.userId }, select: { id: true, passwordHash: true } });
   if (!user) return { ok: false, message: "Usuario no encontrado" };
+  if (!(await resetTokenIsCurrent(payload, user.passwordHash))) return { ok: false, message: INVALID_RESET_LINK };
 
-  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: hashSHA256(newPassword) } });
+  const newHash = hashSHA256(newPassword);
+  // Misma contraseña = misma huella: el enlace seguiría sirviendo. Se exige una distinta.
+  if (newHash === user.passwordHash) return { ok: false, message: "La nueva contraseña debe ser distinta de la actual" };
+  // Condicionado a la contraseña leída: si otro uso del mismo enlace ganó la carrera, no se aplica.
+  const { count } = await prisma.user.updateMany({
+    where: { id: user.id, passwordHash: user.passwordHash },
+    data: { passwordHash: newHash },
+  });
+  if (count === 0) return { ok: false, message: INVALID_RESET_LINK };
   return { ok: true, message: "Contraseña actualizada exitosamente" };
 }
 

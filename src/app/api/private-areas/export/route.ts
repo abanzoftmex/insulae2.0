@@ -5,10 +5,16 @@ import * as XLSX from "xlsx";
 
 import { PrismaPrivateAreaListingRepository } from "@/modules/private-areas/infrastructure/prisma-private-area-listing.repository";
 import { toPrivateAreaListingVM } from "@/modules/private-areas/presentation/private-area-listing.vm";
+import { apiAccessDenied } from "@/shared/application/auth/guards";
+import { MODULES } from "@/shared/application/auth/modules";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  // El middleware no cubre /api: sin esto, cualquiera descargaba saldos y contactos de todas las áreas.
+  const denied = await apiAccessDenied(MODULES.AREAS_PRIVATIVAS);
+  if (denied) return denied;
+
   try {
     const condominium = await prisma.condominium.findFirst({
       where: { slug: PROJECT_SCOPE.condominiumCode, isActive: true },
