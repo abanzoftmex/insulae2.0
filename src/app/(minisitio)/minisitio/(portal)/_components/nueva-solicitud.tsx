@@ -21,16 +21,19 @@ export function NuevaSolicitud({
   onClose,
   departments,
   onCreated,
+  defaultAsunto = "",
 }: {
   open: boolean;
   onClose: () => void;
   departments: TicketDepartment[];
   /** Después de crearla (la pantalla ya se está refrescando). */
   onCreated?: (id: string | null) => void;
+  /** Asunto con el que abre (p. ej. "Duda sobre el estado de cuenta de VQ#074"). */
+  defaultAsunto?: string;
 }) {
   const router = useRouter();
   const formId = useId();
-  const [form, setForm] = useState(FORM_VACIO);
+  const [form, setForm] = useState({ ...FORM_VACIO, nombre: defaultAsunto });
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
 

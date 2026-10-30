@@ -236,6 +236,17 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), quinta vuelta:**
+- **Estado de cuenta de propiedad:**
+  - arriba, la unidad y sus acciones: PDF, correo y "¿Algo no cuadra?", que abre una solicitud con el asunto escrito;
+  - un resumen con la cuenta completa (cargos + intereses − pagos − descuentos = saldo);
+  - los movimientos, pendientes o todos, con estado (vencido, por vencer o pagado) según la misma regla del saldo;
+  - los últimos pagos.
+  - Fechas como "7 ene 2023" y una sola columna de fecha: las dos que había eran el mismo dato, y "Pagado el" siempre estaba vacío.
+- **Piezas compartidas para comercios:** `_components/estado-cuenta/statement-parts.tsx`.
+- **Corrección de datos:** los estados de cuenta, y por tanto sus PDF y correos, mostraban los cargos **cancelados** (3,814 de propiedades y 2,743 de comercios) como "Pendiente" con saldo, aunque los totales no los contaban. Ahora se excluyen en la consulta, como en la 1.0.
+- **Enviar por correo:** el diálogo compartido, con los errores dentro y un toast al enviar, en vez de cuatro `alert()`.
+
 **Hecho (2026-10-29), cuarta vuelta:**
 - **Mis propiedades** y **Mis comercios** con el lenguaje de Mis saldos:
   - resumen de cifras (`StatStrip`) y buscador (`SearchField`) compartidos;
@@ -281,7 +292,7 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
-1. **Estados de cuenta y detalle de propiedad / comercio** con el lenguaje de dinero de Mis saldos. Además:
+1. **Estado de cuenta de comercio** (pestaña de reglamentos incluida) **y detalle de propiedad / comercio** con las piezas del de propiedad. Además:
    - "Saldo pendiente" muestra el vencido;
    - las columnas "N/A" y "Sin estado".
 2. **Teléfonos de emergencia** con `tel:`, WhatsApp (`wa.me`), `mailto:` y mapa.

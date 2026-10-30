@@ -6,7 +6,8 @@ import { getActiveProject, toIso } from "../condominium";
 import { computeBalance, getCondominoScope, num, round2 } from "../scope";
 
 function mapPagoStatus(status: string): number {
-  // legacy id_cat_status_pago: 2 = pagado/cancelado-excluido; 1 = pendiente
+  // legacy id_cat_status_pago: 2 = pagado; 1 = pendiente. Los cancelados no llegan aquí: se excluyen
+  // en la consulta, como en la 1.0 (antes se listaban como pendientes aunque el saldo no los cuenta).
   return status === "PAID" ? 2 : 1;
 }
 
@@ -21,7 +22,7 @@ export async function getPropertyAccountStatement(session: CondominoTokenPayload
       select: { id: true, code: true, name: true, zone: true, m2Original: true, m2Construction: true, indiviso: true },
     }),
     prisma.charge.findMany({
-      where: { privateAreaId: id, responsibility: "OWNER" },
+      where: { privateAreaId: id, responsibility: "OWNER", status: { not: "CANCELED" } },
       orderBy: [{ periodYear: "asc" }, { periodMonth: "asc" }],
       select: {
         amount: true,
@@ -91,6 +92,7 @@ export async function getPropertyAccountStatement(session: CondominoTokenPayload
       descuentos: bal.descuentos,
       saldoPendiente: bal.saldo_pendiente,
       saldoAFavor: bal.saldo_a_favor,
+      saldoVencido: bal.saldo_vencido,
       movimientos,
       historialPagos,
     },
@@ -131,7 +133,7 @@ export async function getRentalAccountStatement(session: CondominoTokenPayload, 
         },
       },
       charges: {
-        where: { responsibility: "COMMERCE" },
+        where: { responsibility: "COMMERCE", status: { not: "CANCELED" } },
         orderBy: [{ periodYear: "asc" }, { periodMonth: "asc" }],
         select: {
           amount: true,
