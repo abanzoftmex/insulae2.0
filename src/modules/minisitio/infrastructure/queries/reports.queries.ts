@@ -39,14 +39,20 @@ export interface FeesReportArea {
 /**
  * Reporte de cuotas por área privativa (todo el condominio), paginado. Los años de las
  * columnas salen de los CARGOS reales (crece solo cuando llega data nueva, p.ej. 2027).
+ * `q` filtra por nombre o clave del área antes de paginar (sin comodines: se quitan % y _).
  */
 export async function getFeesReport(
   session: CondominoTokenPayload,
-  options: { tipo?: FeesReportType; page?: number; limit?: number } = {},
+  options: { tipo?: FeesReportType; page?: number; limit?: number; q?: string } = {},
 ) {
   const tipo: FeesReportType = options.tipo === "extraordinaria" ? "extraordinaria" : "ordinaria";
   const page = Math.max(1, Math.floor(options.page || 1));
   const limit = Math.min(50, Math.max(1, Math.floor(options.limit || 10)));
+  const q = (options.q ?? "").replace(/[%_\\]/g, "").trim().slice(0, 60);
+  const condominio = { condominiumId: session.condominiumId };
+  const whereAreas = q
+    ? { ...condominio, OR: [{ name: { contains: q, mode: "insensitive" as const } }, { code: { contains: q, mode: "insensitive" as const } }] }
+    : condominio;
 
   // Catálogo de grupos de cobro del tipo solicitado
   const allGroups = await prisma.chargeGroup.findMany({
@@ -76,10 +82,11 @@ export async function getFeesReport(
     if (sane.length > 0) anios = sane.slice(-MAX_YEARS);
   }
 
-  const [total, areas] = await Promise.all([
-    prisma.privateArea.count({ where: { condominiumId: session.condominiumId } }),
+  const [total, totalUnidades, areas] = await Promise.all([
+    prisma.privateArea.count({ where: whereAreas }),
+    q ? prisma.privateArea.count({ where: condominio }) : null,
     prisma.privateArea.findMany({
-      where: { condominiumId: session.condominiumId },
+      where: whereAreas,
       select: {
         id: true,
         name: true,
@@ -185,7 +192,9 @@ export async function getFeesReport(
     page,
     limit,
     total,
-    totalUnidades: total,
+    /** Todas las áreas del condominio; `total` es lo que coincide con la búsqueda. */
+    totalUnidades: totalUnidades ?? total,
+    busqueda: q,
     ultimaActualizacionTexto: "Actualizado al día de hoy",
     apoles,
     gruposCobro,

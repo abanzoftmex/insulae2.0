@@ -18,7 +18,7 @@ async function requirePropietarioSession() {
   return session;
 }
 
-export async function getFeesReportAction(input: { tipo: FeesReportType; page?: number; limit?: number }) {
+export async function getFeesReportAction(input: { tipo: FeesReportType; page?: number; limit?: number; q?: string }) {
   const session = await requirePropietarioSession();
   return getFeesReport(session, input);
 }

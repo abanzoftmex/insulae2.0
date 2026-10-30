@@ -253,6 +253,14 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), decimoctava vuelta:**
+- **Buscador en los reportes de cuotas:**
+  - busca por nombre o clave del área en el servidor, antes de paginar, 300 ms después de dejar de escribir; se quitan `%` y `_` para que no funcionen como comodines;
+  - la cuenta dice "13 de 1,745 áreas" y, sin coincidencias, "Ninguna área coincide con «…»";
+  - las páginas siguientes conservan la búsqueda.
+  - Antes, para encontrar un área había que recorrer hasta 59 páginas.
+- **Dato que no es de la interfaz:** hay claves de área repetidas en la base (p. ej. dos "VQ#014-020", una con comercio y otra sin él).
+
 **Hecho (2026-10-29), decimoséptima vuelta:**
 - **Burbuja de superadmin:** con la paleta del portal; antes eran pizarra y verde/ámbar/rojo de Tailwind.
   - Disparador y encabezado en olivo de noche.
@@ -455,8 +463,7 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Etiquetas:** unificadas ("Mis saldos", "Avisos", "Solicitudes"…).
 - **Solicitudes:** acepta `?nueva=1`.
 
-**Pendiente**, en orden:
-1. **Reportes de cuotas:** buscar un área exige paginar (1,745 áreas en orden de catálogo). Un buscador en el servidor (por nombre o clave) haría el reporte manejable.
+**Pendiente:** nada de lo planeado para la interfaz. Siguen abiertas las decisiones de datos y acceso de abajo.
 
 **Dato, no interfaz (decisión del usuario):** el Resumen financiero del portal no reparte igual que el panel de administración (`modules/financial-summary`), y por eso su balance ordinario 2025 (−$12.1 M) no coincide con el del Estado de resultados (−$10.8 M):
 - **egresos:** el portal resta *todos* los egresos en el balance ordinario, incluidos los "Gastos extraordinarios" ($9.7 M en 2025), y deja sin egresos el balance extraordinario. El panel aparta los de la categoría "Gastos extraordinarios" (`resolveBudgetGroup` + `CATEGORY_MAP`);

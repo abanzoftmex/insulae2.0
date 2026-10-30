@@ -4,7 +4,8 @@
  * Reporte de cuotas por área, ordinarias o extraordinarias (solo propietarios). Una fila por área
  * con su cuota mensual vigente, lo vencido, lo pendiente y lo que se cargó cada mes del año
  * elegido. En las áreas con comercio, cada celda trae una segunda línea con la parte del comercio
- * (C). Paginado en el servidor; la página siguiente llega con la tabla atenuada.
+ * (C). Paginado en el servidor; la página siguiente llega con la tabla atenuada. El buscador
+ * (nombre o clave del área) también consulta al servidor, 300 ms después de dejar de escribir.
  *
  * Antes eran dos pantallas casi iguales con tarjetas con íconos, una leyenda de cinco píldoras,
  * encabezados en MAYÚSCULAS, 36 columnas de meses (tres años), un tríptico por año que repetía la
@@ -12,11 +13,12 @@
  * "Pago anticipado" también en cero, y colores de mora calculados con la fecha del último cargo
  * (no indicaban mora).
  */
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useEffectEvent, useRef, useState, useTransition } from "react";
 import type { FeesReport, FeesReportArea, FeesReportType } from "@/modules/minisitio/infrastructure/queries/reports.queries";
 import { fieldBaseClass } from "@/components/minisitio/ui/field";
 import { LoadError } from "@/components/minisitio/ui/load-error";
 import { Paginator } from "@/components/minisitio/ui/paginator";
+import { SearchField } from "@/components/minisitio/ui/search-field";
 import { toast } from "@/stores/minisitio-toast.store";
 import { getFeesReportAction } from "../../_actions/reports";
 import { CELDA, FilaLibre, Importe, TablaMensual, claseDeColumna, columnasDeMeses, useColumnas, type Columna, type Estilo } from "./tabla-mensual";
@@ -92,20 +94,18 @@ export function ReporteCuotas({
   const [pagina, setPagina] = useState(1);
   const [limite, setLimite] = useState(limiteInicial);
   const [anioElegido, setAnioElegido] = useState<number | null>(null);
+  const [busqueda, setBusqueda] = useState("");
   const [pendiente, startTransition] = useTransition();
   const tablaRef = useRef<HTMLDivElement>(null);
+  /** La búsqueda de la última consulta: las páginas siguientes la conservan. */
+  const consultaRef = useRef("");
 
-  if (!datos) return <LoadError what="el reporte de cuotas" />;
-
-  const anios = datos.anios.length ? datos.anios : [anioEnCurso];
-  const anio = anioElegido && anios.includes(anioElegido) ? anioElegido : anios.includes(anioEnCurso) ? anioEnCurso : anios[anios.length - 1];
-  const totalPaginas = Math.max(1, Math.ceil(datos.total / limite));
-
-  const cargar = (nuevaPagina: number, nuevoLimite: number) => {
-    tablaRef.current?.scrollIntoView({ block: "start" });
+  const cargar = (nuevaPagina: number, nuevoLimite: number, consulta = consultaRef.current) => {
+    consultaRef.current = consulta;
+    tablaRef.current?.scrollIntoView({ block: "nearest" });
     startTransition(async () => {
       try {
-        const resultado = await getFeesReportAction({ tipo, page: nuevaPagina, limit: nuevoLimite });
+        const resultado = await getFeesReportAction({ tipo, page: nuevaPagina, limit: nuevoLimite, q: consulta });
         startTransition(() => {
           setDatos(resultado);
           setPagina(nuevaPagina);
@@ -113,10 +113,25 @@ export function ReporteCuotas({
         });
       } catch (error) {
         console.error("[minisitio] reporte de cuotas:", error);
-        toast("No se pudo cargar esa página. Inténtalo otra vez.", "error");
+        toast("No se pudo cargar el reporte. Inténtalo otra vez.", "error");
       }
     });
   };
+
+  // Busca 300 ms después de dejar de escribir, desde la primera página.
+  const buscar = useEffectEvent((consulta: string) => cargar(1, limite, consulta));
+  useEffect(() => {
+    const consulta = busqueda.trim();
+    if (consulta === consultaRef.current) return;
+    const espera = setTimeout(() => buscar(consulta), 300);
+    return () => clearTimeout(espera);
+  }, [busqueda]);
+
+  if (!datos) return <LoadError what="el reporte de cuotas" />;
+
+  const anios = datos.anios.length ? datos.anios : [anioEnCurso];
+  const anio = anioElegido && anios.includes(anioElegido) ? anioElegido : anios.includes(anioEnCurso) ? anioEnCurso : anios[anios.length - 1];
+  const totalPaginas = Math.max(1, Math.ceil(datos.total / limite));
 
   const filas = datos.apoles.map((area) => ({ area, valores: valoresDe(area, anio) }));
   const paginaConComercio = datos.apoles.some((a) => a.tieneArrendamiento);
@@ -132,9 +147,12 @@ export function ReporteCuotas({
     <div className="space-y-4">
       <div ref={tablaRef} className="flex scroll-mt-16 flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-stroke-3 pb-3 lg:scroll-mt-14">
         <p className="text-body text-fg-3">
-          {numero.format(datos.total)} áreas · Cuotas {tipo === "ordinaria" ? "ordinarias" : "extraordinarias"} · Montos en pesos
+          {datos.busqueda ? `${numero.format(datos.total)} de ${numero.format(datos.totalUnidades)}` : numero.format(datos.total)} áreas · Cuotas{" "}
+          {tipo === "ordinaria" ? "ordinarias" : "extraordinarias"} · Montos en pesos
         </p>
-        <div className="flex items-center gap-3">
+        <YearButtons years={anios} value={anio} onChange={setAnioElegido} />
+        <div className="flex w-full flex-wrap items-center justify-between gap-2">
+          <SearchField value={busqueda} onChange={setBusqueda} label="Buscar área" placeholder="Buscar área por nombre o clave" className="w-full sm:w-auto sm:min-w-0 sm:max-w-sm sm:flex-1" />
           <label htmlFor={`rc-${tipo}-limite`} className="sr-only">
             Áreas por página
           </label>
@@ -151,41 +169,44 @@ export function ReporteCuotas({
               </option>
             ))}
           </select>
-          <YearButtons years={anios} value={anio} onChange={setAnioElegido} />
         </div>
       </div>
 
-      <TablaMensual
-        etiqueta="Área"
-        columnas={columnas}
-        grupos={[
-          { titulo: "Cuenta", columnas: 3 },
-          { titulo: `Cargos de ${anio}`, columnas: 12 },
-        ]}
-        descripcion={`Cuotas ${tipo === "ordinaria" ? "ordinarias" : "extraordinarias"} por área, página ${pagina} de ${totalPaginas}`}
-        region="Cuotas por área y por mes"
-        pendiente={pendiente}
-      >
-        <tbody>
-          {filas.map(({ area, valores }) => {
-            const detalle = [area.id_cat_status !== 1 && area.status?.nombre, area.tieneArrendamiento && "Con comercio"].filter(Boolean).join(" · ");
-            return (
-              <FilaPC
-                key={area.id}
-                etiqueta={
-                  <>
-                    <span className="block">{area.nombre}</span>
-                    {detalle && <span className="block text-caption text-fg-3">{detalle}</span>}
-                  </>
-                }
-                valores={valores}
-                conComercio={area.tieneArrendamiento}
-              />
-            );
-          })}
-          <FilaPC estilo="total" etiqueta="Total de esta página" valores={totales} conComercio={paginaConComercio} />
-        </tbody>
-      </TablaMensual>
+      {datos.apoles.length === 0 ? (
+        <p className="py-12 text-center text-body text-fg-2">Ninguna área coincide con «{datos.busqueda}».</p>
+      ) : (
+        <TablaMensual
+          etiqueta="Área"
+          columnas={columnas}
+          grupos={[
+            { titulo: "Cuenta", columnas: 3 },
+            { titulo: `Cargos de ${anio}`, columnas: 12 },
+          ]}
+          descripcion={`Cuotas ${tipo === "ordinaria" ? "ordinarias" : "extraordinarias"} por área, página ${pagina} de ${totalPaginas}`}
+          region="Cuotas por área y por mes"
+          pendiente={pendiente}
+        >
+          <tbody>
+            {filas.map(({ area, valores }) => {
+              const detalle = [area.id_cat_status !== 1 && area.status?.nombre, area.tieneArrendamiento && "Con comercio"].filter(Boolean).join(" · ");
+              return (
+                <FilaPC
+                  key={area.id}
+                  etiqueta={
+                    <>
+                      <span className="block">{area.nombre}</span>
+                      {detalle && <span className="block text-caption text-fg-3">{detalle}</span>}
+                    </>
+                  }
+                  valores={valores}
+                  conComercio={area.tieneArrendamiento}
+                />
+              );
+            })}
+            <FilaPC estilo="total" etiqueta="Total de esta página" valores={totales} conComercio={paginaConComercio} />
+          </tbody>
+        </TablaMensual>
+      )}
 
       <Paginator page={pagina} totalPages={totalPaginas} totalRows={datos.total} onPageChange={(p) => cargar(p, limite)} isPending={pendiente} rowsLabel="áreas" />
 
