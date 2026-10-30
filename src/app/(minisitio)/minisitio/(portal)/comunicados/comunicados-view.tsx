@@ -8,13 +8,12 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
 import type { Comunicado } from "@/modules/minisitio/infrastructure/queries/communications.queries";
-import { SPRING } from "@/components/minisitio/motion";
 import { useMinisitioSession } from "@/components/minisitio/session-provider";
 import { buttonClass } from "@/components/minisitio/ui/button";
 import { ImageViewer, type ViewerImage } from "@/components/minisitio/ui/image-viewer";
 import { LoadError } from "@/components/minisitio/ui/load-error";
+import { UnderlineTabs } from "@/components/minisitio/ui/tabs";
 import { esAvisoNuevo, useMinisitioNavStore } from "@/stores/minisitio-nav.store";
 import { AdminAvatar, AvisoImagen, AvisoPdf } from "../_avisos/aviso-parts";
 import { isPastCalendarDay, useDisplayTimeZone } from "../_lib/client-dates";
@@ -89,14 +88,17 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] | n
 
   return (
     <div className="mx-auto w-full max-w-[880px]">
-      <div role="tablist" aria-label="Mostrar avisos" className="mb-1 flex gap-5 border-b border-stroke-3">
-        <Tab active={filtro === "todos"} onClick={() => setFiltro("todos")} count={avisos.length}>
-          Todos
-        </Tab>
-        <Tab active={filtro === "vigentes"} onClick={() => setFiltro("vigentes")} count={vigentes.length}>
-          Vigentes
-        </Tab>
-      </div>
+      <UnderlineTabs
+        label="Mostrar avisos"
+        value={filtro}
+        onChange={setFiltro}
+        layoutId="avisos-tab"
+        className="mb-1 border-b border-stroke-3"
+        options={[
+          { id: "todos", label: "Todos", count: avisos.length },
+          { id: "vigentes", label: "Vigentes", count: vigentes.length },
+        ]}
+      />
 
       <div role="tabpanel" aria-label={filtro === "todos" ? "Todos los avisos" : "Avisos vigentes"}>
         {comunicados === null ? (
@@ -144,24 +146,6 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] | n
       {comunicados !== null && filtro === "todos" && <InicioDelCanal />}
       <ImageViewer image={imagen} onClose={() => setImagen(null)} />
     </div>
-  );
-}
-
-function Tab({ active, onClick, count, children }: { active: boolean; onClick: () => void; count: number; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={`relative flex h-10 items-center gap-1.5 text-body font-semibold outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-        active ? "text-fg" : "text-fg-3 hover:text-fg"
-      }`}
-    >
-      {children}
-      <span className="text-caption font-medium text-fg-3 tabular-nums">{count}</span>
-      {active && <motion.span layoutId="avisos-tab" aria-hidden className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand" transition={SPRING.indicator} />}
-    </button>
   );
 }
 

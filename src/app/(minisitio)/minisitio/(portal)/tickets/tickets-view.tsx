@@ -11,11 +11,9 @@
  */
 import { useEffect, useId, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Plus, Send } from "lucide-react";
 import { replyTicketAction } from "@/app/(minisitio)/minisitio/_actions/tickets";
 import type { Ticket, TicketDepartment } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
-import { SPRING } from "@/components/minisitio/motion";
 import { msPath } from "@/components/minisitio/paths";
 import { useMinisitioSession } from "@/components/minisitio/session-provider";
 import { Avatar, userDisplayName } from "@/components/minisitio/shell/account-menu";
@@ -23,6 +21,7 @@ import { SecondaryView } from "@/components/minisitio/shell/secondary-view";
 import { buttonClass } from "@/components/minisitio/ui/button";
 import { ImageViewer, type ViewerImage } from "@/components/minisitio/ui/image-viewer";
 import { LoadError } from "@/components/minisitio/ui/load-error";
+import { UnderlineTabs } from "@/components/minisitio/ui/tabs";
 import { toast } from "@/stores/minisitio-toast.store";
 import type { MinisitioUser } from "@/modules/minisitio/domain/types";
 import { AdminAvatar, AvisoImagen, AvisoPdf } from "../_avisos/aviso-parts";
@@ -87,14 +86,16 @@ export function TicketsView({
   return (
     <div className="mx-auto w-full max-w-[880px]">
       <div className="mb-1 flex items-center justify-between gap-3 border-b border-stroke-3">
-        <div role="tablist" aria-label="Mostrar solicitudes" className="flex gap-5">
-          <Tab active={tab === "open"} onClick={() => setTab("open")} count={abiertas.length}>
-            Abiertas
-          </Tab>
-          <Tab active={tab === "closed"} onClick={() => setTab("closed")} count={cerradas.length}>
-            Cerradas
-          </Tab>
-        </div>
+        <UnderlineTabs
+          label="Mostrar solicitudes"
+          value={tab}
+          onChange={setTab}
+          layoutId="solicitudes-tab"
+          options={[
+            { id: "open", label: "Abiertas", count: abiertas.length },
+            { id: "closed", label: "Cerradas", count: cerradas.length },
+          ]}
+        />
         <button type="button" onClick={() => setCreating(true)} className={buttonClass("primary", "sm", "mb-1.5")}>
           <Plus className="h-4 w-4" aria-hidden />
           Nueva solicitud
@@ -184,24 +185,6 @@ export function TicketsView({
       />
       <ImageViewer image={imagen} onClose={() => setImagen(null)} />
     </div>
-  );
-}
-
-function Tab({ active, onClick, count, children }: { active: boolean; onClick: () => void; count: number; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={active}
-      onClick={onClick}
-      className={`relative flex h-10 items-center gap-1.5 text-body font-semibold outline-none focus-visible:ring-2 focus-visible:ring-brand ${
-        active ? "text-fg" : "text-fg-3 hover:text-fg"
-      }`}
-    >
-      {children}
-      <span className="text-caption font-medium text-fg-3 tabular-nums">{count}</span>
-      {active && <motion.span layoutId="solicitudes-tab" aria-hidden className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand" transition={SPRING.indicator} />}
-    </button>
   );
 }
 

@@ -17,6 +17,7 @@ import { LoadError } from "@/components/minisitio/ui/load-error";
 import { AdminAvatar, AvisoImagen, AvisoPdf } from "./_avisos/aviso-parts";
 import { isPastCalendarDay, useDisplayTimeZone } from "./_lib/client-dates";
 import { formatCurrency, formatLongDate, formatShortDate } from "./_lib/format";
+import { resumenUnidades } from "./_lib/saldos";
 
 export interface CuentaResumen {
   saldoVencido: number;
@@ -67,14 +68,6 @@ function saludo(ahora: Date, timeZone?: string): string {
 function hoy(ahora: Date, timeZone?: string): string {
   const texto = ahora.toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", timeZone });
   return texto.charAt(0).toUpperCase() + texto.slice(1);
-}
-
-/** "70 de tus 86 propiedades tienen saldo vencido." y lo mismo para comercios. */
-function lineaUnidades(con: number, total: number, [una, varias]: [string, string]): string | null {
-  if (total === 0) return null;
-  if (con === 0) return total === 1 ? `Tu ${una} está al corriente.` : `Tus ${total} ${varias} están al corriente.`;
-  if (total === 1) return `Tu ${una} tiene saldo vencido.`;
-  return `${con} de tus ${total} ${varias} ${con === 1 ? "tiene" : "tienen"} saldo vencido.`;
 }
 
 export function InicioView({ cuenta, avisos, solicitudes, telefonos }: InicioViewProps) {
@@ -150,12 +143,7 @@ function Cuenta({ cuenta }: { cuenta: CuentaResumen | null }) {
   if (cuenta.propiedades.total + cuenta.comercios.total === 0) return null;
 
   const debe = cuenta.saldoVencido > 0;
-  const detalle = [
-    lineaUnidades(cuenta.propiedades.conAdeudo, cuenta.propiedades.total, ["propiedad", "propiedades"]),
-    lineaUnidades(cuenta.comercios.conAdeudo, cuenta.comercios.total, ["comercio", "comercios"]),
-  ]
-    .filter(Boolean)
-    .join(" ");
+  const detalle = resumenUnidades(cuenta.propiedades, cuenta.comercios);
 
   return (
     <section aria-labelledby="inicio-cuenta" className="flex flex-wrap items-center justify-between gap-x-6 gap-y-4 rounded-panel border border-stroke-2 px-5 py-4">

@@ -236,6 +236,18 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), tercera vuelta:**
+- **Mis saldos:**
+  - arriba, vencido, por vencer y a favor, más una frase de qué unidades deben;
+  - abajo, la lista por unidad de propiedades y comercios, ordenada por lo vencido, con pestañas "Con saldo vencido / Todas", buscador sin acentos y el encabezado de la tabla fijo;
+  - cada fila abre su estado de cuenta y en el celular la lista va en filas.
+  - Se quitaron:
+    - "Saldo pendiente", que mostraba lo vencido;
+    - los datos personales repetidos de Mi perfil;
+    - los colores sin significado;
+    - el resumen viejo (`dashboard.queries.ts`).
+- **Piezas compartidas:** `UnderlineTabs` (`ui/tabs.tsx`) y la frase de adeudo (`(portal)/_lib/saldos.ts`).
+
 **Hecho (2026-10-29), segunda vuelta:**
 - **Avisos** como canal:
   - separadores de día fijos, "Nuevo" desde la visita anterior, pestañas Todos / Vigentes y visor de imagen;
@@ -255,7 +267,7 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
-1. **Mis saldos, Mis propiedades, Mis comercios y estados de cuenta** con un solo lenguaje de dinero. Además:
+1. **Mis propiedades, Mis comercios y estados de cuenta** con el lenguaje de dinero de Mis saldos. Además:
    - "Saldo pendiente" muestra el vencido;
    - las columnas "N/A" y "Sin estado".
 2. **Teléfonos de emergencia** con `tel:`, WhatsApp (`wa.me`), `mailto:` y mapa.
