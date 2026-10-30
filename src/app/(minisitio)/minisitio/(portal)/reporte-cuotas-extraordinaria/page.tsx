@@ -1,28 +1,23 @@
 import type { Metadata } from "next";
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
-import { getFeesReport, type FeesReport } from "@/modules/minisitio/infrastructure/queries/reports.queries";
+import { getFeesReport } from "@/modules/minisitio/infrastructure/queries/reports.queries";
 import { requirePropietario } from "../_reportes/require-propietario";
-import { ReporteCuotasExtraordinariaView } from "./reporte-cuotas-extraordinaria-view";
+import { ReporteCuotas } from "../_reportes/reporte-cuotas";
 
 export const metadata: Metadata = { title: "Reporte de Cuotas Extraordinarias" };
 
-/** Registros por página con los que abría la pantalla vieja. */
-const LIMIT_INICIAL = 30;
+/** Áreas por página al abrir (la consulta acepta hasta 50). */
+const LIMITE_INICIAL = 30;
 
-export default async function ReporteCuotasExtraordinariaPage() {
+export default async function Page() {
   const session = await requireCondominoSession();
   await requirePropietario(session);
 
-  let initialData: FeesReport | null = null;
-  let initialError: string | null = null;
-  try {
-    initialData = await getFeesReport(session, { tipo: "extraordinaria", page: 1, limit: LIMIT_INICIAL });
-  } catch (error) {
+  // Si la carga falla, la vista lo dice y ofrece reintentar.
+  const inicial = await getFeesReport(session, { tipo: "extraordinaria", page: 1, limit: LIMITE_INICIAL }).catch((error) => {
     console.error("[minisitio] reporte-cuotas-extraordinaria:", error);
-    initialError = "Error al cargar reporte";
-  }
+    return null;
+  });
 
-  return (
-    <ReporteCuotasExtraordinariaView initialData={initialData} initialLimit={LIMIT_INICIAL} initialError={initialError} />
-  );
+  return <ReporteCuotas tipo="extraordinaria" inicial={inicial} limiteInicial={LIMITE_INICIAL} anioEnCurso={new Date().getFullYear()} />;
 }

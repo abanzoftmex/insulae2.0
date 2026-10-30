@@ -253,6 +253,20 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), decimoquinta vuelta:**
+- **Reportes de cuotas ordinarias y extraordinarias:** ahora son una sola pieza (`_reportes/reporte-cuotas.tsx`) sobre la tabla mensual, con un solo scroll. Antes eran dos pantallas casi iguales, con doble scroll.
+  - Por área: cuota mensual vigente, vencido (en `overdue`), pendiente y lo que se cargó cada mes del año elegido (botones de año), más el total de la página.
+  - En las áreas con comercio, una segunda línea "C" con la parte del comercio, solo si la fila tiene algún importe suyo.
+  - Paginación en el servidor con "N por página"; la página siguiente llega con la tabla atenuada y, si falla, avisa con un toast.
+- **Se quitaron** las tarjetas con íconos, la leyenda de cinco píldoras y los encabezados en MAYÚSCULAS. También las columnas que no aportaban:
+  - el tríptico por año, que repetía la misma cuota (anual = mensual × 12);
+  - el "saldo del año" y el "pago anticipado", que siempre llegaban en cero;
+  - 36 columnas de meses (tres años);
+  - los colores de mora, que se calculaban con la fecha del *último* cargo.
+- **Datos mal rotulados:** "Cartera vencida {año anterior}" era todo lo vencido, y "pagos mensuales" eran cargos.
+- **Se borraron** `report-chrome`, `financial-cards`, `skeleton-loaders` y las dos vistas viejas.
+- **`Importe`** trata como cero los residuos de redondeo.
+
 **Hecho (2026-10-29), decimocuarta vuelta:**
 - **Reporte general de adeudos:**
   - arriba, saldo vencido, saldo pendiente y "1,091 de 1,745" áreas con saldo vencido. Antes, "Total áreas con adeudos" contaba todas las áreas;
@@ -411,11 +425,12 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden:
-1. **Tablas anchas con doble scroll:** `WideTableSection` (reportes de cuotas ordinarias y extraordinarias) tiene su propio scroll vertical dentro de la página. Pasarla al modelo de la tabla mensual.
-2. **Limpieza:**
+1. **Limpieza:**
    - ya no quedan clases `gray-*` (salvo los colores del PDF del reporte general);
    - 4 `flex-shrink-0` de Tailwind v3, que en v4 no existen, en la burbuja de superadmin;
    - la burbuja de superadmin sigue en pizarra (`slate-*`): es interna, pero desentona.
+2. **Reportes de cuotas:** buscar un área exige paginar (1,745 áreas en orden de catálogo). Un buscador en el servidor (por nombre o clave) haría el reporte manejable.
+3. **Revisión de conjunto:** recorrer todas las pantallas a 390, 768 y 1280 px buscando inconsistencias, errores de consola y problemas de accesibilidad.
 
 **Dato, no interfaz (decisión del usuario):** el Resumen financiero del portal no reparte igual que el panel de administración (`modules/financial-summary`), y por eso su balance ordinario 2025 (−$12.1 M) no coincide con el del Estado de resultados (−$10.8 M):
 - **egresos:** el portal resta *todos* los egresos en el balance ordinario, incluidos los "Gastos extraordinarios" ($9.7 M en 2025), y deja sin egresos el balance extraordinario. El panel aparta los de la categoría "Gastos extraordinarios" (`resolveBudgetGroup` + `CATEGORY_MAP`);

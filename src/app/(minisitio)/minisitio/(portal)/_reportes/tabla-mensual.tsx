@@ -11,8 +11,9 @@
  * Si una columna está destacada (el año elegido) y queda fuera de la vista, por ejemplo en el
  * celular, la tabla se desplaza sola hasta ella: al instante al cargar, suave al cambiar de año.
  *
- * Las filas (`Fila`, `Seccion`, `Subseccion`, `FilaAccion`) van dentro de <tbody> y leen las
- * columnas del contexto.
+ * Las filas (`Fila`, `FilaLibre`, `Seccion`, `Subseccion`, `FilaAccion`) van dentro de <tbody> y
+ * leen las columnas del contexto. `FilaLibre` recibe sus propias celdas (p. ej. dos montos por
+ * celda), armadas con `CELDA`, `claseDeColumna` e `Importe`.
  */
 import { createContext, use, useEffect, useRef } from "react";
 import { formatCurrency } from "../_lib/format";
@@ -51,7 +52,7 @@ export function columnasDeMeses(anio?: number): Columna[] {
   }));
 }
 
-type Estilo = "normal" | "grupo" | "detalle" | "subtotal" | "total";
+export type Estilo = "normal" | "grupo" | "detalle" | "subtotal" | "total";
 
 /** Peso y color de cada tipo de fila; `conSigno` cambia el color a "vencido" en los negativos. */
 const ESTILOS: Record<Estilo, { fila: string; etiqueta: string; primera: [string, string]; resto: [string, string] }> = {
@@ -87,7 +88,7 @@ const ESTILOS: Record<Estilo, { fila: string; etiqueta: string; primera: [string
   },
 };
 
-const CELDA = "h-10 border-b border-stroke-3 px-3 text-right whitespace-nowrap tabular-nums";
+export const CELDA = "h-10 border-b border-stroke-3 px-3 text-right whitespace-nowrap tabular-nums";
 /** Primera columna: fija al desplazar a lo ancho, con sombra cuando quedan columnas ocultas a la izquierda. */
 const FIJA = "sticky left-0 z-10 group-data-[desplazado]/tabla:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.14)]";
 /** Etiqueta de una fila; el padding horizontal lo pone cada estilo. */
@@ -98,20 +99,31 @@ const ColumnasContext = createContext<Columna[]>([]);
 
 const bordeDe = (c: Columna) => (c.separador ? "border-r border-stroke-3" : "");
 const fondoDe = (c: Columna) => (c.destacada ? "bg-highlight" : "");
+/** Borde y fondo que le tocan a una celda de esa columna. */
+export const claseDeColumna = (c: Columna) => `${bordeDe(c)} ${fondoDe(c)}`;
+
+/** Las columnas de la tabla, para filas con celdas propias. */
+export function useColumnas() {
+  return use(ColumnasContext);
+}
+
+/** Un monto, o "—" si es cero, centavos de redondeo incluidos (lectores de pantalla: "Sin movimientos"). */
+export function Importe({ valor }: { valor: number }) {
+  if (Math.abs(valor) >= 0.005) return <>{formatCurrency(valor)}</>;
+  return (
+    <>
+      <span aria-hidden className="font-normal text-fg-4">
+        —
+      </span>
+      <span className="sr-only">Sin movimientos</span>
+    </>
+  );
+}
 
 function Monto({ valor, className }: { valor: number; className: string }) {
   return (
     <td className={`${CELDA} ${className}`}>
-      {valor === 0 ? (
-        <>
-          <span aria-hidden className="font-normal text-fg-4">
-            —
-          </span>
-          <span className="sr-only">Sin movimientos</span>
-        </>
-      ) : (
-        formatCurrency(valor)
-      )}
+      <Importe valor={valor} />
     </td>
   );
 }
@@ -141,6 +153,19 @@ export function Fila({
       {columnas.map((c, i) => (
         <Monto key={c.id} valor={valores[i] || 0} className={`${bordeDe(c)} ${fondoDe(c)} ${clase(i === 0 ? e.primera : e.resto, valores[i] || 0, c)}`} />
       ))}
+    </tr>
+  );
+}
+
+/** Una fila con celdas propias (`children`: un <td> por columna). */
+export function FilaLibre({ etiqueta, estilo = "normal", children }: { etiqueta: React.ReactNode; estilo?: Estilo; children: React.ReactNode }) {
+  const e = ESTILOS[estilo];
+  return (
+    <tr className={e.fila}>
+      <th scope="row" className={`${ETIQUETA} ${e.etiqueta}`}>
+        {etiqueta}
+      </th>
+      {children}
     </tr>
   );
 }
