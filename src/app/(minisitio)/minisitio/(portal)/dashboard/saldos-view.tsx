@@ -7,12 +7,13 @@
  */
 import { useDeferredValue, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, CircleCheck, Search } from "lucide-react";
+import { ChevronRight, CircleCheck } from "lucide-react";
 import { msPath } from "@/components/minisitio/paths";
-import { inputClass } from "@/components/minisitio/ui/field";
 import { LoadError } from "@/components/minisitio/ui/load-error";
+import { SearchField } from "@/components/minisitio/ui/search-field";
+import { StatStrip } from "@/components/minisitio/ui/stat-strip";
 import { UnderlineTabs } from "@/components/minisitio/ui/tabs";
-import { formatCurrency } from "../_lib/format";
+import { formatCurrency, normalizeSearch } from "../_lib/format";
 import { resumenUnidades, type ConteoUnidades } from "../_lib/saldos";
 
 export interface UnidadSaldo {
@@ -42,13 +43,6 @@ type Filtro = "adeudo" | "todas";
 
 const TIPO = { propiedad: "Propiedad", comercio: "Comercio" } as const;
 
-/** Sin acentos ni mayúsculas, para buscar "Ronzino" escribiendo "ronz" o "VQ#01" escribiendo "vq01". */
-const normalize = (text: string) =>
-  text
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9ñ ]/g, "");
 
 const numero = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 });
 const porcentaje = new Intl.NumberFormat("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
@@ -67,7 +61,7 @@ export function SaldosView({ data }: { data: { resumen: Resumen; unidades: Unida
 function Saldos({ resumen, unidades }: { resumen: Resumen; unidades: UnidadSaldo[] }) {
   const [filtro, setFiltro] = useState<Filtro>(resumen.vencido > 0 ? "adeudo" : "todas");
   const [busqueda, setBusqueda] = useState("");
-  const consulta = normalize(useDeferredValue(busqueda)).trim();
+  const consulta = normalizeSearch(useDeferredValue(busqueda)).trim();
 
   if (unidades.length === 0) {
     return (
@@ -79,7 +73,7 @@ function Saldos({ resumen, unidades }: { resumen: Resumen; unidades: UnidadSaldo
 
   const conAdeudo = unidades.filter((u) => u.vencido > 0);
   const base = filtro === "adeudo" ? conAdeudo : unidades;
-  const visibles = consulta ? base.filter((u) => normalize(`${u.nombre} ${u.detalle} ${TIPO[u.tipo]}`).includes(consulta)) : base;
+  const visibles = consulta ? base.filter((u) => normalizeSearch(`${u.nombre} ${u.detalle} ${TIPO[u.tipo]}`).includes(consulta)) : base;
   const mixto = resumen.propiedades.total > 0 && resumen.comercios.total > 0;
 
   const contexto = [
@@ -91,30 +85,20 @@ function Saldos({ resumen, unidades }: { resumen: Resumen; unidades: UnidadSaldo
 
   return (
     <div className="mx-auto w-full max-w-[1040px]">
-      <section aria-labelledby="saldos-resumen" className="rounded-panel border border-stroke-2">
-        <h2 id="saldos-resumen" className="sr-only">
-          Resumen de saldos
-        </h2>
-        {/* En el celular lo vencido va solo y grande; las otras dos, lado a lado. */}
-        <dl className="grid grid-cols-2 sm:grid-cols-3">
-          <div className="col-span-2 border-b border-stroke-3 px-5 py-4 sm:col-span-1 sm:border-r sm:border-b-0">
-            <dt className={`text-body font-semibold ${resumen.vencido > 0 ? "text-overdue" : "text-fg-3"}`}>Saldo vencido</dt>
-            <dd className="mt-0.5 text-display font-bold text-fg tabular-nums">{formatCurrency(resumen.vencido)}</dd>
-          </div>
-          <div className="border-r border-stroke-3 px-5 py-4">
-            <dt className="text-body font-semibold text-fg-3">Por vencer</dt>
-            <dd className="mt-0.5 text-subtitle font-bold text-fg tabular-nums sm:text-display">{formatCurrency(resumen.porVencer)}</dd>
-          </div>
-          <div className="px-5 py-4">
-            <dt className={`text-body font-semibold ${resumen.aFavor > 0 ? "text-success" : "text-fg-3"}`}>A favor</dt>
-            <dd className="mt-0.5 text-subtitle font-bold text-fg tabular-nums sm:text-display">{formatCurrency(resumen.aFavor)}</dd>
-          </div>
-        </dl>
-        <p className="flex items-center gap-2 border-t border-stroke-3 px-5 py-3 text-body text-fg-2">
-          {resumen.vencido === 0 && <CircleCheck className="h-4 w-4 shrink-0 text-success" strokeWidth={2.25} aria-hidden />}
-          {resumenUnidades(resumen.propiedades, resumen.comercios)}
-        </p>
-      </section>
+      <StatStrip
+        label="Resumen de saldos"
+        items={[
+          { id: "vencido", label: "Saldo vencido", value: formatCurrency(resumen.vencido), tone: resumen.vencido > 0 ? "overdue" : undefined },
+          { id: "por-vencer", label: "Por vencer", value: formatCurrency(resumen.porVencer) },
+          { id: "a-favor", label: "A favor", value: formatCurrency(resumen.aFavor), tone: resumen.aFavor > 0 ? "success" : undefined },
+        ]}
+        footer={
+          <p className="flex items-center gap-2">
+            {resumen.vencido === 0 && <CircleCheck className="h-4 w-4 shrink-0 text-success" strokeWidth={2.25} aria-hidden />}
+            {resumenUnidades(resumen.propiedades, resumen.comercios)}
+          </p>
+        }
+      />
 
       <section aria-labelledby="saldos-unidades" className="mt-8">
         <h2 id="saldos-unidades" className="text-body-lg font-bold text-fg">
@@ -133,17 +117,7 @@ function Saldos({ resumen, unidades }: { resumen: Resumen; unidades: UnidadSaldo
               { id: "todas", label: "Todas", count: unidades.length },
             ]}
           />
-          <label className="relative mb-2 w-full sm:mb-1.5 sm:w-64">
-            <span className="sr-only">Buscar unidad</span>
-            <Search className="pointer-events-none absolute top-1/2 left-2.5 h-4 w-4 -translate-y-1/2 text-fg-3" aria-hidden />
-            <input
-              type="search"
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar unidad"
-              className={`${inputClass} h-8 pl-8`}
-            />
-          </label>
+          <SearchField value={busqueda} onChange={setBusqueda} label="Buscar unidad" className="mb-2 w-full sm:mb-1.5 sm:w-64" />
         </div>
 
         <div role="tabpanel" aria-label={filtro === "adeudo" ? "Unidades con saldo vencido" : "Todas las unidades"}>

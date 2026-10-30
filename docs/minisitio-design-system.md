@@ -236,6 +236,20 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), cuarta vuelta:**
+- **Mis propiedades** y **Mis comercios** con el lenguaje de Mis saldos:
+  - resumen de cifras (`StatStrip`) y buscador (`SearchField`) compartidos;
+  - tabla con encabezado fijo y totales en escritorio, y lista en el celular (se quitó el botón tabla / tarjetas).
+- **Mis propiedades:**
+  - las FAP se sangran bajo su AP solo si esa AP está en la lista;
+  - el indiviso se explica en un desplegable accesible (antes, un tooltip que solo abría con el ratón);
+  - el PDF sigue saliendo de lo que se ve.
+- **Mis comercios:**
+  - superficie real (construcción o, si no hay, terreno);
+  - contacto y "Contrato inactivo";
+  - sin el indiviso del dueño ni los "N/A" y "Sin estado".
+- **Se borraron:** las tablas viejas, `IndivisoInfo`, `ViewToggle` y las redirecciones del navegador (quien no tiene unidades ve el estado vacío).
+
 **Hecho (2026-10-29), tercera vuelta:**
 - **Mis saldos:**
   - arriba, vencido, por vencer y a favor, más una frase de qué unidades deben;
@@ -267,7 +281,7 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
-1. **Mis propiedades, Mis comercios y estados de cuenta** con el lenguaje de dinero de Mis saldos. Además:
+1. **Estados de cuenta y detalle de propiedad / comercio** con el lenguaje de dinero de Mis saldos. Además:
    - "Saldo pendiente" muestra el vencido;
    - las columnas "N/A" y "Sin estado".
 2. **Teléfonos de emergencia** con `tel:`, WhatsApp (`wa.me`), `mailto:` y mapa.

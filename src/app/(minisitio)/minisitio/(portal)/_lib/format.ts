@@ -75,3 +75,12 @@ export function formatDayLabel(iso: string | null | undefined, now: Date, timeZo
   });
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
+
+/** Para buscar sin acentos, mayúsculas ni signos: "Ronzino" con "ronz", "VQ#01G" con "vq01g". */
+export function normalizeSearch(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9ñ ]/g, "");
+}
