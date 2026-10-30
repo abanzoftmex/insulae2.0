@@ -3,7 +3,8 @@
 /**
  * Pestañas con subrayado, como las de un canal de Slack: 40 px, cifra en caption y un subrayado
  * olivo de 2 px que se desliza con el mismo resorte que la píldora del menú. El contenido va en
- * un elemento con role="tabpanel" que pone la pantalla.
+ * un elemento con role="tabpanel" que pone la pantalla. Si no caben (celular), se desplazan a lo
+ * ancho sin barra visible y la pestaña elegida se acomoda a la vista.
  */
 import { motion } from "framer-motion";
 import { SPRING } from "../motion";
@@ -34,7 +35,7 @@ export function UnderlineTabs<T extends string>({
   className?: string;
 }) {
   return (
-    <div role="tablist" aria-label={label} className={`flex gap-5 ${className}`}>
+    <div role="tablist" aria-label={label} className={`flex min-w-0 max-w-full scrollbar-hidden gap-5 overflow-x-auto pb-px ${className}`}>
       {options.map((option) => {
         const active = option.id === value;
         return (
@@ -43,8 +44,11 @@ export function UnderlineTabs<T extends string>({
             type="button"
             role="tab"
             aria-selected={active}
-            onClick={() => onChange(option.id)}
-            className={`relative flex h-10 items-center gap-1.5 text-body font-semibold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-brand ${
+            onClick={(e) => {
+              onChange(option.id);
+              e.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest", behavior: "smooth" });
+            }}
+            className={`relative flex h-10 shrink-0 items-center gap-1.5 text-body font-semibold whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-inset ${
               active ? "text-fg" : "text-fg-3 hover:text-fg"
             }`}
           >

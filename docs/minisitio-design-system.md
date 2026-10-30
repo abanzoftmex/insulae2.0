@@ -253,6 +253,26 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), decimosexta vuelta (revisión de conjunto):**
+- **Auditoría automática** de 17 pantallas del portal y 5 públicas, a 390, 768, 1024 y 1280 px. Se revisó lo siguiente, y al final no queda ningún hallazgo:
+  - desbordes horizontales;
+  - botones o enlaces sin nombre accesible;
+  - campos sin etiqueta;
+  - ids duplicados;
+  - un solo `h1` visible;
+  - texto en MAYÚSCULAS;
+  - texto que se sale de su caja;
+  - errores de consola.
+- **Corregido:**
+  - **Reportes:** los `sr-only` de cada guion ("Sin movimientos") son absolutos y, sin un contenedor posicionado, ensanchaban la página entre 881 y 1,161 px. El cuerpo de la tabla mensual ahora es `relative`.
+  - **Pestañas:** en el celular se salían ("Con saldo vencido · Con saldo · Todas", 391 px en 358). Ahora se desplazan a lo ancho sin barra visible, con el foco hacia dentro, y la elegida se acomoda a la vista.
+  - **Mis propiedades:**
+    - su tabla desbordaba a 768 y a 1024 px (con la barra lateral, el contenido mide 704 px);
+    - ahora la tabla se muestra desde `xl` y, debajo, la lista.
+  - **Cifras de resumen:** los montos de ocho cifras se salían a 1024 px. Los tamaños grandes y las cuatro en fila esperan a `xl`.
+  - **Encabezados fijos de las tablas** (Mis saldos, Mis comercios, movimientos del estado de cuenta, Mis propiedades): `top` de 52 px debajo de `lg` (la barra móvil) y 49 px desde `lg`; antes quedaban 3 px bajo la barra móvil.
+  - **Reporte general en el celular:** el buscador y la zona van en renglones propios.
+
 **Hecho (2026-10-29), decimoquinta vuelta:**
 - **Reportes de cuotas ordinarias y extraordinarias:** ahora son una sola pieza (`_reportes/reporte-cuotas.tsx`) sobre la tabla mensual, con un solo scroll. Antes eran dos pantallas casi iguales, con doble scroll.
   - Por área: cuota mensual vigente, vencido (en `overdue`), pendiente y lo que se cargó cada mes del año elegido (botones de año), más el total de la página.
@@ -430,7 +450,6 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
    - 4 `flex-shrink-0` de Tailwind v3, que en v4 no existen, en la burbuja de superadmin;
    - la burbuja de superadmin sigue en pizarra (`slate-*`): es interna, pero desentona.
 2. **Reportes de cuotas:** buscar un área exige paginar (1,745 áreas en orden de catálogo). Un buscador en el servidor (por nombre o clave) haría el reporte manejable.
-3. **Revisión de conjunto:** recorrer todas las pantallas a 390, 768 y 1280 px buscando inconsistencias, errores de consola y problemas de accesibilidad.
 
 **Dato, no interfaz (decisión del usuario):** el Resumen financiero del portal no reparte igual que el panel de administración (`modules/financial-summary`), y por eso su balance ordinario 2025 (−$12.1 M) no coincide con el del Estado de resultados (−$10.8 M):
 - **egresos:** el portal resta *todos* los egresos en el balance ordinario, incluidos los "Gastos extraordinarios" ($9.7 M en 2025), y deja sin egresos el balance extraordinario. El panel aparta los de la categoría "Gastos extraordinarios" (`resolveBudgetGroup` + `CATEGORY_MAP`);

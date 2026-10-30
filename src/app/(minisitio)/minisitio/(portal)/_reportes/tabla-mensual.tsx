@@ -330,7 +330,9 @@ export function TablaMensual({
         aria-busy={pendiente}
         tabIndex={0}
         onScroll={sincronizar}
-        className="overflow-x-auto rounded-b-panel outline-none focus-visible:ring-2 focus-visible:ring-brand"
+        // relative: los sr-only ("Sin movimientos") son absolutos; sin un contenedor posicionado se
+        // ubicaban respecto a la página y la ensanchaban aunque la tabla tuviera su propio scroll.
+        className="relative overflow-x-auto rounded-b-panel outline-none focus-visible:ring-2 focus-visible:ring-brand"
       >
         <table className={tabla} style={ancho}>
           <caption className="sr-only">{descripcion}. Un guion indica un mes sin movimientos.</caption>

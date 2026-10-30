@@ -184,7 +184,7 @@ function Th({ children, align = "left", className = "" }: { children?: React.Rea
   return (
     <th
       scope="col"
-      className={`sticky top-[49px] z-10 border-b border-stroke-3 bg-surface py-2 font-semibold first:pr-3 not-first:px-3 ${align === "right" ? "text-right" : ""} ${className}`}
+      className={`sticky top-[52px] z-10 lg:top-[49px] border-b border-stroke-3 bg-surface py-2 font-semibold first:pr-3 not-first:px-3 ${align === "right" ? "text-right" : ""} ${className}`}
     >
       {children}
     </th>

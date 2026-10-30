@@ -2,7 +2,7 @@
  * Cifras de resumen en una sola tarjeta, separadas por líneas finas (gap de 1 px sobre el color
  * del borde: sirve con cualquier número de columnas). En el celular, una cifra por renglón (con un
  * número impar, la primera arriba y grande); desde tablet, tres por fila, y con cuatro, en pares
- * que en escritorio van en una sola fila. Con seis, dos filas de tres.
+ * que en pantallas anchas (xl) van en una sola fila. Con seis, dos filas de tres.
  */
 export interface StatItem {
   id: string;
@@ -19,7 +19,8 @@ const TONE = { overdue: "text-overdue", success: "text-success" } as const;
 export function StatStrip({ label, items, footer }: { label: string; items: StatItem[]; footer?: React.ReactNode }) {
   const cuatro = items.length >= 4;
   // Con seis, dos filas de tres: en una sola fila los montos de ocho cifras no caben.
-  const columnas = items.length >= 5 || items.length === 3 ? "sm:grid-cols-3" : cuatro ? "sm:grid-cols-2 lg:grid-cols-4" : "sm:grid-cols-2";
+  // Con la barra lateral, el contenido mide 704 px a 1024: los tamaños grandes esperan a xl.
+  const columnas = items.length >= 5 || items.length === 3 ? "sm:grid-cols-3" : cuatro ? "sm:grid-cols-2 xl:grid-cols-4" : "sm:grid-cols-2";
   return (
     <section aria-label={label} className="overflow-hidden rounded-panel border border-stroke-2">
       {/* En el celular, una cifra por renglón (etiqueta a la izquierda, monto a la derecha): en dos
@@ -28,10 +29,10 @@ export function StatStrip({ label, items, footer }: { label: string; items: Stat
         {items.map((item, index) => {
           const destacada = !cuatro && index === 0 && items.length % 2 === 1;
           const tamaño = cuatro
-            ? "text-body-lg sm:text-subtitle lg:text-title"
+            ? "text-body-lg sm:text-subtitle xl:text-title"
             : destacada
-              ? "text-display sm:text-subtitle lg:text-display"
-              : "text-body-lg sm:text-subtitle lg:text-display";
+              ? "text-display sm:text-subtitle xl:text-display"
+              : "text-body-lg sm:text-subtitle xl:text-display";
           return (
             <div
               key={item.id}

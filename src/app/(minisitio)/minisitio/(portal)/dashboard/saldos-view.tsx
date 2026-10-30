@@ -138,21 +138,21 @@ function Saldos({ resumen, unidades }: { resumen: Resumen; unidades: UnidadSaldo
               <table className="w-full text-body max-sm:hidden">
                 <thead>
                   <tr className="text-left text-caption text-fg-3">
-                    <th scope="col" className="sticky top-[49px] z-10 border-b border-stroke-3 bg-surface py-2 pr-3 font-semibold">
+                    <th scope="col" className="sticky top-[52px] z-10 lg:top-[49px] border-b border-stroke-3 bg-surface py-2 pr-3 font-semibold">
                       Unidad
                     </th>
                     {mixto && (
-                      <th scope="col" className="sticky top-[49px] z-10 border-b border-stroke-3 bg-surface px-3 py-2 font-semibold">
+                      <th scope="col" className="sticky top-[52px] z-10 lg:top-[49px] border-b border-stroke-3 bg-surface px-3 py-2 font-semibold">
                         Tipo
                       </th>
                     )}
-                    <th scope="col" className="sticky top-[49px] z-10 border-b border-stroke-3 bg-surface px-3 py-2 text-right font-semibold">
+                    <th scope="col" className="sticky top-[52px] z-10 lg:top-[49px] border-b border-stroke-3 bg-surface px-3 py-2 text-right font-semibold">
                       Vencido
                     </th>
-                    <th scope="col" className="sticky top-[49px] z-10 border-b border-stroke-3 bg-surface px-3 py-2 text-right font-semibold">
+                    <th scope="col" className="sticky top-[52px] z-10 lg:top-[49px] border-b border-stroke-3 bg-surface px-3 py-2 text-right font-semibold">
                       Por vencer
                     </th>
-                    <th scope="col" className="sticky top-[49px] z-10 w-8 border-b border-stroke-3 bg-surface py-2">
+                    <th scope="col" className="sticky top-[52px] z-10 lg:top-[49px] w-8 border-b border-stroke-3 bg-surface py-2">
                       <span className="sr-only">Estado de cuenta</span>
                     </th>
                   </tr>

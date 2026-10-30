@@ -174,7 +174,7 @@ function Propiedades({ propiedades, proyecto }: { propiedades: PropiedadView[]; 
           <p className="py-12 text-center text-body text-fg-2">Ninguna propiedad coincide con «{busqueda.trim()}».</p>
         ) : (
           <>
-            <table className="w-full text-body max-md:hidden">
+            <table className="w-full text-body max-xl:hidden">
               <thead>
                 <tr className="text-left text-caption text-fg-3">
                   <Th>Propiedad</Th>
@@ -245,7 +245,7 @@ function Propiedades({ propiedades, proyecto }: { propiedades: PropiedadView[]; 
               </tfoot>
             </table>
 
-            <ul className="divide-y divide-stroke-3 md:hidden">
+            <ul className="divide-y divide-stroke-3 xl:hidden">
               {filas.map((p) => {
                 const fap = p.tipo === "hijo";
                 return (
@@ -290,7 +290,7 @@ function Th({ children, align = "left", className = "" }: { children?: React.Rea
   return (
     <th
       scope="col"
-      className={`sticky top-[49px] z-10 border-b border-stroke-3 bg-surface py-2 font-semibold first:pr-3 not-first:px-3 ${align === "right" ? "text-right" : ""} ${className}`}
+      className={`sticky top-[52px] z-10 lg:top-[49px] border-b border-stroke-3 bg-surface py-2 font-semibold first:pr-3 not-first:px-3 ${align === "right" ? "text-right" : ""} ${className}`}
     >
       {children}
     </th>

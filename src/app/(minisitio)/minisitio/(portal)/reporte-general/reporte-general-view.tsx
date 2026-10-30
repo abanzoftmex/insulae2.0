@@ -130,11 +130,11 @@ export function ReporteGeneralView({ report }: { report: GeneralReport | null })
           </button>
         </div>
         <div className="flex flex-wrap gap-2">
-          <SearchField value={busqueda} onChange={(v) => filtrar(() => setBusqueda(v))} label="Buscar área" placeholder="Buscar área, zona o uso" className="min-w-0 flex-1 sm:max-w-sm" />
+          <SearchField value={busqueda} onChange={(v) => filtrar(() => setBusqueda(v))} label="Buscar área" placeholder="Buscar área, zona o uso" className="w-full sm:w-auto sm:min-w-0 sm:max-w-sm sm:flex-1" />
           <label htmlFor="rg-zona" className="sr-only">
             Zona
           </label>
-          <select id="rg-zona" value={zona} onChange={(e) => filtrar(() => setZona(e.target.value))} className={`${fieldBaseClass} h-8 pr-8`}>
+          <select id="rg-zona" value={zona} onChange={(e) => filtrar(() => setZona(e.target.value))} className={`${fieldBaseClass} h-8 w-full pr-8 sm:w-auto`}>
             <option value="todas">Todas las zonas</option>
             {zonas.map((z) => (
               <option key={z} value={z}>
