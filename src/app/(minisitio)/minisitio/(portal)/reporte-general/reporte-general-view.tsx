@@ -1,379 +1,225 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import {
-  FileText,
-  Building2,
-  Store,
-  Search,
-  X,
-  Download,
-  RefreshCw,
-} from "lucide-react";
-import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
+/**
+ * Reporte general de adeudos del condominio (solo propietarios; información confidencial). Arriba,
+ * lo vencido, lo pendiente y cuántas áreas deben. Abajo, las áreas de la que más debe a la que
+ * menos, 50 por página, con lo que falta pagar de lo que vence en cada mes del año, y el resumen
+ * por zona. Antes salían las 1,745 áreas de golpe (también las que no deben, con "$0.00" en
+ * rojo), el estado en inglés, "Áreas con adeudos" contaba todas las áreas y, si la carga fallaba,
+ * decía que todas estaban al corriente.
+ */
+import { useMemo, useRef, useState } from "react";
+import { Download } from "lucide-react";
 import type { GeneralReport } from "@/modules/minisitio/infrastructure/queries/reports.queries";
+import { buttonClass } from "@/components/minisitio/ui/button";
+import { fieldBaseClass } from "@/components/minisitio/ui/field";
+import { LoadError } from "@/components/minisitio/ui/load-error";
+import { Paginator } from "@/components/minisitio/ui/paginator";
+import { SearchField } from "@/components/minisitio/ui/search-field";
+import { StatStrip } from "@/components/minisitio/ui/stat-strip";
+import { UnderlineTabs } from "@/components/minisitio/ui/tabs";
 import { toast } from "@/stores/minisitio-toast.store";
-import { getGeneralReportAction } from "../../_actions/reports";
-import { buildReporteGeneralPdf, formatCurrency, meses, reporteGeneralPdfFileName } from "./reporte-general-pdf";
+import { formatCurrency, normalizeSearch } from "../_lib/format";
+import { Fila, TablaMensual, columnasDeMeses, type Columna } from "../_reportes/tabla-mensual";
+import { buildReporteGeneralPdf, reporteGeneralPdfFileName } from "./reporte-general-pdf";
 
 type AreaReporte = GeneralReport["areas"][number];
-type Estadisticas = Partial<GeneralReport["estadisticas"]>;
+type Vista = "vencido" | "saldo" | "todas";
 
-export function ReporteGeneralView({
-  initialAreas,
-  initialEstadisticas,
-}: {
-  initialAreas: AreaReporte[];
-  initialEstadisticas: Estadisticas;
-}) {
-  const [loading, setLoading] = useState(false);
-  const [areas, setAreas] = useState<AreaReporte[]>(initialAreas);
-  const [estadisticas, setEstadisticas] = useState<Estadisticas>(initialEstadisticas);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filtroTipo, setFiltroTipo] = useState("todos");
-  const [filtroZona, setFiltroZona] = useState("todas");
-  const [filtroEstado, setFiltroEstado] = useState("todos");
+const POR_PAGINA = 50;
+const NUMEROS = Array.from({ length: 12 }, (_, i) => i + 1);
+const numero = new Intl.NumberFormat("es-MX");
 
-  // Aplicar filtros
-  const filteredAreas = useMemo(() => {
-    let filtered = areas;
+export function ReporteGeneralView({ report }: { report: GeneralReport | null }) {
+  const [vista, setVista] = useState<Vista>("vencido");
+  const [busqueda, setBusqueda] = useState("");
+  const [zona, setZona] = useState("todas");
+  const [pagina, setPagina] = useState(1);
+  const [exportando, setExportando] = useState(false);
+  const tablaRef = useRef<HTMLDivElement>(null);
 
-    // Filtro por búsqueda
-    if (searchTerm.trim()) {
-      filtered = filtered.filter(
-        (area) =>
-          area.identificador
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          area.direccion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          area.zona?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          area.uso_suelo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          area.id?.toString().includes(searchTerm)
-      );
-    }
+  const areas = useMemo(
+    () => [...(report?.areas ?? [])].sort((a, b) => b.saldo_vencido - a.saldo_vencido || b.saldo_pendiente - a.saldo_pendiente),
+    [report],
+  );
+  const zonas = useMemo(() => [...new Set(areas.map((a) => a.zona))].sort((a, b) => a.localeCompare(b, "es")), [areas]);
 
-    // Filtro por tipo
-    if (filtroTipo !== "todos") {
-      filtered = filtered.filter(
-        (area) => area.tipo.toLowerCase() === filtroTipo
-      );
-    }
-
-    // Filtro por zona
-    if (filtroZona !== "todas") {
-      filtered = filtered.filter((area) => area.zona === filtroZona);
-    }
-
-    // Filtro por estado financiero
-    if (filtroEstado !== "todos") {
-      filtered = filtered.filter(
-        (area) => area.estado_financiero === filtroEstado
-      );
-    }
-
-    return filtered;
-  }, [searchTerm, filtroTipo, filtroZona, filtroEstado, areas]);
-
-  const fetchReporteGeneral = async () => {
-    try {
-      setLoading(true);
-      const data = await getGeneralReportAction();
-      setAreas(data.areas || []);
-      setEstadisticas(data.estadisticas || {});
-    } catch (error) {
-      console.error("Error fetching reporte general:", error);
-      setAreas([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const exportarPDF = async () => {
-    try {
-      const doc = await buildReporteGeneralPdf(filteredAreas);
-
-      // Guardar el PDF
-      doc.save(reporteGeneralPdfFileName());
-    } catch (error) {
-      console.error("Error al generar PDF:", error);
-      toast("No se pudo generar el PDF. Inténtalo otra vez.", "error");
-    }
-  };
-
-  // Obtener listas únicas para filtros
-  const zonasUnicas = [...new Set(areas.map((area) => area.zona))]
-    .filter(Boolean)
-    .sort();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner />
-      </div>
+  const visibles = useMemo(() => {
+    const q = normalizeSearch(busqueda.trim());
+    return areas.filter(
+      (a) =>
+        (vista === "todas" || (vista === "vencido" ? a.saldo_vencido > 0 : a.saldo_pendiente > 0)) &&
+        (zona === "todas" || a.zona === zona) &&
+        (!q || [a.identificador, a.zona, a.uso_suelo, a.status].some((t) => normalizeSearch(t ?? "").includes(q))),
     );
-  }
+  }, [areas, vista, zona, busqueda]);
+
+  if (!report) return <LoadError what="el reporte general" />;
+
+  const { estadisticas, anio } = report;
+  const totalPaginas = Math.max(1, Math.ceil(visibles.length / POR_PAGINA));
+  const paginaActual = Math.min(pagina, totalPaginas);
+  const filas = visibles.slice((paginaActual - 1) * POR_PAGINA, paginaActual * POR_PAGINA);
+  const filtrar = (cambio: () => void) => {
+    cambio();
+    setPagina(1);
+  };
+  const cambiarPagina = (p: number) => {
+    setPagina(p);
+    tablaRef.current?.scrollIntoView({ block: "start" });
+  };
+  const exportar = async () => {
+    setExportando(true);
+    try {
+      (await buildReporteGeneralPdf(visibles)).save(reporteGeneralPdfFileName());
+    } catch (error) {
+      console.error("[minisitio] PDF del reporte general:", error);
+      toast("No se pudo generar el PDF. Inténtalo otra vez.", "error");
+    } finally {
+      setExportando(false);
+    }
+  };
+
+  const columnas: Columna[] = [
+    { id: "vencido", titulo: "Vencido", tituloCompleto: "Saldo vencido", ancho: 140, alerta: true },
+    { id: "pendiente", titulo: "Pendiente", tituloCompleto: "Saldo pendiente, todos los años", ancho: 140, separador: true },
+    ...columnasDeMeses(anio),
+  ];
+  const cuenta = (v: Vista) => areas.filter((a) => (v === "todas" ? true : v === "vencido" ? a.saldo_vencido > 0 : a.saldo_pendiente > 0)).length;
+  const porZona = Object.entries(estadisticas.estadisticas_por_zona).sort(([, a], [, b]) => b.saldo_vencido - a.saldo_vencido || b.saldo_pendiente - a.saldo_pendiente);
 
   return (
-    <div className="space-y-6">
-      {/* Header Principal - Estilo Profesional */}
-      <div className="bg-white border border-line rounded-none shadow-sm">
-        <div className="bg-gray-50 px-6 py-4 border-b border-line">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                Reporte General de Cuotas
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Todas las áreas - <span className="font-bold text-overdue">Información confidencial</span>
-              </p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={exportarPDF}
-                className="bg-overdue text-white px-4 py-2 rounded-none text-sm font-medium hover:bg-red-700 transition-colors duration-200 inline-flex items-center border border-stroke"
-              >
-                <Download className="w-4 h-4 mr-2"/>
-                Exportar PDF
-              </button>
-              <button
-                onClick={fetchReporteGeneral}
-                className="bg-gray-600 text-white px-4 py-2 rounded-none text-sm font-medium hover:bg-gray-700 transition-colors duration-200 inline-flex items-center border border-gray-700"
-              >
-                <RefreshCw className="w-4 h-4 mr-2"/>
-                Actualizar
-              </button>
-            </div>
-          </div>
+    <div className="space-y-5">
+      <p className="text-body text-fg-3">Adeudos de todas las áreas del condominio. Información confidencial: no la compartas.</p>
+
+      <StatStrip
+        label="Adeudos del condominio"
+        items={[
+          { id: "vencido", label: "Saldo vencido", value: formatCurrency(estadisticas.total_saldo_vencido), tone: estadisticas.total_saldo_vencido > 0 ? "overdue" : undefined },
+          { id: "pendiente", label: "Saldo pendiente", value: formatCurrency(estadisticas.total_saldo_pendiente) },
+          {
+            id: "areas",
+            label: "Áreas con saldo vencido",
+            value: `${numero.format(estadisticas.areas_con_saldo_vencido)} de ${numero.format(estadisticas.total_areas)}`,
+          },
+        ]}
+        footer={
+          <>
+            El pendiente incluye lo que aún no vence. {numero.format(estadisticas.areas_con_saldo)} áreas tienen algún saldo; los intereses acumulados suman{" "}
+            <span className="font-semibold text-fg tabular-nums">{formatCurrency(estadisticas.total_intereses)}</span>.
+          </>
+        }
+      />
+
+      <div ref={tablaRef} className="scroll-mt-16 space-y-3 lg:scroll-mt-14">
+        <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-stroke-3">
+          <UnderlineTabs
+            label="Áreas"
+            value={vista}
+            onChange={(v) => filtrar(() => setVista(v))}
+            layoutId="rg-vista-tab"
+            options={[
+              { id: "vencido" as const, label: "Con saldo vencido", count: cuenta("vencido") },
+              { id: "saldo" as const, label: "Con saldo", count: cuenta("saldo") },
+              { id: "todas" as const, label: "Todas", count: cuenta("todas") },
+            ]}
+          />
+          <button type="button" onClick={exportar} disabled={exportando || visibles.length === 0} className={buttonClass("outline", "sm", "mb-1.5")}>
+            <Download className="h-3.5 w-3.5" aria-hidden />
+            {exportando ? "Generando…" : "Descargar PDF"}
+          </button>
         </div>
-
-        {/* Estadísticas Principales */}
-        <div className="px-6 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border-l-4 border-stroke pl-4">
-              <dt className="text-xs font-medium text-gray-500">
-                Total Áreas con Adeudos
-              </dt>
-              <dd className="mt-1 text-2xl tabular-nums font-bold text-gray-900">
-                {estadisticas.total_areas || 0}
-              </dd>
-              <dd className="text-xs text-gray-600">
-                {estadisticas.total_propiedades || 0} propiedades,{" "}
-                {estadisticas.total_arrendamientos || 0} arrendamientos
-              </dd>
-            </div>
-
-            <div className="border-l-4 border-orange-500 pl-4">
-              <dt className="text-xs font-medium text-gray-500">
-                Saldo Pendiente Total
-              </dt>
-              <dd className="mt-1 text-2xl tabular-nums font-bold text-overdue">
-                {formatCurrency(estadisticas.total_saldo_pendiente)}
-              </dd>
-              <dd className="text-xs text-overdue">Todos los adeudos</dd>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filtros y Búsqueda */}
-      <div className="bg-white border border-line rounded-none shadow-sm p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          {/* Búsqueda */}
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"/>
-            <input
-              type="text"
-              placeholder="Buscar área..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-none text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 tabular-nums"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-4 h-4"/>
-              </button>
-            )}
-          </div>
-
-          {/* Filtro por tipo */}
-          <select
-            value={filtroTipo}
-            onChange={(e) => setFiltroTipo(e.target.value)}
-            className="border border-gray-300 rounded-none px-3 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 tabular-nums"
-          >
-            <option value="todos">Todos los tipos</option>
-            <option value="propiedad">Solo Propiedades</option>
-            <option value="arrendamiento">Solo Arrendamientos</option>
-          </select>
-
-          {/* Filtro por zona */}
-          <select
-            value={filtroZona}
-            onChange={(e) => setFiltroZona(e.target.value)}
-            className="border border-gray-300 rounded-none px-3 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 tabular-nums"
-          >
+        <div className="flex flex-wrap gap-2">
+          <SearchField value={busqueda} onChange={(v) => filtrar(() => setBusqueda(v))} label="Buscar área" placeholder="Buscar área, zona o uso" className="min-w-0 flex-1 sm:max-w-sm" />
+          <label htmlFor="rg-zona" className="sr-only">
+            Zona
+          </label>
+          <select id="rg-zona" value={zona} onChange={(e) => filtrar(() => setZona(e.target.value))} className={`${fieldBaseClass} h-8 pr-8`}>
             <option value="todas">Todas las zonas</option>
-            {zonasUnicas.map((zona) => (
-              <option key={zona} value={zona}>
-                {zona}
+            {zonas.map((z) => (
+              <option key={z} value={z}>
+                {z}
               </option>
             ))}
           </select>
-
-          {/* Filtro por estado financiero */}
-          <select
-            value={filtroEstado}
-            onChange={(e) => setFiltroEstado(e.target.value)}
-            className="border border-gray-300 rounded-none px-3 py-2 text-sm focus:ring-1 focus:ring-gray-400 focus:border-gray-400 tabular-nums"
-          >
-            <option value="todos">Todos los estados</option>
-            <option value="vencido">Vencido</option>
-            <option value="pendiente">Pendiente</option>
-          </select>
         </div>
 
-        {filteredAreas.length !== areas.length && (
-          <div className="text-sm text-gray-600 tabular-nums">
-            Mostrando {filteredAreas.length} de {areas.length} áreas
-          </div>
+        {filas.length === 0 ? (
+          <p className="py-12 text-center text-body text-fg-2">
+            {busqueda || zona !== "todas" ? "Ninguna área coincide con la búsqueda." : vista === "vencido" ? "Ninguna área tiene saldo vencido." : "Ninguna área tiene saldo."}
+          </p>
+        ) : (
+          <TablaMensual
+            etiqueta="Área"
+            columnas={columnas}
+            grupos={[
+              { titulo: "Saldo", columnas: 2 },
+              { titulo: `Por pagar de lo que vence en ${anio}`, columnas: 12 },
+            ]}
+            descripcion={`Adeudos por área, página ${paginaActual} de ${totalPaginas}`}
+            region="Adeudos por área y por mes"
+          >
+            <tbody>
+              {filas.map((a: AreaReporte) => (
+                <Fila
+                  key={a.id}
+                  etiqueta={
+                    <>
+                      <span className="block">{a.identificador}</span>
+                      <span className="block text-caption text-fg-3">{[a.zona, a.status].filter(Boolean).join(" · ")}</span>
+                    </>
+                  }
+                  valores={[a.saldo_vencido, a.saldo_pendiente, ...NUMEROS.map((m) => a.meses[m] || 0)]}
+                />
+              ))}
+            </tbody>
+          </TablaMensual>
         )}
+
+        <Paginator page={paginaActual} totalPages={totalPaginas} totalRows={visibles.length} onPageChange={cambiarPagina} rowsLabel="áreas" />
       </div>
 
-      {/* Tabla de Resultados */}
-      {filteredAreas.length > 0 ? (
-        <div className="bg-white border border-line rounded-none shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-line">
-              <thead className="bg-canvas">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-gray-50 z-10">
-                    Área Privativa
+      {porZona.length > 1 && (
+        <section aria-labelledby="rg-zonas" className="space-y-3">
+          <h2 id="rg-zonas" className="text-body-lg font-bold text-fg">
+            Por zona
+          </h2>
+          <div className="overflow-x-auto rounded-panel border border-stroke-2">
+            <table className="w-full min-w-[480px] text-body">
+              <thead>
+                <tr className="text-caption font-semibold text-fg-3">
+                  <th scope="col" className="h-10 border-b border-stroke-2 px-4 text-left">
+                    Zona
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand">
-                    Status
+                  <th scope="col" className="h-10 border-b border-stroke-2 px-3 text-right">
+                    Áreas
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
-                    Saldo Anual
+                  <th scope="col" className="h-10 border-b border-stroke-2 px-3 text-right">
+                    Vencido
                   </th>
-                  {meses.map((mes, idx) => (
-                    <th
-                      key={idx}
-                      className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
-                    >
-                      {mes}
-                    </th>
-                  ))}
+                  <th scope="col" className="h-10 border-b border-stroke-2 px-4 text-right">
+                    Pendiente
+                  </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-line">
-                {filteredAreas.map((area, index) => (
-                  <tr
-                    key={area.id}
-                    className={index % 2 === 0 ?"bg-white":"bg-gray-50"}
-                  >
-                    <td className="px-4 py-3 whitespace-nowrap sticky left-0 bg-inherit z-10">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-gray-100 rounded-full">
-                          {area.tipo === "Propiedad" ? (
-                            <Building2 className="h-4 w-4 text-gray-600"/>
-                          ) : (
-                            <Store className="h-4 w-4 text-gray-600"/>
-                          )}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {area.identificador}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {area.tipo}
-                          </div>
-                        </div>
-                      </div>
+              <tbody>
+                {porZona.map(([nombre, z]) => (
+                  <tr key={nombre} className="hover:bg-surface-2">
+                    <th scope="row" className="h-10 border-b border-stroke-3 px-4 text-left font-normal text-fg">
+                      {nombre}
+                    </th>
+                    <td className="border-b border-stroke-3 px-3 text-right text-fg-2 tabular-nums">{numero.format(z.total_areas)}</td>
+                    <td className={`border-b border-stroke-3 px-3 text-right font-semibold tabular-nums ${z.saldo_vencido > 0 ? "text-overdue" : "text-fg-4"}`}>
+                      {z.saldo_vencido > 0 ? formatCurrency(z.saldo_vencido) : "—"}
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                      {area.status}
-                    </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-right text-sm tabular-nums font-bold text-overdue">
-                      {formatCurrency(area.saldo_pendiente)}
-                    </td>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
-                      <td
-                        key={mes}
-                        className="px-4 py-3 text-sm text-right tabular-nums text-gray-700"
-                      >
-                        {formatCurrency(area.meses[mes] || 0)}
-                      </td>
-                    ))}
+                    <td className="border-b border-stroke-3 px-4 text-right font-semibold text-fg tabular-nums">{formatCurrency(z.saldo_pendiente)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-        </div>
-      ) : (
-        /* Estado vacío */
-        <div className="bg-white border border-line rounded-none shadow-sm p-12 text-center">
-          <div className="w-16 h-16 bg-gray-100 flex items-center justify-center mx-auto mb-4 rounded-full">
-            <FileText className="w-8 h-8 text-gray-400"/>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            {areas.length === 0
-              ? "No hay áreas con adeudos"
-              : "No hay resultados con los filtros aplicados"}
-          </h3>
-          <p className="text-gray-600 mb-6">
-            {areas.length === 0
-              ? "Todas las áreas están al corriente con sus pagos."
-              : "Ajusta los filtros de búsqueda para ver más resultados."}
-          </p>
-          <button
-            onClick={fetchReporteGeneral}
-            className="bg-brand-deep text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors duration-200 inline-flex items-center"
-          >
-            <RefreshCw className="w-4 h-4 mr-2"/>
-            Actualizar
-          </button>
-        </div>
+        </section>
       )}
-
-      {/* Resumen por Zona (si hay datos) */}
-      {estadisticas.estadisticas_por_zona &&
-        Object.keys(estadisticas.estadisticas_por_zona).length > 0 && (
-          <div className="bg-white border border-line rounded-none shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Resumen por Zona
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(estadisticas.estadisticas_por_zona).map(
-                ([zona, stats]) => (
-                  <div
-                    key={zona}
-                    className="border border-line p-4 bg-gray-50"
-                  >
-                    <h4 className="font-medium text-gray-900 mb-2">{zona}</h4>
-                    <div className="space-y-1 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Áreas:</span>
-                        <span className="tabular-nums font-bold">
-                          {stats.total_areas}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Pendiente:</span>
-                        <span className="tabular-nums font-bold text-overdue">
-                          {formatCurrency(stats.saldo_pendiente)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )
-              )}
-            </div>
-          </div>
-        )}
     </div>
   );
 }

@@ -8,6 +8,8 @@
 import { motion } from "framer-motion";
 import { SPRING } from "../motion";
 
+const numero = new Intl.NumberFormat("es-MX");
+
 export interface TabOption<T extends string> {
   id: T;
   label: string;
@@ -47,7 +49,7 @@ export function UnderlineTabs<T extends string>({
             }`}
           >
             {option.label}
-            {option.count !== undefined && <span className="text-caption font-medium text-fg-3 tabular-nums">{option.count}</span>}
+            {option.count !== undefined && <span className="text-caption font-medium text-fg-3 tabular-nums">{numero.format(option.count)}</span>}
             {active && <motion.span layoutId={layoutId} aria-hidden className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand" transition={SPRING.indicator} />}
           </button>
         );

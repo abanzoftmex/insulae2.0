@@ -253,6 +253,15 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), decimocuarta vuelta:**
+- **Reporte general de adeudos:**
+  - arriba, saldo vencido, saldo pendiente y "1,091 de 1,745" áreas con saldo vencido. Antes, "Total áreas con adeudos" contaba todas las áreas;
+  - las áreas van de la que más debe a la que menos, 50 por página, con pestañas "Con saldo vencido / Con saldo / Todas", buscador sin acentos y selector de zona. Antes salían las 1,745 de golpe, también las que no deben, con "$0.00" en rojo;
+  - el estado del área en español ("Disponible", "Vendida"…; antes "AVAILABLE"), también en el PDF, cuyas columnas ahora dicen "Estado" y "Pendiente";
+  - el resumen por zona como tabla, de la zona que más debe a la que menos;
+  - si la carga falla, "No pudimos cargar…" con "Reintentar". Antes decía que todas las áreas estaban al corriente. Se quitaron "Actualizar", el filtro por tipo (todas son propiedades) y una acción de servidor.
+- **Piezas:** la tabla mensual acepta columnas `alerta` (positivos en `overdue`); `fieldBaseClass` es el campo sin ancho, para un select junto a otros controles; las pestañas formatean sus cifras ("1,091").
+
 **Hecho (2026-10-29), decimotercera vuelta:**
 - **Resumen financiero:**
   - una sola tabla por tipo de cuota, con los totales de los tres años visibles (el elegido en crema) y el detalle mes por mes de ese año. Antes eran hasta cinco tablas de unas 40 columnas, con encabezados beige y tarjetas con sombra, y el año elegido solo cambiaba las cifras de arriba;
@@ -402,19 +411,17 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden:
-1. **Reporte general:**
-   - tarjeta con "Exportar PDF" rojo y "Actualizar" pizarra, cifras con borde de color y filtros dentro de otra tarjeta;
-   - el estado sale en inglés, tal como viene de la base ("AVAILABLE");
-   - un saldo de $0.00 se pinta en rojo.
-2. **Tablas anchas con doble scroll:** `WideTableSection` (cartera de cuotas, reporte general) tiene su propio scroll vertical dentro de la página. Pasarla al modelo de la tabla mensual.
-3. **Limpieza:**
-   - las clases `gray-*` que quedan (Reporte general);
-   - 6 clases de Tailwind v3 que en v4 no existen (`flex-shrink-0`), cuatro de ellas en la burbuja de superadmin;
+1. **Tablas anchas con doble scroll:** `WideTableSection` (reportes de cuotas ordinarias y extraordinarias) tiene su propio scroll vertical dentro de la página. Pasarla al modelo de la tabla mensual.
+2. **Limpieza:**
+   - ya no quedan clases `gray-*` (salvo los colores del PDF del reporte general);
+   - 4 `flex-shrink-0` de Tailwind v3, que en v4 no existen, en la burbuja de superadmin;
    - la burbuja de superadmin sigue en pizarra (`slate-*`): es interna, pero desentona.
 
 **Dato, no interfaz (decisión del usuario):** el Resumen financiero del portal no reparte igual que el panel de administración (`modules/financial-summary`), y por eso su balance ordinario 2025 (−$12.1 M) no coincide con el del Estado de resultados (−$10.8 M):
 - **egresos:** el portal resta *todos* los egresos en el balance ordinario, incluidos los "Gastos extraordinarios" ($9.7 M en 2025), y deja sin egresos el balance extraordinario. El panel aparta los de la categoría "Gastos extraordinarios" (`resolveBudgetGroup` + `CATEGORY_MAP`);
 - **ingresos:** el panel cuenta como extraordinarios también el comodato, las cuotas STC y las sanciones; el portal, solo las cuotas extraordinarias.
 - Alinear el portal con el panel cambia cifras que ven los condóminos: solo por los egresos, el balance ordinario 2025 pasaría de −$12.1 M a unos −$2.4 M. Mientras tanto, la pestaña de extraordinarias solo muestra cobros y dice dónde ver los gastos.
+
+**Acceso (decisión del usuario):** el Reporte general muestra los adeudos de *todas* las áreas a cualquier propietario (`requirePropietario`), como en el minisitio anterior. Se rotula como confidencial; si debe verlo solo el comité, hay que restringir el acceso.
 
 **Datos que no son de la interfaz:** la imagen guardada del aviso "13va Asamblea General Ordinaria" es un WebP negro de 600 × 776 (894 bytes); el contenido real está en su PDF.

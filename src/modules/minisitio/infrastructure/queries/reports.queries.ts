@@ -195,6 +195,16 @@ export async function getFeesReport(
 export type FeesReport = Awaited<ReturnType<typeof getFeesReport>>;
 
 /** Reporte general: todas las áreas con saldos y estadísticas por zona. */
+/** Estado del área (enum de la base) como se lee en el portal y en el PDF. */
+const ESTADO_AREA: Record<string, string> = {
+  UNASSIGNED: "Sin asignar",
+  AVAILABLE: "Disponible",
+  SOLD: "Vendida",
+  UNDER_CONSTRUCTION: "En construcción",
+  RENTED: "Rentada",
+  DELINQUENT: "Morosa",
+};
+
 export async function getGeneralReport(session: CondominoTokenPayload) {
   const year = new Date().getFullYear();
 
@@ -221,6 +231,7 @@ export async function getGeneralReport(session: CondominoTokenPayload) {
   let total_saldo_vencido = 0;
   let total_intereses = 0;
   let areas_con_saldo_vencido = 0;
+  let areas_con_saldo = 0;
 
   const out = areas.map((a) => {
     const bal = computeBalance(a.charges);
@@ -235,6 +246,7 @@ export async function getGeneralReport(session: CondominoTokenPayload) {
     total_saldo_vencido += bal.saldo_vencido;
     total_intereses += bal.intereses_acumulados;
     if (bal.saldo_vencido > 0) areas_con_saldo_vencido++;
+    if (bal.saldo_pendiente > 0) areas_con_saldo++;
     const zona = a.zone || "Sin zona";
     if (!estadisticasPorZona[zona]) estadisticasPorZona[zona] = { total_areas: 0, saldo_pendiente: 0, saldo_vencido: 0 };
     estadisticasPorZona[zona].total_areas++;
@@ -248,7 +260,7 @@ export async function getGeneralReport(session: CondominoTokenPayload) {
       direccion: "",
       zona,
       uso_suelo: a.useType || "Sin uso definido",
-      status: a.status || "",
+      status: a.status ? (ESTADO_AREA[a.status] ?? a.status) : "",
       m2_totales: num(a.m2Original),
       meses,
       saldo_pendiente: bal.saldo_pendiente,
@@ -260,9 +272,13 @@ export async function getGeneralReport(session: CondominoTokenPayload) {
 
   return {
     success: true as const,
+    /** Año de los meses: lo que falta pagar de los cargos que vencen en cada mes de este año. */
+    anio: year,
     areas: out,
     estadisticas: {
+      /** Todas las áreas del condominio (antes se rotulaba "con adeudos"). */
       total_areas: out.length,
+      areas_con_saldo,
       total_propiedades: out.length,
       total_arrendamientos: 0,
       total_saldo_pendiente: round2(total_saldo_pendiente),

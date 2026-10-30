@@ -31,6 +31,8 @@ export interface Columna {
   separador?: boolean;
   /** Fondo crema: la columna del año elegido. */
   destacada?: boolean;
+  /** Montos positivos en el color de "vencido" (saldo vencido). */
+  alerta?: boolean;
 }
 
 /** Encabezado que agrupa columnas consecutivas ("Total del año", "2025, mes por mes"). */
@@ -129,14 +131,15 @@ export function Fila({
 }) {
   const columnas = use(ColumnasContext);
   const e = ESTILOS[estilo];
-  const clase = ([peso, color]: [string, string], valor: number) => `${peso} ${conSigno && valor < 0 ? "text-overdue" : color}`;
+  const clase = ([peso, color]: [string, string], valor: number, c: Columna) =>
+    `${peso} ${(conSigno && valor < 0) || (c.alerta && valor > 0) ? "text-overdue" : color}`;
   return (
     <tr className={e.fila}>
       <th scope="row" className={`${ETIQUETA} ${e.etiqueta}`}>
         {etiqueta}
       </th>
       {columnas.map((c, i) => (
-        <Monto key={c.id} valor={valores[i] || 0} className={`${bordeDe(c)} ${fondoDe(c)} ${clase(i === 0 ? e.primera : e.resto, valores[i] || 0)}`} />
+        <Monto key={c.id} valor={valores[i] || 0} className={`${bordeDe(c)} ${fondoDe(c)} ${clase(i === 0 ? e.primera : e.resto, valores[i] || 0, c)}`} />
       ))}
     </tr>
   );

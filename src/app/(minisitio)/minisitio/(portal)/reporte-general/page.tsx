@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
-import { getGeneralReport, type GeneralReport } from "@/modules/minisitio/infrastructure/queries/reports.queries";
+import { getGeneralReport } from "@/modules/minisitio/infrastructure/queries/reports.queries";
 import { requirePropietario } from "../_reportes/require-propietario";
 import { ReporteGeneralView } from "./reporte-general-view";
 
@@ -10,13 +10,12 @@ export default async function ReporteGeneralPage() {
   const session = await requireCondominoSession();
   await requirePropietario(session);
 
-  // Igual que la pantalla vieja: si la carga falla se muestra el estado vacío.
-  let report: GeneralReport | null = null;
-  try {
-    report = await getGeneralReport(session);
-  } catch (error) {
+  // Si la carga falla, la vista lo dice y ofrece reintentar (antes mostraba "todas las áreas
+  // están al corriente").
+  const report = await getGeneralReport(session).catch((error) => {
     console.error("[minisitio] reporte-general:", error);
-  }
+    return null;
+  });
 
-  return <ReporteGeneralView initialAreas={report?.areas || []} initialEstadisticas={report?.estadisticas || {}} />;
+  return <ReporteGeneralView report={report} />;
 }
