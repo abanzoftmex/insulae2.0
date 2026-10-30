@@ -236,6 +236,15 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), décima vuelta:**
+- **Acceso:** entrar, olvidé y nueva contraseña usan un marco compartido (`(public)/_components/auth-shell.tsx`):
+  - formulario sobre blanco con el sello y la foto de Val'Quirico con un solo velo olivo plano;
+  - campos del portal, "Mostrar" la contraseña y mensajes claros: enlace vencido, faltante o sesión cerrada por inactividad.
+  - Se quitó el modal de "olvidé", que repetía su página, junto con los degradados, las MAYÚSCULAS y el botón dorado que se encogía.
+- **Errores:**
+  - dentro del portal, un error o un `notFound()` se muestran en el panel con "Reintentar" (`(portal)/error.tsx` y `not-found.tsx`) y el shell queda en pie; antes se perdía toda la navegación;
+  - fuera del portal, el mismo marco de acceso.
+
 **Hecho (2026-10-29), novena vuelta:**
 - **Año por defecto:** los reportes abren en el último año con ingresos o egresos (2025), no en 2026 en ceros. Los cargos se generan por adelantado y empujaban el año actual.
 - **Resumen financiero:**
@@ -349,7 +358,7 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
    - las cifras de Estado de resultados siguen con sombra e ícono (pasarlas a `StatStrip`);
    - los encabezados beige de `compact-financial-table`.
    - **Dato, no interfaz:** el Resumen financiero y el Estado de resultados no coinciden en 2025 (balance de −$12.1 M frente a −$10.8 M), porque cada uno calcula distinto.
-2. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
+2. **Aviso de privacidad** (pantalla, modal y `/privacy`) **y el acceso de superadmin.**
 3. **Limpieza:**
    - 41 clases que no existen en Tailwind v4;
    - 16 `alert()`;

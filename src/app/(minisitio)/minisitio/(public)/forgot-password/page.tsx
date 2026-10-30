@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { getProjectInfo } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { ForgotPasswordView } from "./forgot-password-view";
 
-export const metadata: Metadata = { title: "Restablecer contraseña" };
+export const metadata: Metadata = { title: "Olvidé mi contraseña" };
 
-export default async function ForgotPasswordPage() {
-  const proyecto = await getProjectInfo();
-  return <ForgotPasswordView proyecto={proyecto} />;
+export default function ForgotPasswordPage() {
+  return <ForgotPasswordView />;
 }
