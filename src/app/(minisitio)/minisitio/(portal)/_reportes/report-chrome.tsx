@@ -3,18 +3,21 @@ import { Filter } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
 /**
- * Piezas de cromo compartidas por los reportes de cuotas (antes
- * `components/reports/ReportChrome.js` del minisitio), calcadas del reporte de cuotas del panel.
+ * Piezas compartidas por los reportes del condominio, con el lenguaje del portal
+ * (docs/minisitio-design-system.md): mayúsculas solo al inicio, cifras en tinta con
+ * `tabular-nums`, tarjetas con borde y sin sombra, y el color solo cuando significa algo.
+ * Antes eran un calco del pergamino del panel (bandas olivo, MAYÚSCULAS con tracking y chips de
+ * ícono); la API se conserva para no tocar cada reporte.
  */
 
-/** Encabezado de página: badge de regreso + título olivo + subtítulo + acciones */
+/** Encabezado del reporte: título, contexto y acciones. El regreso ya lo dan el historial y las migas del shell. */
 export function ReportHeader({
-  backSlot,
   title,
   subtitle,
   actions,
   className,
 }: {
+  /** Se ignora: el shell ya trae atrás/adelante y migas. */
   backSlot?: ReactNode;
   title: ReactNode;
   subtitle?: ReactNode;
@@ -22,33 +25,20 @@ export function ReportHeader({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-[#4c4a24]/20",
-        className
-      )}
-    >
-      <div className="flex items-start gap-3">
-        {backSlot}
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <h1 className="text-3xl font-extrabold text-[#4c4a24] tracking-tighter uppercase">{title}</h1>
-          {subtitle && (
-            <p className="text-[#7a5e44] text-[11px] font-bold uppercase tracking-tight">{subtitle}</p>
-          )}
-        </div>
+    <div className={cn("flex flex-col justify-between gap-4 border-b border-stroke-3 pb-4 md:flex-row md:items-end", className)}>
+      <div className="min-w-0">
+        <h2 className="text-title font-bold text-fg first-letter:uppercase">{title}</h2>
+        {subtitle && <p className="mt-0.5 text-body text-fg-3">{subtitle}</p>}
       </div>
-
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
 
-/** Tarjeta KPI blanca sobre pergamino, con cuadro de icono a la derecha */
+/** Cifra de resumen. El ícono se acepta por compatibilidad pero no se pinta (nada de chips de ícono). */
 export function KpiCard({
   label,
   value,
-  icon,
-  iconClassName = "bg-[#4c4a24]",
   className,
 }: {
   label: ReactNode;
@@ -58,145 +48,81 @@ export function KpiCard({
   className?: string;
 }) {
   return (
-    <div
-      className={cn(
-        "p-4 rounded-xl bg-white border border-[#c8b8a0]/40 shadow-xs flex items-center justify-between",
-        className
-      )}
-    >
-      <div>
-        <p className="text-[9px] font-bold uppercase tracking-widest text-[#7a5e44]">{label}</p>
-        <p className="text-2xl font-bold text-[#2b1e12] tabular-nums mt-0.5">{value}</p>
-      </div>
-      {icon && (
-        <div className={cn("h-9 w-9 rounded-lg text-white flex items-center justify-center", iconClassName)}>
-          {icon}
-        </div>
-      )}
+    <div className={cn("rounded-panel border border-stroke-2 bg-surface px-5 py-4", className)}>
+      <p className="text-body font-semibold text-fg-3">{label}</p>
+      <p className="mt-0.5 text-title font-bold text-fg tabular-nums">{value}</p>
     </div>
   );
 }
 
-/** Tarjeta KPI ancha usada para la simbología P/C */
-export function LegendCard({
-  label,
-  children,
-  className,
-}: {
-  label: ReactNode;
-  children?: ReactNode;
-  className?: string;
-}) {
+/** Tarjeta de simbología (P/C y estados de vencimiento). */
+export function LegendCard({ label, children, className }: { label: ReactNode; children?: ReactNode; className?: string }) {
   return (
-    <div
-      className={cn(
-        "p-4 rounded-xl bg-white border border-[#c8b8a0]/40 shadow-xs flex items-center justify-between",
-        className
-      )}
-    >
-      <div>
-        <p className="text-[9px] font-bold uppercase tracking-widest text-[#7a5e44]">{label}</p>
-        <div className="flex items-center gap-2 mt-1.5 flex-wrap">{children}</div>
-      </div>
+    <div className={cn("rounded-panel border border-stroke-2 bg-surface px-5 py-4", className)}>
+      <p className="text-body font-semibold text-fg-3">{label}</p>
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5">{children}</div>
     </div>
   );
 }
 
 const LEGEND_TONES = {
-  owner: "bg-[#faf6f0] border-[#c8b8a0]/40 text-[#7a5e44]",
-  commerce: "bg-[#fdf6fa] border-[#f5e0eb] text-[#8f1a3d]",
-  ok: "bg-emerald-50 border-emerald-200 text-emerald-700",
-  warn: "bg-amber-50 border-amber-200 text-amber-700",
-  late: "bg-rose-50 border-rose-200 text-rose-700",
+  owner: "text-fg-2",
+  commerce: "text-fg-2",
+  ok: "text-success",
+  warn: "text-warning",
+  late: "text-overdue",
 };
 
-/** Pastilla de leyenda (P: Propietario / C: Comercio y estados de vencimiento) */
-export function LegendPill({
-  tone = "owner",
-  children,
-}: {
-  tone?: keyof typeof LEGEND_TONES;
-  children?: ReactNode;
-}) {
+/** Leyenda: un punto del color del estado y su nombre (sin pastillas de color). */
+export function LegendPill({ tone = "owner", children }: { tone?: keyof typeof LEGEND_TONES; children?: ReactNode }) {
   return (
-    <span className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold border", LEGEND_TONES[tone] ?? LEGEND_TONES.owner)}>
+    <span className={cn("inline-flex items-center gap-1.5 text-caption font-medium", LEGEND_TONES[tone] ?? LEGEND_TONES.owner)}>
+      <span aria-hidden className="h-2 w-2 rounded-full bg-current" />
       {children}
     </span>
   );
 }
 
-/** Panel blanco con franja olivo superior (barra de filtros) */
-export function FilterPanel({
-  title = "Filtros de búsqueda",
-  children,
-  className,
-}: {
-  title?: ReactNode;
-  children?: ReactNode;
-  className?: string;
-}) {
+/** Panel de filtros: borde fino y un título discreto (antes una banda olivo). */
+export function FilterPanel({ title = "Filtros", children, className }: { title?: ReactNode; children?: ReactNode; className?: string }) {
   return (
-    <div className={cn("overflow-hidden rounded-card border border-[#c8b8a0]/40 bg-white shadow-sm", className)}>
-      <div className="px-4 py-2.5 bg-[#4c4a24] text-white flex items-center gap-2 rounded-t-card">
-        <Filter className="h-3.5 w-3.5 text-white/80" />
-        <p className="text-[10px] font-bold uppercase tracking-widest text-white">{title}</p>
-      </div>
+    <div className={cn("rounded-panel border border-stroke-2 bg-surface", className)}>
+      <p className="flex items-center gap-2 border-b border-stroke-3 px-4 py-2.5 text-body font-semibold text-fg first-letter:uppercase">
+        <Filter className="h-3.5 w-3.5 text-fg-3" aria-hidden />
+        {title}
+      </p>
       {children}
     </div>
   );
 }
 
-/** Etiqueta de campo dentro de la barra de filtros */
+/** Etiqueta de campo dentro del panel de filtros. */
 export function FieldLabel({ children, className }: { children?: ReactNode; className?: string }) {
-  return (
-    <label
-      className={cn(
-        "text-[10px] font-bold uppercase tracking-widest text-[#7a5e44] leading-none mb-1.5 block",
-        className
-      )}
-    >
-      {children}
-    </label>
-  );
+  return <label className={cn("mb-1.5 block text-caption font-semibold text-fg-3", className)}>{children}</label>;
 }
 
 /**
- * Contenedor a sangre de la tabla extensiva: bordes pergamino arriba/abajo,
- * sombra profunda, márgenes negativos para romper el padding del layout.
+ * Tabla extensiva a lo ancho del panel de contenido (márgenes negativos iguales a su padding),
+ * con scroll propio y las líneas de bloque de las FAP en los tonos de borde del portal.
  */
 export function WideTableSection({ children, className }: { children?: ReactNode; className?: string }) {
   return (
-    <section
-      className={cn(
-        "overflow-hidden border-t border-b border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm -mx-4 md:-mx-6 lg:-mx-10 -mb-4 md:-mb-6 lg:-mb-8 rounded-none",
-        className
-      )}
-    >
+    <section className={cn("-mx-4 -mb-4 overflow-hidden border-y border-stroke-2 bg-surface sm:-mx-6 sm:-mb-6", className)}>
       <style
         dangerouslySetInnerHTML={{
           __html: `
-          .fap-inventory-table td {
-            border-top: 1px solid #e5d8c8 !important;
-          }
-          .fap-block-start td {
-            border-top: 2.5px solid #a89678 !important;
-          }
-          .fap-block-end td {
-            border-bottom: 2.5px solid #a89678 !important;
-          }
+          .fap-inventory-table td { border-top: 1px solid var(--color-stroke-3) !important; }
+          .fap-block-start td { border-top: 2px solid var(--color-stroke) !important; }
+          .fap-block-end td { border-bottom: 2px solid var(--color-stroke) !important; }
         `,
         }}
       />
-      <div className="overflow-auto max-h-[75vh]">{children}</div>
+      <div className="max-h-[75vh] overflow-auto">{children}</div>
     </section>
   );
 }
 
-/** Pie de la tabla extensiva */
+/** Pie de la tabla extensiva. */
 export function ReportFootnote({ children }: { children?: ReactNode }) {
-  return (
-    <div className="flex justify-between items-center py-4 px-2">
-      <p className="text-[11px] font-bold text-[#7a5e44] uppercase tracking-widest">{children}</p>
-    </div>
-  );
+  return <p className="px-2 py-4 text-caption text-fg-3">{children}</p>;
 }

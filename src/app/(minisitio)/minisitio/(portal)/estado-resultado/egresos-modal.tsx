@@ -126,9 +126,9 @@ export function EgresosModal({
             {!loading && conceptos.length > 0 && (
               <button
                 onClick={exportarDatos}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center text-sm transition-colors"
+                className="bg-success text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center text-sm transition-colors"
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="w-4 h-4 mr-2"/>
                 Exportar CSV
               </button>
             )}
@@ -136,7 +136,7 @@ export function EgresosModal({
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 p-2 transition-colors"
             >
-              <X className="w-6 h-6" />
+              <X className="w-6 h-6"/>
             </button>
           </div>
         </div>
@@ -144,16 +144,16 @@ export function EgresosModal({
         <div className="flex-1 overflow-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader className="w-8 h-8 animate-spin text-blue-600 mr-3" />
+              <Loader className="w-8 h-8 animate-spin text-brand mr-3"/>
               <span className="text-gray-600">Cargando conceptos...</span>
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-                <div className="text-red-600 mb-4">Error: {error}</div>
+              <div className="bg-surface-2 border border-stroke-2 rounded-lg p-6 max-w-md mx-auto">
+                <div className="text-overdue mb-4">Error: {error}</div>
                 <button
                   onClick={fetchConceptos}
-                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
+                  className="bg-overdue text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
                 >
                   Reintentar
                 </button>
@@ -173,16 +173,16 @@ export function EgresosModal({
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-canvas sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-gray-50">
                       Concepto
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
                       Total Anual
                     </th>
                     {meses.map((mes, idx) => (
                       <th
                         key={idx}
-                        className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider whitespace-nowrap"
+                        className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
                       >
                         {mes}
                       </th>
@@ -193,18 +193,18 @@ export function EgresosModal({
                   {conceptos.map((concepto, idx) => (
                     <tr
                       key={concepto.id}
-                      className={idx % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-50 hover:bg-gray-100"}
+                      className={idx % 2 === 0 ?"bg-white hover:bg-gray-50":"bg-gray-50 hover:bg-gray-100"}
                     >
                       <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit">
                         {concepto.nombre}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900">
+                      <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-900">
                         {formatCurrency(concepto.totalAnual)}
                       </td>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                         <td
                           key={mes}
-                          className="px-4 py-3 text-sm text-right font-mono text-gray-700"
+                          className="px-4 py-3 text-sm text-right tabular-nums text-gray-700"
                         >
                           {formatCurrency(concepto.meses[mes])}
                         </td>
@@ -212,11 +212,11 @@ export function EgresosModal({
                     </tr>
                   ))}
 
-                  <tr className="bg-red-100 font-semibold border-t-2 border-red-300">
-                    <td className="px-4 py-4 text-sm text-red-900 uppercase sticky left-0 bg-red-100">
+                  <tr className="bg-surface-2 font-semibold border-t-2 border-stroke-2">
+                    <td className="px-4 py-4 text-sm text-overdue sticky left-0 bg-surface-2">
                       Total General
                     </td>
-                    <td className="px-4 py-4 text-base text-right font-mono font-bold text-red-900">
+                    <td className="px-4 py-4 text-base text-right tabular-nums font-bold text-overdue">
                       {formatCurrency(conceptos.reduce((sum, c) => sum + c.totalAnual, 0))}
                     </td>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => {
@@ -224,7 +224,7 @@ export function EgresosModal({
                       return (
                         <td
                           key={mes}
-                          className="px-4 py-4 text-sm text-right font-mono font-semibold text-red-900"
+                          className="px-4 py-4 text-sm text-right tabular-nums font-semibold text-overdue"
                         >
                           {formatCurrency(totalMes)}
                         </td>

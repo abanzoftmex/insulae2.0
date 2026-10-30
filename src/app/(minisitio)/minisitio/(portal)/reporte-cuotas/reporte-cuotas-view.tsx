@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { AlertTriangle, Layers, MapPin, RefreshCw } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Paginator } from "@/components/minisitio/ui/paginator";
 import { scrollContentToTop } from "@/components/minisitio/paths";
 import type { FeesReport, FeesReportArea } from "@/modules/minisitio/infrastructure/queries/reports.queries";
@@ -113,20 +112,20 @@ const cifrasDelMes = (area: FeesReportArea, year: number, mesIdx: number) => {
 function ReporteSkeleton() {
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
-      <div className="flex flex-col gap-3 pb-5 border-b border-[#4c4a24]/20">
-        <div className="h-8 w-80 max-w-full rounded-md bg-[#e0d5c8] animate-pulse" />
-        <div className="h-3 w-56 max-w-full rounded bg-[#ece5d8] animate-pulse" />
+      <div className="flex flex-col gap-3 pb-5 border-b border-brand">
+        <div className="h-8 w-80 max-w-full rounded-md bg-surface-2 animate-pulse"/>
+        <div className="h-3 w-56 max-w-full rounded bg-surface-2 animate-pulse"/>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         {[0, 1, 2, 3].map((i) => (
           <div
             key={`kpi-skeleton-${i}`}
-            className="h-[86px] rounded-xl bg-white border border-[#c8b8a0]/40 shadow-xs animate-pulse"
+            className="h-[86px] rounded-xl bg-white border border-stroke-2 shadow-xs animate-pulse"
           />
         ))}
       </div>
-      <div className="h-12 rounded-card border border-[#c8b8a0]/40 bg-[#4c4a24]/10 animate-pulse" />
-      <div className="h-[420px] rounded-card border border-[#c8b59d]/50 bg-white/88 animate-pulse" />
+      <div className="h-12 rounded-card border border-stroke-2 bg-brand animate-pulse"/>
+      <div className="h-[420px] rounded-card border border-stroke-2 bg-white/88 animate-pulse"/>
     </div>
   );
 }
@@ -213,8 +212,8 @@ export function ReporteCuotasView({
   if (!data && apiError) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
-        <AlertTriangle className="h-12 w-12 text-brand-accent mb-4" />
-        <h2 className="text-lg font-bold uppercase tracking-tight text-brand mb-1">
+        <AlertTriangle className="h-12 w-12 text-brand-accent mb-4"/>
+        <h2 className="text-lg font-bold text-brand mb-1">
           Error al cargar datos
         </h2>
         <p className="text-sm text-ink-soft mb-4">
@@ -223,9 +222,9 @@ export function ReporteCuotasView({
         <button
           type="button"
           onClick={retryLoadData}
-          className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest transition-standard active-scale hover:bg-brand-uplift"
+          className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-brand text-white text-[10px] font-bold transition-standard active-scale hover:bg-brand-uplift"
         >
-          <RefreshCw className="h-3.5 w-3.5" />
+          <RefreshCw className="h-3.5 w-3.5"/>
           Reintentar
         </button>
       </div>
@@ -307,16 +306,15 @@ export function ReporteCuotasView({
     <div className="space-y-4 animate-in fade-in duration-500">
       {/* ── HEADER SUPERIOR ── */}
       <ReportHeader
-        backSlot={<PageBackBadge className="mt-1.5 shrink-0" />}
         title="Estado de Cartera Ordinaria"
         subtitle={`${unidadesEnSistema} unidades privativas · Corte ${ultimaActualizacionTexto}`}
         actions={
           <button
             type="button"
             onClick={retryLoadData}
-            className="inline-flex items-center justify-center h-8 gap-2 px-3 text-[10px] font-bold uppercase rounded-full border border-[#c8b8a0] bg-white text-[#5a4838] transition-standard active-scale hover:bg-[#faf6f0]"
+            className="inline-flex items-center justify-center h-8 gap-2 px-3 text-[10px] font-bold rounded-full border border-stroke-2 bg-white text-fg transition-standard active-scale hover:bg-[#faf6f0]"
           >
-            <RefreshCw className="h-3.5 w-3.5" /> Actualizar
+            <RefreshCw className="h-3.5 w-3.5"/> Actualizar
           </button>
         }
       />
@@ -326,18 +324,18 @@ export function ReporteCuotasView({
         <KpiCard
           label="Total Unidades"
           value={unidadesEnSistema}
-          icon={<Layers className="h-4 w-4" />}
-          iconClassName="bg-[#4c4a24]"
+          icon={<Layers className="h-4 w-4"/>}
+          iconClassName="bg-brand"
         />
 
         <KpiCard
           label="Ciclo Fiscal"
           value={`${aniosDisponibles[0]} – ${aniosDisponibles[aniosDisponibles.length - 1]}`}
-          icon={<MapPin className="h-4 w-4" />}
-          iconClassName="bg-[#0e7490]"
+          icon={<MapPin className="h-4 w-4"/>}
+          iconClassName="bg-brand"
         />
 
-        <LegendCard label="Simbología de Cobranza" className="col-span-1 md:col-span-2">
+        <LegendCard label="Simbología de Cobranza"className="col-span-1 md:col-span-2">
           <LegendPill tone="owner">P: Propietario</LegendPill>
           <LegendPill tone="commerce">C: Comercio</LegendPill>
           <LegendPill tone="ok">Al corriente</LegendPill>
@@ -354,7 +352,7 @@ export function ReporteCuotasView({
             <select
               value={itemsPerPage}
               onChange={handleItemsPerPageChange}
-              className="h-8 w-full rounded-md border border-[#c8b8a0]/50 bg-white px-2 text-xs font-medium outline-none"
+              className="h-8 w-full rounded-md border border-stroke-2 bg-white px-2 text-xs font-medium outline-none"
             >
               {REGISTROS_POR_PAGINA.map((cantidad) => (
                 <option key={`limit-${cantidad}`} value={cantidad}>
@@ -381,30 +379,30 @@ export function ReporteCuotasView({
 
           {/* THEAD */}
           <thead className="sticky top-0 z-30 shadow-sm">
-            <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
-              <th className="sticky left-0 top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8] min-w-[290px]">
+            <tr className="bg-surface-2 text-left text-[10px] font-bold text-fg">
+              <th className="sticky left-0 top-0 z-50 px-3 py-3 border-b border-r-2 border-stroke-2 bg-surface-2 min-w-[290px]">
                 ÁREA PRIVATIVA/ FRACCIÓN DE ÁREA PRIVATIVA
               </th>
-              <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[160px]">
+              <th className="px-3 py-3 border-b border-stroke-2 bg-surface-2 text-center min-w-[160px]">
                 CARTERA VENCIDA {anioAnterior}
               </th>
-              <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[160px]">
+              <th className="px-3 py-3 border-b border-stroke-2 bg-surface-2 text-center min-w-[160px]">
                 PAGO ANTICIPADO {anioAnterior}
               </th>
               {aniosDisponibles.map((year) => (
                 <React.Fragment key={`head-anio-${year}`}>
-                  <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                  <th className="px-3 py-3 border-b border-stroke-2 bg-surface-2 text-center min-w-[180px]">
                     CUOTAS ORDINARIAS {year} (ANUAL)
                   </th>
-                  <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                  <th className="px-3 py-3 border-b border-stroke-2 bg-surface-2 text-center min-w-[180px]">
                     CUOTAS ORDINARIAS {year} (MENSUAL)
                   </th>
-                  <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                  <th className="px-3 py-3 border-b border-stroke-2 bg-surface-2 text-center min-w-[180px]">
                     CUOTAS ORDINARIAS {year} (SALDO ACTUAL)
                   </th>
                 </React.Fragment>
               ))}
-              <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold text-center min-w-[180px]">
+              <th className="px-3 py-3 border-b border-stroke-2 bg-surface-2 text-warning font-bold text-center min-w-[180px]">
                 SALDO ACTUAL
               </th>
               {aniosDisponibles.map((year) => (
@@ -412,7 +410,7 @@ export function ReporteCuotasView({
                   {MESES.map((mesIdx) => (
                     <th
                       key={`head-mes-${year}-${mesIdx}`}
-                      className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] text-center min-w-[110px]"
+                      className="px-3 py-3 border-b border-stroke-2 bg-surface-2 text-[9px] font-semibold text-fg-3 text-center min-w-[110px]"
                     >
                       {String(mesIdx + 1).padStart(2, "0")}/{year}
                     </th>
@@ -423,7 +421,7 @@ export function ReporteCuotasView({
           </thead>
 
           {/* TBODY */}
-          <tbody className="divide-y divide-[#e8ddd0] text-[#2b1e12]">
+          <tbody className="divide-y divide-stroke-3 text-fg">
             {filasPlanas.map((fila, rowIdx) => {
               const { area, tipo, isChild } = fila;
               const siguiente = filasPlanas[rowIdx + 1];
@@ -433,9 +431,9 @@ export function ReporteCuotasView({
               const isBlockEnd = (isChild || isParent) && (!siguiente || !siguiente.isChild);
 
               const rowBg = isParent
-                ? "bg-[#dfcfb9]"
+                ? "bg-surface-2"
                 : isChild
-                ? "bg-[#f0e6d6]"
+                ? "bg-surface-2"
                 : "bg-white";
 
               const hasCommerce = !!area.tieneArrendamiento;
@@ -486,7 +484,7 @@ export function ReporteCuotasView({
                 <tr
                   key={`${tipo}-${area.id}`}
                   className={cn(
-                    "h-12 border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] group",
+                    "h-12 border-t border-stroke-3 transition-colors hover:brightness-[0.97] group",
                     rowBg,
                     isBlockStart && "fap-block-start",
                     isBlockEnd && "fap-block-end",
@@ -497,15 +495,15 @@ export function ReporteCuotasView({
                   {/* Sticky: Área Privativa / Fracción */}
                   <td
                     className={cn(
-                      "sticky left-0 z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors",
+                      "sticky left-0 z-20 px-3 border-r-2 border-stroke-3 shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors",
                       rowBg
                     )}
                   >
-                    <p className="font-bold text-[#2b1e12] leading-tight truncate">
+                    <p className="font-bold text-fg leading-tight truncate">
                       {isChild ? `FAP: ${area.nombre}` : `AP: ${area.nombre}`}
                     </p>
                     {tipo === 'apol' && area.es_fusion === 1 && area.areasFusion?.length > 0 && (
-                      <p className="text-[9px] font-semibold uppercase tracking-tight text-[#7a5e44] leading-tight truncate">
+                      <p className="text-[9px] font-semibold text-fg-3 leading-tight truncate">
                         Fusión de: {(area.areasFusion as FeesReportArea[]).map(f => f.nombre).join(', ')}
                       </p>
                     )}
@@ -513,7 +511,7 @@ export function ReporteCuotasView({
                   </td>
 
                   {/* Cartera Vencida & Pago Anticipado */}
-                  <td className="px-2 border-r border-[#e8ddd0] text-center">
+                  <td className="px-2 border-r border-stroke-3 text-center">
                     <FinancialCards
                       owner={formatCurrency(carteraProp)}
                       commerce={formatCurrency(carteraCom)}
@@ -521,7 +519,7 @@ export function ReporteCuotasView({
                       statusColor={carteraStatusColor}
                     />
                   </td>
-                  <td className="px-2 border-r border-[#e8ddd0] text-center">
+                  <td className="px-2 border-r border-stroke-3 text-center">
                     <FinancialCards
                       owner={formatCurrency(anticipadoProp)}
                       commerce={formatCurrency(anticipadoCom)}
@@ -535,21 +533,21 @@ export function ReporteCuotasView({
 
                     return (
                       <React.Fragment key={`fila-anio-${area.id}-${year}`}>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">
+                        <td className="px-2 border-r border-stroke-3 text-center">
                           <FinancialCards
                             owner={formatCurrency(cifras.anualProp)}
                             commerce={formatCurrency(cifras.anualCom)}
                             hasCommerce={hasCommerce}
                           />
                         </td>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">
+                        <td className="px-2 border-r border-stroke-3 text-center">
                           <FinancialCards
                             owner={formatCurrency(cifras.mensualProp)}
                             commerce={formatCurrency(cifras.mensualCom)}
                             hasCommerce={hasCommerce}
                           />
                         </td>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">
+                        <td className="px-2 border-r border-stroke-3 text-center">
                           <FinancialCards
                             owner={formatCurrency(cifras.saldoProp)}
                             commerce={formatCurrency(cifras.saldoCom)}
@@ -561,7 +559,7 @@ export function ReporteCuotasView({
                   })}
 
                   {/* Saldo Actual Consolidado */}
-                  <td className="px-2 border-r-2 border-[#d0b898] bg-[#f0e0c8]/30 font-bold text-center">
+                  <td className="px-2 border-r-2 border-stroke-2 bg-surface-2 font-bold text-center">
                     <FinancialCards
                       owner={formatCurrency(saldoProp)}
                       commerce={formatCurrency(saldoCom)}
@@ -579,7 +577,7 @@ export function ReporteCuotasView({
                         return (
                           <td
                             key={`fila-mes-${area.id}-${year}-${mesIdx}`}
-                            className="px-2 border-r border-[#e8ddd0] text-center"
+                            className="px-2 border-r border-stroke-3 text-center"
                           >
                             <FinancialCards
                               owner={formatCurrency(mes.prop)}
@@ -599,19 +597,19 @@ export function ReporteCuotasView({
 
           {/* TFOOT — Totales de la página actual */}
           <tfoot>
-            <tr className="border-t-2 border-[#c8b49a] bg-[#e0d5c8] font-bold text-[#2b1e12]">
-              <td className="sticky left-0 z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2b1e12]">
+            <tr className="border-t-2 border-stroke-2 bg-surface-2 font-bold text-fg">
+              <td className="sticky left-0 z-20 border-r-2 border-stroke-2 bg-surface-2 px-3 py-2 text-xs font-bold text-fg">
                 TOTALES
               </td>
 
-              <td className="px-2 border-r border-[#c8b49a] text-center">
+              <td className="px-2 border-r border-stroke-2 text-center">
                 <FinancialCards
                   owner={formatCurrency(totales.carteraProp)}
                   commerce={formatCurrency(totales.carteraCom)}
                   hasCommerce
                 />
               </td>
-              <td className="px-2 border-r border-[#c8b49a] text-center">
+              <td className="px-2 border-r border-stroke-2 text-center">
                 <FinancialCards
                   owner={formatCurrency(totales.anticipadoProp)}
                   commerce={formatCurrency(totales.anticipadoCom)}
@@ -621,21 +619,21 @@ export function ReporteCuotasView({
 
               {aniosDisponibles.map((year) => (
                 <React.Fragment key={`total-anio-${year}`}>
-                  <td className="px-2 border-r border-[#c8b49a] text-center">
+                  <td className="px-2 border-r border-stroke-2 text-center">
                     <FinancialCards
                       owner={formatCurrency(totales.porAnio[year].anualProp)}
                       commerce={formatCurrency(totales.porAnio[year].anualCom)}
                       hasCommerce
                     />
                   </td>
-                  <td className="px-2 border-r border-[#c8b49a] text-center">
+                  <td className="px-2 border-r border-stroke-2 text-center">
                     <FinancialCards
                       owner={formatCurrency(totales.porAnio[year].mensualProp)}
                       commerce={formatCurrency(totales.porAnio[year].mensualCom)}
                       hasCommerce
                     />
                   </td>
-                  <td className="px-2 border-r border-[#c8b49a] text-center">
+                  <td className="px-2 border-r border-stroke-2 text-center">
                     <FinancialCards
                       owner={formatCurrency(totales.porAnio[year].saldoProp)}
                       commerce={formatCurrency(totales.porAnio[year].saldoCom)}
@@ -645,7 +643,7 @@ export function ReporteCuotasView({
                 </React.Fragment>
               ))}
 
-              <td className="px-2 border-r-2 border-[#d0b898] bg-[#f0e0c8] text-center">
+              <td className="px-2 border-r-2 border-stroke-2 bg-surface-2 text-center">
                 <FinancialCards
                   owner={formatCurrency(totales.saldoProp)}
                   commerce={formatCurrency(totales.saldoCom)}
@@ -658,7 +656,7 @@ export function ReporteCuotasView({
                   {MESES.map((mesIdx) => (
                     <td
                       key={`total-mes-${year}-${mesIdx}`}
-                      className="px-2 border-r border-[#c8b49a] text-center"
+                      className="px-2 border-r border-stroke-2 text-center"
                     >
                       <FinancialCards
                         owner={formatCurrency(totales.meses[year][mesIdx].prop)}

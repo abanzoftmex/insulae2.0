@@ -57,7 +57,7 @@ export const TABLE_TONE = {
 export function renderRowLabel(label: string, isTotal: boolean, textToneClass?: string) {
   if (isTotal) {
     return (
-      <span className={cn("text-[12px] font-bold uppercase tracking-wider", textToneClass)}>{label}</span>
+      <span className={cn("text-[12px] font-bold", textToneClass)}>{label}</span>
     );
   }
   const match = String(label ?? "").match(/^([^(]+)\s*\(([^)]+)\)$/);
@@ -67,7 +67,7 @@ export function renderRowLabel(label: string, isTotal: boolean, textToneClass?: 
     return (
       <div className="flex flex-col py-1">
         <span className="text-[12px] font-bold text-ink leading-snug">{title}</span>
-        <span className="text-[9px] font-bold text-ink-soft/75 uppercase tracking-wider mt-0.5">{subtitle}</span>
+        <span className="text-[9px] font-bold text-ink-soft/75 mt-0.5">{subtitle}</span>
       </div>
     );
   }
@@ -95,17 +95,17 @@ export function CompactFinancialTable({
     <Card className="overflow-hidden border-transparent shadow-layered">
       <CardHeader className="px-4 py-3 border-b border-line bg-card">
         <div className="flex flex-col">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">
+          <CardTitle className="text-[10px] font-bold text-ink-soft/60">
             {title}
           </CardTitle>
-          <h2 className="text-sm font-bold uppercase text-brand mt-0.5">{subtitle}</h2>
+          <h2 className="text-sm font-bold text-brand mt-0.5">{subtitle}</h2>
         </div>
       </CardHeader>
       <CardContent className="p-0">
         <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
           <table className="w-full text-left border-collapse min-w-480">
             <thead>
-              <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
+              <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold text-ink-soft/70">
                 <th
                   style={{ minWidth: "260px", width: "260px" }}
                   className={cn(

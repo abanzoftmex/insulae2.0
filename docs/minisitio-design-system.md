@@ -236,6 +236,18 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), octava vuelta:**
+- **Reportes:**
+  - las piezas compartidas (`_reportes/report-chrome.tsx` y `financial-cards.tsx`) pasaron del pergamino del panel al lenguaje del portal, con la misma API: cifras sin chips de ícono, leyenda con puntos, filtros sin banda olivo y celdas P/C con el color de su estado sobre fondo neutro;
+  - la tabla ancha ya no se sale del panel (márgenes iguales al padding).
+  - Paginador compacto ("1 … 5 6 7 … 59") con la página actual en olivo.
+  - Pasada mecánica a los ocho archivos de reportes:
+    - sin MAYÚSCULAS con tracking;
+    - `font-mono` → `tabular-nums`;
+    - fondos verde y rojo neutros, con el texto conservando su sentido;
+    - el pergamino en hexadecimal → tokens.
+  - Se quitó el botón de regreso de los reportes (el shell ya tiene historial y migas).
+
 **Hecho (2026-10-29), séptima vuelta:**
 - **Teléfonos de emergencia:**
   - agrupados en Emergencias (con "Llamar" destacado), Administración y Experiencias, cada contacto con sus acciones y un botón para copiar;
@@ -326,10 +338,10 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
-1. **Reportes:**
-   - paginador compacto, porque Cartera de cuotas pinta 59 números;
-   - sin MAYÚSCULAS ni degradados verde y rojo;
-   - año por defecto con datos.
+1. **Reportes, lo que falta:**
+   - en Resumen financiero, los chips de ícono de sus cifras y la pastilla "Fase 1 · Beta";
+   - en Estado de resultados, el título "Resumen financiero" y el botón "Actualizar" oscuro;
+   - año por defecto con datos (hoy abren en 2026, en ceros).
 2. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
 3. **Limpieza:**
    - 41 clases que no existen en Tailwind v4;

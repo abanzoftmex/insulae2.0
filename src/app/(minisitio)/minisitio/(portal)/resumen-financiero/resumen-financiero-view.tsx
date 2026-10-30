@@ -13,7 +13,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { PageBackBadge } from '@/components/ui/page-back-badge';
 import { StatCard } from '@/components/ui/stat-card';
 import type { FinancialYears, ResumenFinanciero } from '@/modules/minisitio/infrastructure/queries/financials.queries';
 import { getFinancialYearsAction, getResumenFinancieroAction } from '../../_actions/reports';
@@ -408,9 +407,9 @@ export function ResumenFinancieroView({
   if (error) {
     return (
       <div className="rounded-card border border-danger/25 bg-danger/10 p-4">
-        <h2 className="text-xl font-bold uppercase tracking-tight text-danger mb-2">Error</h2>
+        <h2 className="text-xl font-bold text-danger mb-2">Error</h2>
         <p className="text-sm font-medium text-danger">{error}</p>
-        <Button variant="destructive" size="sm" className="mt-4" onClick={fetchAllData}>
+        <Button variant="destructive"size="sm"className="mt-4"onClick={fetchAllData}>
           Reintentar
         </Button>
       </div>
@@ -419,7 +418,7 @@ export function ResumenFinancieroView({
 
   const segmentClass = (activo: boolean, ancho: string) =>
     cn(
-      'flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all',
+      'flex items-center rounded-md text-[10px] font-bold   transition-all',
       ancho,
       activo ? 'bg-card text-brand shadow-sm border border-line' : 'text-ink-soft hover:text-ink'
     );
@@ -429,11 +428,10 @@ export function ResumenFinancieroView({
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-5 border-b border-brand">
         <div className="flex items-start gap-3">
-          <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Resumen Financiero</h1>
-            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Fase 1 · BETA</Badge>
-            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+            <h1 className="text-3xl font-bold text-brand">Resumen Financiero</h1>
+            <Badge variant="brand"className="w-fit rounded-full px-4 py-2 text-[10px]">Fase 1 · BETA</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold">
               {CONDOMINIO} · Corte {anio} · {ultimaActualizacionTexto}
             </p>
           </div>
@@ -448,7 +446,7 @@ export function ResumenFinancieroView({
                   key={year}
                   type="button"
                   onClick={() => setAnio(year)}
-                  className={segmentClass(anio === year, 'h-8 px-3')}
+                  className={segmentClass(anio === year,'h-8 px-3')}
                 >
                   {year}
                 </button>
@@ -461,14 +459,14 @@ export function ResumenFinancieroView({
             <button
               type="button"
               onClick={() => setModo('ordinary')}
-              className={segmentClass(esOrdinario, 'h-8 px-4')}
+              className={segmentClass(esOrdinario,'h-8 px-4')}
             >
               Cuotas Ordinarias
             </button>
             <button
               type="button"
               onClick={() => setModo('extraordinary')}
-              className={segmentClass(!esOrdinario, 'h-8 px-4')}
+              className={segmentClass(!esOrdinario,'h-8 px-4')}
             >
               Cuotas Extraordinarias
             </button>
@@ -479,40 +477,40 @@ export function ResumenFinancieroView({
       {/* KPI Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
         {esOrdinario ? (
-          <StatCard accent="brand" label="Ingresos Ordinarios" value={formatCurrency(kpi.ingresos)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+          <StatCard accent="brand"label="Ingresos Ordinarios"value={formatCurrency(kpi.ingresos)} icon={<TrendingUp className="h-3.5 w-3.5"/>} />
         ) : (
-          <StatCard accent="cyan" label="Extraordinarios" value={formatCurrency(kpi.ingresos)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+          <StatCard accent="cyan"label="Extraordinarios"value={formatCurrency(kpi.ingresos)} icon={<DollarSign className="h-3.5 w-3.5"/>} />
         )}
-        <StatCard accent="lime" label="Otros Ingresos" value={formatCurrency(kpi.otrosIngresos)} icon={<Plus className="h-3.5 w-3.5" />} />
-        <StatCard accent="brand" label="Ingresos Totales" value={formatCurrency(kpi.ingresosTotales)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
-        <StatCard accent="gold" label="Egresos Totales" value={formatCurrency(kpi.egresos)} icon={<TrendingDown className="h-3.5 w-3.5" />} />
+        <StatCard accent="lime"label="Otros Ingresos"value={formatCurrency(kpi.otrosIngresos)} icon={<Plus className="h-3.5 w-3.5"/>} />
+        <StatCard accent="brand"label="Ingresos Totales"value={formatCurrency(kpi.ingresosTotales)} icon={<TrendingUp className="h-3.5 w-3.5"/>} />
+        <StatCard accent="gold"label="Egresos Totales"value={formatCurrency(kpi.egresos)} icon={<TrendingDown className="h-3.5 w-3.5"/>} />
         <StatCard
           accent={kpi.balanceAnual >= 0 ? 'emerald' : 'gold'}
           label="Balance Anual"
           value={formatCurrency(kpi.balanceAnual)}
-          icon={<Calendar className="h-3.5 w-3.5" />}
+          icon={<Calendar className="h-3.5 w-3.5"/>}
         />
         {esOrdinario ? (
           <StatCard
             accent="emerald"
             label={`Cuotas Ord. ${anio} (Anual)`}
             value={formatCurrency(kpi.ingresos)}
-            icon={<Wallet className="h-3.5 w-3.5" />}
+            icon={<Wallet className="h-3.5 w-3.5"/>}
           />
         ) : (
           <StatCard
             accent="emerald"
             label={`Cuotas Extr. Cargadas (Desde ${anios[0]})`}
             value={formatCurrency(kpi.extraordinariasAcumuladas)}
-            icon={<Wallet className="h-3.5 w-3.5" />}
+            icon={<Wallet className="h-3.5 w-3.5"/>}
           />
         )}
       </div>
 
       {/* Context Info */}
       <div className="flex items-center gap-2 p-3 bg-canvas/40 border border-line/30 rounded-md">
-        <Info className="h-4 w-4 text-brand-accent shrink-0" />
-        <p className="text-[11px] font-bold text-ink-soft/70 leading-tight uppercase tracking-tight">
+        <Info className="h-4 w-4 text-brand-accent shrink-0"/>
+        <p className="text-[11px] font-bold text-ink-soft/70 leading-tight">
           {`Ámbito: ${CONDOMINIO} · Datos consolidados de Insulae 2.0 · Periodo visual: ${anios.join(' / ')}`}
         </p>
       </div>

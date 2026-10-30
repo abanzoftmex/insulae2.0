@@ -367,7 +367,7 @@ export function EstadoResultadoView({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <AlertTriangle className="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+          <AlertTriangle className="w-16 h-16 text-warning mx-auto mb-4"/>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">
             Error al cargar datos
           </h2>
@@ -378,7 +378,7 @@ export function EstadoResultadoView({
             onClick={retryLoadData}
             className="bg-brand-deep text-white px-6 py-2 rounded-lg hover:bg-gray-800 inline-flex items-center"
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <RefreshCw className="w-4 h-4 mr-2"/>
             Reintentar
           </button>
         </div>
@@ -403,7 +403,7 @@ export function EstadoResultadoView({
         <div className="bg-gray-50 px-6 py-4 border-b border-line">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 uppercase tracking-wide">
+              <h1 className="text-lg font-semibold text-gray-900">
                 Resumen Financiero
               </h1>
               <p className="text-sm text-gray-600 mt-1">
@@ -434,7 +434,7 @@ export function EstadoResultadoView({
                 onClick={retryLoadData}
                 className="bg-gray-600 text-white px-4 py-2 text-sm font-medium hover:bg-gray-700 inline-flex items-center border border-gray-700"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className="w-4 h-4 mr-2"/>
                 Actualizar
               </button>
             </div>
@@ -445,19 +445,19 @@ export function EstadoResultadoView({
       {/* Cards de Resumen */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Total Ingresos */}
-        <div className="bg-white border border-green-200 rounded-lg p-6 shadow-sm">
+        <div className="bg-white border border-stroke-2 rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-green-800">
+            <h3 className="text-sm font-semibold text-success">
               Total Ingresos
             </h3>
-            <TrendingUp className="w-5 h-5 text-green-600" />
+            <TrendingUp className="w-5 h-5 text-success"/>
           </div>
           {totales ? (
-            <p className="text-2xl font-bold text-green-900 mt-2">
+            <p className="text-2xl font-bold text-success mt-2">
               {formatCurrency(totales.totalIngresos)}
             </p>
           ) : ingresos ? (
-            <p className="text-2xl font-bold text-green-900 mt-2">
+            <p className="text-2xl font-bold text-success mt-2">
               {formatCurrency(ingresos.totalPrincipalesAnual + ingresos.totalOtrosAnual)}
             </p>
           ) : (
@@ -465,25 +465,25 @@ export function EstadoResultadoView({
               <div className="h-8 bg-gray-200 rounded w-32 mt-2"></div>
             </div>
           )}
-          <p className="text-sm text-green-600 mt-1">
+          <p className="text-sm text-success mt-1">
             Año {anio}
           </p>
         </div>
 
         {/* Total Egresos */}
-        <div className="bg-white border border-red-200 rounded-lg p-6 shadow-sm">
+        <div className="bg-white border border-stroke-2 rounded-lg p-6 shadow-sm">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-red-800">
+            <h3 className="text-sm font-semibold text-overdue">
               Total Egresos
             </h3>
-            <TrendingDown className="w-5 h-5 text-red-600" />
+            <TrendingDown className="w-5 h-5 text-overdue"/>
           </div>
           {totales ? (
-            <p className="text-2xl font-bold text-red-900 mt-2">
+            <p className="text-2xl font-bold text-overdue mt-2">
               {formatCurrency(totales.egresos)}
             </p>
           ) : egresos ? (
-            <p className="text-2xl font-bold text-red-900 mt-2">
+            <p className="text-2xl font-bold text-overdue mt-2">
               {formatCurrency(egresos.totalAnual)}
             </p>
           ) : (
@@ -491,34 +491,34 @@ export function EstadoResultadoView({
               <div className="h-8 bg-gray-200 rounded w-32 mt-2"></div>
             </div>
           )}
-          <p className="text-sm text-red-600 mt-1">
+          <p className="text-sm text-overdue mt-1">
             Año {anio}
           </p>
         </div>
 
         {/* Balance Final */}
         <div className={`bg-white border rounded-lg p-6 shadow-sm ${
-          (totales?.balance || balance?.anual || 0) >= 0 ? 'border-green-200' : 'border-red-200'
+          (totales?.balance || balance?.anual || 0) >= 0 ? 'border-stroke-2' : 'border-stroke-2'
         }`}>
           <div className="flex items-center justify-between">
             <h3 className={`text-sm font-semibold ${
-              (totales?.balance || balance?.anual || 0) >= 0 ? 'text-green-800' : 'text-red-800'
+              (totales?.balance || balance?.anual || 0) >= 0 ? 'text-success' : 'text-overdue'
             }`}>
               Balance Final
             </h3>
             <BarChart3 className={`w-5 h-5 ${
-              (totales?.balance || balance?.anual || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+              (totales?.balance || balance?.anual || 0) >= 0 ? 'text-success' : 'text-overdue'
             }`} />
           </div>
           {totales ? (
             <p className={`text-2xl font-bold mt-2 ${
-              totales.balance >= 0 ? 'text-green-900' : 'text-red-900'
+              totales.balance >= 0 ? 'text-success' : 'text-overdue'
             }`}>
               {formatCurrency(totales.balance)}
             </p>
           ) : balance ? (
             <p className={`text-2xl font-bold mt-2 ${
-              balance.anual >= 0 ? 'text-green-900' : 'text-red-900'
+              balance.anual >= 0 ? 'text-success' : 'text-overdue'
             }`}>
               {formatCurrency(balance.anual)}
             </p>
@@ -528,7 +528,7 @@ export function EstadoResultadoView({
             </div>
           )}
           <p className={`text-sm mt-1 ${
-            (totales?.balance || balance?.anual || 0) >= 0 ? 'text-green-600' : 'text-red-600'
+            (totales?.balance || balance?.anual || 0) >= 0 ? 'text-success' : 'text-overdue'
           }`}>
             {(totales?.balance || balance?.anual || 0) >= 0 ? 'Superávit' : 'Déficit'} {anio}
           </p>
@@ -537,10 +537,10 @@ export function EstadoResultadoView({
 
       {/* INGRESOS */}
       <div className="bg-white border border-line shadow-sm overflow-x-auto">
-        <div className="bg-green-50 px-6 py-4 border-b border-green-200">
+        <div className="bg-surface-2 px-6 py-4 border-b border-stroke-2">
           <div className="flex items-center">
-            <TrendingUp className="w-5 h-5 text-green-600 mr-2" />
-            <h2 className="text-base font-semibold text-green-900 uppercase">
+            <TrendingUp className="w-5 h-5 text-success mr-2"/>
+            <h2 className="text-base font-semibold text-success">
               Ingresos
             </h2>
           </div>
@@ -549,15 +549,15 @@ export function EstadoResultadoView({
         {/* Contenido de Ingresos */}
         {ingresosError ? (
           <div className="p-6 text-center">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <AlertTriangle className="w-6 h-6 text-red-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-red-800">Error cargando ingresos</h3>
-              <p className="text-sm text-red-600 mb-3">{ingresosError}</p>
+            <div className="bg-surface-2 border border-stroke-2 rounded-lg p-4">
+              <AlertTriangle className="w-6 h-6 text-overdue mx-auto mb-2"/>
+              <h3 className="font-semibold text-overdue">Error cargando ingresos</h3>
+              <p className="text-sm text-overdue mb-3">{ingresosError}</p>
               <button
                 onClick={retryIngresos}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 inline-flex items-center text-sm"
+                className="bg-overdue text-white px-4 py-2 rounded-md hover:bg-red-700 inline-flex items-center text-sm"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className="w-4 h-4 mr-2"/>
                 Reintentar
               </button>
             </div>
@@ -565,7 +565,7 @@ export function EstadoResultadoView({
         ) : loadingIngresos || !ingresos ? (
           <div className="p-6">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="animate-spin w-4 h-4 border-2 border-green-600 border-t-transparent rounded-full"></div>
+              <div className="animate-spin w-4 h-4 border-2 border-stroke border-t-transparent rounded-full"></div>
               <span className="text-sm text-gray-600">Cargando detalles de ingresos...</span>
             </div>
             <TableSkeleton rows={4} cols={14} />
@@ -575,16 +575,16 @@ export function EstadoResultadoView({
             <table className="min-w-full divide-y divide-line">
               <thead className="bg-canvas">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-gray-50 z-10">
                     Concepto
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
                     Anual
                   </th>
                   {meses.map((mes, idx) => (
                     <th
                       key={idx}
-                      className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider whitespace-nowrap"
+                      className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
                     >
                       {mes}
                     </th>
@@ -596,18 +596,18 @@ export function EstadoResultadoView({
                 {ingresos.principales.map((ingreso, idx) => (
                 <tr
                   key={ingreso.id}
-                  className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                  className={idx % 2 === 0 ?"bg-white":"bg-gray-50"}
                 >
                   <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit z-10">
                     {ingreso.nombre}
                   </td>
-                  <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900">
+                  <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-900">
                     {formatCurrency(ingreso.totalAnual)}
                   </td>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                     <td
                       key={mes}
-                      className="px-4 py-3 text-sm text-right font-mono text-gray-700"
+                      className="px-4 py-3 text-sm text-right tabular-nums text-gray-700"
                     >
                       {formatCurrency(ingreso.meses[mes])}
                     </td>
@@ -616,17 +616,17 @@ export function EstadoResultadoView({
               ))}
 
               {/* Subtotal Principales */}
-              <tr className="bg-green-100 font-semibold">
-                <td className="px-4 py-3 text-sm text-green-900 sticky left-0 bg-green-100 z-10">
+              <tr className="bg-surface-2 font-semibold">
+                <td className="px-4 py-3 text-sm text-success sticky left-0 bg-surface-2 z-10">
                   Subtotal Ingresos Principales
                 </td>
-                <td className="px-4 py-3 text-sm text-right font-mono font-bold text-green-900">
+                <td className="px-4 py-3 text-sm text-right tabular-nums font-bold text-success">
                   {formatCurrency(ingresos.totalPrincipalesAnual)}
                 </td>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                   <td
                     key={mes}
-                    className="px-4 py-3 text-sm text-right font-mono font-semibold text-green-900"
+                    className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-success"
                   >
                     {formatCurrency(ingresos.totalesPrincipalesPorMes[mes])}
                   </td>
@@ -638,18 +638,18 @@ export function EstadoResultadoView({
                 ingresos.otros.map((ingreso, idx) => (
                   <tr
                     key={ingreso.id}
-                    className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                    className={idx % 2 === 0 ?"bg-white":"bg-gray-50"}
                   >
                     <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit z-10">
                       {ingreso.nombre}
                     </td>
-                    <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900">
+                    <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-900">
                       {formatCurrency(ingreso.totalAnual)}
                     </td>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                       <td
                         key={mes}
-                        className="px-4 py-3 text-sm text-right font-mono text-gray-700"
+                        className="px-4 py-3 text-sm text-right tabular-nums text-gray-700"
                       >
                         {formatCurrency(ingreso.meses[mes])}
                       </td>
@@ -659,17 +659,17 @@ export function EstadoResultadoView({
 
               {/* Subtotal Otros */}
               {ingresos.otros.length > 0 && (
-                <tr className="bg-green-100 font-semibold">
-                  <td className="px-4 py-3 text-sm text-green-900 sticky left-0 bg-green-100 z-10">
+                <tr className="bg-surface-2 font-semibold">
+                  <td className="px-4 py-3 text-sm text-success sticky left-0 bg-surface-2 z-10">
                     Subtotal Otros Ingresos
                   </td>
-                  <td className="px-4 py-3 text-sm text-right font-mono font-bold text-green-900">
+                  <td className="px-4 py-3 text-sm text-right tabular-nums font-bold text-success">
                     {formatCurrency(ingresos.totalOtrosAnual)}
                   </td>
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                     <td
                       key={mes}
-                      className="px-4 py-3 text-sm text-right font-mono font-semibold text-green-900"
+                      className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-success"
                     >
                       {formatCurrency(ingresos.totalesOtrosPorMes[mes])}
                     </td>
@@ -678,11 +678,11 @@ export function EstadoResultadoView({
               )}
 
               {/* Total Ingresos */}
-              <tr className="bg-green-200 font-bold border-t-2 border-green-400">
-                <td className="px-4 py-4 text-sm text-green-900 uppercase sticky left-0 bg-green-200 z-10">
+              <tr className="bg-surface-2 font-bold border-t-2 border-stroke">
+                <td className="px-4 py-4 text-sm text-success sticky left-0 bg-surface-2 z-10">
                   Total Ingresos
                 </td>
-                <td className="px-4 py-4 text-base text-right font-mono font-bold text-green-900">
+                <td className="px-4 py-4 text-base text-right tabular-nums font-bold text-success">
                   {formatCurrency(ingresos.totalAnual)}
                 </td>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => {
@@ -692,7 +692,7 @@ export function EstadoResultadoView({
                   return (
                     <td
                       key={mes}
-                      className="px-4 py-4 text-sm text-right font-mono font-bold text-green-900"
+                      className="px-4 py-4 text-sm text-right tabular-nums font-bold text-success"
                     >
                       {formatCurrency(totalMes)}
                     </td>
@@ -707,10 +707,10 @@ export function EstadoResultadoView({
 
       {/* EGRESOS */}
       <div className="bg-white border border-line shadow-sm">
-        <div className="bg-red-50 px-6 py-4 border-b border-red-200">
+        <div className="bg-surface-2 px-6 py-4 border-b border-stroke-2">
           <div className="flex items-center">
-            <TrendingDown className="w-5 h-5 text-red-600 mr-2" />
-            <h2 className="text-base font-semibold text-red-900 uppercase">
+            <TrendingDown className="w-5 h-5 text-overdue mr-2"/>
+            <h2 className="text-base font-semibold text-overdue">
               Egresos
             </h2>
           </div>
@@ -719,15 +719,15 @@ export function EstadoResultadoView({
         {/* Contenido de Egresos */}
         {egresosError ? (
           <div className="p-6 text-center">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <AlertTriangle className="w-6 h-6 text-red-600 mx-auto mb-2" />
-              <h3 className="font-semibold text-red-800">Error cargando egresos</h3>
-              <p className="text-sm text-red-600 mb-3">{egresosError}</p>
+            <div className="bg-surface-2 border border-stroke-2 rounded-lg p-4">
+              <AlertTriangle className="w-6 h-6 text-overdue mx-auto mb-2"/>
+              <h3 className="font-semibold text-overdue">Error cargando egresos</h3>
+              <p className="text-sm text-overdue mb-3">{egresosError}</p>
               <button
                 onClick={retryEgresos}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 inline-flex items-center text-sm"
+                className="bg-overdue text-white px-4 py-2 rounded-md hover:bg-red-700 inline-flex items-center text-sm"
               >
-                <RefreshCw className="w-4 h-4 mr-2" />
+                <RefreshCw className="w-4 h-4 mr-2"/>
                 Reintentar
               </button>
             </div>
@@ -735,7 +735,7 @@ export function EstadoResultadoView({
         ) : loadingEgresos || !egresos ? (
           <div className="p-6">
             <div className="flex items-center space-x-2 mb-4">
-              <div className="animate-spin w-4 h-4 border-2 border-red-600 border-t-transparent rounded-full"></div>
+              <div className="animate-spin w-4 h-4 border-2 border-stroke border-t-transparent rounded-full"></div>
               <span className="text-sm text-gray-600">Cargando grupos de egresos...</span>
             </div>
             <TableSkeleton rows={5} cols={14} />
@@ -745,16 +745,16 @@ export function EstadoResultadoView({
             <table className="min-w-full divide-y divide-line">
               <thead className="bg-canvas">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-gray-50 z-10">
                     Concepto
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
                     Anual
                   </th>
                   {meses.map((mes, idx) => (
                     <th
                       key={idx}
-                      className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider whitespace-nowrap"
+                      className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
                     >
                       {mes}
                     </th>
@@ -776,21 +776,21 @@ export function EstadoResultadoView({
                           {loadingOpciones[grupo.id] ? (
                             <div className="animate-spin w-4 h-4 mr-2 border-2 border-gray-600 border-t-transparent rounded-full"></div>
                           ) : expandedEgresos[grupo.id] ? (
-                            <ChevronDown className="w-4 h-4 mr-2" />
+                            <ChevronDown className="w-4 h-4 mr-2"/>
                           ) : (
-                            <ChevronRight className="w-4 h-4 mr-2" />
+                            <ChevronRight className="w-4 h-4 mr-2"/>
                           )}
                           {grupoIdx + 1}. {grupo.nombre}
                         </button>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-right font-mono font-bold text-gray-900">
+                    <td className="px-4 py-3 text-sm text-right tabular-nums font-bold text-gray-900">
                       {formatCurrency(grupo.totalAnual)}
                     </td>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                       <td
                         key={mes}
-                        className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900"
+                        className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-900"
                       >
                         {formatCurrency(grupo.meses[mes])}
                       </td>
@@ -814,20 +814,20 @@ export function EstadoResultadoView({
                               </span>
                               {opcion.nombre}
                             </div>
-                            <div className="flex items-center text-blue-600 text-xs">
-                              <Eye className="w-3 h-3 mr-1" />
+                            <div className="flex items-center text-brand text-xs">
+                              <Eye className="w-3 h-3 mr-1"/>
                               Ver conceptos
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-800">
+                        <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-800">
                           {formatCurrency(opcion.totalAnual)}
                         </td>
                         {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(
                           (mes) => (
                             <td
                               key={mes}
-                              className="px-4 py-3 text-sm text-right font-mono text-gray-700"
+                              className="px-4 py-3 text-sm text-right tabular-nums text-gray-700"
                             >
                               {formatCurrency(opcion.meses[mes])}
                             </td>
@@ -839,17 +839,17 @@ export function EstadoResultadoView({
               ))}
 
               {/* Total Egresos */}
-              <tr className="bg-red-200 font-bold border-t-2 border-red-400">
-                <td className="px-4 py-4 text-sm text-red-900 uppercase sticky left-0 bg-red-200 z-10">
+              <tr className="bg-surface-2 font-bold border-t-2 border-stroke">
+                <td className="px-4 py-4 text-sm text-overdue sticky left-0 bg-surface-2 z-10">
                   Total Egresos
                 </td>
-                <td className="px-4 py-4 text-base text-right font-mono font-bold text-red-900">
+                <td className="px-4 py-4 text-base text-right tabular-nums font-bold text-overdue">
                   {formatCurrency(egresos.totalAnual)}
                 </td>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                   <td
                     key={mes}
-                    className="px-4 py-4 text-sm text-right font-mono font-bold text-red-900"
+                    className="px-4 py-4 text-sm text-right tabular-nums font-bold text-overdue"
                   >
                     {formatCurrency(egresos.totalesPorMes[mes])}
                   </td>
@@ -865,18 +865,18 @@ export function EstadoResultadoView({
       <div className="bg-white border border-line shadow-sm overflow-x-auto">
         <div
           className={`px-6 py-4 ${
-            (balance?.anual || 0) >= 0 ? "bg-blue-50" : "bg-orange-50"
+            (balance?.anual || 0) >= 0 ? "bg-surface-2" : "bg-orange-50"
           }`}
         >
           <div className="flex items-center mb-4">
             <BarChart3
               className={`w-6 h-6 mr-3 ${
-                (balance?.anual || 0) >= 0 ? "text-blue-600" : "text-orange-600"
+                (balance?.anual || 0) >= 0 ? "text-brand" : "text-orange-600"
               }`}
             />
             <span
-              className={`text-lg font-bold uppercase ${
-                (balance?.anual || 0) >= 0 ? "text-blue-900" : "text-orange-900"
+              className={`text-lg font-bold ${
+                (balance?.anual || 0) >= 0 ? "text-brand" : "text-orange-900"
               }`}
             >
               Balance del Periodo
@@ -888,16 +888,16 @@ export function EstadoResultadoView({
           <table className="min-w-full divide-y divide-line">
             <thead className="bg-canvas">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase sticky left-0 bg-gray-50 z-10">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-gray-50 z-10">
                   Balance
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase">
+                <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
                   Anual
                 </th>
                 {meses.map((mes, idx) => (
                   <th
                     key={idx}
-                    className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase whitespace-nowrap"
+                    className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
                   >
                     {mes}
                   </th>
@@ -906,20 +906,20 @@ export function EstadoResultadoView({
             </thead>
             <tbody>
               <tr
-                className={(balance?.anual || 0) >= 0 ? "bg-blue-100" : "bg-orange-100"}
+                className={(balance?.anual || 0) >= 0 ?"bg-surface-2":"bg-orange-100"}
               >
                 <td
-                  className={`px-4 py-4 text-sm font-bold uppercase sticky left-0 z-10 ${
+                  className={`px-4 py-4 text-sm font-bold sticky left-0 z-10 ${
                     (balance?.anual || 0) >= 0
-                      ? "bg-blue-100 text-blue-900"
+                      ? "bg-surface-2 text-brand"
                       : "bg-orange-100 text-orange-900"
                   }`}
                 >
                   Balance Final
                 </td>
                 <td
-                  className={`px-4 py-4 text-base text-right font-mono font-bold ${
-                    (balance?.anual || 0) >= 0 ? "text-blue-900" : "text-orange-900"
+                  className={`px-4 py-4 text-base text-right tabular-nums font-bold ${
+                    (balance?.anual || 0) >= 0 ? "text-brand" : "text-orange-900"
                   }`}
                 >
                   {formatCurrency(balance?.anual || 0)}
@@ -929,8 +929,8 @@ export function EstadoResultadoView({
                   return (
                     <td
                       key={mes}
-                      className={`px-4 py-4 text-sm text-right font-mono font-semibold ${
-                        balanceMes >= 0 ? "text-blue-900" : "text-orange-900"
+                      className={`px-4 py-4 text-sm text-right tabular-nums font-semibold ${
+                        balanceMes >= 0 ? "text-brand" : "text-orange-900"
                       }`}
                     >
                       {formatCurrency(balanceMes)}
