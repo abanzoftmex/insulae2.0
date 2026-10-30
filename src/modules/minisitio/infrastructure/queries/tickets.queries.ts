@@ -65,6 +65,7 @@ export async function listTickets(session: CondominoTokenPayload, status?: Ticke
       id_cat_status_tickets: st.id,
       id_directorio: t.openedById,
       respuesta: t.response || null,
+      fecha_respuesta: toIso(t.respondedAt),
       pdf_respuesta: t.responsePdfUrl || null,
       imagen_respuesta: t.responseImageUrl || null,
       respuesta_usuario: respuestaUsuario,

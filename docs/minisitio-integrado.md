@@ -41,7 +41,7 @@ src/shared/application/auth/{signed-token,condomino-token,condomino-session,supe
 
 Las consultas devuelven exactamente el JSON que consumían las pantallas viejas (mismos nombres de campo). Se verificó con un script que compara ambos lados: **152/152 respuestas idénticas** para tres condóminos de prueba (propietario y comercio, solo comercios, propietario con tickets).
 
-Pantallas (`/minisitio/...`): inicio (`/minisitio`), `dashboard`, `propiedades`, `propiedades/[id]`, `propiedades/[id]/estado-cuenta`, `arrendamientos`, `arrendamientos/[id]`, `arrendamientos/[id]/estado-cuenta`, `comunicados`, `notificaciones`, `experiencias`, `tickets`, `mi-perfil`, `reglamentos`, `campos-contacto`, `aviso-privacidad`, `estado-resultado`, `resumen-financiero`, `reporte-cuotas`, `reporte-cuotas-extraordinaria`, `reporte-general`, más las públicas.
+Pantallas (`/minisitio/...`): inicio (`/minisitio`), `dashboard`, `propiedades`, `propiedades/[id]`, `propiedades/[id]/estado-cuenta`, `arrendamientos`, `arrendamientos/[id]`, `arrendamientos/[id]/estado-cuenta`, `comunicados` (Avisos), `notificaciones` (redirige a Avisos), `experiencias`, `tickets`, `mi-perfil`, `reglamentos`, `campos-contacto`, `aviso-privacidad`, `estado-resultado`, `resumen-financiero`, `reporte-cuotas`, `reporte-cuotas-extraordinaria`, `reporte-general`, más las públicas.
 
 ## Variables de entorno (producción)
 

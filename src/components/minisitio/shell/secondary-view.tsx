@@ -29,6 +29,7 @@ export function SecondaryView({
   onClose,
   title,
   context,
+  footer,
   children,
 }: {
   open: boolean;
@@ -37,6 +38,8 @@ export function SecondaryView({
   title: string;
   /** Contexto atenuado junto al título, como el canal junto a "Hilo" en Slack. */
   context?: string;
+  /** Fijo abajo, fuera del scroll (p. ej. el compositor de un hilo). */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const mounted = useSyncExternalStore(noopSubscribe, () => true, () => false);
@@ -103,7 +106,8 @@ export function SecondaryView({
               <X className="h-[18px] w-[18px]" aria-hidden />
             </button>
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-[calc(16px+env(safe-area-inset-bottom))]">{children}</div>
+          <div className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 ${footer ? "pb-4" : "pb-[calc(16px+env(safe-area-inset-bottom))]"}`}>{children}</div>
+          {footer && <div className="shrink-0 px-4 pt-2 pb-[calc(12px+env(safe-area-inset-bottom))]">{footer}</div>}
         </motion.div>
       )}
     </AnimatePresence>,

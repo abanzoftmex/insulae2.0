@@ -22,7 +22,7 @@ import { logoutAction } from "@/app/(minisitio)/minisitio/_actions/auth";
 import type { SidebarData } from "@/modules/minisitio/infrastructure/queries/sidebar.queries";
 import { useMinisitioStore } from "@/stores/minisitio.store";
 import { useMinisitioLayoutStore } from "@/stores/minisitio-layout.store";
-import { useMinisitioNavStore } from "@/stores/minisitio-nav.store";
+import { esAvisoNuevo, useMinisitioNavStore } from "@/stores/minisitio-nav.store";
 import { useMinisitioSession } from "./session-provider";
 import { useInactivityLogout } from "./use-inactivity-logout";
 import PrivacyNoticeModal from "./privacy-notice-modal";
@@ -32,15 +32,7 @@ import { Sidebar } from "./shell/sidebar";
 import { CommandPalette } from "./shell/command-palette";
 import { AccountMenu } from "./shell/account-menu";
 import { MobileSheet, MobileTabBar } from "./shell/mobile-nav";
-
-/** Sin registro en este dispositivo, cuenta como nuevo lo publicado en la última semana. */
-const AVISO_NUEVO_MS = 7 * 24 * 60 * 60 * 1000;
-
-function hayAvisoNuevo(ultimo: string | null, visto: string | undefined, ahora: number): boolean {
-  if (!ultimo) return false;
-  const publicado = Date.parse(ultimo);
-  return visto ? publicado > Date.parse(visto) : ahora - publicado < AVISO_NUEVO_MS;
-}
+import { Toaster } from "./ui/toaster";
 
 const chromeButton =
   "inline-flex h-7 w-7 items-center justify-center rounded-ctrl text-chrome-ink-soft outline-none hover:bg-chrome-hover hover:text-chrome-ink active:bg-chrome-pressed focus-visible:ring-2 focus-visible:ring-chrome-focus";
@@ -87,8 +79,7 @@ export function MinisitioShell({
   const mainRef = useRef<HTMLElement>(null);
   const userId = user?.id ?? null;
   const avisoVisto = useMinisitioNavStore((s) => (userId ? s.avisosVistos[userId] : undefined));
-  const markAvisosVistos = useMinisitioNavStore((s) => s.markAvisosVistos);
-  const enAvisos = /^\/(comunicados|notificaciones)(\/|$)/.test(path);
+  const enAvisos = /^\/comunicados(\/|$)/.test(path);
 
   // Preferencias persistidas: se rehidratan tras montar para que el primer render coincida
   // con el HTML del servidor. Layout effect: corre antes que los efectos de las páginas.
@@ -99,11 +90,9 @@ export function MinisitioShell({
     setMountedAt(Date.now());
   }, []);
 
-  // Entrar a Avisos los da por vistos hasta el más reciente.
-  useEffect(() => {
-    if (enAvisos && userId && sidebar.ultimoAviso) markAvisosVistos(userId, sidebar.ultimoAviso);
-  }, [enAvisos, userId, sidebar.ultimoAviso, markAvisosVistos]);
-  const avisosNoLeidos = mountedAt !== null && !enAvisos && hayAvisoNuevo(sidebar.ultimoAviso, avisoVisto, mountedAt);
+  // "Avisos" va en negrita si hay uno más nuevo que el último visto. Entrar a Avisos los da por
+  // vistos (lo hace la propia pantalla, después de calcular cuáles marcar como nuevos).
+  const avisosNoLeidos = mountedAt !== null && !enAvisos && esAvisoNuevo(sidebar.ultimoAviso, avisoVisto, mountedAt);
 
   // Cierre de sesión tras 30 minutos sin actividad.
   useInactivityLogout();
@@ -240,7 +229,7 @@ export function MinisitioShell({
               secondaryOpen ? "lg:mr-[404px]" : ""
             }`}
           >
-            <div className="sticky top-0 z-20 hidden h-[49px] shrink-0 items-center gap-2 border-b border-stroke-3 bg-surface/95 pr-4 pl-[18px] backdrop-blur supports-[backdrop-filter]:bg-surface/85 lg:flex">
+            <div className="sticky top-0 z-20 hidden h-[49px] shrink-0 items-center gap-2 border-b border-stroke-3 bg-surface pr-4 pl-[18px] lg:flex">
               {trail.length > 0 && (
                 <nav aria-label="Ruta" className="flex min-w-0 items-center gap-1.5 text-body text-fg-3">
                   {trail.map((crumb, index) => (
@@ -271,6 +260,7 @@ export function MinisitioShell({
       </MobileSheet>
 
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} model={model} onSelect={onSelect} />
+      <Toaster />
 
       {showPrivacyModal && (
         <PrivacyNoticeModal

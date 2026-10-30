@@ -1,24 +1,8 @@
 "use server";
 
-/** Solicitudes y reportes (tickets): pantalla Tickets y alta desde los estados de cuenta. */
+/** Solicitudes (tickets): alta y respuesta desde la pantalla Solicitudes y alta desde los estados de cuenta. */
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
-import {
-  createTicket,
-  listTicketDepartments,
-  listTickets,
-  replyToTicket,
-  type CreateTicketInput,
-  type TicketStatusFilter,
-} from "@/modules/minisitio/infrastructure/queries/tickets.queries";
-
-export async function listTicketsAction(status?: TicketStatusFilter) {
-  const session = await requireCondominoSession();
-  return listTickets(session, status);
-}
-
-export async function listTicketDepartmentsAction() {
-  return listTicketDepartments();
-}
+import { createTicket, replyToTicket, type CreateTicketInput } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
 
 export async function createTicketAction(input: CreateTicketInput) {
   const session = await requireCondominoSession();

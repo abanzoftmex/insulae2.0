@@ -37,3 +37,14 @@ export const useMinisitioNavStore = create<MinisitioNavState>()(
     },
   ),
 );
+
+/** Sin registro en este dispositivo, cuenta como nuevo lo publicado en la última semana. */
+export const AVISO_NUEVO_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** ¿El aviso publicado en `fecha` es nuevo para quien vio los avisos hasta `visto`? */
+export function esAvisoNuevo(fecha: string | null | undefined, visto: string | null | undefined, ahora: number): boolean {
+  if (!fecha) return false;
+  const publicado = Date.parse(fecha);
+  if (Number.isNaN(publicado)) return false;
+  return visto ? publicado > Date.parse(visto) : ahora - publicado < AVISO_NUEVO_MS;
+}

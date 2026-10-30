@@ -135,6 +135,7 @@
   --color-chrome-selected-ink: #3d3c22;              /* 9.25:1 sobre la píldora */
   --color-chrome-accent: #b58c42;                    /* marcador de 3px, 3.64:1 */
   --color-chrome-focus: #ffcf87;                     /* anillo de foco en el chrome, 7.78:1 */
+  --color-chrome-danger: #ff9b85;                    /* error sobre el marco (toasts), 6.92:1 */
 
   /* Avisos: conteos que piden acción y marcas de no leído */
   --color-mention: #b8431a;                          /* teja del sello; cifra blanca 5.45:1 */
@@ -158,6 +159,7 @@
   --shadow-toast: 0 0 0 1px rgb(29 28 29 / 0.13), 0 4px 12px rgb(0 0 0 / 0.08);
   --shadow-modal: 0 0 0 1px rgb(29 28 29 / 0.13), 0 18px 48px rgb(0 0 0 / 0.35);
   --shadow-button: 0 1px 3px rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);   /* botón en hover (Slack) */
+  --shadow-float: 0 0 0 1px rgb(29 28 29 / 0.13), 0 1px 3px rgb(0 0 0 / 0.08);     /* "flotante leve": píldora de fecha */
   --color-stroke-button: rgb(94 93 96 / 0.45);       /* borde del botón outline; el texto lo identifica */
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

@@ -153,6 +153,24 @@ Notas:
   - es un combobox con listbox, se maneja con ↑ ↓ Inicio Fin Enter Esc y la fila activa lleva olivo sólido;
   - acción "Nueva solicitud" → `/tickets?nueva=1`.
 - **Menú de cuenta** (`shell/account-menu.tsx`): popover de 260 px con filas de 32 px y resaltado sólido; "Cerrar sesión" se resalta en peligro.
+- **Diálogo** (`ui/dialog.tsx`): el modal de Slack.
+  - Medidas: 520 px y radio 8; encabezado de 70 px con título 22/30; contenido con 28 px a los lados (16 en el celular); acciones a la derecha, con una sola primaria.
+  - Entra de .95 a 1 en 80 ms sobre un velo olivo al 60 % y en el celular ocupa la pantalla.
+  - Atrapa el foco y Esc lo cierra.
+- **Campos** (`ui/field.ts`): 40 px, radio 8, borde de 1 px y anillo olivo. En el celular el texto va a 16 px: con menos, iOS hace zoom.
+- **Toasts** (`toast("…")` de `stores/minisitio-toast.store.ts`, que pinta `ui/toaster.tsx` en el shell):
+  - sustituyen a `alert()`;
+  - suben 20 px en 80 ms, se van a los 5 s y se pausan al pasar el cursor;
+  - van abajo al centro.
+- **Visor de imagen** (`ui/image-viewer.tsx`): pantalla completa sobre olivo casi negro, con "Abrir original" y cerrar.
+- **Hilo** (Solicitudes):
+  - mensajes de 36 px separados por una línea "N respuestas";
+  - compositor fijo en el pie de la vista secundaria, con radio 8, borde que se enciende con el foco y ⌘/Ctrl + Enter para enviar.
+- **Separador de día** (Avisos):
+  - una línea con una píldora (`shadow-float`, 13 px) que se fija bajo el encabezado al desplazarse;
+  - "Hoy", "Ayer" o el día con nombre;
+  - lo nuevo lleva `highlight` y la etiqueta "Nuevo" en `mention`.
+- **Pestañas** (Avisos, Solicitudes): 40 px, con cifra en caption. El subrayado olivo de 2 px se desliza con el resorte de la píldora del menú.
 - **Estados:**
   - **carga:** esqueleto con pulso 1 → .65 → 1 en 1 s, y spinner solo si tarda más de 400 ms;
   - **vacío:** una frase y, si aplica, la acción;
@@ -218,28 +236,36 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
-**Hecho (2026-10-29):**
+**Hecho (2026-10-29), segunda vuelta:**
+- **Avisos** como canal:
+  - separadores de día fijos, "Nuevo" desde la visita anterior, pestañas Todos / Vigentes y visor de imagen;
+  - sin los filtros que daban 0 ni la categoría "3".
+  - `/notificaciones` redirige aquí: era la misma lista, paginada.
+- **Solicitudes** como hilos:
+  - lista Abiertas / Cerradas y detalle en la vista secundaria;
+  - compositor que avisa que la respuesta reemplaza la anterior (el modelo guarda una sola);
+  - diálogo de alta compartido con los estados de cuenta;
+  - toasts en vez de `alert()`.
+  - Ya no se promete un aviso por correo al departamento: `createTicket` no envía ninguno.
+
+**Hecho (2026-10-29), primera vuelta:**
 - **Shell:** marco y paneles, barra superior con historial y buscador, barra lateral con secciones, señales y homónimos, ⌘K, menú de cuenta, celular (pestañas y hoja), vista secundaria y fundido entre pantallas.
 - **Inicio:** saldo vencido de todas las unidades, avisos como mensajes con detalle al lado, solicitudes y emergencias con `tel:`.
 - **Etiquetas:** unificadas ("Mis saldos", "Avisos", "Solicitudes"…).
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
-1. **Avisos** como canal, con detalle en la vista secundaria. Además:
-   - quitar los filtros que siempre dan 0;
-   - la categoría sale como "3".
-2. **Solicitudes** como hilos (la respuesta de la administración en la vista secundaria).
-3. **Mis saldos, Mis propiedades, Mis comercios y estados de cuenta** con un solo lenguaje de dinero. Además:
+1. **Mis saldos, Mis propiedades, Mis comercios y estados de cuenta** con un solo lenguaje de dinero. Además:
    - "Saldo pendiente" muestra el vencido;
    - las columnas "N/A" y "Sin estado".
-4. **Teléfonos de emergencia** con `tel:`, WhatsApp (`wa.me`), `mailto:` y mapa.
-5. **Documentos, Experiencias** (quitar las tarjetas de relleno) **y Mi perfil.**
-6. **Reportes:**
+2. **Teléfonos de emergencia** con `tel:`, WhatsApp (`wa.me`), `mailto:` y mapa.
+3. **Documentos, Experiencias** (quitar las tarjetas de relleno) **y Mi perfil.**
+4. **Reportes:**
    - paginador compacto, porque Cartera de cuotas pinta 59 números;
    - sin MAYÚSCULAS ni degradados verde y rojo;
    - año por defecto con datos.
-7. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
-8. **Limpieza:**
+5. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
+6. **Limpieza:**
    - 41 clases que no existen en Tailwind v4;
    - 16 `alert()`;
    - unas 825 clases `gray-*`.

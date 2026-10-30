@@ -6,16 +6,17 @@
  * aviso se abre en la vista secundaria, como un hilo de Slack, sin perder la lista.
  */
 import { useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { ArrowUpRight, CircleCheck, FileText, Phone, Plus, RotateCw } from "lucide-react";
+import { CircleCheck, FileText, Phone, Plus } from "lucide-react";
 import { msPath } from "@/components/minisitio/paths";
 import { useMinisitioSession } from "@/components/minisitio/session-provider";
 import { SecondaryView } from "@/components/minisitio/shell/secondary-view";
 import { buttonClass } from "@/components/minisitio/ui/button";
+import { ImageViewer, type ViewerImage } from "@/components/minisitio/ui/image-viewer";
+import { LoadError } from "@/components/minisitio/ui/load-error";
+import { AdminAvatar, AvisoImagen, AvisoPdf } from "./_avisos/aviso-parts";
 import { isPastCalendarDay, useDisplayTimeZone } from "./_lib/client-dates";
-import { formatCurrency } from "./_lib/format";
+import { formatCurrency, formatLongDate, formatShortDate } from "./_lib/format";
 
 export interface CuentaResumen {
   saldoVencido: number;
@@ -57,18 +58,6 @@ interface InicioViewProps {
   telefonos: TelefonoEmergencia[];
 }
 
-function fechaCorta(iso: string | null, timeZone?: string): string {
-  if (!iso) return "";
-  const date = new Date(iso);
-  return isNaN(date.getTime()) ? "" : date.toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric", timeZone });
-}
-
-function fechaLarga(iso: string | null, timeZone?: string): string {
-  if (!iso) return "";
-  const date = new Date(iso);
-  return isNaN(date.getTime()) ? "" : date.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric", timeZone });
-}
-
 function saludo(ahora: Date, timeZone?: string): string {
   const hora = Number(new Intl.DateTimeFormat("es-MX", { hour: "numeric", hourCycle: "h23", timeZone }).format(ahora));
   if (hora >= 5 && hora < 12) return "Buenos días";
@@ -94,6 +83,7 @@ export function InicioView({ cuenta, avisos, solicitudes, telefonos }: InicioVie
   const [ahora] = useState(() => new Date());
   // El aviso se conserva al cerrar para que el panel no se vacíe mientras sale.
   const [panel, setPanel] = useState<{ aviso: AvisoResumen | null; open: boolean }>({ aviso: null, open: false });
+  const [imagen, setImagen] = useState<ViewerImage | null>(null);
   const nombre = user?.nombre?.trim().split(/\s+/)[0] ?? "";
 
   return (
@@ -127,10 +117,11 @@ export function InicioView({ cuenta, avisos, solicitudes, telefonos }: InicioVie
         open={panel.open}
         onClose={() => setPanel((p) => ({ ...p, open: false }))}
         title="Aviso"
-        context={panel.aviso ? fechaCorta(panel.aviso.fecha, timeZone) : undefined}
+        context={panel.aviso ? formatShortDate(panel.aviso.fecha, timeZone) : undefined}
       >
-        {panel.aviso && <AvisoDetalle aviso={panel.aviso} timeZone={timeZone} />}
+        {panel.aviso && <AvisoDetalle aviso={panel.aviso} timeZone={timeZone} onImage={setImagen} />}
       </SecondaryView>
+      <ImageViewer image={imagen} onClose={() => setImagen(null)} />
     </div>
   );
 }
@@ -150,21 +141,6 @@ function SectionHeader({ id, title, href, linkLabel, linkAria }: { id: string; t
           {linkLabel}
         </Link>
       )}
-    </div>
-  );
-}
-
-function LoadError({ what }: { what: string }) {
-  const router = useRouter();
-  return (
-    <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-panel border border-stroke-2 px-4 py-3">
-      <p className="text-body text-fg-2">
-        <span className="font-semibold text-fg">No pudimos cargar {what}.</span> Vuelve a intentarlo en un momento.
-      </p>
-      <button type="button" onClick={() => router.refresh()} className={buttonClass("outline", "sm")}>
-        <RotateCw className="h-3.5 w-3.5" aria-hidden />
-        Reintentar
-      </button>
     </div>
   );
 }
@@ -229,15 +205,6 @@ function Cuenta({ cuenta }: { cuenta: CuentaResumen | null }) {
   );
 }
 
-function AdminAvatar() {
-  // 36 px con radio del 22 %: el avatar de mensaje de Slack, con el sello de Val'Quirico.
-  return (
-    <span aria-hidden className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] bg-highlight">
-      <Image src="/logo-mono.png" alt="" width={26} height={27} className="h-[27px] w-auto" />
-    </span>
-  );
-}
-
 function Avisos({
   avisos,
   abiertoId,
@@ -275,7 +242,7 @@ function Avisos({
                     <span className="flex items-baseline gap-2">
                       <span className="text-body font-bold text-fg">Administración</span>
                       <time dateTime={aviso.fecha ?? undefined} className="text-caption text-fg-3" suppressHydrationWarning>
-                        {fechaCorta(aviso.fecha, timeZone)}
+                        {formatShortDate(aviso.fecha, timeZone)}
                       </time>
                     </span>
                     <span className="block text-message font-semibold text-fg">{aviso.titulo}</span>
@@ -301,8 +268,8 @@ function Avisos({
   );
 }
 
-function AvisoDetalle({ aviso, timeZone }: { aviso: AvisoResumen; timeZone?: string }) {
-  const vigencia = fechaLarga(aviso.vigencia, timeZone);
+function AvisoDetalle({ aviso, timeZone, onImage }: { aviso: AvisoResumen; timeZone?: string; onImage: (image: ViewerImage) => void }) {
+  const vigencia = formatLongDate(aviso.vigencia, timeZone);
   return (
     <article className="space-y-4">
       <div className="flex items-center gap-2">
@@ -310,41 +277,14 @@ function AvisoDetalle({ aviso, timeZone }: { aviso: AvisoResumen; timeZone?: str
         <div className="min-w-0">
           <p className="text-body font-bold text-fg">Administración Val&apos;Quirico</p>
           <p className="text-caption text-fg-3">
-            <time dateTime={aviso.fecha ?? undefined}>{fechaLarga(aviso.fecha, timeZone)}</time>
+            <time dateTime={aviso.fecha ?? undefined}>{formatLongDate(aviso.fecha, timeZone)}</time>
           </p>
         </div>
       </div>
       <h3 className="text-subtitle font-bold text-fg">{aviso.titulo}</h3>
       {aviso.mensaje && <p className="text-message whitespace-pre-line text-fg">{aviso.mensaje}</p>}
-      {aviso.imagen && (
-        <a
-          href={aviso.imagen}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block overflow-hidden rounded-panel border border-stroke-2 outline-none focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- imágenes de la 1.0 en otro host */}
-          <img src={aviso.imagen} alt={`Imagen del aviso «${aviso.titulo}»`} className="w-full" />
-          <span className="sr-only"> (abre la imagen en otra pestaña)</span>
-        </a>
-      )}
-      {aviso.pdf && (
-        <a
-          href={aviso.pdf}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-3 rounded-panel border border-stroke-2 p-3 outline-none hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-brand"
-        >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-surface bg-surface-3 text-fg-2">
-            <FileText className="h-5 w-5" aria-hidden />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-body font-semibold text-fg">Documento del aviso</span>
-            <span className="block text-caption text-fg-3">PDF · se abre en otra pestaña</span>
-          </span>
-          <ArrowUpRight className="h-4 w-4 shrink-0 text-fg-3" aria-hidden />
-        </a>
-      )}
+      {aviso.imagen && <AvisoImagen src={aviso.imagen} titulo={aviso.titulo} onOpen={() => onImage({ src: aviso.imagen ?? "", title: aviso.titulo })} />}
+      {aviso.pdf && <AvisoPdf href={aviso.pdf} />}
       {vigencia && (
         <p className="text-caption text-fg-3">
           {isPastCalendarDay(aviso.vigencia, timeZone) ? `Estuvo vigente hasta el ${vigencia}.` : `Vigente hasta el ${vigencia}.`}
@@ -384,7 +324,7 @@ function Solicitudes({ solicitudes, timeZone }: { solicitudes: SolicitudesResume
                   <span className="truncate">{s.departamento || "Administración"}</span>
                   <span aria-hidden>·</span>
                   <span className="shrink-0" suppressHydrationWarning>
-                    {fechaCorta(s.fecha, timeZone)}
+                    {formatShortDate(s.fecha, timeZone)}
                   </span>
                   {s.respondida && <span className="ml-auto shrink-0 font-semibold text-brand">Respondida</span>}
                 </span>

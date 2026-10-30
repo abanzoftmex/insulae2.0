@@ -1,27 +1,10 @@
-import type { Metadata } from "next";
-import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
-import {
-  listNotificaciones,
-  type NotificacionesPage as NotificacionesData,
-} from "@/modules/minisitio/infrastructure/queries/communications.queries";
-import { NotificacionesView } from "./notificaciones-view";
+import { redirect } from "next/navigation";
+import { msPath } from "@/components/minisitio/paths";
 
-export const metadata: Metadata = { title: "Notificaciones" };
-
-// Lo que quedaba en pantalla si la primera carga fallaba en el minisitio.
-const EMPTY_PAGE: NotificacionesData = {
-  notificaciones: [],
-  pagination: { total: 0, limit: 10, offset: 0, hasMore: false, currentPage: 1, totalPages: 1 },
-};
-
-/** Notificaciones (`/minisitio/notificaciones`, antes pages/notificaciones.js): 10 por página. */
-export default async function NotificacionesPage() {
-  const session = await requireCondominoSession();
-
-  const initialData = await listNotificaciones(session, { limit: 10, offset: 0 }).catch((error) => {
-    console.error("[minisitio] Notificaciones:", error);
-    return EMPTY_PAGE;
-  });
-
-  return <NotificacionesView initialData={initialData} />;
+/**
+ * El "historial de avisos" repetía los mismos comunicados que Avisos, paginados. Avisos ya muestra
+ * toda la historia, así que la ruta vieja (por si alguien la guardó) lleva allá.
+ */
+export default function NotificacionesPage() {
+  redirect(msPath("/comunicados"));
 }

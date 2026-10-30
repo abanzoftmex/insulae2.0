@@ -13,7 +13,7 @@ import { SPRING, scrim } from "../motion";
 
 const TABS = [
   { id: "inicio", label: "Inicio", href: "/", icon: Home, match: /^\/$/ },
-  { id: "avisos", label: "Avisos", href: "/comunicados", icon: Megaphone, match: /^\/(comunicados|notificaciones)/ },
+  { id: "avisos", label: "Avisos", href: "/comunicados", icon: Megaphone, match: /^\/comunicados/ },
   { id: "solicitudes", label: "Solicitudes", href: "/tickets", icon: MessageSquareText, match: /^\/tickets/ },
 ] as const;
 

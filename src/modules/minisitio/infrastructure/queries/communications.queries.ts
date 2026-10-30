@@ -68,37 +68,6 @@ export async function listComunicadosRecientes(session: CondominoTokenPayload) {
 
 export type ComunicadoReciente = Awaited<ReturnType<typeof listComunicadosRecientes>>["comunicados"][number];
 
-/** Pantalla Notificaciones, paginada con limit/offset. */
-export async function listNotificaciones(session: CondominoTokenPayload, { limit = 20, offset = 0 } = {}) {
-  const safeLimit = Math.max(1, Math.floor(limit) || 20);
-  const safeOffset = Math.max(0, Math.floor(offset) || 0);
-  const all = (await findNotifications(session)).map((n) => ({
-    id: n.id,
-    titulo: n.title,
-    mensaje: n.message,
-    fecha: toIso(n.sentAt),
-    tipo: "info",
-    categoria: n.category || "General",
-    leida: false,
-    fechaCreacion: toIso(n.sentAt),
-    fechaPublicar: toIso(n.sentAt),
-  }));
-  const total = all.length;
-  return {
-    notificaciones: all.slice(safeOffset, safeOffset + safeLimit),
-    pagination: {
-      total,
-      limit: safeLimit,
-      offset: safeOffset,
-      hasMore: safeOffset + safeLimit < total,
-      currentPage: Math.floor(safeOffset / safeLimit) + 1,
-      totalPages: Math.max(1, Math.ceil(total / safeLimit)),
-    },
-  };
-}
-
-export type NotificacionesPage = Awaited<ReturnType<typeof listNotificaciones>>;
-
 /**
  * Metadatos de la sección Experiencias. La "gaceta" no tiene equivalente en insulae2.0
  * todavía; las experiencias en sí salen de listComunicadosDestacados().
