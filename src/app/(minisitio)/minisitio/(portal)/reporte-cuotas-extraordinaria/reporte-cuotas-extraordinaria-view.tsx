@@ -6,6 +6,7 @@ import { FinancialReportSkeleton } from "@/components/minisitio/skeleton-loaders
 import { cn } from "@/shared/utils/cn";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Paginator } from "@/components/minisitio/ui/paginator";
+import { scrollContentToTop } from "@/components/minisitio/paths";
 import type { FeesReport, FeesReportArea } from "@/modules/minisitio/infrastructure/queries/reports.queries";
 import { getFeesReportAction } from "../../_actions/reports";
 import {
@@ -121,7 +122,7 @@ export function ReporteCuotasExtraordinariaView({
   const handlePageChange = (newPage: number) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollContentToTop();
       loadData(newPage, itemsPerPage);
     }
   };

@@ -86,17 +86,20 @@ export function TicketsView({
   initialTickets,
   departments,
   initialError = "",
+  initialCreateOpen = false,
 }: {
   initialAllTickets: TicketItem[];
   initialTickets: TicketItem[];
   departments: TicketDepartment[];
   initialError?: string;
+  /** Abrir el formulario de alta al entrar (`/tickets?nueva=1`). */
+  initialCreateOpen?: boolean;
 }) {
   // State management
   const [activeTab, setActiveTab] = useState<TabKey>("open");
   const [tickets, setTickets] = useState<TicketItem[]>(initialTickets);
   const [allTickets, setAllTickets] = useState<TicketItem[]>(initialAllTickets); // Store all tickets for counts
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(initialCreateOpen);
   const [expandedTickets, setExpandedTickets] = useState<Record<string, boolean>>({}); // Tarjeta expandida/colapsada
   const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({}); // Formulario de respuesta visible
   const [ticketReplies, setTicketReplies] = useState<Record<string, string>>({}); // Track replies for each ticket

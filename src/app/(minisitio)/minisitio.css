@@ -110,9 +110,109 @@
     inset 0 0 0 1px rgb(61 60 34 / 0.07),
     0 1px 0 rgb(255 255 255 / 0.9);
 
-  /* Curvas: `smooth` para geometría (ancho, alto), `out-quint` para opacidad */
+  /* Curvas: `smooth` para geometría (ancho, alto), `out-quint` para opacidad, `exit` para salidas */
   --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ── Shell al estilo Slack: "olivo de noche" ───────────────────────────────
+     El aubergine de Slack es aquí el olivo profundo de la marca (brand-deep).
+     Contrastes WCAG calculados contra --color-chrome; ver
+     docs/minisitio-design-system.md. Nombres nuevos a propósito: no se redefine
+     nada compartido con el admin (globals.css). */
+  --color-chrome-strong: #2d2c18;                    /* marco de la ventana y barra superior */
+  --color-chrome: #3d3c22;                           /* barra lateral */
+  --color-chrome-hover: rgb(255 255 255 / 0.08);     /* → #4d4c34 */
+  --color-chrome-pressed: rgb(255 255 255 / 0.12);   /* → #54533d */
+  --color-chrome-field: rgb(251 248 240 / 0.25);     /* buscador: tinta clara al 25 % (Slack) */
+  --color-chrome-field-hover: rgb(251 248 240 / 0.32);
+  --color-chrome-line: rgb(255 255 255 / 0.1);       /* divisores (decorativo) */
+  --color-chrome-ink: #fbf8f0;                       /* 10.59:1 — texto principal y no leído */
+  --color-chrome-ink-soft: rgb(251 248 240 / 0.76);  /* 6.90:1 — ítem en reposo, íconos */
+  --color-chrome-label: rgb(251 248 240 / 0.66);     /* 5.64:1 — títulos de sección */
+  --color-chrome-faint: rgb(251 248 240 / 0.45);     /* solo decoración, nunca texto */
+  --color-chrome-selected: #f1eac1;                  /* píldora del ítem activo */
+  --color-chrome-selected-ink: #3d3c22;              /* 9.25:1 sobre la píldora */
+  --color-chrome-accent: #b58c42;                    /* marcador de 3px, 3.64:1 */
+  --color-chrome-focus: #ffcf87;                     /* anillo de foco en el chrome, 7.78:1 */
+
+  /* Avisos: conteos que piden acción y marcas de no leído */
+  --color-mention: #b8431a;                          /* teja del sello; cifra blanca 5.45:1 */
+  --color-unread: #ffcf87;                           /* crema del sello */
+  --color-highlight: #f6f1e8;                        /* fila no leída en el contenido */
+  --color-highlight-bar: #922f12;                    /* 7.08:1 frente a highlight */
+
+  /* Complementos del plano de contenido */
+  --color-brand-hover: #4b4a2b;                      /* hover del primario, 9.08:1 con blanco */
+  --color-stroke-accessible: #616161;                /* borde inferior de campos, 6.19:1 */
+  --color-warning: #8d6928;                          /* 5.02:1 sobre blanco */
+  --color-warning-bg: #fbf8f0;
+  --color-success-bg: #ecf5ec;
+  --color-critical-bg: #fbefef;
+  --color-overdue: #922f12;                          /* "vencido": teja del sello, 7.97:1 sobre blanco */
+
+  /* Elevación de Slack (docs/slack-design-analysis.md §2.6): toda superficie flotante lleva un
+     anillo de 1 px de tinta al 13 % más una sola sombra difusa; el contenido en reposo, nada. */
+  --shadow-panel: 0 4px 0 rgb(0 0 0 / 0.05), 0 0 20px rgb(0 0 0 / 0.1);
+  --shadow-menu: 0 0 0 1px rgb(29 28 29 / 0.13), 0 4px 12px rgb(0 0 0 / 0.12);
+  --shadow-toast: 0 0 0 1px rgb(29 28 29 / 0.13), 0 4px 12px rgb(0 0 0 / 0.08);
+  --shadow-modal: 0 0 0 1px rgb(29 28 29 / 0.13), 0 18px 48px rgb(0 0 0 / 0.35);
+  --shadow-button: 0 1px 3px rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);   /* botón en hover (Slack) */
+  --color-stroke-button: rgb(94 93 96 / 0.45);       /* borde del botón outline; el texto lo identifica */
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  /* Escala tipográfica (Fluent + espaciado óptico de Inter). Nada por debajo de 12px. */
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-body: 14px;
+  --text-body--line-height: 20px;
+  --text-body--letter-spacing: -0.006em;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 22px;
+  --text-body-lg--letter-spacing: -0.011em;
+  --text-subtitle: 20px;
+  --text-subtitle--line-height: 28px;
+  --text-subtitle--letter-spacing: -0.017em;
+  --text-title: 24px;
+  --text-title--line-height: 32px;
+  --text-title--letter-spacing: -0.02em;
+  --text-display: 28px;
+  --text-display--line-height: 36px;
+  --text-display--letter-spacing: -0.021em;
+  /* Cuerpo de mensaje (avisos, respuestas): 15/22, el ritmo de lectura de Slack. */
+  --text-message: 15px;
+  --text-message--line-height: 22px;
+  --text-message--letter-spacing: -0.009em;
+
+  /* Movimiento con los tiempos verificados de Slack (docs/slack-design-analysis.md §6):
+     casi todo en 80 ms con una sola curva; nada rebota. Los mismos valores viven en
+     components/minisitio/motion.ts. Tailwind 4 lee `duration-*` de --transition-duration-*. */
+  --ease-slack: cubic-bezier(0.36, 0.19, 0.29, 1);
+  --transition-duration-instant: 80ms;     /* botones, foco, menús, diálogos */
+  --transition-duration-fast: 160ms;       /* píldora, pliegue de secciones, peek */
+  --transition-duration-base: 200ms;       /* contenido que llega, spinner */
+  --transition-duration-moderate: 240ms;
+  --transition-duration-slow: 320ms;       /* crecimiento de campos */
+  --transition-duration-deliberate: 400ms;
+  --default-transition-duration: 80ms;
+  --default-transition-timing-function: cubic-bezier(0.36, 0.19, 0.29, 1);
+  --animate-fade-in: fade-in 200ms linear both;
+  --animate-rise-in: rise-in 200ms cubic-bezier(0.36, 0.19, 0.29, 1) both;
+  --animate-pulse-soft: pulse-soft 1s ease-in-out infinite;
+  /* Carga: aparece a los 400 ms (como el spinner de Slack); si la pantalla llega antes, no parpadea. */
+  --animate-appear-late: fade-in 160ms linear 400ms both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+  }
+  @keyframes rise-in {
+    from { opacity: 0; transform: translateY(4px); }
+  }
+  /* Esqueletos: pulso de opacidad como Slack, sin destellos que barren. */
+  @keyframes pulse-soft {
+    50% { opacity: 0.65; }
+  }
 
 
   /* Design tokens — named --space-N to avoid overriding Tailwind's utility scale */
@@ -125,6 +225,22 @@
   --space-7: 48px;
   --space-8: 56px;
   --space-9: 64px;
+}
+
+/* Movimiento reducido: sin geometría animada ni destellos; la opacidad se conserva
+   corta para no perder la señal de "algo cambió". */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-duration-fast: 0ms;
+    --transition-duration-moderate: 0ms;
+    --transition-duration-slow: 0ms;
+    --transition-duration-deliberate: 0ms;
+    --animate-rise-in: fade-in 120ms linear both;
+    --animate-pulse-soft: none;
+  }
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /* Utilidades compartidas con el admin */
@@ -207,6 +323,38 @@
   }
 }
 
+/* Scroll de la barra lateral oscura: aparece al pasar o enfocar, en crema translúcida. */
+@utility scrollbar-chrome {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  overscroll-behavior: contain;
+
+  &:hover,
+  &:focus-within {
+    scrollbar-color: rgb(251 248 240 / 0.22) transparent;
+  }
+
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: var(--radius-pill);
+  }
+
+  &:hover::-webkit-scrollbar-thumb,
+  &:focus-within::-webkit-scrollbar-thumb {
+    background-color: rgb(251 248 240 / 0.22);
+  }
+}
+
 /* Submenú animado SIN framer-motion: el truco grid 0fr→1fr consigue una
    transición de alto real sin medir nada en JS. */
 @utility submenu-collapsible {
@@ -244,7 +392,9 @@
   body {
     background: var(--background);
     color: var(--foreground);
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 }
 

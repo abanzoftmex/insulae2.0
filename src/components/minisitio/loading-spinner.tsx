@@ -16,8 +16,8 @@ export function LoadingSpinner({
   return (
     <div className="flex items-center justify-center p-4">
       <div className="flex flex-col items-center space-y-2">
-        <div className={`animate-spin rounded-full border-b-2 border-blue-600 ${SIZE_CLASSES[size]}`}></div>
-        {text && <p className="text-sm text-gray-600">{text}</p>}
+        <div className={`animate-spin rounded-full border-2 border-stroke-2 border-b-brand ${SIZE_CLASSES[size]}`}></div>
+        {text && <p className="text-body text-fg-3">{text}</p>}
       </div>
     </div>
   );

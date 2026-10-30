@@ -1,9 +1,17 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./minisitio.css";
 import { readSuperadminSession } from "@/shared/application/auth/superadmin-session";
 import { readCondominoSession } from "@/shared/application/auth/condomino-session";
 import { getSessionInfo } from "@/modules/minisitio/application/auth.service";
 import { SuperAdminBubble } from "@/components/minisitio/superadmin-bubble";
+
+// La misma fuente y configuración que el panel (admin/layout.tsx): un solo producto y
+// ninguna descarga nueva en el build.
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -28,7 +36,7 @@ export default async function MinisitioRootLayout({ children }: { children: Reac
   }
 
   return (
-    <html lang="es">
+    <html lang="es" className={inter.variable}>
       <body className="antialiased" suppressHydrationWarning>
         {children}
         {superadmin && <SuperAdminBubble expiresAt={superadmin.expiresAt} impersonatedUser={impersonatedUser} />}

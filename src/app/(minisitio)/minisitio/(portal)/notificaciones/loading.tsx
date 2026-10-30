@@ -1,10 +1,6 @@
-import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
+import { PageSkeleton } from "@/components/minisitio/page-skeleton";
 
-/** Mismo estado de carga que tenía pages/notificaciones.js mientras llegaban los datos. */
+/** Carga del historial de avisos: esqueleto del portal (aparece a los 400 ms). */
 export default function NotificacionesLoading() {
-  return (
-    <div className="min-h-screen flex items-center justify-center">
-      <LoadingSpinner />
-    </div>
-  );
+  return <PageSkeleton label="Cargando el historial de avisos…" />;
 }

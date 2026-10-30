@@ -1,4 +1,5 @@
 /** Arrendamientos (comercios) del condómino, con saldos. Contrato legacy del minisitio. */
+import { cache } from "react";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import type { CondominoTokenPayload } from "@/shared/application/auth/condomino-token";
 import { toIso } from "../condominium";
@@ -9,7 +10,7 @@ function fullName(u: { firstName: string | null; lastName: string | null; busine
   return [u.firstName, u.lastName].filter(Boolean).join(" ") || u.businessName || null;
 }
 
-export async function listRentals(session: CondominoTokenPayload) {
+async function listRentalsUncached(session: CondominoTokenPayload) {
   const rentals = await prisma.rental.findMany({
     where: {
       condominiumId: session.condominiumId,
@@ -109,3 +110,6 @@ export async function getRental(session: CondominoTokenPayload, id: string) {
   const arrendamiento = arrendamientos.find((a) => String(a.id_arrendamientos) === String(id));
   return arrendamiento ? { success: true as const, arrendamiento } : null;
 }
+
+/** Memorizada por petición: el layout del portal (barra lateral) y la página la comparten. */
+export const listRentals = cache(listRentalsUncached);

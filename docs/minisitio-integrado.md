@@ -15,6 +15,10 @@ Rama `feat/minisitio-integrado` (2026-10-29). El portal de condóminos que viví
 
 Se eliminaron `src/app/api/condomino/*` y `src/app/api/dev/*`. El minisitio independiente deja de funcionar cuando se despliegue esta rama (su backend era esa API).
 
+## Diseño
+
+El portal sigue el sistema de [minisitio-design-system.md](minisitio-design-system.md): shell al estilo Slack con los colores de Val'Quirico. Una pantalla nueva se registra en `src/components/minisitio/shell/nav-config.ts` y no lleva encabezado propio.
+
 ## Estructura
 
 ```
@@ -30,14 +34,14 @@ src/app/
 │       └── logout      borra la cookie y vuelve al login (?reason=inactivity|revoked)
 ├── actions/, api/      sin cambios (salvo lo eliminado)
 src/modules/minisitio/  ← dominio, auth.service, consultas (infrastructure/queries/*), mailer
-src/components/minisitio/ ← shell, sesión, burbuja superadmin, componentes compartidos
-src/stores/minisitio*.ts  ← preferencias de vista y caché (sessionStorage)
+src/components/minisitio/ ← shell (shell/: barra lateral, ⌘K, cuenta, celular, vista secundaria), sesión, burbuja superadmin, componentes compartidos
+src/stores/minisitio*.ts  ← preferencias de vista y caché (sessionStorage); secciones plegadas y avisos vistos (localStorage)
 src/shared/application/auth/{signed-token,condomino-token,condomino-session,superadmin-session}.ts
 ```
 
 Las consultas devuelven exactamente el JSON que consumían las pantallas viejas (mismos nombres de campo). Se verificó con un script que compara ambos lados: **152/152 respuestas idénticas** para tres condóminos de prueba (propietario y comercio, solo comercios, propietario con tickets).
 
-Pantallas (`/minisitio/...`): bienvenida (`/minisitio`), `dashboard`, `propiedades`, `propiedades/[id]`, `propiedades/[id]/estado-cuenta`, `arrendamientos`, `arrendamientos/[id]`, `arrendamientos/[id]/estado-cuenta`, `comunicados`, `notificaciones`, `experiencias`, `tickets`, `mi-perfil`, `reglamentos`, `campos-contacto`, `aviso-privacidad`, `estado-resultado`, `resumen-financiero`, `reporte-cuotas`, `reporte-cuotas-extraordinaria`, `reporte-general`, más las públicas.
+Pantallas (`/minisitio/...`): inicio (`/minisitio`), `dashboard`, `propiedades`, `propiedades/[id]`, `propiedades/[id]/estado-cuenta`, `arrendamientos`, `arrendamientos/[id]`, `arrendamientos/[id]/estado-cuenta`, `comunicados`, `notificaciones`, `experiencias`, `tickets`, `mi-perfil`, `reglamentos`, `campos-contacto`, `aviso-privacidad`, `estado-resultado`, `resumen-financiero`, `reporte-cuotas`, `reporte-cuotas-extraordinaria`, `reporte-general`, más las públicas.
 
 ## Variables de entorno (producción)
 

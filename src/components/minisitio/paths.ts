@@ -10,6 +10,16 @@ export function msPath(path = "/"): string {
   return clean === "/" ? MINISITIO_BASE : `${MINISITIO_BASE}${clean}`;
 }
 
+/** Id del panel de contenido del shell: en escritorio el scroll vive ahí, no en la ventana. */
+export const CONTENT_ID = "ms-main";
+
+/** Sube al inicio del contenido (el panel en escritorio, la ventana en el celular). */
+export function scrollContentToTop(behavior: ScrollBehavior = "smooth"): void {
+  if (typeof window === "undefined") return;
+  document.getElementById(CONTENT_ID)?.scrollTo({ top: 0, behavior });
+  window.scrollTo({ top: 0, behavior });
+}
+
 /** Quita el prefijo `/minisitio` (para comparar con las rutas del menú). */
 export function stripMinisitioBase(pathname: string | null | undefined): string {
   if (!pathname) return "/";

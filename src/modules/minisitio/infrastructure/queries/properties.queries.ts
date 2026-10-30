@@ -1,4 +1,5 @@
 /** Propiedades (áreas privativas) del condómino, con saldos. Contrato legacy del minisitio. */
+import { cache } from "react";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import type { CondominoTokenPayload } from "@/shared/application/auth/condomino-token";
 import { getActiveProject } from "../condominium";
@@ -80,7 +81,7 @@ function toPropiedad(a: AreaRow, totalM2Proyecto: unknown) {
 
 export type Propiedad = ReturnType<typeof toPropiedad>;
 
-export async function listProperties(session: CondominoTokenPayload) {
+async function listPropertiesUncached(session: CondominoTokenPayload) {
   const scope = await getCondominoScope(session.userId, session.condominiumId);
   if (scope.privateAreaIds.length === 0) {
     return { success: true as const, propiedades: [] as Propiedad[], ultimaActualizacionTexto: "Sin propiedades asignadas" };
@@ -148,3 +149,6 @@ export async function getPropertyDetail(session: CondominoTokenPayload, id: stri
 }
 
 export type PropertyDetail = NonNullable<Awaited<ReturnType<typeof getPropertyDetail>>>;
+
+/** Memorizada por petición: el layout del portal (barra lateral) y la página la comparten. */
+export const listProperties = cache(listPropertiesUncached);
