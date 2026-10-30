@@ -1,8 +1,10 @@
 import { PasswordChangeForm } from "./components/password-change-form";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
+import { requireAdminSession } from "@/shared/application/auth/guards";
 
-export default function PasswordChangePage() {
+export default async function PasswordChangePage() {
+  await requireAdminSession();
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-brand">

@@ -12,7 +12,9 @@
  * Ambos aceptan un módulo o una lista (basta con tener permiso en uno de ellos), para las
  * pantallas compartidas entre personal y condóminos, como la participación en asambleas.
  */
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { ADMIN_SESSION_COOKIE, type AdminSession } from "./admin-session";
 import { getUserPermissions, hasPermission, readAdminSession, type PermissionAction } from "./permissions";
 import type { ModuleName } from "./modules";
 
@@ -36,12 +38,22 @@ export class PermissionDeniedError extends Error {
   }
 }
 
+/** Sesión del panel o redirección al login (para páginas que no dependen de un módulo). */
+export async function requireAdminSession(): Promise<AdminSession> {
+  const session = await readAdminSession();
+  if (!session) {
+    // Una cookie con firma válida pero ya revocada (contraseña cambiada, cuenta desactivada)
+    // haría que el middleware mandara /login de vuelta a /: se borra antes en /api/auth/salir.
+    redirect((await cookies()).has(ADMIN_SESSION_COOKIE) ? "/api/auth/salir" : "/login");
+  }
+  return session;
+}
+
 export async function requirePageAccess(
   module: ModuleName | readonly ModuleName[],
   action: PermissionAction = "canRead",
 ): Promise<void> {
-  const session = await readAdminSession();
-  if (!session) redirect("/login");
+  await requireAdminSession();
 
   const permissions = await getUserPermissions();
   if (!hasPermission(permissions, module, action)) {

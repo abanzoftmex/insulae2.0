@@ -1,12 +1,39 @@
 "use server";
 import { assertPermission } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { getUserPermissions, hasPermission, readAdminSession } from "@/shared/application/auth/permissions";
+import { getAnnouncementKeys, getRepresentedKeys } from "@/modules/announcement/application/assembly-representation";
 
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { absoluteFileUrl } from "@/shared/infrastructure/storage/storage-paths";
+
+const VOTE_TYPES = new Set(["FAVOR", "AGAINST", "ABSTAIN", "NONE"]);
+const CLOSED_DATE_STATUSES = new Set(["Realizada", "No Realizada"]); // los que fija closeAsambleaAction
+
+/**
+ * Quién puede marcar asistencia o votar por una clave (puesto o invitado especial). Quien opera
+ * la asamblea (Convocatorias con permiso de modificar) puede marcar cualquier clave de la
+ * convocatoria, también después de cerrarla para corregir; un participante, solo las que
+ * representa y mientras la asamblea siga abierta. Antes bastaba con leer Convocatorias para
+ * votar o marcar asistencia en nombre de cualquiera.
+ */
+async function assertCanActFor(announcementId: string, key: string, closed: boolean): Promise<void> {
+  if (hasPermission(await getUserPermissions(), MODULES.CONVOCATORIAS, "canUpdate")) {
+    if (!(await getAnnouncementKeys(announcementId)).has(key)) {
+      throw new Error("Ese puesto o invitado no pertenece a esta convocatoria.");
+    }
+    return;
+  }
+  if (closed) throw new Error("La asamblea ya cerró: ya no se pueden registrar votos ni asistencia.");
+  const session = await readAdminSession();
+  const represented = session ? await getRepresentedKeys(announcementId, session) : [];
+  if (!represented.some((r) => r.key === key)) {
+    throw new Error("Solo puedes votar o registrar asistencia por los puestos o invitados que representas.");
+  }
+}
 
 /**
  * Toggle attendance for a given position ID in the specific date called session.
@@ -16,28 +43,35 @@ export async function toggleAttendanceAction(dateId: string, positionId: string,
   try {
     await assertPermission([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO], "canRead");
     const callDate = await prisma.announcementDate.findUnique({
-      where: { id: dateId }
+      where: { id: dateId },
+      select: { announcementId: true, status: true },
     });
 
     if (!callDate) throw new Error("Called date not found");
+    await assertCanActFor(callDate.announcementId, positionId, CLOSED_DATE_STATUSES.has(callDate.status));
 
-    let current = callDate.checkedPositions
-      ? callDate.checkedPositions.split(",").map(id => id.trim()).filter(Boolean)
-      : [];
+    // Leer y escribir con la fila bloqueada: dos registros simultáneos ya no se pisan.
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1 FROM "AnnouncementDate" WHERE "id" = ${dateId} FOR UPDATE`;
+      const row = await tx.announcementDate.findUniqueOrThrow({ where: { id: dateId }, select: { checkedPositions: true } });
+      let current = row.checkedPositions
+        ? row.checkedPositions.split(",").map(id => id.trim()).filter(Boolean)
+        : [];
 
-    if (isPresent) {
-      if (!current.includes(positionId)) {
-        current.push(positionId);
+      if (isPresent) {
+        if (!current.includes(positionId)) {
+          current.push(positionId);
+        }
+      } else {
+        current = current.filter(id => id !== positionId);
       }
-    } else {
-      current = current.filter(id => id !== positionId);
-    }
 
-    const updated = await prisma.announcementDate.update({
-      where: { id: dateId },
-      data: {
-        checkedPositions: current.join(",")
-      }
+      return tx.announcementDate.update({
+        where: { id: dateId },
+        data: {
+          checkedPositions: current.join(",")
+        }
+      });
     });
 
     revalidatePath(`/gobernanza/convocatorias/${callDate.announcementId}`, "layout");
@@ -55,32 +89,42 @@ export async function toggleAttendanceAction(dateId: string, positionId: string,
 export async function registerVoteAction(topicId: string, positionId: string, voteType: string) {
   try {
     await assertPermission([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO], "canRead");
+    if (!VOTE_TYPES.has(voteType)) throw new Error("Tipo de voto no válido.");
     const topic = await prisma.announcementTopic.findUnique({
-      where: { id: topicId }
+      where: { id: topicId },
+      select: { announcementId: true, announcement: { select: { status: { select: { name: true } } } } },
     });
 
     if (!topic) throw new Error("Topic not found");
+    // closeAsambleaAction deja la convocatoria en un estado "Terminada" o "Cancelada".
+    const closed = /terminada|cancelada/i.test(topic.announcement.status?.name ?? "");
+    await assertCanActFor(topic.announcementId, positionId, closed);
 
-    let currentVotes: Record<string, string> = {};
-    if (topic.votesJson) {
-      try {
-        currentVotes = JSON.parse(topic.votesJson);
-      } catch (err) {
-        currentVotes = {};
+    // Leer y escribir con la fila bloqueada: dos votos simultáneos ya no se pisan.
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT 1 FROM "AnnouncementTopic" WHERE "id" = ${topicId} FOR UPDATE`;
+      const row = await tx.announcementTopic.findUniqueOrThrow({ where: { id: topicId }, select: { votesJson: true } });
+      let currentVotes: Record<string, string> = {};
+      if (row.votesJson) {
+        try {
+          currentVotes = JSON.parse(row.votesJson);
+        } catch (err) {
+          currentVotes = {};
+        }
       }
-    }
 
-    if (voteType === "NONE") {
-      delete currentVotes[positionId];
-    } else {
-      currentVotes[positionId] = voteType; // FAVOR, AGAINST, ABSTAIN
-    }
-
-    const updated = await prisma.announcementTopic.update({
-      where: { id: topicId },
-      data: {
-        votesJson: JSON.stringify(currentVotes)
+      if (voteType === "NONE") {
+        delete currentVotes[positionId];
+      } else {
+        currentVotes[positionId] = voteType; // FAVOR, AGAINST, ABSTAIN
       }
+
+      return tx.announcementTopic.update({
+        where: { id: topicId },
+        data: {
+          votesJson: JSON.stringify(currentVotes)
+        }
+      });
     });
 
     revalidatePath(`/gobernanza/convocatorias/${updated.announcementId}`, "layout");

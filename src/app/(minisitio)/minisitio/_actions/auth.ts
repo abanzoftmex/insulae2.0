@@ -17,11 +17,12 @@ import {
   validateResetToken,
 } from "@/modules/minisitio/application/auth.service";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
+import { clientIp } from "@/shared/infrastructure/db/auth-throttle";
 import type { ActionResult, MinisitioSessionInfo } from "@/modules/minisitio/domain/types";
 
 export async function loginAction(input: { email: string; password: string }): Promise<ActionResult<MinisitioSessionInfo>> {
   try {
-    const result = await authenticateCondomino(input?.email ?? "", input?.password ?? "");
+    const result = await authenticateCondomino(input?.email ?? "", input?.password ?? "", await clientIp());
     if (!result.ok) return { success: false, message: result.message };
     await setCondominoSessionCookie(await signCondominoToken(result.session));
     return { success: true, message: "Inicio de sesión exitoso", ...result.info };
@@ -40,7 +41,7 @@ export async function logoutAction(): Promise<{ success: true }> {
 export async function forgotPasswordAction(email: string): Promise<ActionResult> {
   if (!(email || "").trim()) return { success: false, message: "Email es requerido" };
   try {
-    await requestPasswordReset(email, await appOrigin());
+    await requestPasswordReset(email, await appOrigin(), await clientIp());
     // Nunca revelar si el correo existe.
     return { success: true, message: FORGOT_PASSWORD_GENERIC_MESSAGE };
   } catch (error) {

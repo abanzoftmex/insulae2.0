@@ -10,19 +10,32 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/shared/infrastructure/db/prisma";
-import { ADMIN_SESSION_COOKIE, verifyAdminSession, type AdminSession } from "./admin-session";
+import { ADMIN_SESSION_COOKIE, adminSessionIsCurrent, verifyAdminSession, type AdminSession } from "./admin-session";
 import type { ModuleName } from "./modules";
 export * from "./permission-utils";
 import type { PermissionAction, ModulePermissions, UserPermissions } from "./permission-utils";
 
-/** Lee y verifica la cookie de sesión del panel. Devuelve null si no hay sesión válida. */
+/**
+ * Lee y verifica la cookie de sesión del panel. Devuelve null si no hay sesión válida, si la
+ * cuenta se desactivó o si la contraseña cambió desde que se inició la sesión.
+ */
 export const readAdminSession = cache(async (): Promise<AdminSession | null> => {
+  let session: AdminSession | null;
   try {
     const cookieStore = await cookies();
-    return await verifyAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
+    session = await verifyAdminSession(cookieStore.get(ADMIN_SESSION_COOKIE)?.value);
   } catch {
     return null;
   }
+  if (!session) return null;
+  // Un error de la base se propaga (página de error) en vez de contar como "sin sesión": si no,
+  // /api/auth/salir borraría la cookie de una sesión válida por un fallo pasajero.
+  const user = await prisma.user.findUnique({
+    where: { id: session.userId },
+    select: { isActive: true, passwordHash: true },
+  });
+  if (!user?.isActive || !(await adminSessionIsCurrent(session, user.passwordHash))) return null;
+  return session;
 });
 
 /**
@@ -66,28 +79,30 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
 
   let roles = user.userRoles.map((ur) => ur.role);
 
-  // Fallback auto-sanación: si el usuario no tiene UserRole pero tiene initialRole
-  if (roles.length === 0 && user.initialRole && user.initialRole.trim() !== "") {
-    const fallbackRole = await prisma.role.findFirst({
-      where: {
-        condominiumId: user.condominiumId,
-        name: { equals: user.initialRole.trim(), mode: "insensitive" },
-        isActive: true,
-      },
-      select: {
-        id: true,
-        permissions: {
-          where: { isActive: true, module: { isActive: true } },
-          select: {
-            canRead: true,
-            canCreate: true,
-            canUpdate: true,
-            canDelete: true,
-            module: { select: { name: true } },
+  // Fallback auto-sanación: si el usuario no tiene UserRole pero tiene initialRole. Nombre exacto
+  // salvo mayúsculas: con `equals` + `mode: "insensitive"` (ILIKE) un initialRole "%" tomaba
+  // cualquier rol, Master incluido.
+  const initialRole = user.initialRole?.trim().toLowerCase();
+  if (roles.length === 0 && initialRole) {
+    const fallbackRole = (
+      await prisma.role.findMany({
+        where: { condominiumId: user.condominiumId, isActive: true },
+        select: {
+          id: true,
+          name: true,
+          permissions: {
+            where: { isActive: true, module: { isActive: true } },
+            select: {
+              canRead: true,
+              canCreate: true,
+              canUpdate: true,
+              canDelete: true,
+              module: { select: { name: true } },
+            },
           },
         },
-      },
-    });
+      })
+    ).find((role) => role.name.trim().toLowerCase() === initialRole);
 
     if (fallbackRole) {
       roles = [fallbackRole];

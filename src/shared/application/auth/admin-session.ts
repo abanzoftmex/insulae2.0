@@ -8,6 +8,9 @@
  *
  * Se implementa con Web Crypto (no con `node:crypto`) para poder verificar la firma
  * también en el middleware, que corre en el runtime edge.
+ *
+ * La sesión lleva una huella de la contraseña (`sv`): readAdminSession() la compara con la
+ * guardada, así que cambiar o restablecer la contraseña cierra todas las sesiones abiertas.
  */
 
 export const ADMIN_SESSION_COOKIE = "insulae_session";
@@ -29,6 +32,7 @@ export interface AdminSession {
   userId: string;
   email: string | null;
   name: string;
+  sv: string; // huella de la contraseña al iniciar sesión (ver passwordFingerprint)
   iat: number; // unix seconds
   exp: number; // unix seconds
 }
@@ -38,7 +42,7 @@ const ADMIN_RESET_PURPOSE = "admin-reset-2";
 export interface AdminResetToken {
   p: typeof ADMIN_RESET_PURPOSE;
   userId: string;
-  pv: string; // huella de la contraseña al emitirlo (ver passwordVersion)
+  pv: string; // huella de la contraseña al emitirlo (ver passwordFingerprint)
   exp: number;
 }
 
@@ -110,44 +114,59 @@ async function verifyPayload<T extends { exp?: number }>(token: string | null | 
   }
 }
 
+/**
+ * Huella de la contraseña guardada (HMAC: no se puede calcular ni revertir sin el secreto). La
+ * llevan la sesión (`sv`) y el token de restablecimiento (`pv`), así que ambos dejan de valer
+ * en cuanto la contraseña cambia. El prefijo separa los dos usos.
+ */
+async function passwordFingerprint(purpose: "sv" | "pv", passwordHash: string | null): Promise<string> {
+  return toBase64Url(await hmac(`${purpose}:${passwordHash ?? ""}`)).slice(0, 22);
+}
+
 // ---- sesión ----
 
-export async function signAdminSession(input: { userId: string; email: string | null; name: string }): Promise<string> {
+export async function signAdminSession(input: {
+  userId: string;
+  email: string | null;
+  name: string;
+  passwordHash: string | null;
+}): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
   const payload: AdminSession = {
     userId: input.userId,
     email: input.email,
     name: input.name,
+    sv: await passwordFingerprint("sv", input.passwordHash),
     iat: now,
     exp: now + ADMIN_SESSION_TTL_SECONDS,
   };
   return signPayload(payload);
 }
 
+/**
+ * Firma, vigencia y forma (lo que puede revisar el middleware sin base). Las sesiones sin `sv`
+ * (formato anterior) se rechazan. Falta adminSessionIsCurrent, que hace readAdminSession().
+ */
 export async function verifyAdminSession(token: string | null | undefined): Promise<AdminSession | null> {
   const payload = await verifyPayload<AdminSession & { p?: unknown; condominiumId?: unknown }>(token);
   // Un token con propósito no es una sesión: antes un enlace de restablecimiento servía como
   // cookie. Tampoco una sesión del minisitio (lleva condominiumId), por si los secretos coincidieran.
   if (!payload || payload.p !== undefined || payload.condominiumId !== undefined) return null;
-  if (typeof payload.userId !== "string" || !payload.userId) return null;
+  if (typeof payload.userId !== "string" || !payload.userId || typeof payload.sv !== "string") return null;
   return payload;
 }
 
-// ---- token de restablecimiento de contraseña (1 h, propósito acotado, un solo uso) ----
-
-/**
- * Huella de la contraseña guardada (HMAC: no se puede calcular ni revertir sin el secreto). El
- * token la lleva, así que deja de valer en cuanto la contraseña cambia: sirve una sola vez.
- */
-async function passwordVersion(passwordHash: string | null): Promise<string> {
-  return toBase64Url(await hmac(`pv:${passwordHash ?? ""}`)).slice(0, 22);
+export async function adminSessionIsCurrent(session: AdminSession, passwordHash: string | null): Promise<boolean> {
+  return session.sv === (await passwordFingerprint("sv", passwordHash));
 }
+
+// ---- token de restablecimiento de contraseña (1 h, propósito acotado, un solo uso) ----
 
 export async function signAdminResetToken(userId: string, passwordHash: string | null): Promise<string> {
   const payload: AdminResetToken = {
     p: ADMIN_RESET_PURPOSE,
     userId,
-    pv: await passwordVersion(passwordHash),
+    pv: await passwordFingerprint("pv", passwordHash),
     exp: Math.floor(Date.now() / 1000) + ADMIN_RESET_TTL_SECONDS,
   };
   return signPayload(payload);
@@ -167,5 +186,5 @@ export async function readAdminResetToken(token: string | null | undefined): Pro
 }
 
 export async function adminResetTokenIsCurrent(payload: AdminResetToken, passwordHash: string | null): Promise<boolean> {
-  return payload.pv === (await passwordVersion(passwordHash));
+  return payload.pv === (await passwordFingerprint("pv", passwordHash));
 }

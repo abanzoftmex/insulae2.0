@@ -60,8 +60,8 @@ model Condominium {
   // Cada condominio (tenant de Insulae) se liga 1 a 1 con un tenant
   // específico de Luca — su propia URL y secreto de firma, no uno global,
   // porque puede haber varios condominios compartiendo este deployment.
-  lucaApiBaseUrl                String?
-  lucaWebhookSecret             String?
+  lucaApiBaseUrl               String?
+  lucaWebhookSecret            String?
   lucaSyncEvents               LucaSyncEvent[]
 }
 
@@ -1454,4 +1454,15 @@ model RegistrationType {
 
   @@unique([condominiumId, code])
   @@index([condominiumId])
+}
+
+/// Contadores de intentos (ventana fija) del login, de las solicitudes de restablecimiento de
+/// contraseña y del modo superadmin. Ver src/shared/infrastructure/db/auth-throttle.ts.
+model AuthThrottle {
+  key         String   @id
+  count       Int      @default(0)
+  windowStart DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([updatedAt])
 }

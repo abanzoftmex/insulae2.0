@@ -6,9 +6,12 @@
  * el sessionStorage del minisitio independiente. El token caduca de todos modos al día.
  *
  * - `readCondominoSession()`  → solo verifica firma y vigencia (sin tocar la base).
- * - `requireCondominoSession()` → además confirma en la base que el usuario sigue activo y
- *   con acceso al portal. Úsalo al inicio de cada page.tsx y de cada server action: si el
- *   administrador revoca el acceso, la siguiente petición manda al login.
+ * - `readVerifiedCondominoSession()` → además confirma en la base que el usuario sigue activo,
+ *   con acceso al portal y con la misma contraseña que al iniciar sesión (cambiarla o
+ *   restablecerla cierra las demás sesiones). Devuelve null si no.
+ * - `requireCondominoSession()` → lo mismo, pero redirige. Úsalo al inicio de cada page.tsx y
+ *   de cada server action: si el administrador revoca el acceso, la siguiente petición manda
+ *   al login.
  */
 import { cache } from "react";
 import { cookies } from "next/headers";
@@ -17,6 +20,7 @@ import { prisma } from "@/shared/infrastructure/db/prisma";
 import {
   CONDOMINO_SESSION_COOKIE,
   MINISITIO_BASE_PATH,
+  condominoSessionIsCurrent,
   verifyCondominoToken,
   type CondominoTokenPayload,
 } from "./condomino-token";
@@ -32,10 +36,11 @@ export const readCondominoSession = cache(async (): Promise<CondominoTokenPayloa
 
 /**
  * ¿Sigue teniendo acceso al portal? Misma regla que el login: cuenta activa y (ADMIN, rol del
- * minisitio o al menos una asignación de área privativa activa).
+ * minisitio o al menos una asignación de área privativa activa). Además, la contraseña no debe
+ * haber cambiado desde que se inició la sesión.
  */
 async function hasPortalAccess(session: CondominoTokenPayload): Promise<boolean> {
-  const allowed = await prisma.user.count({
+  const user = await prisma.user.findFirst({
     where: {
       id: session.userId,
       condominiumId: session.condominiumId,
@@ -46,9 +51,15 @@ async function hasPortalAccess(session: CondominoTokenPayload): Promise<boolean>
         { assignments: { some: { isActive: true } } },
       ],
     },
+    select: { passwordHash: true },
   });
-  return allowed > 0;
+  return !!user && (await condominoSessionIsCurrent(session, user.passwordHash));
 }
+
+export const readVerifiedCondominoSession = cache(async (): Promise<CondominoTokenPayload | null> => {
+  const session = await readCondominoSession();
+  return session && (await hasPortalAccess(session)) ? session : null;
+});
 
 /**
  * Sesión verificada contra la base. Sin sesión redirige al login; con el acceso revocado
@@ -57,7 +68,7 @@ async function hasPortalAccess(session: CondominoTokenPayload): Promise<boolean>
 export const requireCondominoSession = cache(async (): Promise<CondominoTokenPayload> => {
   const session = await readCondominoSession();
   if (!session) redirect(`${MINISITIO_BASE_PATH}/login`);
-  if (!(await hasPortalAccess(session))) redirect(`${MINISITIO_BASE_PATH}/logout?reason=revoked`);
+  if (!(await readVerifiedCondominoSession())) redirect(`${MINISITIO_BASE_PATH}/logout?reason=revoked`);
   return session;
 });
 

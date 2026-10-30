@@ -18,13 +18,19 @@ import { clearCondominoSessionCookie, setCondominoSessionCookie } from "@/shared
 import { signCondominoToken } from "@/shared/application/auth/condomino-token";
 import { getImpersonationTarget } from "@/modules/minisitio/application/auth.service";
 import { listUsersForSuperadmin, type SuperadminUserOption } from "@/modules/minisitio/infrastructure/queries/superadmin.queries";
+import { clientIp, consumeAttempt, superadminThrottleRules } from "@/shared/infrastructure/db/auth-throttle";
 import type { ActionResult, MinisitioSessionInfo } from "@/modules/minisitio/domain/types";
 
 const EXPIRED_MESSAGE = "Sesión de superadministrador inválida o expirada.";
+const TOO_MANY_ATTEMPTS = "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.";
 
 export async function validateSuperadminAction(input: { user: string; password: string }): Promise<ActionResult<{ expiresAt: number }>> {
   if (!input?.user || !input?.password) return { success: false, message: "Usuario y contraseña son requeridos" };
   if (!isSuperadminConfigured()) return { success: false, message: "El modo superadministrador no está configurado." };
+  // Cada intento cuenta (por IP y en total), incluso los correctos: es una sola credencial compartida.
+  if (!(await consumeAttempt(superadminThrottleRules(await clientIp())))) {
+    return { success: false, message: TOO_MANY_ATTEMPTS };
+  }
   if (!checkSuperadminCredentials(input.user, input.password)) {
     return { success: false, message: "Usuario o contraseña incorrectos" };
   }
@@ -38,6 +44,9 @@ export async function extendSuperadminAction(password: string): Promise<ActionRe
   const session = await readSuperadminSession();
   if (!session) return { success: false, message: "La sesión de superadministrador expiró. Vuelve a ingresar." };
   if (!password) return { success: false, message: "La contraseña es requerida" };
+  if (!(await consumeAttempt(superadminThrottleRules(await clientIp())))) {
+    return { success: false, message: TOO_MANY_ATTEMPTS };
+  }
   if (!checkSuperadminPassword(password)) return { success: false, message: "Contraseña incorrecta" };
 
   const expiresAt = Math.max(Date.now(), session.expiresAt) + SUPERADMIN_TTL_MS;

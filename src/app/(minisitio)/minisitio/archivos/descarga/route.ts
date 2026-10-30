@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { readCondominoSession } from "@/shared/application/auth/condomino-session";
+import { readVerifiedCondominoSession } from "@/shared/application/auth/condomino-session";
 import { presignGetUrl } from "@/shared/infrastructure/storage/r2";
 import { contentDisposition, fileNameFromStoredUrl, isServableStorageKey, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 
@@ -14,7 +14,7 @@ import { contentDisposition, fileNameFromStoredUrl, isServableStorageKey, storag
  *   GET /minisitio/archivos/descarga?url=<url guardada>&name=<nombre>
  */
 export async function GET(request: NextRequest) {
-  if (!(await readCondominoSession())) {
+  if (!(await readVerifiedCondominoSession())) {
     return NextResponse.json({ message: "Sesión no válida" }, { status: 401 });
   }
 

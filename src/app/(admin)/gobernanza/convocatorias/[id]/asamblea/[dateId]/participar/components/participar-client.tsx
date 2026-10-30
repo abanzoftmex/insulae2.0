@@ -67,22 +67,31 @@ export function ParticiparClient({
   );
 
   const [isPending, startTransition] = useTransition();
+  // Si el servidor rechaza el registro (no representas esa clave, la asamblea cerró), se revierte
+  // lo que la pantalla ya había marcado y se explica por qué.
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const handleToggleAttendance = async (targetId: string, isChecked: boolean) => {
+    const previous = checkedIds;
     const updated = isChecked
       ? [...checkedIds, targetId]
       : checkedIds.filter(id => id !== targetId);
     setCheckedIds(updated);
+    setActionError(null);
 
     startTransition(async () => {
       const res = await toggleAttendanceAction(dateSession.id, targetId, isChecked);
       if (res.success && res.checkedPositions !== undefined) {
         setCheckedIds(res.checkedPositions ? res.checkedPositions.split(",") : []);
+      } else if (!res.success) {
+        setCheckedIds(previous);
+        setActionError(res.error || "No se pudo registrar la asistencia.");
       }
     });
   };
 
   const handleCastVote = async (topicId: string, targetId: string, type: "FAVOR" | "AGAINST" | "ABSTAIN" | "NONE") => {
+    const previous = votesMap;
     const currentTopicVotes = { ...votesMap[topicId] };
     if (type === "NONE") {
       delete currentTopicVotes[targetId];
@@ -93,6 +102,7 @@ export function ParticiparClient({
       ...votesMap,
       [topicId]: currentTopicVotes
     });
+    setActionError(null);
 
     startTransition(async () => {
       const res = await registerVoteAction(topicId, targetId, type);
@@ -101,6 +111,9 @@ export function ParticiparClient({
           ...votesMap,
           [topicId]: JSON.parse(res.votesJson)
         });
+      } else if (!res.success) {
+        setVotesMap(previous);
+        setActionError(res.error || "No se pudo registrar el voto.");
       }
     });
   };
@@ -115,7 +128,12 @@ export function ParticiparClient({
 
   return (
     <div className="space-y-6 pb-20">
-      
+      {actionError && (
+        <div role="alert" className="rounded-card border border-danger/30 bg-danger/5 px-4 py-3 text-xs font-medium text-danger">
+          {actionError}
+        </div>
+      )}
+
       {/* Overview Card */}
       <div className="p-5 bg-white border border-line rounded-card shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
         <div>

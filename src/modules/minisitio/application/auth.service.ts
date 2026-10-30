@@ -4,10 +4,12 @@
  * /api/dev/impersonate, que ya no existen: ahora se llama en el mismo proceso.
  *
  * Seguridad: RECHAZA cuentas sin passwordHash y NO acepta las contraseñas por defecto.
+ * Contraseñas con scrypt (password-hash.ts); mientras no se verifica la contraseña todos los
+ * errores dan el mismo mensaje, y los intentos se limitan por correo e IP (auth-throttle.ts).
  * Acceso: cuenta activa y (ADMIN, rol del minisitio, área privativa activa o contrato de
  * arrendamiento) — ver condomino-access.ts.
  */
-import crypto from "crypto";
+import { after } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import {
   MINISITIO_ACCESS_DENIED_MESSAGE,
@@ -20,19 +22,32 @@ import {
   signResetToken,
   type CondominoTokenPayload,
 } from "@/shared/application/auth/condomino-token";
+import { hashPassword } from "@/shared/application/auth/password-hash";
+import { matchPasswordCandidates } from "@/shared/application/auth/password-login";
+import {
+  clearThrottle,
+  consumeAttempt,
+  loginAccountKeys,
+  loginThrottleRules,
+  resetRequestThrottleRules,
+} from "@/shared/infrastructure/db/auth-throttle";
 import { findUserIdsByEmail, storedEmailMatching } from "@/shared/infrastructure/db/user-email-lookup";
 import { getMinisitioCondominium } from "../infrastructure/condominium";
 import { MINISITIO_MAIL_FROM, sendMinisitioEmail } from "../infrastructure/mailer";
 import type { MinisitioSessionInfo, MinisitioUserType, UserIndicators } from "../domain/types";
 
-function hashSHA256(t: string) {
-  return crypto.createHash("sha256").update(t).digest("hex");
-}
-function hashMD5(t: string) {
-  return crypto.createHash("md5").update(t).digest("hex");
+type AuthFailure = { ok: false; message: string };
+
+/** Lo que se firma en la cookie de sesión del condómino (ver signCondominoToken). */
+export interface CondominoSessionInput {
+  userId: string;
+  condominiumId: string;
+  passwordHash: string | null;
 }
 
-type AuthFailure = { ok: false; message: string };
+const INVALID_CREDENTIALS =
+  "Correo o contraseña incorrectos. Si es tu primera vez, usa “¿Olvidaste tu contraseña?” para activar tu cuenta.";
+const TOO_MANY_ATTEMPTS = "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.";
 
 async function countRentals(condominiumId: string, userId: string): Promise<number> {
   return prisma.rental.count({
@@ -81,13 +96,18 @@ function buildSessionInfo(
 export async function authenticateCondomino(
   emailInput: string,
   passwordInput: string,
-): Promise<{ ok: true; session: { userId: string; condominiumId: string }; info: MinisitioSessionInfo } | AuthFailure> {
+  ip: string,
+): Promise<{ ok: true; session: CondominoSessionInput; info: MinisitioSessionInfo } | AuthFailure> {
   const condo = await getMinisitioCondominium();
   if (!condo) return { ok: false, message: "Servicio no disponible." };
 
   const email = (emailInput || "").trim();
   const password = (passwordInput || "").trim();
   if (!email || !password) return { ok: false, message: "Ingresa tu correo y contraseña." };
+
+  // El intento se cuenta antes de verificar (ver auth-throttle.ts).
+  const throttle = loginThrottleRules(email, ip);
+  if (!(await consumeAttempt(throttle))) return { ok: false, message: TOO_MANY_ATTEMPTS };
 
   const ids = await findUserIdsByEmail(email);
   const candidates = await prisma.user.findMany({
@@ -109,22 +129,13 @@ export async function authenticateCondomino(
     },
   });
 
-  if (candidates.length === 0) return { ok: false, message: "Credenciales incorrectas." };
+  const verified = await matchPasswordCandidates(candidates, password);
+  if (verified.length === 0) return { ok: false, message: INVALID_CREDENTIALS };
 
-  const activos = candidates.filter((u) => u.isActive);
-  if (activos.length === 0) return { ok: false, message: "Tu cuenta está inactiva. Contacta al administrador." };
-
-  // SHA-256 o MD5 heredado. Sin comparar en texto plano: el hash guardado servía como contraseña.
-  const matchPassword = (h: string | null) => !!h && (h === hashSHA256(password) || h === hashMD5(password));
-
-  const matched = activos.filter((u) => matchPassword(u.passwordHash));
-  if (matched.length === 0) {
-    if (activos.some((u) => u.passwordHash)) return { ok: false, message: "Credenciales incorrectas." };
-    return {
-      ok: false,
-      message: "Aún no has configurado tu contraseña. Usa “¿Olvidaste tu contraseña?” para activarla.",
-    };
-  }
+  // La contraseña ya se comprobó: desde aquí los mensajes pueden ser específicos.
+  const matched = verified.filter((u) => u.isActive);
+  if (matched.length === 0) return { ok: false, message: "Tu cuenta está inactiva. Contacta al administrador." };
+  await clearThrottle(loginAccountKeys(throttle));
 
   // Permitir si es ADMIN, tiene rol autorizado, o tiene áreas privativas activas (propietario)
   let user = matched.find((u) => u.userType === "ADMIN" || u.userRoles.length > 0 || u.assignments.length > 0);
@@ -165,7 +176,7 @@ export async function authenticateCondomino(
     hasComerciosArrendamientos: rentalCount > 0,
   });
 
-  return { ok: true, session: { userId: user.id, condominiumId: condo.id }, info };
+  return { ok: true, session: { userId: user.id, condominiumId: condo.id, passwordHash: user.passwordHash }, info };
 }
 
 /** Datos del condómino de la sesión (antes GET /api/condomino/auth/me). */
@@ -195,17 +206,18 @@ export async function getSessionInfo(session: CondominoTokenPayload): Promise<Mi
 /** Usuario a suplantar desde el modo superadmin (antes POST /api/dev/impersonate). */
 export async function getImpersonationTarget(
   userId: string,
-): Promise<{ ok: true; session: { userId: string; condominiumId: string }; info: MinisitioSessionInfo } | AuthFailure> {
+): Promise<{ ok: true; session: CondominoSessionInput; info: MinisitioSessionInfo } | AuthFailure> {
   const condo = await getMinisitioCondominium();
   if (!condo) return { ok: false, message: "Condominio no encontrado." };
 
   const id = (userId || "").trim();
   if (!id) return { ok: false, message: "Falta el identificador del usuario." };
 
-  const session = { userId: id, condominiumId: condo.id };
-  const info = await getSessionInfo({ ...session, exp: 0 });
+  const info = await getSessionInfo({ userId: id, condominiumId: condo.id, sv: "", exp: 0 });
   if (!info) return { ok: false, message: "Usuario no encontrado o inactivo." };
-  return { ok: true, session, info };
+  // La sesión suplantada lleva la huella de la contraseña del usuario, como la suya propia.
+  const user = await prisma.user.findUnique({ where: { id }, select: { passwordHash: true } });
+  return { ok: true, session: { userId: id, condominiumId: condo.id, passwordHash: user?.passwordHash ?? null }, info };
 }
 
 // ---- Recuperación de contraseña ----
@@ -218,11 +230,14 @@ const INVALID_RESET_LINK = "El enlace es inválido, expiró o ya se usó. Solici
 /**
  * Si existe un usuario activo con ese correo exacto y con el rol del minisitio, le envía el
  * enlace de restablecimiento (1 h, un solo uso) a la dirección guardada que coincidió, no a la
- * tecleada. Nunca revela si el correo existe.
+ * tecleada. Nunca revela si el correo existe. Las solicitudes se limitan por correo e IP: al
+ * llegar al límite no se envía nada, pero se responde igual.
  */
-export async function requestPasswordReset(emailInput: string, origin: string): Promise<void> {
+export async function requestPasswordReset(emailInput: string, origin: string, ip: string): Promise<void> {
   const email = (emailInput || "").trim();
   if (!email) return;
+
+  if (!(await consumeAttempt(resetRequestThrottleRules(email, ip)))) return;
 
   const condominium = await getMinisitioCondominium();
   if (!condominium) return;
@@ -245,17 +260,20 @@ export async function requestPasswordReset(emailInput: string, origin: string): 
   const token = await signResetToken({ userId: user.id, email: loginEmail, passwordHash: user.passwordHash });
   const resetLink = `${origin}/minisitio/reset-password?token=${encodeURIComponent(token)}`;
 
-  try {
-    await sendMinisitioEmail({
-      from: MINISITIO_MAIL_FROM,
-      to: [to],
-      subject: "Restablecer tu contraseña - Val'Quirico",
-      html: resetEmailHtml(resetLink),
-    });
-  } catch (error) {
-    // No revelar detalles al usuario; igual se responde con el mensaje genérico.
-    console.error("[minisitio] Error enviando email de reset:", error);
-  }
+  // Después de responder: si el envío corriera aquí, el tiempo de respuesta delataría qué correos
+  // existen. Un error no se le muestra al usuario; igual recibe el mensaje genérico.
+  after(async () => {
+    try {
+      await sendMinisitioEmail({
+        from: MINISITIO_MAIL_FROM,
+        to: [to],
+        subject: "Restablecer tu contraseña - Val'Quirico",
+        html: resetEmailHtml(resetLink),
+      });
+    } catch (error) {
+      console.error("[minisitio] Error enviando email de reset:", error);
+    }
+  });
 }
 
 export async function validateResetToken(token: string): Promise<{ valid: true; email: string } | { valid: false; message: string }> {
@@ -277,13 +295,12 @@ export async function resetPassword(token: string, newPasswordInput: string): Pr
   if (!user) return { ok: false, message: "Usuario no encontrado" };
   if (!(await resetTokenIsCurrent(payload, user.passwordHash))) return { ok: false, message: INVALID_RESET_LINK };
 
-  const newHash = hashSHA256(newPassword);
-  // Misma contraseña = misma huella: el enlace seguiría sirviendo. Se exige una distinta.
-  if (newHash === user.passwordHash) return { ok: false, message: "La nueva contraseña debe ser distinta de la actual" };
-  // Condicionado a la contraseña leída: si otro uso del mismo enlace ganó la carrera, no se aplica.
+  // scrypt usa sal nueva: el hash cambia aunque la contraseña sea la misma, así que el enlace
+  // (y toda sesión abierta) deja de valer. Condicionado a la contraseña leída: si otro uso del
+  // mismo enlace ganó la carrera, no se aplica.
   const { count } = await prisma.user.updateMany({
     where: { id: user.id, passwordHash: user.passwordHash },
-    data: { passwordHash: newHash },
+    data: { passwordHash: await hashPassword(newPassword) },
   });
   if (count === 0) return { ok: false, message: INVALID_RESET_LINK };
   return { ok: true, message: "Contraseña actualizada exitosamente" };

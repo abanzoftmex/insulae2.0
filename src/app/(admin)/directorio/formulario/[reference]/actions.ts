@@ -1,11 +1,18 @@
 "use server";
 import { assertPermission } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
+import { AccountGuardError, assertCanGrant, assertCanManageAccount } from "@/shared/application/auth/account-guards";
+import { hashPassword } from "@/shared/application/auth/password-hash";
 
 import { updateDirectoryContactUseCase } from "@/modules/directory";
 import type { DirectoryContactParticipation } from "@/modules/directory/domain/directory";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import crypto from "crypto";
+
+/** Campos que cambian con qué correo se entra a la cuenta o qué permisos tiene. */
+const ACCESS_FIELDS = ["email", "personalEmail", "businessEmail", "userType", "initialRole", "apolfap", "registrationTypeCode"] as const;
+
+const normalized = (value: unknown) => (typeof value === "string" ? value.trim() || null : (value ?? null));
 
 function cleanUserId(id: string): string {
   let decoded = id.trim();
@@ -24,34 +31,59 @@ export async function saveDirectoryContactAction(id: string, data: Partial<Direc
   try {
     await assertPermission(MODULES.DIRECTORIO, "canUpdate");
     const targetId = cleanUserId(id);
-    const res = await updateDirectoryContactUseCase.execute({ id: targetId, data });
+
+    // Cambiar el correo o los permisos de una cuenta con acceso al panel, o dar el tipo ADMIN o
+    // un rol que abre el panel, no se hace solo con el permiso del Directorio (account-guards.ts).
+    const current = await prisma.user.findUnique({
+      where: { id: targetId },
+      select: { id: true, condominiumId: true, email: true, personalEmail: true, businessEmail: true, userType: true, initialRole: true, apolfap: true, registrationTypeCode: true },
+    });
+    // Sin usuario no se guarda nada: antes el guard se saltaba y el repositorio, que vuelve a
+    // decodificar el id, escribía sobre la cuenta real (un id codificado dos veces).
+    if (!current) return { ok: false, message: "No se encontró el contacto." };
+
+    const changed = ACCESS_FIELDS.filter((field) => data[field] !== undefined && normalized(data[field]) !== normalized(current[field]));
+    if (changed.length > 0) await assertCanManageAccount(current.id);
+    await assertCanGrant({
+      condominiumId: current.condominiumId,
+      userType: changed.includes("userType") ? data.userType : undefined,
+      initialRole: changed.includes("initialRole") ? data.initialRole : undefined,
+    });
+
+    // El formulario siempre manda initialRole y el repositorio borra y recrea los UserRole cuando
+    // llega: si no cambió, no se manda, para no quitar roles (Master, "Solo Minisitio") sin querer.
+    const payload = { ...data };
+    if (!changed.includes("initialRole")) delete payload.initialRole;
+
+    const res = await updateDirectoryContactUseCase.execute({ id: current.id, data: payload });
     return { ok: true, message: "Contacto actualizado correctamente.", idVq: res.idVq };
   } catch (error) {
+    if (error instanceof AccountGuardError) return { ok: false, message: error.message };
     console.error("[saveDirectoryContactAction] failed", error);
     return { ok: false, message: "No se pudo actualizar el contacto." };
   }
-}
-
-function hashSHA256(text: string): string {
-  return crypto.createHash("sha256").update(text).digest("hex");
 }
 
 export async function updatePasswordAction(id: string, passwordPlain: string) {
   try {
     await assertPermission(MODULES.DIRECTORIO, "canUpdate");
     const targetId = cleanUserId(id);
+    await assertCanManageAccount(targetId);
+    const password = (passwordPlain || "").trim();
+    if (password.length < 8) return { ok: false, message: "La contraseña debe tener al menos 8 caracteres." };
     await prisma.user.update({
       where: { id: targetId },
-      data: { passwordHash: hashSHA256(passwordPlain) },
+      data: { passwordHash: await hashPassword(password) },
     });
     return { ok: true, message: "Contraseña actualizada correctamente." };
   } catch (error) {
+    if (error instanceof AccountGuardError) return { ok: false, message: error.message };
     console.error("[updatePasswordAction] failed", error);
     return { ok: false, message: "No se pudo actualizar la contraseña." };
   }
 }
 
-function generateRandomPassword(length = 8): string {
+function generateRandomPassword(length = 12): string {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$";
   let password = "";
   for (let i = 0; i < length; i++) {
@@ -65,6 +97,7 @@ export async function generateTemporaryPasswordAction(id: string) {
   try {
     await assertPermission(MODULES.DIRECTORIO, "canUpdate");
     const targetId = cleanUserId(id);
+    await assertCanManageAccount(targetId);
     const user = await prisma.user.findUnique({
       where: { id: targetId },
       include: {
@@ -81,11 +114,11 @@ export async function generateTemporaryPasswordAction(id: string) {
       return { ok: false, message: "El usuario no tiene ningún correo electrónico configurado." };
     }
 
-    const tempPassword = generateRandomPassword(8);
-    const passwordHash = hashSHA256(tempPassword);
+    const tempPassword = generateRandomPassword();
+    const passwordHash = await hashPassword(tempPassword);
 
     await prisma.user.update({
-      where: { id },
+      where: { id: targetId },
       data: { passwordHash },
     });
 
@@ -153,6 +186,7 @@ export async function generateTemporaryPasswordAction(id: string) {
       password: tempPassword,
     };
   } catch (error) {
+    if (error instanceof AccountGuardError) return { ok: false, message: error.message };
     console.error("[generateTemporaryPasswordAction] failed", error);
     return { ok: false, message: "No se pudo generar ni enviar la contraseña provisional." };
   }
@@ -370,12 +404,18 @@ export async function createNestedUserAction(
 export async function deleteNestedUserAction(id: string) {
   try {
     await assertPermission(MODULES.DIRECTORIO, "canDelete");
+    // Solo usuarios anidados, y no los que tienen acceso al panel: antes servía para desactivar
+    // cualquier cuenta, administradores incluidos.
+    const nested = await prisma.user.findUnique({ where: { id }, select: { parentId: true } });
+    if (!nested?.parentId) return { ok: false, message: "Solo se pueden eliminar usuarios anidados." };
+    await assertCanManageAccount(id);
     await prisma.user.update({
       where: { id },
       data: { isActive: false }
     });
     return { ok: true, message: "Usuario anidado eliminado correctamente." };
   } catch (error) {
+    if (error instanceof AccountGuardError) return { ok: false, message: error.message };
     console.error("[deleteNestedUserAction] failed", error);
     return { ok: false, message: "No se pudo eliminar el usuario anidado." };
   }

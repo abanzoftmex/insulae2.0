@@ -5,11 +5,8 @@ import { MODULES } from "@/shared/application/auth/modules";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
-import crypto from "crypto";
-
-function hashSHA256(text: string): string {
-  return crypto.createHash("sha256").update(text).digest("hex");
-}
+import { AccountGuardError, assertCanGrant } from "@/shared/application/auth/account-guards";
+import { hashPassword } from "@/shared/application/auth/password-hash";
 
 export async function createFullDirectoryContactAction(data: any) {
   try {
@@ -21,6 +18,13 @@ export async function createFullDirectoryContactAction(data: any) {
 
     if (!condominium) {
       return { ok: false, message: "No se encontró el condominio activo." };
+    }
+
+    // Dar el tipo ADMIN o un rol que abre el panel no se hace solo con el permiso del Directorio.
+    await assertCanGrant({ condominiumId: condominium.id, userType: data.userType, initialRole: data.initialRole });
+    const password = typeof data.password === "string" ? data.password.trim() : "";
+    if (password && password.length < 8) {
+      return { ok: false, message: "La contraseña debe tener al menos 8 caracteres." };
     }
 
     const siblings = await prisma.user.findMany({
@@ -73,7 +77,7 @@ export async function createFullDirectoryContactAction(data: any) {
         taxAddress: data.taxAddress || null,
         taxStatusPdfUrl: data.taxStatusPdfUrl || null,
         initialRole: data.initialRole || null,
-        passwordHash: data.password ? hashSHA256(data.password) : null,
+        passwordHash: password ? await hashPassword(password) : null,
         isActive: true,
       },
     });
@@ -99,6 +103,7 @@ export async function createFullDirectoryContactAction(data: any) {
     revalidatePath("/directorio");
     return { ok: true, message: "Persona creada exitosamente.", id: newUser.id };
   } catch (error) {
+    if (error instanceof AccountGuardError) return { ok: false, message: error.message };
     console.error("[createFullDirectoryContactAction] error", error);
     return { ok: false, message: "Ocurrió un error al crear la persona." };
   }

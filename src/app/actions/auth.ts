@@ -8,17 +8,29 @@
  *   (o la cuenta de sistema con userType ADMIN). Los condóminos usan el minisitio.
  * - No existen contraseñas por defecto: una cuenta sin contraseña se activa con
  *   "¿Olvidaste tu contraseña?" o con la contraseña provisional que genera el Directorio.
+ * - Contraseñas con scrypt (password-hash.ts). Mientras no se verifica la contraseña, todos los
+ *   errores dan el mismo mensaje: antes se podía saber qué correos existían, cuáles estaban
+ *   inactivos y cuáles no tenían contraseña. Los intentos fallidos se limitan (auth-throttle.ts).
  */
 import { cookies } from "next/headers";
-import crypto from "crypto";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { findUserIdsByEmail } from "@/shared/infrastructure/db/user-email-lookup";
+import {
+  clearThrottle,
+  clientIp,
+  consumeAttempt,
+  loginAccountKeys,
+  loginThrottleRules,
+  passwordChangeThrottleRules,
+} from "@/shared/infrastructure/db/auth-throttle";
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_TTL_SECONDS,
   signAdminSession,
   type AdminSession,
 } from "@/shared/application/auth/admin-session";
+import { hashPassword, verifyPassword } from "@/shared/application/auth/password-hash";
+import { matchPasswordCandidates } from "@/shared/application/auth/password-login";
 import {
   canAccessAdminPanel,
   getPermissionsForUser,
@@ -30,22 +42,9 @@ export type LoginResult = {
   error?: string;
 };
 
-function hashSHA256(text: string): string {
-  return crypto.createHash("sha256").update(text).digest("hex");
-}
-
-function hashMD5(text: string): string {
-  return crypto.createHash("md5").update(text).digest("hex");
-}
-
-/**
- * Acepta SHA-256 (el estándar) y MD5 (heredado del legacy). Ya no compara en texto plano: con
- * eso el hash guardado servía como contraseña, y en la base no quedan contraseñas en claro.
- */
-function passwordMatches(storedHash: string | null, password: string): boolean {
-  if (!storedHash) return false;
-  return storedHash === hashSHA256(password) || storedHash === hashMD5(password);
-}
+const INVALID_CREDENTIALS =
+  "Correo o contraseña incorrectos. Si aún no tienes contraseña, usa “¿Olvidaste tu contraseña?” para crearla.";
+const TOO_MANY_ATTEMPTS = "Demasiados intentos. Espera unos minutos e inténtalo de nuevo.";
 
 export async function loginAction(
   _prevState: unknown,
@@ -59,7 +58,14 @@ export async function loginAction(
   }
 
   try {
+    // El intento se cuenta antes de verificar (ver auth-throttle.ts).
+    const throttle = loginThrottleRules(email, await clientIp());
+    if (!(await consumeAttempt(throttle))) {
+      return { success: false, error: TOO_MANY_ATTEMPTS };
+    }
+
     // Un correo puede estar compartido por varias cuentas (dato legacy): desambiguamos por contraseña.
+    // La consulta se hace aunque no haya ids, para que el tiempo no revele si el correo existe.
     const ids = await findUserIdsByEmail(email);
     const candidates = await prisma.user.findMany({
       where: { id: { in: ids } },
@@ -77,29 +83,20 @@ export async function loginAction(
       },
     });
 
-    if (candidates.length === 0) {
-      return { success: false, error: "Credenciales incorrectas. Inténtalo de nuevo." };
+    const matched = await matchPasswordCandidates(candidates, password);
+    if (matched.length === 0) {
+      return { success: false, error: INVALID_CREDENTIALS };
     }
 
-    const activos = candidates.filter((u) => u.isActive);
+    // La contraseña ya se comprobó: desde aquí los mensajes pueden ser específicos.
+    const activos = matched.filter((u) => u.isActive);
     if (activos.length === 0) {
       return { success: false, error: "Tu cuenta se encuentra inactiva. Contacta al administrador." };
     }
 
-    const matched = activos.filter((u) => passwordMatches(u.passwordHash, password));
-    if (matched.length === 0) {
-      if (activos.every((u) => !u.passwordHash)) {
-        return {
-          success: false,
-          error: "Tu cuenta aún no tiene contraseña. Usa “¿Olvidaste tu contraseña?” para crearla.",
-        };
-      }
-      return { success: false, error: "Contraseña incorrecta. Inténtalo de nuevo." };
-    }
-
     // Entre las cuentas cuya contraseña coincide, la primera con acceso al panel.
-    let user: (typeof matched)[number] | null = null;
-    for (const candidate of matched) {
+    let user: (typeof activos)[number] | null = null;
+    for (const candidate of activos) {
       if (candidate.userType === "ADMIN" || canAccessAdminPanel(await getPermissionsForUser(candidate.id))) {
         user = candidate;
         break;
@@ -112,12 +109,15 @@ export async function loginAction(
       };
     }
 
+    await clearThrottle(loginAccountKeys(throttle));
+
     const name =
       [user.firstName, user.lastName].filter(Boolean).join(" ").trim() || user.businessName || "Usuario Insulae";
     const token = await signAdminSession({
       userId: user.id,
       email: user.email || user.personalEmail || user.businessEmail || null,
       name,
+      passwordHash: user.passwordHash,
     });
 
     const cookieStore = await cookies();
@@ -169,7 +169,12 @@ export async function changePasswordAction(
       return { success: false, error: "Usuario no encontrado." };
     }
 
-    if (!passwordMatches(user.passwordHash, currentPassword.trim())) {
+    // Con una sesión robada no se debe poder adivinar la contraseña actual a fuerza de intentos.
+    const throttle = passwordChangeThrottleRules(user.id);
+    if (!(await consumeAttempt(throttle))) {
+      return { success: false, error: TOO_MANY_ATTEMPTS };
+    }
+    if (!(await verifyPassword(currentPassword.trim(), user.passwordHash)).ok) {
       return { success: false, error: "La contraseña actual es incorrecta." };
     }
 
@@ -179,10 +184,12 @@ export async function changePasswordAction(
 
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: hashSHA256(newPassword.trim()) },
+      data: { passwordHash: await hashPassword(newPassword.trim()) },
     });
+    await clearThrottle(throttle.map((rule) => rule.key));
 
-    // Cerrar sesión para forzar un nuevo inicio con la contraseña nueva.
+    // Cerrar sesión para forzar un nuevo inicio con la contraseña nueva. Las sesiones abiertas
+    // en otros dispositivos también dejan de valer (llevan la huella de la contraseña anterior).
     const cookieStore = await cookies();
     cookieStore.delete(ADMIN_SESSION_COOKIE);
 

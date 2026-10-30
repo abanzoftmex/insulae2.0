@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { assertPermission } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
 import { readAdminSession } from "@/shared/application/auth/permissions";
+import { assertCanManageAccount } from "@/shared/application/auth/account-guards";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 export interface PersonRelationsSummary {
@@ -372,6 +373,11 @@ export async function deleteDirectoryPersonAction(
         message: "No puedes eliminar tu propio usuario mientras mantienes la sesión activa.",
       };
     }
+    // Dar de baja (y quitar la contraseña de) una cuenta con acceso al panel exige el permiso de
+    // Roles; también vale para sus usuarios anidados, que se dan de baja con ella.
+    await assertCanManageAccount(targetUserId);
+    const children = await prisma.user.findMany({ where: { parentId: targetUserId, isActive: true }, select: { id: true } });
+    for (const child of children) await assertCanManageAccount(child.id);
 
     await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({

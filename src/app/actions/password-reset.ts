@@ -7,15 +7,18 @@
  *    con acceso al panel, firma un token de 1 hora y envía el enlace por correo (Resend, vía
  *    API REST para no depender del SDK) a la dirección guardada que coincidió, no a la
  *    tecleada. Siempre responde igual: no revela si el correo existe. El dominio del enlace
- *    sale de `appOrigin()`, nunca de la petición.
+ *    sale de `appOrigin()`, nunca de la petición. Las solicitudes se limitan por correo e IP.
  * 2. `resetPasswordWithTokenAction(token, newPassword)`: valida el token (un solo uso: lleva una
- *    huella de la contraseña) y fija la contraseña con SHA-256, el estándar del login.
+ *    huella de la contraseña) y fija la contraseña con scrypt. Cambiar la contraseña cierra las
+ *    sesiones abiertas de la cuenta.
  */
-import crypto from "crypto";
+import { after } from "next/server";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { adminResetTokenIsCurrent, readAdminResetToken, signAdminResetToken } from "@/shared/application/auth/admin-session";
+import { hashPassword } from "@/shared/application/auth/password-hash";
 import { canAccessAdminPanel, getPermissionsForUser } from "@/shared/application/auth/permissions";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
+import { clientIp, consumeAttempt, resetRequestThrottleRules } from "@/shared/infrastructure/db/auth-throttle";
 import { findUserIdsByEmail, storedEmailMatching } from "@/shared/infrastructure/db/user-email-lookup";
 
 const GENERIC_OK =
@@ -27,6 +30,11 @@ export async function requestPasswordResetAction(emailInput: string): Promise<{ 
   if (!email) return { success: false, message: "Ingresa tu correo." };
 
   try {
+    // Se cuenta cada solicitud, exista o no el correo; al llegar al límite se responde igual pero no se envía nada.
+    if (!(await consumeAttempt(resetRequestThrottleRules(email, await clientIp())))) {
+      return { success: true, message: GENERIC_OK };
+    }
+
     const ids = await findUserIdsByEmail(email);
     const candidates = ids.length
       ? await prisma.user.findMany({
@@ -62,7 +70,11 @@ export async function requestPasswordResetAction(emailInput: string): Promise<{ 
     const name = [target.firstName, target.lastName].filter(Boolean).join(" ") || "usuario";
     const condominiumName = target.condominium?.name || "Insulae";
 
-    await sendResetEmail({ to, name, condominiumName, resetLink });
+    // Después de responder: si el envío corriera aquí, el tiempo de respuesta delataría qué
+    // correos existen.
+    after(() => sendResetEmail({ to, name, condominiumName, resetLink }).catch((error) => {
+      console.error("[requestPasswordResetAction] envío", error);
+    }));
     return { success: true, message: GENERIC_OK };
   } catch (error) {
     console.error("[requestPasswordResetAction] error", error);
@@ -94,15 +106,12 @@ export async function resetPasswordWithTokenAction(
     if (!(await adminResetTokenIsCurrent(payload, user.passwordHash))) {
       return { success: false, message: INVALID_LINK };
     }
-    const hash = crypto.createHash("sha256").update(password).digest("hex");
-    // Misma contraseña = misma huella: el enlace seguiría sirviendo. Se exige una distinta.
-    if (hash === user.passwordHash) {
-      return { success: false, message: "La nueva contraseña debe ser distinta de la actual." };
-    }
-    // Condicionado a la contraseña leída: si otro uso del mismo enlace ganó la carrera, no se aplica.
+    // scrypt usa sal nueva: el hash cambia aunque la contraseña sea la misma, así que el enlace
+    // (y toda sesión abierta) deja de valer. Condicionado a la contraseña leída: si otro uso del
+    // mismo enlace ganó la carrera, no se aplica.
     const { count } = await prisma.user.updateMany({
       where: { id: user.id, passwordHash: user.passwordHash },
-      data: { passwordHash: hash },
+      data: { passwordHash: await hashPassword(password) },
     });
     if (count === 0) return { success: false, message: INVALID_LINK };
     return { success: true, message: "Contraseña actualizada. Ya puedes iniciar sesión." };

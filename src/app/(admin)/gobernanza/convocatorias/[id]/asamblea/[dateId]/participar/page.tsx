@@ -1,7 +1,7 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
 import { getAnnouncementByIdUseCase } from "@/modules/announcement/application/announcement.use-cases";
-import { prisma } from "@/shared/infrastructure/db/prisma";
+import { getRepresentedKeys } from "@/modules/announcement/application/assembly-representation";
 import { getCurrentSession } from "@/app/actions/auth";
 import { ParticiparClient } from "./components/participar-client";
 import { Badge } from "@/components/ui/badge";
@@ -55,46 +55,9 @@ export default async function ParticiparAsambleaPage({ params }: PageProps) {
   const dateSession = announcement.dates.find(d => d.id === dateId);
   if (!dateSession) notFound();
 
-  // 3. Resolve user's invited positions & special guest mappings
-  const userAssignments = await prisma.condominiumStructurePositionAssignment.findMany({
-    where: { userId: session.userId, isActive: true },
-    include: { position: true }
-  });
-
-  const invitedPositionIds = (announcement.invitedPositions || []).map(ip => ip.positionId);
-  
-  const matchedAssignments = userAssignments.filter(ua => invitedPositionIds.includes(ua.positionId));
-
-  // Correo exacto salvo mayúsculas (`equals` con `mode: "insensitive"` es ILIKE: `_` y `%` serían
-  // comodines). Esto solo decide qué ofrece la pantalla: registerVoteAction y
-  // toggleAttendanceAction todavía aceptan cualquier clave (falta validarlo en el servidor).
-  const sessionEmail = (session.email ?? "").trim().toLowerCase();
-  const matchedGuests = sessionEmail
-    ? (await prisma.specialGuest.findMany({ where: { announcementId: id, isActive: true } })).filter(
-        (guest) => guest.email?.trim().toLowerCase() === sessionEmail,
-      )
-    : [];
-
-  // Build represented keys array
-  const representedKeys: { key: string; name: string; type: "POSITION" | "GUEST" }[] = [];
-
-  for (const assignment of matchedAssignments) {
-    if (assignment.position) {
-      representedKeys.push({
-        key: assignment.positionId,
-        name: assignment.position.name,
-        type: "POSITION"
-      });
-    }
-  }
-
-  for (const guest of matchedGuests) {
-    representedKeys.push({
-      key: guest.id,
-      name: guest.name,
-      type: "GUEST"
-    });
-  }
+  // 3. Puestos invitados e invitados especiales que representa el usuario. Misma regla que
+  // validan registerVoteAction y toggleAttendanceAction en el servidor.
+  const representedKeys = await getRepresentedKeys(id, session);
 
   // 4. Validate if the user is convocated at all
   if (representedKeys.length === 0) {

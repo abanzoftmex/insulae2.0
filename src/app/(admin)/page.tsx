@@ -20,7 +20,8 @@ import { getCondominiumOverviewUseCase } from "@/modules/condominium";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { LiveClock } from "@/components/ui/live-clock";
-import { getUserPermissions, readAdminSession } from "@/shared/application/auth/permissions";
+import { getUserPermissions } from "@/shared/application/auth/permissions";
+import { requireAdminSession } from "@/shared/application/auth/guards";
 import { MODULES, type ModuleName } from "@/shared/application/auth/modules";
 
 export const metadata: Metadata = {
@@ -140,8 +141,8 @@ const QUICK_ACTIONS: QuickActionDef[] = [
 
 export default async function Home() {
   const now = new Date();
-  const [session, permissions, condominiumOverview] = await Promise.all([
-    readAdminSession(),
+  const session = await requireAdminSession();
+  const [permissions, condominiumOverview] = await Promise.all([
     getUserPermissions(),
     getCondominiumOverviewUseCase.execute(),
   ]);

@@ -15,6 +15,7 @@
 import crypto from "crypto";
 import { prisma } from "../shared/infrastructure/db/prisma";
 import { canAccessAdminPanel, getPermissionsForUser } from "../shared/application/auth/permissions";
+import { hashPassword } from "../shared/application/auth/password-hash";
 
 function tempPassword(): string {
   // 12 caracteres sin ambiguos (sin 0/O, 1/l/I).
@@ -73,7 +74,7 @@ async function main() {
   for (const t of targets) {
     await prisma.user.update({
       where: { id: t.id },
-      data: { passwordHash: crypto.createHash("sha256").update(t.password).digest("hex") },
+      data: { passwordHash: await hashPassword(t.password) },
     });
   }
   console.log(`\nContraseñas provisionales fijadas: ${targets.length}. Entrégalas por un canal seguro y pide cambiarlas en /cambio-contrasena.`);
