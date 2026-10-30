@@ -236,6 +236,25 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), sexta vuelta:**
+- **Detalle de propiedad y de comercio** con una pieza compartida (`_components/unidad-detalle.tsx`):
+  - nombre y "Ver estado de cuenta";
+  - vencido, por vencer y el último pago real (solo en propiedades: los pagos se registran por área y no distinguen al comercio);
+  - una ficha con "Sin registrar" donde no hay dato;
+  - la galería solo si hay imágenes (hoy no hay ninguna en la base).
+  - Se quitaron:
+    - el indiviso inventado de 0.0417 %;
+    - "Último pago" y "Total cargos" siempre en $0.00;
+    - los "N/A" del comercio.
+- **Estado de cuenta de comercio:**
+  - las mismas piezas que el de propiedad, con su "¿Algo no cuadra?";
+  - pestañas "Estado de cuenta / Reglamentos";
+  - un mensaje claro si no se encuentra, en lugar del modal de error.
+  - La consulta trae también descuentos y saldo a favor.
+- **Documentos del condominio:** una lista de documentos compartida (`_components/document-list.tsx`), la misma de la pestaña de reglamentos.
+- **Títulos de pestaña:** "Pantalla | Val'Quirico", iguales en el metadata y en el shell.
+- **Se borraron** `ImageGallery`, `ReglamentosTab`, `ReglamentosView`, `ButtonSpinner` y `LegacyCard`.
+
 **Hecho (2026-10-29), quinta vuelta:**
 - **Estado de cuenta de propiedad:**
   - arriba, la unidad y sus acciones: PDF, correo y "¿Algo no cuadra?", que abre una solicitud con el asunto escrito;
@@ -292,17 +311,14 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
-1. **Estado de cuenta de comercio** (pestaña de reglamentos incluida) **y detalle de propiedad / comercio** con las piezas del de propiedad. Además:
-   - "Saldo pendiente" muestra el vencido;
-   - las columnas "N/A" y "Sin estado".
-2. **Teléfonos de emergencia** con `tel:`, WhatsApp (`wa.me`), `mailto:` y mapa.
-3. **Documentos, Experiencias** (quitar las tarjetas de relleno) **y Mi perfil.**
-4. **Reportes:**
+1. **Teléfonos de emergencia** con `tel:`, WhatsApp (`wa.me`), `mailto:` y mapa.
+2. **Experiencias** (quitar las tarjetas de relleno) **y Mi perfil.**
+3. **Reportes:**
    - paginador compacto, porque Cartera de cuotas pinta 59 números;
    - sin MAYÚSCULAS ni degradados verde y rojo;
    - año por defecto con datos.
-5. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
-6. **Limpieza:**
+4. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
+5. **Limpieza:**
    - 41 clases que no existen en Tailwind v4;
    - 16 `alert()`;
    - unas 825 clases `gray-*`.

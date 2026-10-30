@@ -15,8 +15,9 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Minisitio Condóminos | Val'Quirico",
-    template: "%s | Minisitio Val'Quirico",
+    default: "Portal del condómino | Val'Quirico",
+    // Igual que el título que pone el shell: "Avisos | Val'Quirico" (como "canal | espacio" en Slack).
+    template: "%s | Val'Quirico",
   },
   description: "Portal de condóminos, propietarios y residentes de Val'Quirico.",
 };

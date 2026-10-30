@@ -238,6 +238,9 @@ export interface PagoEstadoCuenta {
   formaPago?: string | null;
 }
 
+/** Formas de pago del modelo (enum PaymentMethod) en palabras. */
+const FORMA_PAGO: Record<string, string> = { CASH: "Efectivo", TRANSFER: "Transferencia", CARD: "Tarjeta", CHECK: "Cheque", OTHER: "Otro" };
+
 export function StatementPayments({ pagos, timeZone }: { pagos: PagoEstadoCuenta[]; timeZone?: string }) {
   if (pagos.length === 0) return null;
   return (
@@ -252,7 +255,7 @@ export function StatementPayments({ pagos, timeZone }: { pagos: PagoEstadoCuenta
               <span className="block text-fg" suppressHydrationWarning>
                 {formatShortDate(p.fechaPago, timeZone) || "Sin fecha"}
               </span>
-              {(p.folio || p.formaPago) && <span className="block text-caption text-fg-3">{[p.formaPago, p.folio && `Folio ${p.folio}`].filter(Boolean).join(" · ")}</span>}
+              {(p.folio || p.formaPago) && <span className="block text-caption text-fg-3">{[p.formaPago && (FORMA_PAGO[p.formaPago] ?? p.formaPago), p.folio && `Folio ${p.folio}`].filter(Boolean).join(" · ")}</span>}
             </span>
             <span className="shrink-0 font-semibold text-fg tabular-nums">{formatCurrency(p.monto)}</span>
           </li>

@@ -1,237 +1,67 @@
 "use client";
 
+/**
+ * Detalle de un comercio: saldo y ficha del contrato con lo que de verdad está registrado (antes
+ * leía campos que no existen y pintaba "N/A" y $0.00). Sin "último pago": los pagos se registran
+ * por área privativa y no distinguen al dueño del comercio.
+ */
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LegacyCard as Card } from "@/components/minisitio/legacy-card";
-import { StatusBadge } from "@/components/minisitio/status-badge";
-import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
-import { useMinisitioAuth } from "@/components/minisitio/use-minisitio-auth";
 import { msPath } from "@/components/minisitio/paths";
+import { buttonClass } from "@/components/minisitio/ui/button";
 import { useMinisitioLayoutStore } from "@/stores/minisitio-layout.store";
+import { useDisplayTimeZone } from "../../_lib/client-dates";
+import { formatLongDate } from "../../_lib/format";
+import { SinDato, UnidadDetalle } from "../../_components/unidad-detalle";
 import type { ArrendamientoView } from "../arrendamientos-types";
 
-/**
- * Comercio tal como lo lee la pantalla. `area_nombre`, `zona_nombre`, `monto_cargado` y
- * `monto_vencido` ya no vienen en el contrato (tampoco los mandaba el proxy del minisitio):
- * se muestran "N/A" / $0.00, igual que en el minisitio actual.
- */
-type ArrendamientoDetalle = ArrendamientoView & {
-  area_nombre?: string | null;
-  zona_nombre?: string | null;
-  monto_cargado?: number | null;
-  monto_vencido?: number | null;
-};
+const m2 = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 });
+const PLACEHOLDERS = new Set(["Sin barrio", "Sin uso definido"]);
+const texto = (value: string | null | undefined) => (value && !PLACEHOLDERS.has(value) ? value : null);
+const num = (value: unknown) => Number(value) || 0;
 
-const ERROR_MESSAGE = "Error al cargar los detalles del arrendamiento";
-
-/** Formato de fecha del legacy, con la zona de Val'Quirico para que servidor e hidratación coincidan. */
-function formatFecha(value: string): string {
-  try {
-    const d = new Date(value);
-    return isNaN(d.getTime()) ? "N/A" : d.toLocaleDateString("es-MX", { timeZone: "America/Mexico_City" });
-  } catch {
-    return "N/A";
-  }
-}
-
-/**
- * Detalle de un comercio (antes pages/arrendamientos/[id]/index.js). `arrendamiento` es null
- * si no es del condómino: el proxy legacy respondía 404 y la pantalla mostraba el error.
- */
-export function ArrendamientoDetalleView({
-  id,
-  arrendamiento,
-}: {
-  id: string;
-  arrendamiento: ArrendamientoDetalle | null;
-}) {
-  const router = useRouter();
-  const { user, userType } = useMinisitioAuth();
-  const setPageTitle = useMinisitioLayoutStore((s) => s.setPageTitle);
-  const puedeVer = userType === "arrendatario" || userType === "both";
+export function ArrendamientoDetalleView({ id, arrendamiento }: { id: string; arrendamiento: ArrendamientoView | null }) {
+  const timeZone = useDisplayTimeZone();
+  const setPageData = useMinisitioLayoutStore((s) => s.setPageData);
 
   useEffect(() => {
-    if (!user || !id) return;
-
-    if (userType !== "arrendatario" && userType !== "both") {
-      router.push(msPath("/"));
-      return;
-    }
-
-    // El legacy envolvía cada estado en <Layout title="…">, que fijaba el título del encabezado:
-    // "Detalle de Comercio" (se quedaba tras cargar) o "Error".
-    setPageTitle(arrendamiento ? "Detalle de Comercio" : "Error");
-  }, [user, id, userType, router, arrendamiento, setPageTitle]);
-
-  // El legacy dejaba el spinner mientras redirigía a quien no tiene comercios
-  if (!puedeVer) {
-    return <LoadingSpinner />;
-  }
+    if (arrendamiento) setPageData({ title: arrendamiento.nombre_comercio, breadcrumbs: [{ label: "Mis comercios", href: msPath("/arrendamientos") }] });
+  }, [arrendamiento, setPageData]);
 
   if (!arrendamiento) {
     return (
-      <Card>
-        <div className="text-center py-8">
-          <p className="text-red-600 mb-4">{ERROR_MESSAGE}</p>
-          <Link href={msPath("/arrendamientos")} className="text-blue-600 hover:text-blue-800">
-            Volver a Comercios
-          </Link>
-        </div>
-      </Card>
+      <div className="mx-auto w-full max-w-[1040px] py-12 text-center">
+        <p className="text-body text-fg-2">No encontramos este comercio entre los tuyos.</p>
+        <Link href={msPath("/arrendamientos")} className={buttonClass("outline", "sm", "mt-3")}>
+          Ir a Mis comercios
+        </Link>
+      </div>
     );
   }
 
-  const getStatusBadge = (statusId: number) => {
-    const statusMap: Record<number, number> = {
-      1: 1, // Activo -> Verde
-      2: 3, // Inactivo -> Rojo
-      3: 2, // Pendiente -> Amarillo
-    };
-    return statusMap[statusId] || 2;
-  };
+  const a = arrendamiento;
+  const superficie = num(a.m2_construccion) || num(a.superficie);
+  const inicio = formatLongDate(a.fecha_inicio, timeZone);
 
   return (
-    <div className="space-y-6">
-      {/* Navegación */}
-      <div className="flex items-center space-x-2 text-sm text-gray-500">
-        <Link href={msPath("/arrendamientos")} className="hover:text-gray-700">
-          Arrendamientos
-        </Link>
-        <span>/</span>
-        <span className="text-gray-900">{arrendamiento.nombre_comercio || "Detalle"}</span>
-      </div>
-
-      {/* Información Principal */}
-      <Card title="Información del Comercio">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Nombre del Comercio</label>
-              <p className="mt-1 text-sm text-gray-900">{arrendamiento.nombre_comercio || "N/A"}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Razón Social</label>
-              <p className="mt-1 text-sm text-gray-900">{arrendamiento.razon_social_comercio || "N/A"}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Clase de Comercio</label>
-              <p className="mt-1 text-sm text-gray-900">{arrendamiento.clase_comercio || "Sin clasificar"}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Estado</label>
-              <div className="mt-1">
-                {/* Legacy: se pasaba el id de badge como `type` y un `text` que StatusBadge no acepta,
-                    así que pinta una pastilla azul vacía. Se conserva tal cual (ver reporte del port). */}
-                <StatusBadge type={String(getStatusBadge(arrendamiento.id_cat_status_comercios))} status={undefined} />
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Área Privativa</label>
-              <p className="mt-1 text-sm text-gray-900">{arrendamiento.area_nombre || "N/A"}</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Zona</label>
-              <p className="mt-1 text-sm text-gray-900">{arrendamiento.zona_nombre || "N/A"}</p>
-            </div>
-
-            {arrendamiento.fecha_inicio && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fecha de Inicio</label>
-                <p className="mt-1 text-sm text-gray-900">{formatFecha(arrendamiento.fecha_inicio)}</p>
-              </div>
-            )}
-          </div>
-        </div>
-      </Card>
-
-      {/* Información Financiera */}
-      <Card title="Información Financiera">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Saldo Total</label>
-              <p className="mt-1 text-lg font-semibold text-blue-600">
-                $
-                {arrendamiento.monto_cargado
-                  ? arrendamiento.monto_cargado.toLocaleString("es-MX", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  : "0.00"}
-              </p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Monto Vencido</label>
-              <p className="mt-1 text-lg font-semibold text-red-600">
-                $
-                {arrendamiento.monto_vencido
-                  ? arrendamiento.monto_vencido.toLocaleString("es-MX", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })
-                  : "0.00"}
-              </p>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Documentación */}
-      {(arrendamiento.folio_861 || arrendamiento.fecha_inscripcion_f861 || arrendamiento.fecha_vigencia_f861) && (
-        <Card title="Documentación F-861">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {arrendamiento.folio_861 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Folio F-861</label>
-                <p className="mt-1 text-sm text-gray-900">{arrendamiento.folio_861}</p>
-              </div>
-            )}
-
-            {arrendamiento.fecha_inscripcion_f861 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fecha de Inscripción</label>
-                <p className="mt-1 text-sm text-gray-900">{formatFecha(arrendamiento.fecha_inscripcion_f861)}</p>
-              </div>
-            )}
-
-            {arrendamiento.fecha_vigencia_f861 && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Fecha de Vigencia</label>
-                <p className="mt-1 text-sm text-gray-900">{formatFecha(arrendamiento.fecha_vigencia_f861)}</p>
-              </div>
-            )}
-          </div>
-        </Card>
-      )}
-
-      {/* Acciones */}
-      <Card title="Acciones">
-        <div className="flex space-x-4">
-          <Link
-            href={msPath(`/arrendamientos/${id}/estado-cuenta`)}
-            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors"
-          >
-            Ver Estado de Cuenta
-          </Link>
-          <Link
-            href={msPath("/arrendamientos")}
-            className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition-colors"
-          >
-            Volver a Comercios
-          </Link>
-        </div>
-      </Card>
-    </div>
+    <UnidadDetalle
+      nombre={a.nombre_comercio}
+      subtitulo={[a.area_privativa, texto(a.barrio)].filter(Boolean).join(" · ") || undefined}
+      estadoCuentaHref={`/arrendamientos/${id}/estado-cuenta`}
+      vencido={num(a.saldo_vencido)}
+      porVencer={num(a.saldo_pendiente_no_vencido)}
+      aFavor={num(a.saldo_a_favor)}
+      ficha={[
+        { label: "Contrato", value: a.id_cat_status_comercios === 1 ? "Activo" : "Inactivo" },
+        { label: "Inicio del contrato", value: inicio ? <span suppressHydrationWarning>{inicio}</span> : <SinDato /> },
+        { label: "Local", value: a.area_privativa || <SinDato /> },
+        { label: "Barrio", value: texto(a.barrio) ?? <SinDato /> },
+        { label: "Uso de suelo", value: texto(a.uso_suelo) ?? <SinDato /> },
+        { label: "Superficie", value: superficie > 0 ? `${m2.format(superficie)} m²` : <SinDato /> },
+        { label: "Contacto administrativo", value: a.contacto_administrativo || <SinDato /> },
+        { label: "Contacto contable", value: a.contacto_contable || <SinDato /> },
+        ...(a.observaciones ? [{ label: "Observaciones", value: <span className="whitespace-pre-line">{a.observaciones}</span> }] : []),
+      ]}
+    />
   );
 }

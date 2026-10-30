@@ -9,11 +9,7 @@ import { listTicketDepartments, type TicketDepartment } from "@/modules/minisiti
 import { msPath } from "@/components/minisitio/paths";
 import { EstadoCuentaArrendamientoView } from "./estado-cuenta-arrendamiento-view";
 
-export const metadata: Metadata = { title: "Estado de Cuenta" };
-
-// Mensajes del modal de error del minisitio (antes según el status de la API).
-const NOT_FOUND_MESSAGE = "Arrendamiento no encontrado. El ID no existe o no tienes acceso a él.";
-const LOAD_ERROR_MESSAGE = "Error al cargar el estado de cuenta. Por favor, intenta de nuevo.";
+export const metadata: Metadata = { title: "Estado de cuenta" };
 
 export default async function EstadoCuentaArrendamientoPage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireCondominoSession();
@@ -63,7 +59,7 @@ export default async function EstadoCuentaArrendamientoPage({ params }: { params
     <EstadoCuentaArrendamientoView
       id={id}
       statement={statement}
-      loadError={statement ? null : failed ? LOAD_ERROR_MESSAGE : NOT_FOUND_MESSAGE}
+      loadFailed={!statement && failed}
       proyecto={proyecto}
       departments={departments}
       reglamentos={documents.documentos}

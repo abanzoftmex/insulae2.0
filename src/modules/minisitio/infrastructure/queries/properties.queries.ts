@@ -117,7 +117,10 @@ export async function getPropertyDetail(session: CondominoTokenPayload, id: stri
   });
   if (!area) return null;
 
-  const project = await getActiveProject(session.condominiumId);
+  const [project, ultimoPago] = await Promise.all([
+    getActiveProject(session.condominiumId),
+    prisma.payment.findFirst({ where: { privateAreaId: id }, orderBy: { paidAt: "desc" }, select: { paidAt: true, amount: true } }),
+  ]);
   const bal = computeBalance(area.charges);
   // El detalle de la API vieja no traía `parent_ordenamiento` (el listado sí).
   const propiedad: Omit<Propiedad, "parent_ordenamiento"> & { parent_ordenamiento?: null } = toPropiedad(
@@ -138,6 +141,8 @@ export async function getPropertyDetail(session: CondominoTokenPayload, id: stri
       pagosRealizados: bal.pagosRealizados,
       descuentos: bal.descuentos,
     },
+    /** El pago más reciente registrado del área (null si no hay). */
+    ultimoPago: ultimoPago ? { fecha: ultimoPago.paidAt.toISOString(), monto: num(ultimoPago.amount) } : null,
     images: area.images.map((img) => ({
       id: img.id,
       descripcion: img.fileName || "",
