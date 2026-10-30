@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
 import { getSessionInfo } from "@/modules/minisitio/application/auth.service";
 import { getRentalAccountStatement } from "@/modules/minisitio/infrastructure/queries/account-statement.queries";
-import { getProjectInfo } from "@/modules/minisitio/infrastructure/queries/project.queries";
+import { getPaymentInstructions, getProjectInfo } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { listDocuments, type Documento } from "@/modules/minisitio/infrastructure/queries/documents.queries";
 import { listTicketDepartments, type TicketDepartment } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
 import { msPath } from "@/components/minisitio/paths";
@@ -15,7 +15,7 @@ export default async function EstadoCuentaArrendamientoPage({ params }: { params
   const session = await requireCondominoSession();
   const { id } = await params;
 
-  const [statementResult, proyecto, departments, documents] = await Promise.all([
+  const [statementResult, proyecto, departments, documents, pago] = await Promise.all([
     // null si el arrendamiento no es del condómino.
     getRentalAccountStatement(session, id).then(
       (statement) => ({ statement, failed: false }),
@@ -45,6 +45,11 @@ export default async function EstadoCuentaArrendamientoPage({ params }: { params
         return { documentos: [] as Documento[], error: "No se pudieron cargar los reglamentos" };
       },
     ),
+    // "Cómo pagar": si falla, simplemente no se ofrece.
+    getPaymentInstructions().catch((error) => {
+      console.error("[minisitio] Error al cargar las instrucciones de pago:", error);
+      return null;
+    }),
   ]);
 
   const { statement, failed } = statementResult;
@@ -64,6 +69,7 @@ export default async function EstadoCuentaArrendamientoPage({ params }: { params
       departments={departments}
       reglamentos={documents.documentos}
       reglamentosError={documents.error}
+      pago={pago}
     />
   );
 }

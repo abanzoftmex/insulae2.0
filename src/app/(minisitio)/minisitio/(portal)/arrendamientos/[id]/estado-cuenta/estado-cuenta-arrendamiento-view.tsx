@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { RentalAccountStatement } from "@/modules/minisitio/infrastructure/queries/account-statement.queries";
 import type { Documento } from "@/modules/minisitio/infrastructure/queries/documents.queries";
-import type { ProjectInfo } from "@/modules/minisitio/infrastructure/queries/project.queries";
+import type { ProjectInfo, InstruccionesPago } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import type { TicketDepartment } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
 import { msPath } from "@/components/minisitio/paths";
 import { useMinisitioSession } from "@/components/minisitio/session-provider";
@@ -22,6 +22,7 @@ import { useDisplayTimeZone } from "@/app/(minisitio)/minisitio/(portal)/_lib/cl
 import { statementFileName } from "@/app/(minisitio)/minisitio/(portal)/_lib/estado-cuenta-utils";
 import { DocumentList } from "@/app/(minisitio)/minisitio/(portal)/_components/document-list";
 import { CreateTicketModal } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/create-ticket-modal";
+import { ComoPagar } from "@/app/(minisitio)/minisitio/(portal)/_components/como-pagar";
 import { SendStatementEmailModal, useStatementEmail } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/send-email-modal";
 import { StatementActions, StatementMovements, StatementSummary } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/statement-parts";
 import { buildRentalStatementPdf } from "./rental-statement-pdf";
@@ -37,6 +38,8 @@ interface EstadoCuentaArrendamientoViewProps {
   departments: TicketDepartment[];
   reglamentos: Documento[];
   reglamentosError: string;
+  /** "Cómo pagar"; `null` si la administración no lo ha publicado o no se pudo cargar. */
+  pago: InstruccionesPago | null;
 }
 
 export function EstadoCuentaArrendamientoView({ statement, loadFailed, ...rest }: EstadoCuentaArrendamientoViewProps) {
@@ -66,6 +69,7 @@ function EstadoCuentaComercio({
   departments,
   reglamentos,
   reglamentosError,
+  pago,
 }: Omit<EstadoCuentaArrendamientoViewProps, "statement" | "loadFailed"> & { statement: RentalAccountStatement }) {
   const { arrendamiento, estadoCuenta } = statement;
   const { user } = useMinisitioSession();
@@ -73,6 +77,7 @@ function EstadoCuentaComercio({
   const [tab, setTab] = useState<"estado" | "reglamentos">("estado");
   const [generando, setGenerando] = useState(false);
   const [ayuda, setAyuda] = useState(false);
+  const [pagar, setPagar] = useState(false);
   const setPageData = useMinisitioLayoutStore((state) => state.setPageData);
   const nombre = arrendamiento.nombre_comercio || "Comercio";
 
@@ -123,7 +128,15 @@ function EstadoCuentaComercio({
           {datos.length > 0 && <p className="text-body text-fg-3">{datos.join(" · ")}</p>}
         </div>
         {tab === "estado" && (
-          <StatementActions onPdf={descargar} generating={generando} onEmail={email.openEmailModal} sending={email.sendingEmail} onHelp={() => setAyuda(true)} />
+          <StatementActions
+            onPdf={descargar}
+            generating={generando}
+            onEmail={email.openEmailModal}
+            sending={email.sendingEmail}
+            onHelp={() => setAyuda(true)}
+            onPay={pago ? () => setPagar(true) : undefined}
+            destacarPago={estadoCuenta.saldoPendiente > 0}
+          />
         )}
       </div>
 
@@ -158,6 +171,7 @@ function EstadoCuentaComercio({
         )}
       </div>
 
+      {pago && <ComoPagar open={pagar} onClose={() => setPagar(false)} info={pago} unidad={arrendamiento.area_nombre} movimientos={estadoCuenta.movimientos} />}
       <SendStatementEmailModal variant="arrendamiento" subjectName={nombre} userEmail={user?.email} state={email} />
       <CreateTicketModal open={ayuda} onClose={() => setAyuda(false)} departments={departments} defaultAsunto={`Duda sobre el estado de cuenta de ${nombre}`} />
     </div>

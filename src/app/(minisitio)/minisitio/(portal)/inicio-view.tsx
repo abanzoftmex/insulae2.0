@@ -7,9 +7,10 @@
  */
 import { useState } from "react";
 import Link from "next/link";
-import { CircleCheck, FileText, Phone, Plus } from "lucide-react";
+import { CircleCheck, FileText, Landmark, Phone, Plus } from "lucide-react";
 import { msPath } from "@/components/minisitio/paths";
 import { useMinisitioSession } from "@/components/minisitio/session-provider";
+import type { InstruccionesPago } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { SecondaryView } from "@/components/minisitio/shell/secondary-view";
 import { buttonClass } from "@/components/minisitio/ui/button";
 import { ImageViewer, type ViewerImage } from "@/components/minisitio/ui/image-viewer";
@@ -18,6 +19,7 @@ import { AdminAvatar, AvisoImagen, AvisoPdf } from "./_avisos/aviso-parts";
 import { isPastCalendarDay, useDisplayTimeZone } from "./_lib/client-dates";
 import { formatCurrency, formatLongDate, formatShortDate } from "./_lib/format";
 import { resumenUnidades } from "./_lib/saldos";
+import { ComoPagar } from "./_components/como-pagar";
 
 export interface CuentaResumen {
   saldoVencido: number;
@@ -57,6 +59,8 @@ interface InicioViewProps {
   avisos: AvisoResumen[] | null;
   solicitudes: SolicitudesResumen | null;
   telefonos: TelefonoEmergencia[];
+  /** "Cómo pagar"; `null` si la administración no lo ha publicado o no se pudo cargar. */
+  pago: InstruccionesPago | null;
 }
 
 function saludo(ahora: Date, timeZone?: string): string {
@@ -70,13 +74,14 @@ function hoy(ahora: Date, timeZone?: string): string {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-export function InicioView({ cuenta, avisos, solicitudes, telefonos }: InicioViewProps) {
+export function InicioView({ cuenta, avisos, solicitudes, telefonos, pago }: InicioViewProps) {
   const { user } = useMinisitioSession();
   const timeZone = useDisplayTimeZone();
   const [ahora] = useState(() => new Date());
   // El aviso se conserva al cerrar para que el panel no se vacíe mientras sale.
   const [panel, setPanel] = useState<{ aviso: AvisoResumen | null; open: boolean }>({ aviso: null, open: false });
   const [imagen, setImagen] = useState<ViewerImage | null>(null);
+  const [pagar, setPagar] = useState(false);
   const nombre = user?.nombre?.trim().split(/\s+/)[0] ?? "";
 
   return (
@@ -91,13 +96,28 @@ export function InicioView({ cuenta, avisos, solicitudes, telefonos }: InicioVie
         </p>
       </div>
 
-      <Cuenta cuenta={cuenta} />
+      {/* Una sola vista secundaria a la vez: abrir "Cómo pagar" cierra el aviso y al revés. */}
+      <Cuenta
+        cuenta={cuenta}
+        onPay={
+          pago
+            ? () => {
+                setPanel((p) => ({ ...p, open: false }));
+                setPagar(true);
+              }
+            : undefined
+        }
+      />
+      {pago && <ComoPagar open={pagar} onClose={() => setPagar(false)} info={pago} />}
 
       <div className="mt-8 grid gap-x-10 gap-y-8 @[52rem]:grid-cols-[minmax(0,1fr)_288px]">
         <Avisos
           avisos={avisos}
           abiertoId={panel.open ? panel.aviso?.id : undefined}
-          onOpen={(aviso) => setPanel({ aviso, open: true })}
+          onOpen={(aviso) => {
+            setPagar(false);
+            setPanel({ aviso, open: true });
+          }}
           timeZone={timeZone}
         />
         <div className="space-y-8">
@@ -138,7 +158,7 @@ function SectionHeader({ id, title, href, linkLabel, linkAria }: { id: string; t
   );
 }
 
-function Cuenta({ cuenta }: { cuenta: CuentaResumen | null }) {
+function Cuenta({ cuenta, onPay }: { cuenta: CuentaResumen | null; onPay?: () => void }) {
   if (cuenta === null) return <LoadError what="tu saldo" />;
   if (cuenta.propiedades.total + cuenta.comercios.total === 0) return null;
 
@@ -175,12 +195,18 @@ function Cuenta({ cuenta }: { cuenta: CuentaResumen | null }) {
         )}
       </div>
       <div className="flex flex-wrap gap-2">
+        {onPay && (debe || cuenta.saldoPorVencer > 0) && (
+          <button type="button" onClick={onPay} className={buttonClass(debe ? "primary" : "outline")}>
+            <Landmark className="h-4 w-4" aria-hidden />
+            Cómo pagar
+          </button>
+        )}
         {cuenta.unicaConAdeudo && (
           <Link href={msPath(cuenta.unicaConAdeudo.href)} className={buttonClass("outline")} aria-label={`Estado de cuenta de ${cuenta.unicaConAdeudo.nombre}`}>
             Estado de cuenta
           </Link>
         )}
-        <Link href={msPath("/dashboard")} className={buttonClass(debe ? "primary" : "outline")}>
+        <Link href={msPath("/dashboard")} className={buttonClass(debe && !onPay ? "primary" : "outline")}>
           Ver mis saldos
         </Link>
       </div>

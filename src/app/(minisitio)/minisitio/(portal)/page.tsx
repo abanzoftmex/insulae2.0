@@ -5,6 +5,7 @@ import { listContactFields } from "@/modules/minisitio/infrastructure/queries/do
 import { listProperties } from "@/modules/minisitio/infrastructure/queries/properties.queries";
 import { listRentals } from "@/modules/minisitio/infrastructure/queries/rentals.queries";
 import { listTickets } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
+import { getPaymentInstructions } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { comunicadoFileUrl } from "./_lib/comunicado-file-url";
 import { telefonosDeEmergencia, toContacto, type Contacto } from "./_lib/contactos";
 import { InicioView, type AvisoResumen, type CuentaResumen, type SolicitudesResumen, type TelefonoEmergencia } from "./inicio-view";
@@ -31,12 +32,13 @@ function logAndNull(section: string) {
 export default async function InicioPage() {
   const session = await requireCondominoSession();
 
-  const [propiedades, comercios, recientes, abiertas, contacto] = await Promise.all([
+  const [propiedades, comercios, recientes, abiertas, contacto, pago] = await Promise.all([
     listProperties(session).catch(logAndNull("propiedades")),
     listRentals(session).catch(logAndNull("comercios")),
     listComunicadosRecientes(session).catch(logAndNull("avisos recientes")),
     listTickets(session, "open").catch(logAndNull("solicitudes abiertas")),
     listContactFields(session).catch(logAndNull("teléfonos")),
+    getPaymentInstructions().catch(logAndNull("instrucciones de pago")),
   ]);
 
   let cuenta: CuentaResumen | null = null;
@@ -108,5 +110,5 @@ export default async function InicioPage() {
     href: llamar(c) ?? "",
   }));
 
-  return <InicioView cuenta={cuenta} avisos={avisos} solicitudes={solicitudes} telefonos={telefonos} />;
+  return <InicioView cuenta={cuenta} avisos={avisos} solicitudes={solicitudes} telefonos={telefonos} pago={pago} />;
 }

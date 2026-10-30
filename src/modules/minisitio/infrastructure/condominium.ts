@@ -21,6 +21,8 @@ export const getActiveProject = cache(async (condominiumId: string) =>
       condominiumLogoUrl: true,
       privacyNoticeText: true,
       privacyNoticePdfUrl: true,
+      footerLeft: true,
+      footerRight: true,
     },
   }),
 );

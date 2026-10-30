@@ -9,7 +9,7 @@
  * - los últimos pagos y la barra de acciones (PDF, correo, "¿Algo no cuadra?").
  */
 import { useMemo, useState } from "react";
-import { FileDown, LifeBuoy, Mail } from "lucide-react";
+import { FileDown, Landmark, LifeBuoy, Mail } from "lucide-react";
 import { buttonClass } from "@/components/minisitio/ui/button";
 import { StatStrip } from "@/components/minisitio/ui/stat-strip";
 import { UnderlineTabs } from "@/components/minisitio/ui/tabs";
@@ -95,16 +95,29 @@ export function StatementActions({
   onEmail,
   sending,
   onHelp,
+  onPay,
+  destacarPago = false,
 }: {
   onPdf: () => void;
   generating: boolean;
   onEmail: () => void;
   sending: boolean;
   onHelp: () => void;
+  /** Abre "Cómo pagar" (si la administración publicó cómo). */
+  onPay?: () => void;
+  /** Con saldo por pagar, "Cómo pagar" es la acción principal. */
+  destacarPago?: boolean;
 }) {
+  const pagoPrincipal = Boolean(onPay) && destacarPago;
   return (
     <div className="flex flex-wrap gap-2">
-      <button type="button" onClick={onPdf} disabled={generating} className={buttonClass("primary", "sm")}>
+      {onPay && (
+        <button type="button" onClick={onPay} className={buttonClass(pagoPrincipal ? "primary" : "outline", "sm")}>
+          <Landmark className="h-3.5 w-3.5" aria-hidden />
+          Cómo pagar
+        </button>
+      )}
+      <button type="button" onClick={onPdf} disabled={generating} className={buttonClass(pagoPrincipal ? "outline" : "primary", "sm")}>
         <FileDown className="h-3.5 w-3.5" aria-hidden />
         {generating ? "Generando…" : "Descargar PDF"}
       </button>

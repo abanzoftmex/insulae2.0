@@ -253,6 +253,15 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), decimonovena vuelta:**
+- **"Cómo pagar"** (`(portal)/_components/como-pagar.tsx`). Antes, el portal mostraba el adeudo sin decir cómo pagarlo. Ahora hay un panel en la vista secundaria con:
+  - **Cuentas para transferir:** la CLABE en sus partes (banco · plaza · cuenta · control), con "Copiar".
+  - **Beneficiario y RFC.**
+  - **Concepto sugerido** para que la administración identifique el pago: el del cargo pendiente más antiguo, p. ej. "VQ#03B-020, Cuota Extraordinaria Dic 2025"; sin pendientes, la cuota ordinaria del mes.
+  - **Notas de la administración:** plazos, formas de pago aceptadas y no aceptadas, cómo identificar el pago.
+- **Dónde aparece:** en Inicio, en el estado de cuenta de propiedad y en el de comercio. Con saldo, "Cómo pagar" es la acción principal. Abrirlo en Inicio cierra el aviso abierto, y al revés.
+- **De dónde salen los datos:** del pie de los recibos que la administración edita en el panel (`Project.footerLeft` y `footerRight`), leído con `getPaymentInstructions()`. Si el texto de los bancos no tiene el formato "Banco: … / Clabe interbancaria: …", se muestra tal cual entre las notas.
+
 **Hecho (2026-10-29), decimoctava vuelta:**
 - **Buscador en los reportes de cuotas:**
   - busca por nombre o clave del área en el servidor, antes de paginar, 300 ms después de dejar de escribir; se quitan `%` y `_` para que no funcionen como comodines;

@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { PropertyAccountStatement } from "@/modules/minisitio/infrastructure/queries/account-statement.queries";
+import type { InstruccionesPago } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import type { TicketDepartment } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
 import { msPath } from "@/components/minisitio/paths";
 import { useMinisitioSession } from "@/components/minisitio/session-provider";
@@ -16,6 +17,7 @@ import { useMinisitioLayoutStore } from "@/stores/minisitio-layout.store";
 import { toast } from "@/stores/minisitio-toast.store";
 import { useDisplayTimeZone } from "@/app/(minisitio)/minisitio/(portal)/_lib/client-dates";
 import { statementFileName } from "@/app/(minisitio)/minisitio/(portal)/_lib/estado-cuenta-utils";
+import { ComoPagar } from "@/app/(minisitio)/minisitio/(portal)/_components/como-pagar";
 import { CreateTicketModal } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/create-ticket-modal";
 import { SendStatementEmailModal, useStatementEmail } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/send-email-modal";
 import {
@@ -34,9 +36,10 @@ interface EstadoCuentaPropiedadViewProps {
   /** `null` si la propiedad no es del condómino o no se pudo cargar. */
   statement: PropertyAccountStatement | null;
   departments: TicketDepartment[];
+  pago: InstruccionesPago | null;
 }
 
-export function EstadoCuentaPropiedadView({ id, statement, departments }: EstadoCuentaPropiedadViewProps) {
+export function EstadoCuentaPropiedadView({ id, statement, departments, pago }: EstadoCuentaPropiedadViewProps) {
   if (!statement) {
     return (
       <div className="mx-auto w-full max-w-[1040px] py-12 text-center">
@@ -47,15 +50,26 @@ export function EstadoCuentaPropiedadView({ id, statement, departments }: Estado
       </div>
     );
   }
-  return <EstadoCuentaPropiedad id={id} statement={statement} departments={departments} />;
+  return <EstadoCuentaPropiedad id={id} statement={statement} departments={departments} pago={pago} />;
 }
 
-function EstadoCuentaPropiedad({ id, statement, departments }: { id: string; statement: PropertyAccountStatement; departments: TicketDepartment[] }) {
+function EstadoCuentaPropiedad({
+  id,
+  statement,
+  departments,
+  pago,
+}: {
+  id: string;
+  statement: PropertyAccountStatement;
+  departments: TicketDepartment[];
+  pago: InstruccionesPago | null;
+}) {
   const { propiedad, estadoCuenta, proyecto } = statement;
   const { user } = useMinisitioSession();
   const timeZone = useDisplayTimeZone();
   const [generando, setGenerando] = useState(false);
   const [ayuda, setAyuda] = useState(false);
+  const [pagar, setPagar] = useState(false);
   const setPageData = useMinisitioLayoutStore((state) => state.setPageData);
 
   useEffect(() => {
@@ -111,7 +125,15 @@ function EstadoCuentaPropiedad({ id, statement, departments }: { id: string; sta
           <p className="text-title font-bold text-fg">{propiedad.nombre}</p>
           {datos.length > 0 && <p className="text-body text-fg-3">{datos.join(" · ")}</p>}
         </div>
-        <StatementActions onPdf={descargar} generating={generando} onEmail={email.openEmailModal} sending={email.sendingEmail} onHelp={() => setAyuda(true)} />
+        <StatementActions
+          onPdf={descargar}
+          generating={generando}
+          onEmail={email.openEmailModal}
+          sending={email.sendingEmail}
+          onHelp={() => setAyuda(true)}
+          onPay={pago ? () => setPagar(true) : undefined}
+          destacarPago={estadoCuenta.saldoPendiente > 0}
+        />
       </div>
 
       <StatementSummary
@@ -126,6 +148,7 @@ function EstadoCuentaPropiedad({ id, statement, departments }: { id: string; sta
       <StatementMovements movimientos={estadoCuenta.movimientos} timeZone={timeZone} />
       <StatementPayments pagos={estadoCuenta.historialPagos} timeZone={timeZone} />
 
+      {pago && <ComoPagar open={pagar} onClose={() => setPagar(false)} info={pago} unidad={propiedad.nombre} movimientos={estadoCuenta.movimientos} />}
       <SendStatementEmailModal variant="propiedad" subjectName={propiedad.nombre} userEmail={user?.email} state={email} />
       <CreateTicketModal
         open={ayuda}
