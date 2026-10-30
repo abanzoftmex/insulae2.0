@@ -1,5 +1,6 @@
 /**
- * Ejercicios que muestra el resumen financiero (los elige la página en el servidor).
+ * Ejercicios que muestra el resumen financiero (lo comparten la carga inicial del servidor y
+ * el "Reintentar" del cliente).
  *
  * Recorte a los 3 ejercicios más recientes: el panel publica un tríptico fijo ("Periodo
  * visual: 2024 / 2025 / 2026"), así que el minisitio muestra exactamente los mismos 3 años y

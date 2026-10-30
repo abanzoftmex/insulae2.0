@@ -1,47 +1,35 @@
 import type { Metadata } from "next";
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
-import {
-  listTicketDepartments,
-  listTickets,
-  type TicketDepartment,
-} from "@/modules/minisitio/infrastructure/queries/tickets.queries";
+import { listTicketDepartments, listTickets } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
 import { TicketsView } from "./tickets-view";
 
-export const metadata: Metadata = { title: "Solicitudes" };
+export const metadata: Metadata = { title: "Solicitudes y reportes" };
 
 /**
- * Solicitudes (`/minisitio/tickets`): todas las del condómino (la vista las separa en abiertas y
- * cerradas) y los departamentos del formulario. Tras crear o responder, la vista pide
- * router.refresh() y esta página vuelve a consultar.
- *
- * `?nueva=1` abre el formulario de alta (lo usan Inicio y "Buscar o ir a…"); `&asunto=…` lo abre
- * con el asunto escrito (p. ej. "Corregir mis datos de contacto" desde Mi perfil).
+ * Solicitudes y reportes (antes pages/tickets.js). Igual que la pantalla vieja al entrar:
+ * todos los tickets (para los contadores de las pestañas), los de la pestaña inicial
+ * ("abiertas") y los departamentos del formulario de alta. Cada carga falla por separado,
+ * como antes: solo la lista de la pestaña muestra el aviso de error.
  */
-export default async function TicketsPage({ searchParams }: { searchParams: Promise<{ nueva?: string; asunto?: string }> }) {
-  const [session, params] = await Promise.all([requireCondominoSession(), searchParams]);
+export default async function TicketsPage() {
+  const session = await requireCondominoSession();
 
-  const [tickets, departments] = await Promise.all([
-    listTickets(session)
-      .then((r) => r.tickets)
-      .catch((error) => {
-        console.error("[minisitio] Solicitudes:", error);
-        return null;
-      }),
-    // Sin departamentos el formulario sigue sirviendo (la solicitud va sin departamento).
-    listTicketDepartments()
-      .then((r) => r.departments)
-      .catch((error): TicketDepartment[] => {
-        console.error("[minisitio] Solicitudes: departamentos:", error);
-        return [];
-      }),
+  const [all, open, departments] = await Promise.allSettled([
+    listTickets(session),
+    listTickets(session, "open"),
+    listTicketDepartments(),
   ]);
+
+  for (const result of [all, open, departments]) {
+    if (result.status === "rejected") console.error("[minisitio] tickets:", result.reason);
+  }
 
   return (
     <TicketsView
-      tickets={tickets}
-      departments={departments}
-      initialCreateOpen={params.nueva === "1"}
-      initialAsunto={params.nueva === "1" ? params.asunto?.slice(0, 150) : undefined}
+      initialAllTickets={all.status === "fulfilled" ? all.value.tickets : []}
+      initialTickets={open.status === "fulfilled" ? open.value.tickets : []}
+      departments={departments.status === "fulfilled" ? departments.value.departments : []}
+      initialError={open.status === "rejected" ? "Error al cargar los tickets" : ""}
     />
   );
 }

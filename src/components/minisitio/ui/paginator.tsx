@@ -1,30 +1,12 @@
 "use client";
 
-/**
- * Paginación de cliente compacta: "Anterior · 1 … 5 6 7 … 59 · Siguiente" (antes pintaba un botón
- * por página: 59 en la cartera de cuotas). La página actual va en olivo; el resto, como botones
- * chicos. `onPageChange(page)` en vez de hrefs.
- */
 import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
-import { buttonClass } from "./button";
+import { cn } from "@/shared/utils/cn";
 
-/** Páginas visibles: primera, última, la actual y sus vecinas, con "…" en los huecos. */
-function ventana(page: number, total: number): (number | "…")[] {
-  const set = new Set([1, total, page - 1, page, page + 1]);
-  if (page <= 3) [2, 3, 4].forEach((p) => set.add(p));
-  if (page >= total - 2) [total - 1, total - 2, total - 3].forEach((p) => set.add(p));
-  const out: (number | "…")[] = [];
-  let anterior = 0;
-  for (const p of [...set].filter((n) => n >= 1 && n <= total).sort((a, b) => a - b)) {
-    if (p - anterior > 1) out.push("…");
-    out.push(p);
-    anterior = p;
-  }
-  return out;
-}
-
-const numero = new Intl.NumberFormat("es-MX");
-
+/**
+ * Variante de `@/components/ui/paginator` para paginación con estado de cliente: en vez de
+ * hrefs recibe `onPageChange(page)`. El marcado y las clases son idénticos.
+ */
 export function Paginator({
   page,
   totalPages,
@@ -42,56 +24,72 @@ export function Paginator({
 }) {
   if (totalPages <= 1) return null;
 
-  const ir = (siguiente: number) => {
-    if (siguiente < 1 || siguiente > totalPages || siguiente === page) return;
-    onPageChange?.(siguiente);
+  const navigate = (nextPage: number) => {
+    if (nextPage < 1 || nextPage > totalPages || nextPage === page) return;
+    onPageChange?.(nextPage);
   };
 
-  return (
-    <nav aria-label="Paginación" className="flex flex-col items-center justify-between gap-3 py-2 sm:flex-row">
-      <p className="flex items-center gap-2 text-caption text-fg-3 tabular-nums">
-        {totalRows !== undefined && (
-          <span>
-            {numero.format(totalRows)} {rowsLabel} ·
-          </span>
-        )}
-        <span>
-          Página {page} de {totalPages}
-        </span>
-        {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" aria-label="Cargando" />}
-      </p>
+  const pageNumbers: number[] = [];
+  for (let i = 1; i <= totalPages; i += 1) pageNumbers.push(i);
 
-      <div className="flex flex-wrap items-center gap-1">
-        <button type="button" onClick={() => ir(page - 1)} disabled={page <= 1 || isPending} className={buttonClass("ghost", "sm", "min-w-0 px-2")}>
-          <ChevronLeft className="h-3.5 w-3.5" aria-hidden />
-          Anterior
-        </button>
-        {ventana(page, totalPages).map((p, index) =>
-          p === "…" ? (
-            <span key={`hueco-${index}`} aria-hidden className="w-6 text-center text-caption text-fg-4">
-              …
+  const hasPrev = page > 1;
+  const hasNext = page < totalPages;
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-1 py-2 bg-[#faf6f0]/30 rounded-2xl border border-line/30">
+      <div className="flex items-center gap-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 tabular-nums">
+          {totalRows !== undefined && (
+            <span>
+              {totalRows} {rowsLabel} &middot;{" "}
             </span>
-          ) : (
+          )}
+          <span>
+            página {page} de {totalPages}
+          </span>
+        </p>
+        {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" />}
+      </div>
+
+      <div className="flex items-center flex-wrap gap-1.5">
+        <button
+          type="button"
+          onClick={() => navigate(Math.max(1, page - 1))}
+          disabled={!hasPrev || isPending}
+          className="flex items-center gap-1 h-8 px-2.5 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-[#5a4838] hover:text-white hover:border-[#5a4838] disabled:opacity-30 disabled:pointer-events-none"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" /> Ant.
+        </button>
+
+        {pageNumbers.map((pageNum) => {
+          const isActive = pageNum === page;
+          return (
             <button
-              key={p}
               type="button"
-              onClick={() => ir(p)}
+              key={`page-${pageNum}`}
+              onClick={() => navigate(pageNum)}
               disabled={isPending}
-              aria-current={p === page ? "page" : undefined}
-              aria-label={`Página ${p}`}
-              className={`inline-flex h-7 min-w-7 items-center justify-center rounded-ctrl px-1.5 text-[13px] font-semibold tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-50 ${
-                p === page ? "bg-brand text-white" : "text-fg-2 hover:bg-surface-3"
-              }`}
+              className={cn(
+                "h-8 w-8 flex items-center justify-center rounded-full border text-[10px] font-bold transition-all",
+                isActive
+                  ? "bg-[#5a4838] border-[#5a4838] text-white shadow-sm"
+                  : "bg-white border-line text-ink hover:bg-[#5a4838]/10 hover:text-[#5a4838] hover:border-[#5a4838]/30",
+              )}
             >
-              {p}
+              {pageNum}
             </button>
-          ),
-        )}
-        <button type="button" onClick={() => ir(page + 1)} disabled={page >= totalPages || isPending} className={buttonClass("ghost", "sm", "min-w-0 px-2")}>
-          Siguiente
-          <ChevronRight className="h-3.5 w-3.5" aria-hidden />
+          );
+        })}
+
+        <button
+          type="button"
+          onClick={() => navigate(Math.min(totalPages, page + 1))}
+          disabled={!hasNext || isPending}
+          className="flex items-center gap-1 h-8 px-2.5 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors hover:bg-[#5a4838] hover:text-white hover:border-[#5a4838] disabled:opacity-30 disabled:pointer-events-none"
+        >
+          Sig. <ChevronRight className="h-3.5 w-3.5" />
         </button>
       </div>
-    </nav>
+    </div>
   );
 }

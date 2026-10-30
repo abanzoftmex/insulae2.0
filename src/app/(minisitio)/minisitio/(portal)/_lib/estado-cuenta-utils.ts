@@ -6,7 +6,17 @@
 import { fetchImageAsDataUrlAction } from "@/app/(minisitio)/minisitio/_actions/account";
 import { isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
 
-export { formatCurrency } from "./format";
+export function formatCurrency(amount: unknown): string {
+  // Verificar que el amount sea un número válido
+  const numAmount = parseFloat(amount as string);
+  if (isNaN(numAmount)) {
+    return "$0.00";
+  }
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+  }).format(numAmount);
+}
 
 /** Fecha ISO → d/m/aaaa (es-MX). Separa las partes para evitar el desfase de zona horaria. */
 export function formatDate(dateString: string | null | undefined): string {

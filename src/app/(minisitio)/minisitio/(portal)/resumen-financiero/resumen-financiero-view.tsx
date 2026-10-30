@@ -1,238 +1,638 @@
 "use client";
 
-/**
- * Resumen financiero por tipo de cuota (ordinarias o extraordinarias): las cifras del año elegido
- * y una sola tabla con los totales de los años visibles (el elegido, resaltado) y el detalle mes
- * por mes de ese año. Antes eran hasta cinco tablas de unas 40 columnas (tres años de 13
- * columnas cada uno) con encabezados beige, y el año elegido solo cambiaba las cifras de arriba.
- * Los tres años llegan del servidor: cambiar de año o de tipo no vuelve a consultar.
- */
 import { useMemo, useState } from "react";
-import type { GrupoMensual, ResumenFinanciero } from "@/modules/minisitio/infrastructure/queries/financials.queries";
-import { LoadError } from "@/components/minisitio/ui/load-error";
-import { StatStrip } from "@/components/minisitio/ui/stat-strip";
-import { UnderlineTabs } from "@/components/minisitio/ui/tabs";
-import { formatCurrency } from "../_lib/format";
-import { Espacio, Fila, Seccion, TablaMensual, columnasDeMeses, type Columna } from "../_reportes/tabla-mensual";
-import { YearButtons } from "../_reportes/year-buttons";
+import {
+  Calendar,
+  DollarSign,
+  Info,
+  Plus,
+  TrendingDown,
+  TrendingUp,
+  Wallet
+} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/shared/utils/cn';
+import { PageBackBadge } from '@/components/ui/page-back-badge';
+import { StatCard } from '@/components/ui/stat-card';
+import type { FinancialYears, ResumenFinanciero } from '@/modules/minisitio/infrastructure/queries/financials.queries';
+import { getFinancialYearsAction, getResumenFinancieroAction } from '../../_actions/reports';
+import { CompactFinancialTable, TABLE_TONE, type FinancialTable } from './compact-financial-table';
+import { pickVisibleYears } from './visible-years';
 
-/** Datos de un ejercicio: balance ordinario y extraordinario (más la cartera, que aún llega en cero). */
+// Único condominio del minisitio: los endpoints financieros no devuelven su nombre.
+const CONDOMINIO = "Val'Quirico";
+
+// Nombres de los meses (mismas etiquetas que MONTH_LABELS del panel)
+const MESES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+/** Datos de un ejercicio: balance + cartera, ordinario + extraordinario. */
 export type DatosAnio = ResumenFinanciero;
 
-type Modo = "ordinary" | "extraordinary";
-interface Serie {
-  total: number;
-  meses: number[];
-}
-type PorAnio = Record<number, Serie>;
-interface FilaResumen {
-  nombre: string;
-  porAnio: PorAnio;
-}
-
-const NUMEROS = Array.from({ length: 12 }, (_, i) => i + 1);
-const vacia = (): Serie => ({ total: 0, meses: NUMEROS.map(() => 0) });
-const serieDe = (g: GrupoMensual): Serie => ({ total: g.totalAnual || 0, meses: NUMEROS.map((m) => g.meses.find((x) => x.mes === m)?.total || 0) });
-const sumar = (series: Serie[]): Serie =>
-  series.reduce((acc, s) => ({ total: acc.total + s.total, meses: acc.meses.map((v, i) => v + s.meses[i]) }), vacia());
-const restar = (a: Serie, b: Serie): Serie => ({ total: a.total - b.total, meses: a.meses.map((v, i) => v - b.meses[i]) });
+type Numeric = number | string | null | undefined;
 
 /**
- * Filas por nombre a lo largo de los años visibles, para que no bailen entre ejercicios (un grupo
- * que no existe en un año vale 0). Si dos grupos se llaman igual en un año, se suman: antes el
- * segundo pisaba al primero y las filas no sumaban el total.
+ * Grupo financiero tal como llega de balance-* (`meses` = [{ mes, total }]) o de cuentas-*
+ * (`meses` = { 1..12 }, con `totalGeneral` / `totalAnualMeses`).
  */
-function filasPorNombre(anios: number[], gruposDe: (anio: number) => GrupoMensual[]): FilaResumen[] {
-  const filas = new Map<string, PorAnio>();
-  for (const anio of anios) {
-    for (const g of gruposDe(anio)) {
-      const nombre = g.nombre.trim() || "Sin nombre";
-      const porAnio = filas.get(nombre) ?? {};
-      porAnio[anio] = sumar([porAnio[anio] ?? vacia(), serieDe(g)]);
-      filas.set(nombre, porAnio);
-    }
-  }
-  return [...filas].map(([nombre, porAnio]) => ({ nombre, porAnio }));
+interface GrupoFinanciero {
+  nombre?: string | null;
+  meses?: { mes: Numeric; total: Numeric }[] | Record<string, Numeric> | null;
+  totalAnual?: Numeric;
+  totalAnualMeses?: Numeric;
+  totalGeneral?: Numeric;
 }
 
-const totalesPorAnio = (anios: number[], gruposDe: (anio: number) => GrupoMensual[]): PorAnio =>
-  Object.fromEntries(anios.map((anio) => [anio, sumar(gruposDe(anio).map(serieDe))]));
+interface BalanceAnio {
+  ingresosMensuales?: GrupoFinanciero[];
+  otrosIngresos?: GrupoFinanciero[];
+  egresosMensuales?: GrupoFinanciero[];
+}
 
-/** Saldo acumulado dentro del año ("Bancos y caja"): el total del año es el mismo neto. */
-const acumulado = (s: Serie): Serie => {
-  let suma = 0;
-  return { total: s.total, meses: s.meses.map((v) => (suma += v)) };
+// Función para formatear números como moneda mexicana
+const formatCurrency = (value: number | null | undefined) => {
+  if (value === null || value === undefined) return '$0.00';
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 2
+  }).format(value);
 };
 
-export function ResumenFinancieroView({
-  anios,
-  anioInicial,
-  datosPorAnio,
-  error,
+// Función helper para parsear valores numéricos que pueden venir como strings
+const parseNumericValue = (value: Numeric): number => {
+  if (value === null || value === undefined) return 0;
+  if (typeof value === 'string') {
+    // Eliminar comas y símbolos de moneda si existen
+    const cleaned = value.replace(/[,$]/g, '');
+    return parseFloat(cleaned) || 0;
+  }
+  return value || 0;
+};
+
+/**
+ * Los grupos llegan con `meses` como arreglo [{ mes, total }] (balance-*) o como
+ * objeto { 1..12 } (cuentas-*). Se normaliza a un arreglo de 12 números.
+ */
+const mesesDeGrupo = (grupo: GrupoFinanciero | undefined): number[] => {
+  const meses = grupo?.meses;
+  return Array.from({ length: 12 }, (_, idx) => {
+    const mes = idx + 1;
+    if (Array.isArray(meses)) {
+      return parseNumericValue(meses.find((m) => parseInt(String(m?.mes), 10) === mes)?.total);
+    }
+    if (meses && typeof meses === 'object') {
+      return parseNumericValue(meses[mes] ?? meses[String(mes)]);
+    }
+    return 0;
+  });
+};
+
+const totalDeGrupo = (grupo: GrupoFinanciero | undefined): number => {
+  if (!grupo) return 0;
+  if (grupo.totalAnual !== null && grupo.totalAnual !== undefined) return parseNumericValue(grupo.totalAnual);
+  if (grupo.totalAnualMeses !== null && grupo.totalAnualMeses !== undefined) return parseNumericValue(grupo.totalAnualMeses);
+  if (grupo.totalGeneral !== null && grupo.totalGeneral !== undefined) return parseNumericValue(grupo.totalGeneral);
+  return mesesDeGrupo(grupo).reduce((sum, value) => sum + value, 0);
+};
+
+const sumTotales = (grupos: GrupoFinanciero[] | undefined) =>
+  (grupos || []).reduce((sum, grupo) => sum + totalDeGrupo(grupo), 0);
+
+const sumMeses = (grupos: GrupoFinanciero[] | undefined) =>
+  (grupos || []).reduce(
+    (acc, grupo) => {
+      const meses = mesesDeGrupo(grupo);
+      return acc.map((value, idx) => value + meses[idx]);
+    },
+    Array.from({ length: 12 }, () => 0)
+  );
+
+/**
+ * Construye el shape { title, years, rows } de CompactFinancialTable fusionando
+ * los grupos de todos los años cargados por nombre, para que las filas no bailen
+ * entre ejercicios (un grupo presupuestal que no existe en un año vale 0).
+ * `annualTotal` / `months` salen ya formateados; `annualTotalValue` queda numérico.
+ */
+function buildMergedTable({
+  title,
+  years,
+  selector,
+  totalLabel = 'Total'
 }: {
-  /** Años visibles (los tres más recientes con datos), en orden. */
-  anios: number[];
-  anioInicial: number;
-  datosPorAnio: Record<number, DatosAnio>;
-  error: boolean;
+  title: string;
+  years: number[];
+  selector: (year: number) => GrupoFinanciero[] | undefined;
+  totalLabel?: string;
+}): FinancialTable {
+  const orden: string[] = [];
+  const porNombre = new Map<string, Map<number, GrupoFinanciero>>();
+
+  years.forEach((year) => {
+    (selector(year) || []).forEach((grupo, idx) => {
+      const nombre = String(grupo?.nombre || '').trim() || `Concepto ${idx + 1}`;
+      if (!porNombre.has(nombre)) {
+        porNombre.set(nombre, new Map());
+        orden.push(nombre);
+      }
+      porNombre.get(nombre)!.set(year, grupo);
+    });
+  });
+
+  const rows: FinancialTable['rows'] = orden.map((nombre, idx) => ({
+    id: `fila-${idx}`,
+    label: nombre,
+    isTotal: false,
+    yearly: years.map((year) => {
+      const grupo = porNombre.get(nombre)!.get(year);
+      const total = totalDeGrupo(grupo);
+      return {
+        year,
+        annualTotal: formatCurrency(total),
+        annualTotalValue: total,
+        months: mesesDeGrupo(grupo).map((value) => formatCurrency(value))
+      };
+    })
+  }));
+
+  if (rows.length > 0) {
+    rows.push({
+      id: 'fila-total',
+      label: totalLabel,
+      isTotal: true,
+      yearly: years.map((year) => {
+        const grupos = selector(year) || [];
+        const total = sumTotales(grupos);
+        return {
+          year,
+          annualTotal: formatCurrency(total),
+          annualTotalValue: total,
+          months: sumMeses(grupos).map((value) => formatCurrency(value))
+        };
+      })
+    });
+  }
+
+  return { title, years, rows };
+}
+
+/**
+ * Tabla de saldo: fila "Total" (ingresos − egresos del año, mes a mes) y fila
+ * "Bancos y caja" (el mismo neto pero acumulado dentro del año).
+ */
+function buildSaldoTable({
+  title,
+  years,
+  balanceDe
+}: {
+  title: string;
+  years: number[];
+  balanceDe: (year: number) => BalanceAnio | undefined;
+}): FinancialTable {
+  const rows = [
+    { id: 'saldo-total', label: 'Total', isTotal: true },
+    { id: 'saldo-bancos', label: 'Bancos y caja', isTotal: false }
+  ].map((row) => ({
+    ...row,
+    yearly: years.map((year) => {
+      const balance = balanceDe(year);
+      const ingresos = [
+        ...(balance?.ingresosMensuales || []),
+        ...(balance?.otrosIngresos || [])
+      ];
+      const egresos = balance?.egresosMensuales || [];
+      const ingresosMeses = sumMeses(ingresos);
+      const egresosMeses = sumMeses(egresos);
+      const anual = sumTotales(ingresos) - sumTotales(egresos);
+
+      let acumulado = 0;
+      const months = ingresosMeses.map((ingresoMes, idx) => {
+        const neto = ingresoMes - egresosMeses[idx];
+        acumulado += neto;
+        return formatCurrency(row.id === 'saldo-bancos' ? acumulado : neto);
+      });
+
+      return { year, annualTotal: formatCurrency(anual), annualTotalValue: anual, months };
+    })
+  }));
+
+  return { title, years, rows };
+}
+
+const tablaTieneImportes = (table: FinancialTable) =>
+  table.rows.some((row) => row.yearly.some((slice) => slice.annualTotalValue !== 0));
+
+// Cartera ordinaria: cuota ordinaria + los demás grupos de cobro del año.
+const carteraOrdinariaDe = (yearData: DatosAnio | undefined): GrupoFinanciero[] => {
+  const ordinarias = yearData?.cuentasOrdinarias?.ordinarias;
+  if (!ordinarias) return [];
+  const grupos: GrupoFinanciero[] = [];
+  if (ordinarias.cuotasOrdinarias) grupos.push(ordinarias.cuotasOrdinarias);
+  ((ordinarias.otrosGrupos || []) as GrupoFinanciero[]).forEach((grupo) => grupos.push(grupo));
+  return grupos;
+};
+
+const carteraExtraordinariaDe = (yearData: DatosAnio | undefined) =>
+  (yearData?.cuentasExtraordinarias?.extraordinarias?.grupos || []) as GrupoFinanciero[];
+
+/** Texto de "última actualización" si alguna de las cuatro piezas lo trae. */
+const textoActualizacion = (pieza: unknown) =>
+  (pieza as { ultimaActualizacionTexto?: unknown } | null | undefined)?.ultimaActualizacionTexto;
+
+export function ResumenFinancieroView({
+  initialAnios,
+  initialAnio,
+  initialDatosPorAnio,
+  initialError,
+}: {
+  initialAnios: number[];
+  initialAnio: number;
+  initialDatosPorAnio: Record<number, DatosAnio>;
+  initialError: string | null;
 }) {
-  const [anio, setAnio] = useState(anioInicial);
-  const [modo, setModo] = useState<Modo>("ordinary");
-  const ordinario = modo === "ordinary";
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(initialError);
 
-  const tablas = useMemo(() => {
-    const balanceDe = (a: number) => (ordinario ? datosPorAnio[a]?.balanceOrdinarias : datosPorAnio[a]?.balanceExtraordinarias);
-    const cuotas = (a: number) => balanceDe(a)?.ingresosMensuales ?? [];
-    const otros = (a: number) => balanceDe(a)?.otrosIngresos ?? [];
-    const egresos = (a: number) => balanceDe(a)?.egresosMensuales ?? [];
-    const totalCuotas = totalesPorAnio(anios, cuotas);
-    const totalOtros = totalesPorAnio(anios, otros);
-    const totalEgresos = totalesPorAnio(anios, egresos);
-    const neto = Object.fromEntries(anios.map((a) => [a, restar(sumar([totalCuotas[a], totalOtros[a]]), totalEgresos[a])])) as PorAnio;
+  // Tríptico visible: los 3 ejercicios más recientes con datos.
+  const [anios, setAnios] = useState<number[]>(initialAnios);
+  const [anio, setAnio] = useState(initialAnio);
+  const [modo, setModo] = useState<'ordinary' | 'extraordinary'>('ordinary');
+  const [datosPorAnio, setDatosPorAnio] = useState<Record<number, DatosAnio>>(initialDatosPorAnio);
+
+  const esOrdinario = modo === 'ordinary';
+
+  const fetchAllData = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // 1) Años con datos reales.
+      let dataAnios: FinancialYears | null = null;
+      try {
+        dataAnios = await getFinancialYearsAction();
+      } catch (e) {
+        console.error('Error al cargar los años disponibles:', e);
+      }
+
+      // 2) Recorte a los 3 ejercicios más recientes (tríptico fijo, igual que el panel).
+      const { visibles, seleccionado } = pickVisibleYears(dataAnios);
+      setAnios(visibles);
+      setAnio(seleccionado);
+
+      // 3) Un ejercicio por llamada: se cargan los 3 en paralelo.
+      const entradas = await Promise.all(
+        visibles.map(async (year) => [year, await getResumenFinancieroAction(year)] as const)
+      );
+      setDatosPorAnio(Object.fromEntries(entradas));
+    } catch (e) {
+      console.error('Error al cargar datos:', e);
+      setError('Error al cargar los datos financieros. Por favor, intenta de nuevo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const ultimaActualizacionTexto = useMemo(() => {
+    const yearData = datosPorAnio[anio];
+    const candidates = [
+      textoActualizacion(yearData?.balanceOrdinarias),
+      textoActualizacion(yearData?.cuentasOrdinarias),
+      textoActualizacion(yearData?.balanceExtraordinarias),
+      textoActualizacion(yearData?.cuentasExtraordinarias)
+    ];
+
+    return candidates.find((value): value is string => typeof value === 'string' && value.trim() !== '') || 'No disponible';
+  }, [datosPorAnio, anio]);
+
+  const tablasOrdinarias = useMemo(() => {
+    const balanceDe = (year: number): BalanceAnio | undefined => datosPorAnio[year]?.balanceOrdinarias;
     return {
-      cuotas: filasPorNombre(anios, cuotas),
-      otros: filasPorNombre(anios, otros),
-      egresos: filasPorNombre(anios, egresos),
-      totalCuotas,
-      totalOtros,
-      totalEgresos,
-      neto,
-      bancos: Object.fromEntries(anios.map((a) => [a, acumulado(neto[a])])) as PorAnio,
-      // Extraordinarias cobradas en todos los años visibles.
-      extraordinariasAcumuladas: anios.reduce((suma, a) => suma + sumar((datosPorAnio[a]?.balanceExtraordinarias?.ingresosMensuales ?? []).map(serieDe)).total, 0),
+      ingresos: buildMergedTable({
+        title: 'Cuotas a Áreas Privativas (Cobranza Condominal)',
+        years: anios,
+        selector: (year) => balanceDe(year)?.ingresosMensuales
+      }),
+      otrosIngresos: buildMergedTable({
+        title: 'Otros Ingresos (Catálogo de Ingresos Diversos)',
+        years: anios,
+        selector: (year) => balanceDe(year)?.otrosIngresos
+      }),
+      egresos: buildMergedTable({
+        title: 'Egresos mensuales',
+        years: anios,
+        selector: (year) => balanceDe(year)?.egresosMensuales
+      }),
+      saldo: buildSaldoTable({
+        title: 'Saldo Ingresos - Egresos Ordinarios',
+        years: anios,
+        balanceDe
+      }),
+      cartera: buildMergedTable({
+        title: 'Cuentas por cobrar - Ingresos Cuotas Ordinarias',
+        years: anios,
+        selector: (year) => carteraOrdinariaDe(datosPorAnio[year])
+      })
     };
-  }, [datosPorAnio, anios, ordinario]);
+  }, [datosPorAnio, anios]);
 
-  if (error) return <LoadError what="el resumen financiero" />;
+  const tablasExtraordinarias = useMemo(() => {
+    const balanceDe = (year: number): BalanceAnio | undefined => datosPorAnio[year]?.balanceExtraordinarias;
+    return {
+      ingresos: buildMergedTable({
+        title: 'Ingresos Extraordinarios',
+        years: anios,
+        selector: (year) => balanceDe(year)?.ingresosMensuales
+      }),
+      otrosIngresos: buildMergedTable({
+        title: 'Otros Ingresos Extraordinarios',
+        years: anios,
+        selector: (year) => balanceDe(year)?.otrosIngresos
+      }),
+      egresos: buildMergedTable({
+        title: 'Egresos Extraordinarios',
+        years: anios,
+        selector: (year) => balanceDe(year)?.egresosMensuales
+      }),
+      saldo: buildSaldoTable({
+        title: 'Saldo Consolidado',
+        years: anios,
+        balanceDe
+      }),
+      cartera: buildMergedTable({
+        title: 'Cuentas por cobrar - Cuotas extraordinarias',
+        years: anios,
+        selector: (year) => carteraExtraordinariaDe(datosPorAnio[year])
+      })
+    };
+  }, [datosPorAnio, anios]);
 
-  const cuotasAnio = tablas.totalCuotas[anio]?.total ?? 0;
-  const otrosAnio = tablas.totalOtros[anio]?.total ?? 0;
-  const egresosAnio = tablas.totalEgresos[anio]?.total ?? 0;
-  const balance = tablas.neto[anio]?.total ?? 0;
-  // En extraordinarias la consulta aún no reparte los egresos (llegan vacíos): sin ellos, un saldo
-  // engañaría. Se dice abajo dónde verlos.
-  const conEgresos = tablas.egresos.length > 0;
+  // KPI del año seleccionado, en el modo activo.
+  const kpi = useMemo(() => {
+    const balance: BalanceAnio | undefined = esOrdinario
+      ? datosPorAnio[anio]?.balanceOrdinarias
+      : datosPorAnio[anio]?.balanceExtraordinarias;
 
-  const valoresDe = (porAnio: PorAnio) => [...anios.map((a) => porAnio[a]?.total ?? 0), ...(porAnio[anio]?.meses ?? vacia().meses)];
-  const columnas: Columna[] = [
-    ...anios.map((a, i) => ({
-      id: `anio-${a}`,
-      titulo: String(a),
-      tituloCompleto: `Total de ${a}`,
-      ancho: 140,
-      destacada: a === anio,
-      separador: i === anios.length - 1,
-    })),
-    ...columnasDeMeses(anio),
-  ];
-  const rango = anios.length > 1 ? `Totales de ${anios[0]} a ${anios[anios.length - 1]} y` : "Detalle de";
+    const ingresos = sumTotales(balance?.ingresosMensuales);
+    const otrosIngresos = sumTotales(balance?.otrosIngresos);
+    const egresos = sumTotales(balance?.egresosMensuales);
+    const ingresosTotales = ingresos + otrosIngresos;
+
+    // Extraordinarias cargadas: acumulado de todos los años visibles.
+    const extraordinariasAcumuladas = anios.reduce(
+      (sum, year) => sum + sumTotales(datosPorAnio[year]?.balanceExtraordinarias?.ingresosMensuales),
+      0
+    );
+
+    return {
+      ingresos,
+      otrosIngresos,
+      egresos,
+      ingresosTotales,
+      balanceAnual: ingresosTotales - egresos,
+      extraordinariasAcumuladas
+    };
+  }, [datosPorAnio, anio, anios, esOrdinario]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-20">
+        <div className="animate-spin rounded-full border-b-2 border-brand h-12 w-12"></div>
+        <p className="text-sm text-ink-soft">Cargando...</p>
+        <p className="text-sm font-medium text-ink-soft/70">Procesando información</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-card border border-danger/25 bg-danger/10 p-4">
+        <h2 className="text-xl font-bold uppercase tracking-tight text-danger mb-2">Error</h2>
+        <p className="text-sm font-medium text-danger">{error}</p>
+        <Button variant="destructive" size="sm" className="mt-4" onClick={fetchAllData}>
+          Reintentar
+        </Button>
+      </div>
+    );
+  }
+
+  const segmentClass = (activo: boolean, ancho: string) =>
+    cn(
+      'flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all',
+      ancho,
+      activo ? 'bg-card text-brand shadow-sm border border-line' : 'text-ink-soft hover:text-ink'
+    );
 
   return (
-    <div className="space-y-5">
-      {/* Tipo de cuota y año; el título ya lo pone el shell. */}
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-stroke-3">
-        <UnderlineTabs
-          label="Tipo de cuota"
-          value={modo}
-          onChange={setModo}
-          layoutId="rf-modo-tab"
-          options={[
-            { id: "ordinary" as const, label: "Cuotas ordinarias" },
-            { id: "extraordinary" as const, label: "Cuotas extraordinarias" },
-          ]}
-        />
-        <YearButtons years={anios} value={anio} onChange={setAnio} className="mb-1.5" />
-      </div>
-      <p className="text-body text-fg-3">
-        {rango} {anio} mes por mes · Montos en pesos
-      </p>
+    <div className="space-y-5 animate-in fade-in duration-500">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-5 border-b border-brand">
+        <div className="flex items-start gap-3">
+          <PageBackBadge className="mt-1.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Resumen Financiero</h1>
+            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Fase 1 · BETA</Badge>
+            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+              {CONDOMINIO} · Corte {anio} · {ultimaActualizacionTexto}
+            </p>
+          </div>
+        </div>
 
-      <StatStrip
-        label={`Resumen ${anio}`}
-        items={
-          ordinario
-            ? [
-                { id: "cuotas", label: "Cuotas ordinarias", value: formatCurrency(cuotasAnio) },
-                { id: "otros", label: "Otros ingresos", value: formatCurrency(otrosAnio) },
-                { id: "egresos", label: "Egresos", value: formatCurrency(egresosAnio) },
-                {
-                  id: "balance",
-                  label: "Balance",
-                  value: formatCurrency(balance),
-                  tone: balance < 0 ? "overdue" : balance > 0 ? "success" : undefined,
-                },
-              ]
-            : [
-                { id: "cuotas", label: `Cuotas extraordinarias ${anio}`, value: formatCurrency(cuotasAnio) },
-                { id: "acumuladas", label: `Cobradas desde ${anios[0]}`, value: formatCurrency(tablas.extraordinariasAcumuladas) },
-              ]
-        }
-        footer={
-          ordinario ? (
-            <>
-              Ingresos del año: <span className="font-semibold text-fg tabular-nums">{formatCurrency(cuotasAnio + otrosAnio)}</span> (cuotas y otros
-              ingresos).{" "}
-              {balance !== 0 && (
-                <>
-                  Los {balance < 0 ? "egresos los superaron" : "ingresos superaron a los egresos"} por{" "}
-                  <span className="font-semibold text-fg tabular-nums">{formatCurrency(Math.abs(balance))}</span>.
-                </>
-              )}
-            </>
-          ) : undefined
-        }
-      />
-
-      <TablaMensual
-        columnas={columnas}
-        grupos={[
-          { titulo: anios.length > 1 ? "Total del año" : "Total", columnas: anios.length },
-          { titulo: `${anio}, mes por mes`, columnas: 12 },
-        ]}
-        descripcion={`Resumen financiero de cuotas ${ordinario ? "ordinarias" : "extraordinarias"}, en pesos`}
-        region={`Resumen financiero por año y por mes de ${anio}`}
-      >
-        <tbody>
-          <Seccion titulo="Ingresos por cuotas" />
-          {tablas.cuotas.map((f) => (
-            <Fila key={f.nombre} etiqueta={f.nombre} valores={valoresDe(f.porAnio)} />
-          ))}
-          <Fila estilo="total" etiqueta="Total de cuotas" valores={valoresDe(tablas.totalCuotas)} />
-        </tbody>
-
-        {tablas.otros.length > 0 && (
-          <tbody>
-            <Seccion titulo="Otros ingresos" />
-            {tablas.otros.map((f) => (
-              <Fila key={f.nombre} etiqueta={f.nombre} valores={valoresDe(f.porAnio)} />
-            ))}
-            <Fila estilo="total" etiqueta="Total de otros ingresos" valores={valoresDe(tablas.totalOtros)} />
-          </tbody>
-        )}
-
-        {conEgresos && (
-          <>
-            <tbody>
-              <Seccion titulo="Egresos" />
-              {tablas.egresos.map((f) => (
-                <Fila key={f.nombre} etiqueta={f.nombre} valores={valoresDe(f.porAnio)} />
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Year Selector */}
+          {anios.length > 1 && (
+            <div className="flex items-center gap-1 p-1 bg-canvas-2 rounded-lg border border-line/50">
+              {anios.map((year) => (
+                <button
+                  key={year}
+                  type="button"
+                  onClick={() => setAnio(year)}
+                  className={segmentClass(anio === year, 'h-8 px-3')}
+                >
+                  {year}
+                </button>
               ))}
-              <Fila estilo="total" etiqueta="Total de egresos" valores={valoresDe(tablas.totalEgresos)} />
-            </tbody>
-            <tbody>
-              <Espacio />
-              <Fila estilo="total" conSigno etiqueta="Ingresos − egresos" valores={valoresDe(tablas.neto)} />
-              <Fila conSigno etiqueta="Bancos y caja (acumulado del año)" valores={valoresDe(tablas.bancos)} />
-            </tbody>
+            </div>
+          )}
+
+          {/* Mode Selector */}
+          <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
+            <button
+              type="button"
+              onClick={() => setModo('ordinary')}
+              className={segmentClass(esOrdinario, 'h-8 px-4')}
+            >
+              Cuotas Ordinarias
+            </button>
+            <button
+              type="button"
+              onClick={() => setModo('extraordinary')}
+              className={segmentClass(!esOrdinario, 'h-8 px-4')}
+            >
+              Cuotas Extraordinarias
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* KPI Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+        {esOrdinario ? (
+          <StatCard accent="brand" label="Ingresos Ordinarios" value={formatCurrency(kpi.ingresos)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        ) : (
+          <StatCard accent="cyan" label="Extraordinarios" value={formatCurrency(kpi.ingresos)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+        )}
+        <StatCard accent="lime" label="Otros Ingresos" value={formatCurrency(kpi.otrosIngresos)} icon={<Plus className="h-3.5 w-3.5" />} />
+        <StatCard accent="brand" label="Ingresos Totales" value={formatCurrency(kpi.ingresosTotales)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+        <StatCard accent="gold" label="Egresos Totales" value={formatCurrency(kpi.egresos)} icon={<TrendingDown className="h-3.5 w-3.5" />} />
+        <StatCard
+          accent={kpi.balanceAnual >= 0 ? 'emerald' : 'gold'}
+          label="Balance Anual"
+          value={formatCurrency(kpi.balanceAnual)}
+          icon={<Calendar className="h-3.5 w-3.5" />}
+        />
+        {esOrdinario ? (
+          <StatCard
+            accent="emerald"
+            label={`Cuotas Ord. ${anio} (Anual)`}
+            value={formatCurrency(kpi.ingresos)}
+            icon={<Wallet className="h-3.5 w-3.5" />}
+          />
+        ) : (
+          <StatCard
+            accent="emerald"
+            label={`Cuotas Extr. Cargadas (Desde ${anios[0]})`}
+            value={formatCurrency(kpi.extraordinariasAcumuladas)}
+            icon={<Wallet className="h-3.5 w-3.5" />}
+          />
+        )}
+      </div>
+
+      {/* Context Info */}
+      <div className="flex items-center gap-2 p-3 bg-canvas/40 border border-line/30 rounded-md">
+        <Info className="h-4 w-4 text-brand-accent shrink-0" />
+        <p className="text-[11px] font-bold text-ink-soft/70 leading-tight uppercase tracking-tight">
+          {`Ámbito: ${CONDOMINIO} · Datos consolidados de Insulae 2.0 · Periodo visual: ${anios.join(' / ')}`}
+        </p>
+      </div>
+
+      {/* Main Content Sections */}
+      <div className="space-y-6">
+        {esOrdinario ? (
+          <>
+            <CompactFinancialTable
+              title="Balance Mensual"
+              subtitle={tablasOrdinarias.ingresos.title}
+              firstColumnLabel="Tipo de Cobro"
+              annualLabelPrefix="Ingreso Anual"
+              table={tablasOrdinarias.ingresos}
+              monthLabels={MESES}
+              tone={TABLE_TONE.income}
+            />
+
+            <CompactFinancialTable
+              title="Balance Mensual"
+              subtitle={tablasOrdinarias.otrosIngresos.title}
+              firstColumnLabel="Concepto de Ingreso"
+              annualLabelPrefix="Ingreso Anual"
+              table={tablasOrdinarias.otrosIngresos}
+              monthLabels={MESES}
+              tone={TABLE_TONE.income}
+            />
+
+            <CompactFinancialTable
+              title="Corte Mensual"
+              subtitle={tablasOrdinarias.egresos.title}
+              firstColumnLabel="Tipo de Egreso"
+              annualLabelPrefix="Egreso"
+              table={tablasOrdinarias.egresos}
+              monthLabels={MESES}
+              tone={TABLE_TONE.expense}
+            />
+
+            <CompactFinancialTable
+              title="Balance Ordinario"
+              subtitle={tablasOrdinarias.saldo.title}
+              firstColumnLabel="Saldo"
+              annualLabelPrefix="Total Anual"
+              table={tablasOrdinarias.saldo}
+              monthLabels={MESES}
+              tone={TABLE_TONE.balance}
+            />
+
+            {tablaTieneImportes(tablasOrdinarias.cartera) && (
+              <CompactFinancialTable
+                title="Control de Cartera"
+                subtitle={tablasOrdinarias.cartera.title}
+                firstColumnLabel="Tipo de Ingreso"
+                annualLabelPrefix="Periodo"
+                table={tablasOrdinarias.cartera}
+                monthLabels={MESES}
+                tone={TABLE_TONE.income}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <CompactFinancialTable
+              title="Balance Extraordinario"
+              subtitle={tablasExtraordinarias.ingresos.title}
+              firstColumnLabel="Tipo de Ingreso"
+              annualLabelPrefix="Total"
+              table={tablasExtraordinarias.ingresos}
+              monthLabels={MESES}
+              tone={TABLE_TONE.income}
+            />
+
+            {tablasExtraordinarias.otrosIngresos.rows.length > 0 && (
+              <CompactFinancialTable
+                title="Balance Extraordinario"
+                subtitle={tablasExtraordinarias.otrosIngresos.title}
+                firstColumnLabel="Tipo de Ingreso"
+                annualLabelPrefix="Total"
+                table={tablasExtraordinarias.otrosIngresos}
+                monthLabels={MESES}
+                tone={TABLE_TONE.income}
+              />
+            )}
+
+            {tablasExtraordinarias.egresos.rows.length > 0 && (
+              <CompactFinancialTable
+                title="Balance Extraordinario"
+                subtitle={tablasExtraordinarias.egresos.title}
+                firstColumnLabel="Tipo de Egreso"
+                annualLabelPrefix="Total"
+                table={tablasExtraordinarias.egresos}
+                monthLabels={MESES}
+                tone={TABLE_TONE.expense}
+              />
+            )}
+
+            <CompactFinancialTable
+              title="Balance Extraordinario"
+              subtitle={tablasExtraordinarias.saldo.title}
+              firstColumnLabel="Concepto"
+              annualLabelPrefix="Periodo"
+              table={tablasExtraordinarias.saldo}
+              monthLabels={MESES}
+              tone={TABLE_TONE.balance}
+            />
+
+            {tablaTieneImportes(tablasExtraordinarias.cartera) && (
+              <CompactFinancialTable
+                title="Control de Cartera"
+                subtitle={tablasExtraordinarias.cartera.title}
+                firstColumnLabel="Tipo de Ingreso"
+                annualLabelPrefix="Periodo"
+                table={tablasExtraordinarias.cartera}
+                monthLabels={MESES}
+                tone={TABLE_TONE.income}
+              />
+            )}
           </>
         )}
-      </TablaMensual>
-
-      <p className="text-caption text-fg-3">
-        {ordinario
-          ? "Ingresos y egresos registrados por la administración. Un guion (—) indica un mes sin movimientos."
-          : "Aquí solo se muestran los cobros de cuotas extraordinarias. Los gastos extraordinarios aparecen en el Estado de resultados, en “Gastos extraordinarios”."}
-      </p>
+      </div>
     </div>
   );
 }

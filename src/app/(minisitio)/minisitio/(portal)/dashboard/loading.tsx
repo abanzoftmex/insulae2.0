@@ -1,6 +1,10 @@
-import { PageSkeleton } from "@/components/minisitio/page-skeleton";
+import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
 
-/** Carga de Mis saldos: esqueleto del portal (aparece a los 400 ms). */
+/** Mismo estado de carga que tenía pages/dashboard.js mientras llegaban los datos. */
 export default function DashboardLoading() {
-  return <PageSkeleton label="Cargando tus saldos…" />;
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <LoadingSpinner />
+    </div>
+  );
 }

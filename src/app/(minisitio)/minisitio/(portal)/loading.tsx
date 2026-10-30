@@ -1,6 +1,10 @@
-import { PageSkeleton } from "@/components/minisitio/page-skeleton";
+import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
 
-/** Mientras el servidor resuelve la pantalla, el shell sigue visible y el contenido late. */
+/** Mientras el servidor resuelve los datos de la pantalla, el shell sigue visible. */
 export default function PortalLoading() {
-  return <PageSkeleton label="Cargando…" />;
+  return (
+    <div className="flex min-h-[50vh] items-center justify-center">
+      <LoadingSpinner size="large" text="Cargando..." />
+    </div>
+  );
 }

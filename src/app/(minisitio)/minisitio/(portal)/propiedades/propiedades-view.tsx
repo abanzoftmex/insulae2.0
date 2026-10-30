@@ -1,306 +1,537 @@
 "use client";
 
-/**
- * Mis propiedades: las áreas privativas del condómino en el orden del condominio (fusiones → AP →
- * sus FAP, ver propiedades-organizer), con superficie, indiviso y saldo. Resumen arriba; tabla con
- * totales en escritorio y lista en el celular. El PDF sale de lo que se ve (respeta la búsqueda).
- */
-import { useDeferredValue, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, FileDown, FileText, Info } from "lucide-react";
+import { BarChart3, Building2, FileText, Search, TrendingUp, X } from "lucide-react";
+import { StatusBadge } from "@/components/minisitio/status-badge";
+import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
+import { ViewToggle } from "@/components/minisitio/view-toggle";
+import { useMinisitioAuth } from "@/components/minisitio/use-minisitio-auth";
+import { msPath } from "@/components/minisitio/paths";
+import type { ListView } from "@/stores/minisitio.store";
 import type { PropertiesList } from "@/modules/minisitio/infrastructure/queries/properties.queries";
 import type { ProjectInfo } from "@/modules/minisitio/infrastructure/queries/project.queries";
-import { msPath } from "@/components/minisitio/paths";
-import { useMinisitioSession } from "@/components/minisitio/session-provider";
-import { buttonClass } from "@/components/minisitio/ui/button";
-import { LoadError } from "@/components/minisitio/ui/load-error";
-import { SearchField } from "@/components/minisitio/ui/search-field";
-import { StatStrip } from "@/components/minisitio/ui/stat-strip";
-import { toast } from "@/stores/minisitio-toast.store";
-import { formatCurrency, normalizeSearch } from "../_lib/format";
+import { PropiedadesTable } from "./propiedades-table";
+import { IndivisoInfo } from "./indiviso-info";
 import { generatePropertiesReportPdf } from "./propiedades-report-pdf";
-import { organizarPropiedadesHierarquicamente, tieneReferencia } from "./propiedades-organizer";
-import { parseNum, type PropiedadView } from "./propiedades-format";
+import { tieneReferencia } from "./propiedades-organizer";
+import { fechaAyer, parseNum, type PropiedadView } from "./propiedades-format";
 
-/** El total del proyecto que usaba el minisitio cuando no se podía leer. */
-const TOTAL_M2_PROYECTO_POR_DEFECTO = 157850.23;
+/** Mis Propiedades (antes pages/propiedades.js). Los datos llegan del servidor en la primera carga. */
+export function PropiedadesView({
+  initialData,
+  proyecto,
+}: {
+  initialData: PropertiesList;
+  /** null si no se pudo obtener (el legacy seguía con el total de m² por defecto). */
+  proyecto: ProjectInfo | null;
+}) {
+  const router = useRouter();
+  const { user, userType, setPropiedades } = useMinisitioAuth();
+  const propiedadesData: PropiedadView[] = initialData.propiedades;
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentView, setCurrentView] = useState<ListView>("table");
+  const totalM2Proyecto = proyecto ? proyecto.totalM2 : 157850.23; // Valor por defecto
+  const [generatingPDF, setGeneratingPDF] = useState(false);
+  const ultimaActualizacionTexto = initialData.ultimaActualizacionTexto || "No disponible";
+  const puedeVer = userType === "propietario" || userType === "both";
 
-const m2 = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 });
-const pct = new Intl.NumberFormat("es-MX", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
-const num = (value: unknown) => parseNum(value) || 0;
-const porVencer = (p: PropiedadView) => Math.max(0, num(p.saldo_pendiente) - num(p.saldo_vencido));
+  // Siempre forzar vista de tabla - no guardar preferencia
+  // useEffect eliminado para evitar cargar preferencias guardadas en caché
 
-/** En las FAP la superficie que cuenta viene en m² de construcción. */
-const superficie = (p: PropiedadView) => (tieneReferencia(p.id_areas_privativas_padre) ? num(p.m2_construccion) || num(p.m2_totales) : num(p.m2_totales));
+  // Filtrar datos aplicando búsqueda (el servidor ya devuelve solo propiedades activas)
+  const filteredData = useMemo(() => {
+    let filtered = [...propiedadesData];
 
-const PLACEHOLDERS = new Set(["Sin barrio", "Sin uso definido"]);
-const detalle = (p: PropiedadView) => [p.zona, p.uso_suelo].filter((v) => v && !PLACEHOLDERS.has(v)).join(" · ");
+    // Aplicar filtro de búsqueda por texto
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(
+        (propiedad) =>
+          propiedad.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          propiedad.iniciales?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          propiedad.zona?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          propiedad.uso_suelo?.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+    }
 
-export function PropiedadesView({ data, proyecto }: { data: PropertiesList | null; proyecto: ProjectInfo | null }) {
-  if (!data) {
-    return (
-      <div className="mx-auto w-full max-w-[1040px]">
-        <LoadError what="tus propiedades" />
-      </div>
-    );
-  }
-  if (data.propiedades.length === 0) {
-    return (
-      <div className="mx-auto w-full max-w-[1040px] py-12 text-center">
-        <p className="text-body text-fg-2">No tienes propiedades asignadas.</p>
-        <p className="mt-1 text-body text-fg-3">Si crees que es un error, escríbele a la administración desde Solicitudes.</p>
-      </div>
-    );
-  }
-  return <Propiedades propiedades={data.propiedades} proyecto={proyecto} />;
-}
+    return filtered;
+  }, [searchTerm, propiedadesData]);
 
-function Propiedades({ propiedades, proyecto }: { propiedades: PropiedadView[]; proyecto: ProjectInfo | null }) {
-  const { user } = useMinisitioSession();
-  const [busqueda, setBusqueda] = useState("");
-  const [verIndiviso, setVerIndiviso] = useState(false);
-  const [generando, setGenerando] = useState(false);
-  const consulta = normalizeSearch(useDeferredValue(busqueda)).trim();
-  const totalM2Proyecto = proyecto?.totalM2 || TOTAL_M2_PROYECTO_POR_DEFECTO;
+  useEffect(() => {
+    if (!user) return;
 
-  const filtradas = useMemo(
-    () => (consulta ? propiedades.filter((p) => normalizeSearch(`${p.nombre} ${p.iniciales} ${p.zona} ${p.uso_suelo}`).includes(consulta)) : propiedades),
-    [propiedades, consulta],
-  );
-  const filas = useMemo(() => organizarPropiedadesHierarquicamente(filtradas), [filtradas]);
-  // Una FAP cuelga de su AP solo si esa AP está en la lista (puede no ser del condómino).
-  const enLista = useMemo(() => new Set(filtradas.map((p) => p.id_areas_privativas)), [filtradas]);
-  const anidada = (p: (typeof filas)[number]) => p.tipo === "hijo" && p.id_areas_privativas_padre != null && enLista.has(p.id_areas_privativas_padre);
+    if (userType !== "propietario" && userType !== "both") {
+      router.push(msPath("/"));
+      return;
+    }
 
-  const totales = useMemo(
-    () =>
-      filtradas.reduce(
-        (acc, p) => ({
-          superficie: acc.superficie + num(p.m2_totales),
-          construccion: acc.construccion + num(p.m2_construccion),
-          indiviso: acc.indiviso + num(p.indiviso),
-          vencido: acc.vencido + num(p.saldo_vencido),
-          porVencer: acc.porVencer + porVencer(p),
-        }),
-        { superficie: 0, construccion: 0, indiviso: 0, vencido: 0, porVencer: 0 },
-      ),
-    [filtradas],
-  );
+    setPropiedades(propiedadesData); // Actualizar store
+  }, [userType, user, router, setPropiedades, propiedadesData]);
 
-  // El resumen es de todas las propiedades, no de la búsqueda.
-  const resumen = useMemo(
-    () => ({
-      superficie: propiedades.reduce((sum, p) => sum + superficie(p), 0),
-      indiviso: propiedades.reduce((sum, p) => sum + num(p.indiviso) + num(p.indiviso_fap_condominio), 0),
-      vencido: propiedades.reduce((sum, p) => sum + num(p.saldo_vencido), 0),
-      porVencer: propiedades.reduce((sum, p) => sum + porVencer(p), 0),
-    }),
-    [propiedades],
-  );
+  const handleViewChange = (newView: ListView) => {
+    setCurrentView(newView);
+    // No guardar preferencia - siempre forzar tabla al recargar
+  };
 
-  const descargar = async () => {
-    if (filtradas.length === 0) return;
-    setGenerando(true);
+  const clearAllFilters = () => {
+    setSearchTerm("");
+  };
+
+  const formatCurrency = (amount: number | null | undefined) => {
+    return new Intl.NumberFormat("es-MX", {
+      style: "currency",
+      currency: "MXN",
+    }).format(amount || 0);
+  };
+
+  const formatM2 = (m2: unknown) => {
+    const value = parseNum(m2) || 0;
+    return `${value.toLocaleString("es-MX", {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    })} m²`;
+  };
+
+  const getStatusBadge = (statusId: number) => {
+    // Mapear IDs de status a tipos para el badge
+    const statusMap: Record<number, number> = {
+      1: 1, // Activo -> Verde
+      2: 3, // Inactivo -> Rojo
+      3: 2, // Pendiente -> Amarillo
+    };
+    return statusMap[statusId] || 2;
+  };
+
+  const getFinancialStatusBadge = (estadoSaldo: string) => {
+    // Mapear estado financiero real a badge
+    const statusMap: Record<string, number> = {
+      vencido: 3, // Rojo
+      pendiente: 2, // Amarillo
+      a_favor: 1, // Verde
+      al_corriente: 1, // Verde
+    };
+    return statusMap[estadoSaldo] || 2;
+  };
+
+  const getPropertyStatusBadge = (statusName: string) => {
+    const statusMap: Record<string, { color: string; text: string }> = {
+      Activo: { color: "bg-green-100 text-green-800", text: "Activo" },
+      Inactivo: { color: "bg-red-100 text-red-800", text: "Inactivo" },
+      Pendiente: { color: "bg-yellow-100 text-yellow-800", text: "Pendiente" },
+      "Sin status": { color: "bg-gray-100 text-gray-800", text: "Sin status" },
+    };
+
+    const config = statusMap[statusName] || statusMap["Sin status"];
+    return config;
+  };
+
+  // Función para generar el reporte PDF de propiedades
+  const generatePropertiesReport = async () => {
+    if (!filteredData || filteredData.length === 0) {
+      alert("No hay propiedades para generar el reporte.");
+      return;
+    }
+
+    setGeneratingPDF(true);
+
     try {
-      await generatePropertiesReportPdf({ propiedades: filtradas, proyecto, user });
+      await generatePropertiesReportPdf({ propiedades: filteredData, proyecto, user });
     } catch (error) {
-      console.error("[minisitio] reporte de propiedades:", error);
-      toast("No se pudo generar el PDF. Inténtalo otra vez.", "error");
+      console.error("Error generando reporte PDF:", error);
+      alert("Error al generar el reporte PDF. Por favor, inténtalo de nuevo.");
     } finally {
-      setGenerando(false);
+      setGeneratingPDF(false);
     }
   };
 
-  return (
-    <div className="mx-auto w-full max-w-[1040px]">
-      <StatStrip
-        label="Resumen de tus propiedades"
-        items={[
-          { id: "superficie", label: "Superficie", value: `${m2.format(resumen.superficie)} m²` },
-          {
-            id: "indiviso",
-            label: "Indiviso",
-            value: `${pct.format(resumen.indiviso)} %`,
-            addon: (
-              <button
-                type="button"
-                onClick={() => setVerIndiviso((v) => !v)}
-                aria-expanded={verIndiviso}
-                aria-controls="indiviso-ayuda"
-                aria-label="Qué es el indiviso"
-                className="-my-0.5 inline-flex h-5 w-5 items-center justify-center rounded-ctrl text-fg-3 outline-none hover:bg-surface-3 hover:text-fg focus-visible:ring-2 focus-visible:ring-brand"
-              >
-                <Info className="h-4 w-4" aria-hidden />
-              </button>
-            ),
-          },
-          { id: "vencido", label: "Saldo vencido", value: formatCurrency(resumen.vencido), tone: resumen.vencido > 0 ? "overdue" : undefined },
-          { id: "por-vencer", label: "Por vencer", value: formatCurrency(resumen.porVencer) },
-        ]}
-        footer={
-          verIndiviso ? (
-            <p id="indiviso-ayuda">
-              El indiviso es tu parte del condominio. Si no está registrado, se calcula con la superficie: m² de la propiedad ÷{" "}
-              {m2.format(totalM2Proyecto)} m² del proyecto × 100.
-            </p>
-          ) : undefined
-        }
-      />
+  // El legacy dejaba el spinner mientras redirigía a quien no es propietario
+  if (!puedeVer) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
-      <section aria-labelledby="propiedades-lista" className="mt-8">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-stroke-3 pb-2">
-          <h2 id="propiedades-lista" className="text-body-lg font-bold text-fg">
-            {filtradas.length === propiedades.length
-              ? `${propiedades.length} ${propiedades.length === 1 ? "propiedad" : "propiedades"}`
-              : `${filtradas.length} de ${propiedades.length}`}
-          </h2>
-          <div className="flex w-full items-center gap-2 sm:w-auto">
-            <SearchField value={busqueda} onChange={setBusqueda} label="Buscar propiedad" placeholder="Buscar propiedad" className="min-w-0 flex-1 sm:w-72" />
-            <button
-              type="button"
-              onClick={descargar}
-              disabled={generando || filtradas.length === 0}
-              title="Descarga en PDF las propiedades de la lista"
-              className={buttonClass("outline", "sm")}
-            >
-              <FileDown className="h-3.5 w-3.5" aria-hidden />
-              {generando ? "Generando…" : "PDF"}
-              <span className="sr-only"> de las propiedades de la lista</span>
-            </button>
+  return (
+    <div className="space-y-6">
+      {/* Header con estadísticas */}
+      <div className="bg-primary-dark rounded-xl p-6 text-white">
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Mis Propiedades</h1>
+            <p className="text-gray-300 mt-1">Gestiona y monitorea tus propiedades</p>
+            <p className="text-gray-300 text-sm mt-1">
+              Ultima actualizacion: <span className="font-semibold text-white">{ultimaActualizacionTexto}</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center bg-primary-light bg-opacity-20 rounded-lg p-3">
+              <Building2 className="w-8 h-8 text-white mr-3" />
+              <div>
+                <p className="text-2xl font-bold">{filteredData.filter((prop) => prop.id_cat_status === 1).length}</p>
+                <p className="text-sm text-gray-200">Propiedades Activas</p>
+              </div>
+            </div>
           </div>
         </div>
 
-        {filtradas.length === 0 ? (
-          <p className="py-12 text-center text-body text-fg-2">Ninguna propiedad coincide con «{busqueda.trim()}».</p>
-        ) : (
-          <>
-            <table className="w-full text-body max-xl:hidden">
-              <thead>
-                <tr className="text-left text-caption text-fg-3">
-                  <Th>Propiedad</Th>
-                  <Th align="right">Superficie</Th>
-                  <Th align="right">Construcción</Th>
-                  <Th align="right">Indiviso</Th>
-                  <Th align="right">Vencido</Th>
-                  <Th align="right">Por vencer</Th>
-                  <Th className="w-[72px]">
-                    <span className="sr-only">Acciones</span>
-                  </Th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stroke-3">
-                {filas.map((p) => {
-                  const fap = p.tipo === "hijo";
-                  const dentro = anidada(p);
-                  return (
-                    <tr key={`${p.id_areas_privativas}-${p.tipo}`} className="group relative hover:bg-surface-2">
-                      <td className={`py-2.5 pr-3 ${dentro ? "pl-6" : ""}`}>
-                        {/* Las FAP cuelgan de su AP con una guía, como las respuestas de un hilo. */}
-                        {dentro && <span aria-hidden className="absolute top-0 bottom-0 left-2 border-l border-stroke-2" />}
-                        <span className="mr-1.5 text-caption font-semibold text-fg-3">{fap ? "FAP" : "AP"}</span>
-                        <Link
-                          href={msPath(`/propiedades/${p.id_areas_privativas}`)}
-                          className="font-semibold text-fg outline-none after:absolute after:inset-0 after:rounded-surface focus-visible:after:ring-2 focus-visible:after:ring-brand"
-                        >
-                          {p.nombre}
-                        </Link>
-                        {detalle(p) && (
-                          <span className="block max-w-[340px] truncate text-caption text-fg-3" title={detalle(p)}>
-                            {detalle(p)}
-                          </span>
-                        )}
-                      </td>
-                      <Td>{num(p.m2_totales) > 0 ? `${m2.format(num(p.m2_totales))} m²` : <Vacio />}</Td>
-                      <Td>{num(p.m2_construccion) > 0 ? `${m2.format(num(p.m2_construccion))} m²` : <Vacio />}</Td>
-                      <Td>{num(p.indiviso) > 0 ? `${pct.format(num(p.indiviso))} %` : <Vacio />}</Td>
-                      <Td>{num(p.saldo_vencido) > 0 ? <span className="font-semibold text-overdue">{formatCurrency(num(p.saldo_vencido))}</span> : <Vacio />}</Td>
-                      <Td>{porVencer(p) > 0 ? formatCurrency(porVencer(p)) : <Vacio />}</Td>
-                      <td className="py-2.5 text-right whitespace-nowrap">
-                        <Link
-                          href={msPath(`/propiedades/${p.id_areas_privativas}/estado-cuenta`)}
-                          title="Estado de cuenta"
-                          aria-label={`Estado de cuenta de ${p.nombre}`}
-                          className="relative z-10 inline-flex h-7 w-7 items-center justify-center rounded-ctrl text-fg-3 outline-none hover:bg-surface-3 hover:text-fg focus-visible:ring-2 focus-visible:ring-brand"
-                        >
-                          <FileText className="h-4 w-4" aria-hidden />
-                        </Link>
-                        <ChevronRight className="inline h-4 w-4 text-fg-4 group-hover:text-fg-2" aria-hidden />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-              <tfoot>
-                <tr className="border-t border-stroke-2 font-semibold text-fg">
-                  <td className="py-3 pr-3">Total</td>
-                  <Td>{m2.format(totales.superficie)} m²</Td>
-                  <Td>{m2.format(totales.construccion)} m²</Td>
-                  <Td>{pct.format(totales.indiviso)} %</Td>
-                  <Td>
-                    <span className={totales.vencido > 0 ? "text-overdue" : ""}>{formatCurrency(totales.vencido)}</span>
-                  </Td>
-                  <Td>{formatCurrency(totales.porVencer)}</Td>
-                  <td />
-                </tr>
-              </tfoot>
-            </table>
+        {/* Estadísticas rápidas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-white bg-opacity-10 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="bg-primary-light rounded-lg p-3 mr-4 flex-shrink-0">
+                <TrendingUp className="w-6 h-6 text-primary-dark" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xl font-bold text-gray-900">
+                  {filteredData
+                    .filter((prop) => prop.id_cat_status === 1) // Solo propiedades activas
+                    .reduce((total, prop) => {
+                      const esFAP = tieneReferencia(prop.id_areas_privativas_padre);
+                      const m2Totales = parseNum(prop.m2_totales) || 0;
+                      const m2Construccion = parseNum(prop.m2_construccion) || 0;
 
-            <ul className="divide-y divide-stroke-3 xl:hidden">
-              {filas.map((p) => {
-                const fap = p.tipo === "hijo";
-                return (
-                  <li key={`${p.id_areas_privativas}-${p.tipo}`}>
+                      // En FAPs el valor principal de superficie viene en m2_construccion.
+                      const superficie = esFAP ? m2Construccion || m2Totales : m2Totales;
+                      return total + superficie;
+                    }, 0)
+                    .toLocaleString("es-MX")}{" "}
+                  m²
+                </p>
+                <p className="text-sm text-gray-900">Metros Cuadrados Totales</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white bg-opacity-10 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="bg-primary-light rounded-lg p-3 mr-4 flex-shrink-0">
+                <BarChart3 className="w-6 h-6 text-primary-dark" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xl font-bold text-gray-900">
+                  {filteredData
+                    .filter((prop) => prop.id_cat_status === 1) // Solo propiedades activas
+                    .reduce((total, prop) => {
+                      const indiviso = parseNum(prop.indiviso) || 0;
+                      const indivisoFapCondominio = parseNum(prop.indiviso_fap_condominio) || 0;
+                      return total + indiviso + indivisoFapCondominio;
+                    }, 0)
+                    .toFixed(4)}
+                  %
+                </p>
+                <div className="text-sm text-gray-900 flex items-center">
+                  Indiviso total de las areas privativas
+                  <span className="ml-2">
+                    <IndivisoInfo totalM2Proyecto={totalM2Proyecto} />
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Card de Saldo Pendiente */}
+          <div className="bg-white bg-opacity-10 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="bg-yellow-500 rounded-lg p-3 mr-4 flex-shrink-0">
+                <Building2 className="w-6 h-6 text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-bold text-gray-900">
+                  {formatCurrency(
+                    filteredData
+                      .filter((prop) => prop.id_cat_status === 1) // Solo propiedades activas
+                      .reduce((total, prop) => {
+                        const pendiente = parseNum(prop.saldo_pendiente) || 0;
+                        return total + pendiente;
+                      }, 0),
+                  )}
+                </p>
+                <p className="text-sm text-gray-900">Saldo Pendiente</p>
+                <p className="text-xs text-gray-700 mt-1">Total de cuotas por pagar</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Card de Saldo Vencido */}
+          <div className="bg-white bg-opacity-10 rounded-lg p-4">
+            <div className="flex items-start">
+              <div className="bg-red-500 rounded-lg p-3 mr-4 flex-shrink-0">
+                <Building2 className="w-6 h-6 text-white" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-lg font-bold text-red-600">
+                  {formatCurrency(
+                    filteredData
+                      .filter((prop) => prop.id_cat_status === 1) // Solo propiedades activas
+                      .reduce((total, prop) => {
+                        const vencido = parseNum(prop.saldo_vencido) || 0;
+                        return total + vencido;
+                      }, 0),
+                  )}
+                </p>
+                <p className="text-sm text-gray-900">Saldo Vencido</p>
+                <p className="text-xs text-gray-700 mt-1">
+                  Al {fechaAyer({ day: "2-digit", month: "short", year: "numeric" })}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Buscador y Filtros */}
+      {propiedadesData.length > 0 && (
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div className="flex flex-col lg:flex-row gap-4">
+            {/* Barra de búsqueda */}
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, iniciales, barrio o uso de suelo..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-light focus:border-transparent transition-all duration-200"
+              />
+              {searchTerm && (
+                <button
+                  onClick={clearAllFilters}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  title="Limpiar búsqueda"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Información de búsqueda aplicada */}
+          {searchTerm && (
+            <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-600">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700">
+                <Search className="w-3 h-3 mr-1" />"{searchTerm}":{" "}
+                {filteredData.length} resultado
+                {filteredData.length !== 1 ? "s" : ""}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Control de vista y acciones */}
+      {propiedadesData.length > 0 && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <h2 className="text-lg font-semibold text-gray-900">
+            {filteredData.length} Propiedad
+            {filteredData.length !== 1 ? "es" : ""} Activa
+            {filteredData.length !== 1 ? "s" : ""} {searchTerm ? "(filtrada)" : ""}
+          </h2>
+
+          <div className="flex items-center gap-3">
+            {/* Botón para generar reporte PDF */}
+            <button
+              onClick={generatePropertiesReport}
+              disabled={generatingPDF || filteredData.length === 0}
+              className="inline-flex items-center px-4 py-2 bg-primary-dark text-white text-sm font-medium rounded-lg hover:bg-primary-light hover:text-primary-dark transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed border border-primary-dark"
+            >
+              {generatingPDF ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Generando PDF...
+                </>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4 mr-2" />
+                  Generar Reporte PDF
+                </>
+              )}
+            </button>
+
+            {/* Control de vista */}
+            <ViewToggle view={currentView} onViewChange={handleViewChange} />
+          </div>
+        </div>
+      )}
+
+      {/* Contenido según vista */}
+      {filteredData.length > 0 ? (
+        currentView === "grid" ? (
+          /* Vista de tarjetas */
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredData.map((propiedad) => (
+              <div
+                key={propiedad.id_areas_privativas}
+                className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="p-6">
+                  {/* Header de la tarjeta */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">{propiedad.nombre}</h3>
+                      <p className="text-sm text-gray-500">{propiedad.iniciales}</p>
+                    </div>
+                    <StatusBadge status={getFinancialStatusBadge(propiedad.estado_saldo)} type="payment" />
+                  </div>
+
+                  {/* Información principal */}
+                  <div className="space-y-3 mb-4">
+                    <div className="flex justify-between text-sm items-center">
+                      <span className="text-gray-600">Status:</span>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          getPropertyStatusBadge(propiedad.status_nombre).color
+                        }`}
+                      >
+                        {getPropertyStatusBadge(propiedad.status_nombre).text}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Barrio:</span>
+                      <span className="font-medium text-gray-900">{propiedad.zona || "Sin barrio"}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Uso de suelo:</span>
+                      <span className="font-medium text-gray-900">{propiedad.uso_suelo || "Sin uso definido"}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">M² Totales:</span>
+                      <span className="font-medium text-gray-900">{formatM2(propiedad.m2_totales)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">M² Construidos:</span>
+                      <span className="font-medium text-gray-900">{formatM2(propiedad.m2_construccion)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Indiviso:</span>
+                      {propiedad.indiviso !== null ? (
+                        <span className="font-medium text-primary-dark">
+                          {(parseNum(propiedad.indiviso) || 0).toFixed(4)}%
+                        </span>
+                      ) : (
+                        <span className="font-medium text-primary-dark">0.0000%</span>
+                      )}
+                    </div>
+                    {propiedad.indiviso_fap_condominio !== null && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Indiviso FAP/Cond.:</span>
+                        <span className="font-medium text-blue-600">
+                          {propiedad.indiviso_fap_condominio.toFixed(4)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Saldo vencido */}
+                  <div
+                    className={`rounded-lg p-3 mb-4 border-l-4 ${
+                      (parseNum(propiedad.saldo_vencido) || 0) > 0
+                        ? "bg-red-50 border-red-500"
+                        : "bg-green-50 border-green-500"
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-600">
+                          Saldo Vencido al {fechaAyer({ day: "2-digit", month: "short", year: "numeric" })}
+                        </span>
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            (parseNum(propiedad.saldo_vencido) || 0) > 0
+                              ? "bg-red-100 text-red-800"
+                              : "bg-green-100 text-green-800"
+                          }`}
+                        >
+                          {(parseNum(propiedad.saldo_vencido) || 0) > 0 ? "Vencido" : "Al Corriente"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Total Vencido</span>
+                        <span
+                          className={`font-bold ${
+                            (parseNum(propiedad.saldo_vencido) || 0) > 0 ? "text-red-600" : "text-green-600"
+                          }`}
+                        >
+                          {formatCurrency(propiedad.saldo_vencido || 0)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Acciones */}
+                  <div className="flex space-x-2">
                     <Link
-                      href={msPath(`/propiedades/${p.id_areas_privativas}`)}
-                      className={`flex items-center gap-3 py-3 outline-none focus-visible:bg-surface-2 active:bg-surface-2 ${anidada(p) ? "pl-4" : ""}`}
+                      href={msPath(`/propiedades/${propiedad.id_areas_privativas}`)}
+                      className="flex-1 bg-primary-dark text-white text-center py-2.5 px-3 rounded-lg text-sm font-medium hover:bg-primary-light hover:text-primary-dark transition-colors duration-200"
                     >
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate font-semibold text-fg">
-                          <span className="mr-1.5 text-caption text-fg-3">{fap ? "FAP" : "AP"}</span>
-                          {p.nombre}
-                        </span>
-                        <span className="block truncate text-caption text-fg-3">
-                          {[num(p.m2_totales) > 0 && `${m2.format(num(p.m2_totales))} m²`, detalle(p)].filter(Boolean).join(" · ")}
-                        </span>
-                      </span>
-                      <span className="shrink-0 text-right">
-                        {num(p.saldo_vencido) > 0 ? (
-                          <>
-                            <span className="block font-semibold text-overdue tabular-nums">{formatCurrency(num(p.saldo_vencido))}</span>
-                            <span className="block text-caption text-fg-3">vencido</span>
-                          </>
-                        ) : (
-                          <span className="text-caption font-medium text-success">Al corriente</span>
-                        )}
-                      </span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-fg-4" aria-hidden />
+                      Ver Detalle
                     </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        )}
-      </section>
+                    <Link
+                      href={msPath(`/propiedades/${propiedad.id_areas_privativas}/estado-cuenta`)}
+                      className="flex-1 bg-gray-100 text-gray-700 text-center py-2.5 px-3 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors duration-200"
+                    >
+                      Estado de Cuenta
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* Vista de tabla */
+          <PropiedadesTable
+            propiedades={filteredData}
+            formatCurrency={formatCurrency}
+            formatM2={formatM2}
+            getStatusBadge={getStatusBadge}
+            getFinancialStatusBadge={getFinancialStatusBadge}
+          />
+        )
+      ) : searchTerm ? (
+        /* Sin resultados de búsqueda */
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No se encontraron propiedades</h3>
+          <p className="text-gray-600 mb-6">
+            {searchTerm
+              ? `No hay propiedades activas que coincidan con "${searchTerm}"`
+              : "No se encontraron propiedades activas"}
+          </p>
+          <button
+            onClick={clearAllFilters}
+            className="bg-primary-dark text-white px-6 py-2 rounded-lg hover:bg-primary-light hover:text-primary-dark transition-colors duration-200"
+          >
+            Limpiar búsqueda
+          </button>
+        </div>
+      ) : (
+        /* Estado vacío - sin propiedades */
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Building2 className="w-8 h-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No tienes propiedades asignadas</h3>
+          <p className="text-gray-600 mb-6">Contacta al administrador si crees que esto es un error.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-primary-dark text-white px-6 py-2 rounded-lg hover:bg-primary-light hover:text-primary-dark transition-colors duration-200"
+          >
+            Actualizar
+          </button>
+        </div>
+      )}
     </div>
   );
-}
-
-function Th({ children, align = "left", className = "" }: { children?: React.ReactNode; align?: "left" | "right"; className?: string }) {
-  return (
-    <th
-      scope="col"
-      className={`sticky top-[52px] z-10 lg:top-[49px] border-b border-stroke-3 bg-surface py-2 font-semibold first:pr-3 not-first:px-3 ${align === "right" ? "text-right" : ""} ${className}`}
-    >
-      {children}
-    </th>
-  );
-}
-
-function Td({ children }: { children: React.ReactNode }) {
-  return <td className="px-3 py-2.5 text-right whitespace-nowrap tabular-nums">{children}</td>;
-}
-
-function Vacio() {
-  return <span className="text-fg-4">—</span>;
 }

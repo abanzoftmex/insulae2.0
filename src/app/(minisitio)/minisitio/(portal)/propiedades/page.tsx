@@ -4,25 +4,18 @@ import { listProperties } from "@/modules/minisitio/infrastructure/queries/prope
 import { getProjectInfo } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { PropiedadesView } from "./propiedades-view";
 
-export const metadata: Metadata = { title: "Mis propiedades" };
+export const metadata: Metadata = { title: "Mis Propiedades" };
 
-/**
- * Mis propiedades (`/minisitio/propiedades`). Quien no tiene propiedades ve el estado vacío (antes
- * se le redirigía desde el navegador). Si la consulta falla, la vista lo dice y ofrece reintentar.
- */
 export default async function PropiedadesPage() {
   const session = await requireCondominoSession();
   const [propiedades, proyecto] = await Promise.all([
-    listProperties(session).catch((error) => {
-      console.error("[minisitio] Mis propiedades:", error);
-      return null;
-    }),
-    // Sin el proyecto solo se pierde el total de m² de la explicación del indiviso y del PDF.
+    listProperties(session),
+    // El legacy toleraba que /api/proyecto fallara (seguía con el total de m² por defecto).
     getProjectInfo().catch((error) => {
-      console.error("[minisitio] Mis propiedades: proyecto:", error);
+      console.error("[minisitio] propiedades: getProjectInfo", error);
       return null;
     }),
   ]);
 
-  return <PropiedadesView data={propiedades} proyecto={proyecto} />;
+  return <PropiedadesView initialData={propiedades} proyecto={proyecto} />;
 }

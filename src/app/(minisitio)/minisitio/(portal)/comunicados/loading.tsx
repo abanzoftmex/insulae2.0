@@ -1,6 +1,13 @@
-import { PageSkeleton } from "@/components/minisitio/page-skeleton";
+import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
 
-/** Carga de Avisos: esqueleto del portal (aparece a los 400 ms). */
+/** Mismo estado de carga que tenía pages/comunicados.js mientras llegaban los datos. */
 export default function ComunicadosLoading() {
-  return <PageSkeleton label="Cargando avisos…" />;
+  return (
+    <div className="min-h-screen bg-canvas flex items-center justify-center">
+      <div className="text-center">
+        <LoadingSpinner size="lg" />
+        <p className="mt-4 text-gray-600">Cargando comunicados...</p>
+      </div>
+    </div>
+  );
 }

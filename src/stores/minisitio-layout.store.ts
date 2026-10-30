@@ -7,9 +7,6 @@
  * página solo llama a `setPageData` cuando su título depende de datos (p. ej. el nombre de
  * la propiedad). El override queda ligado a la ruta en la que se fijó, así que nunca se
  * "arrastra" a la siguiente pantalla.
- *
- * `secondaryOpen`: hay una vista secundaria abierta (SecondaryView); en escritorio el shell le
- * hace lugar al panel de contenido, como el panel de hilo de Slack.
  */
 import { create } from "zustand";
 
@@ -30,8 +27,6 @@ interface MinisitioLayoutState {
   setPageTitle: (title: string) => void;
   setBreadcrumbs: (breadcrumbs: Breadcrumb[]) => void;
   resetLayout: () => void;
-  secondaryOpen: boolean;
-  setSecondaryOpen: (open: boolean) => void;
 }
 
 function currentPathname(): string {
@@ -53,6 +48,4 @@ export const useMinisitioLayoutStore = create<MinisitioLayoutState>((set, get) =
     set({ override: { pathname, title: prev?.pathname === pathname ? prev.title : "", breadcrumbs } });
   },
   resetLayout: () => set({ override: null }),
-  secondaryOpen: false,
-  setSecondaryOpen: (open) => set((s) => (s.secondaryOpen === open ? s : { secondaryOpen: open })),
 }));

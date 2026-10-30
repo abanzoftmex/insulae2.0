@@ -1,11 +1,12 @@
 "use server";
 
 /**
- * Acciones de la cuenta del condómino: perfil, envío del estado de cuenta por correo e imágenes
- * para los PDF.
+ * Acciones de la cuenta del condómino: perfil, notificaciones paginadas, envío del estado
+ * de cuenta por correo e imágenes para los PDF.
  */
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
 import { getProfile, updateRequiresInvoice } from "@/modules/minisitio/infrastructure/queries/profile.queries";
+import { listNotificaciones } from "@/modules/minisitio/infrastructure/queries/communications.queries";
 import { getPrivacyNotice } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { getActiveProject } from "@/modules/minisitio/infrastructure/condominium";
 import { MINISITIO_STATEMENT_MAIL_FROM, sendMinisitioEmail } from "@/modules/minisitio/infrastructure/mailer";
@@ -31,6 +32,24 @@ export async function updateRequiresInvoiceAction(requiereFactura: boolean): Pro
     console.error("[minisitio] updateRequiresInvoiceAction:", error);
     return { success: false, message: "Error al actualizar el perfil" };
   }
+}
+
+/**
+ * La constancia fiscal la administra el personal en insulae2.0 (directorio); el minisitio
+ * independiente también respondía 501 aquí.
+ */
+export async function uploadConstanciaFiscalAction(formData?: FormData): Promise<ActionResult> {
+  await requireCondominoSession();
+  void formData; // se recibe por compatibilidad con la pantalla; aún no se procesa
+  return {
+    success: false,
+    message: "La actualización de la constancia fiscal se realiza por el administrador en insulae2.0.",
+  };
+}
+
+export async function listNotificacionesAction(input: { limit?: number; offset?: number } = {}) {
+  const session = await requireCondominoSession();
+  return listNotificaciones(session, input);
 }
 
 /** Hosts de la 1.0 de donde aún pueden venir logos (nombres de archivo legacy). */

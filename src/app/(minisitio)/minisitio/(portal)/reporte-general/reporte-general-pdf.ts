@@ -77,8 +77,8 @@ export async function buildReporteGeneralPdf(filteredAreas: AreaReporte[]) {
   const headers = [
     "Tipo",
     "Identificación",
-    "Estado",
-    "Pendiente",
+    "Status",
+    "Anual",
     ...meses.map((m) => m.substring(0, 3)), // Abreviar nombres de meses
   ];
 
@@ -115,13 +115,13 @@ export async function buildReporteGeneralPdf(filteredAreas: AreaReporte[]) {
     columnStyles: {
       0: { cellWidth: 20, halign: "left", fontStyle: "bold" }, // Tipo
       1: { cellWidth: 38, halign: "left" }, // Identificación
-      2: { cellWidth: 18, halign: "center" }, // Estado
+      2: { cellWidth: 18, halign: "center" }, // Status
       3: {
         cellWidth: 24,
         halign: "right",
         fontStyle: "bold",
-        textColor: [185, 28, 28], // red-700 para el saldo pendiente
-      }, // Pendiente (todos los años)
+        textColor: [185, 28, 28], // red-700 para el total anual
+      }, // Anual
       // Meses (12 columnas) - con ancho uniforme
       4: { cellWidth: 14, halign: "right", fontSize: 6.5 },
       5: { cellWidth: 14, halign: "right", fontSize: 6.5 },

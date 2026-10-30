@@ -35,6 +35,16 @@ export interface Financials {
   expense: { groups: FinancialGroup[]; concepts: FinancialConcept[] };
 }
 
+/**
+ * Nombre de un grupo de presupuesto. La migración dejó el nombre real en `category` ("Gastos de
+ * seguridad") y en `name` el tipo de presupuesto, igual en casi todos ("Presupuesto ordinario"): se
+ * mostraban cuatro grupos con el mismo nombre. "OTHER" es el valor por omisión de `category`.
+ */
+function grupoNombre(grupo: { name: string; category: string | null } | null | undefined): string {
+  if (!grupo) return "";
+  return grupo.category && grupo.category !== "OTHER" ? grupo.category : grupo.name;
+}
+
 function ensureGroup(map: Map<string, FinancialGroup>, id: string, nombre: string): FinancialGroup {
   let g = map.get(id);
   if (!g) {
@@ -118,10 +128,7 @@ const loadFinancials = cache(async (condominiumId: string, yearsKey: string): Pr
   for (const e of expenses) {
     const grupo = e.budgetConcept?.group;
     const gid = grupo?.id || "sin-grupo";
-    // La migración dejó el nombre del grupo en `category` ("Gastos de seguridad") y en `name` el
-    // tipo de presupuesto, igual en casi todos ("Presupuesto ordinario"): se mostraban cuatro
-    // grupos con el mismo nombre. "OTHER" es el valor por omisión de `category`.
-    const gname = grupo ? (grupo.category && grupo.category !== "OTHER" ? grupo.category : grupo.name) : "Sin grupo";
+    const gname = grupo ? grupoNombre(grupo) : "Sin grupo";
     const [year, month, amount] = [e.date.getFullYear(), e.date.getMonth() + 1, num(e.amount)];
     const g = ensureGroup(expGroups, gid, gname);
     if (grupo) {
@@ -316,6 +323,86 @@ export async function getEstadoResultadoEgresosGrupos(session: CondominoTokenPay
   const fin = await getFinancials(session, [anio]);
   return { success: true as const, anio, egresos: mapEgresosGrupos(fin, anio) };
 }
+
+/** Opciones (conceptos presupuestales) por grupo de egreso: sin equivalente en insulae2.0 (vacío válido). */
+export function getEstadoResultadoEgresosOpciones() {
+  return { success: true as const, opciones: [] as unknown[] };
+}
+
+/** Conceptos por opción de egreso: sin equivalente en insulae2.0 (vacío válido). */
+export function getEstadoResultadoEgresosConceptos(opcionIdInput: string | null, anio: number) {
+  const opcionId = opcionIdInput || null;
+  return {
+    success: true as const,
+    opcionId,
+    anio,
+    opcion: opcionId ? { id_cat_grupos_presupuesto: opcionId, nombre: "", id_cat_grupos_cobro: null } : null,
+    conceptos: [] as unknown[],
+    totalConceptos: 0,
+    totalGeneral: 0,
+  };
+}
+
+/** Conceptos de egreso de un grupo presupuestal, por mes (drill-down del estado de resultados). */
+export async function getExpenseConcepts(session: CondominoTokenPayload, groupId: string, anio: number) {
+  const start = new Date(anio, 0, 1);
+  const end = new Date(anio + 1, 0, 1);
+
+  const expenses = await prisma.expense.findMany({
+    where: {
+      condominiumId: session.condominiumId,
+      isActive: true,
+      date: { gte: start, lt: end },
+      ...(groupId ? { budgetConcept: { group: { id: groupId } } } : {}),
+    },
+    select: {
+      date: true,
+      amount: true,
+      budgetConcept: { select: { id: true, name: true, group: { select: { id: true, name: true, category: true } } } },
+    },
+  });
+
+  const byConcept = new Map<string, { id: string; nombre: string; categoria: string; meses: MonthMap; totalAnual: number }>();
+  for (const e of expenses) {
+    const cid = e.budgetConcept?.id || "sin-concepto";
+    if (!byConcept.has(cid)) {
+      const meses: MonthMap = {};
+      for (let m = 1; m <= 12; m++) meses[m] = 0;
+      byConcept.set(cid, {
+        id: cid,
+        nombre: e.budgetConcept?.name || "Sin concepto",
+        // Mismo nombre de grupo que en la tabla: `category` ("Gastos de seguridad"), no el tipo de presupuesto.
+        categoria: grupoNombre(e.budgetConcept?.group) || "General",
+        meses,
+        totalAnual: 0,
+      });
+    }
+    const c = byConcept.get(cid)!;
+    const month = e.date.getMonth() + 1;
+    const amount = num(e.amount);
+    c.meses[month] = round2(c.meses[month] + amount);
+    c.totalAnual = round2(c.totalAnual + amount);
+  }
+
+  const conceptos = [...byConcept.values()];
+  const opcion = conceptos.length
+    ? { id_cat_grupos_presupuesto: groupId, nombre: conceptos[0].categoria, id_cat_grupos_cobro: null }
+    : groupId
+      ? { id_cat_grupos_presupuesto: groupId, nombre: "", id_cat_grupos_cobro: null }
+      : null;
+
+  return {
+    success: true as const,
+    opcionId: groupId || null,
+    anio,
+    opcion,
+    conceptos,
+    totalConceptos: conceptos.length,
+    totalGeneral: round2(conceptos.reduce((a, c) => a + c.totalAnual, 0)),
+  };
+}
+
+export type ExpenseConcepts = Awaited<ReturnType<typeof getExpenseConcepts>>;
 
 // ---- Resumen financiero ----
 

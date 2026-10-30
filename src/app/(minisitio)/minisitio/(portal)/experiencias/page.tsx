@@ -21,7 +21,11 @@ export default async function ExperienciasPage() {
   ]);
 
   return (
-    // Si la consulta falla, la vista lo dice y ofrece reintentar (antes mostraba "contenido de ejemplo").
-    <ExperienciasView destacados={destacados?.comunicados ?? null} linkGaceta={meta.linkGaceta} />
+    <ExperienciasView
+      destacados={destacados?.comunicados ?? []}
+      linkGaceta={meta.linkGaceta}
+      // Mismo mensaje que mostraba el minisitio cuando fallaba la carga.
+      error={destacados ? null : "Error al cargar los comunicados. Mostrando contenido de ejemplo."}
+    />
   );
 }

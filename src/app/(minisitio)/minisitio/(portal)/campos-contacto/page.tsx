@@ -1,23 +1,22 @@
 import type { Metadata } from "next";
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
-import { listContactFields } from "@/modules/minisitio/infrastructure/queries/documents.queries";
-import { toContacto } from "../_lib/contactos";
+import { listContactFields, type CampoContacto } from "@/modules/minisitio/infrastructure/queries/documents.queries";
 import { CamposContactoView } from "./campos-contacto-view";
 
-export const metadata: Metadata = { title: "Teléfonos de emergencia" };
+export const metadata: Metadata = { title: "Números de Emergencia" };
 
-/**
- * Teléfonos de emergencia y contacto (`/minisitio/campos-contacto`). Si la consulta falla, la
- * pantalla lo dice: es justo la que no puede quedarse vacía sin avisar.
- */
+/** Información de contacto / números de emergencia (antes pages/campos-contacto.js). */
 export default async function CamposContactoPage() {
   const session = await requireCondominoSession();
-  const contactos = await listContactFields(session)
-    .then((data) => data.campos.map(toContacto))
-    .catch((error) => {
-      console.error("[minisitio] Teléfonos de emergencia:", error);
-      return null;
-    });
 
-  return <CamposContactoView contactos={contactos} />;
+  // Si falla, la pantalla vieja mostraba la lista vacía.
+  let campos: CampoContacto[] = [];
+  try {
+    const data = await listContactFields(session);
+    if (data.success) campos = data.campos || [];
+  } catch (error) {
+    console.error("[minisitio] campos-contacto:", error);
+  }
+
+  return <CamposContactoView campos={campos} />;
 }

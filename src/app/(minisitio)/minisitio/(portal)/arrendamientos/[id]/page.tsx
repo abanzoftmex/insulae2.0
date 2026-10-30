@@ -3,7 +3,7 @@ import { requireCondominoSession } from "@/shared/application/auth/condomino-ses
 import { getRental } from "@/modules/minisitio/infrastructure/queries/rentals.queries";
 import { ArrendamientoDetalleView } from "./arrendamiento-detalle-view";
 
-export const metadata: Metadata = { title: "Comercio" };
+export const metadata: Metadata = { title: "Detalle de Comercio" };
 
 export default async function ArrendamientoDetallePage({ params }: { params: Promise<{ id: string }> }) {
   const session = await requireCondominoSession();

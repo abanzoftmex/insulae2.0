@@ -1,39 +1,45 @@
 "use client";
 
-/**
- * Solicitudes (`/minisitio/tickets`) como hilos de Slack: la lista (abiertas o cerradas) y cada
- * solicitud se abre en la vista secundaria con la conversación completa —tu solicitud, la
- * respuesta de la administración y tu respuesta— y el compositor abajo.
- *
- * Se pinta con los datos del servidor: tras crear o responder, router.refresh() trae la lista
- * nueva y el conteo de la barra lateral. El modelo guarda una sola respuesta del condómino; una
- * nueva reemplaza la anterior, y el compositor lo dice.
- */
-import { useEffect, useId, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Plus, Send } from "lucide-react";
-import { replyTicketAction } from "@/app/(minisitio)/minisitio/_actions/tickets";
+import { useRef, useState } from "react";
+import {
+  Ticket as TicketIcon,
+  Plus,
+  AlertCircle,
+  CheckCircle,
+  Send,
+  MessageSquare,
+  FileText,
+  Image as ImageIcon,
+  Download,
+  Calendar,
+  Building2,
+  ChevronDown,
+  MapPin,
+  CornerDownRight,
+} from "lucide-react";
+import { createTicketAction, listTicketsAction, replyTicketAction } from "@/app/(minisitio)/minisitio/_actions/tickets";
 import type { Ticket, TicketDepartment } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
 import { msPath } from "@/components/minisitio/paths";
-import { useMinisitioSession } from "@/components/minisitio/session-provider";
-import { Avatar, userDisplayName } from "@/components/minisitio/shell/account-menu";
-import { SecondaryView } from "@/components/minisitio/shell/secondary-view";
-import { buttonClass } from "@/components/minisitio/ui/button";
-import { ImageViewer, type ViewerImage } from "@/components/minisitio/ui/image-viewer";
-import { LoadError } from "@/components/minisitio/ui/load-error";
-import { UnderlineTabs } from "@/components/minisitio/ui/tabs";
-import { toast } from "@/stores/minisitio-toast.store";
-import type { MinisitioUser } from "@/modules/minisitio/domain/types";
-import { AdminAvatar, AvisoImagen, AvisoPdf } from "../_avisos/aviso-parts";
-import { NuevaSolicitud } from "../_components/nueva-solicitud";
-import { useDisplayTimeZone } from "../_lib/client-dates";
-import { formatShortDate } from "../_lib/format";
 
 type TabKey = "open" | "closed";
 
-const estaAbierta = (t: Ticket) => t.id_cat_status_tickets === 1;
+/**
+ * Ticket tal como lo pinta la pantalla. `pdf_solicitud` / `imagen_solicitud` (adjuntos de la
+ * solicitud) los leía la pantalla vieja pero la consulta no los devuelve hoy (tampoco la API
+ * anterior): el bloque "Documentos" solo aparece si algún día llegan.
+ */
+type TicketItem = Ticket & {
+  pdf_solicitud?: string | null;
+  imagen_solicitud?: string | null;
+};
 
-/** Quita la línea con la URL cruda del PDF que traen descripciones antiguas. */
+interface TicketsListResult {
+  success: boolean;
+  tickets?: TicketItem[];
+  message?: string;
+}
+
+// Quita la línea con la URL cruda del PDF de descripciones antiguas
 function cleanDescripcion(text: string | null | undefined) {
   if (!text) return "";
   return text
@@ -43,314 +49,697 @@ function cleanDescripcion(text: string | null | undefined) {
     .trim();
 }
 
-/** Lo último que se dijo en el hilo, para la fila de la lista. */
-function vistaPrevia(t: Ticket): string {
-  if (t.respuesta_usuario) return `Tú: ${t.respuesta_usuario}`;
-  if (t.respuesta) return `Administración: ${t.respuesta}`;
-  return cleanDescripcion(t.descripcion);
+// Descarga un archivo con el nombre indicado: la ruta del servidor redirige a R2 forzando
+// Content-Disposition: attachment.
+function descargarArchivo(url: string, filename?: string) {
+  const name = filename || "documento.pdf";
+  const proxied = `${msPath("/archivos/descarga")}?url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}`;
+  const a = document.createElement("a");
+  a.href = proxied;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+// Fecha del ticket. Se fija la zona horaria del condominio para que el HTML del servidor y
+// el del navegador coincidan (la pantalla vieja solo se pintaba en el navegador).
+function formatTicketDate(value: string | null) {
+  if (!value) return "Fecha N/D";
+  try {
+    const d = new Date(value);
+    return isNaN(d.getTime())
+      ? "Fecha N/D"
+      : d.toLocaleDateString("es-ES", {
+          day: "2-digit",
+          month: "short",
+          year: "numeric",
+          timeZone: "America/Mexico_City",
+        });
+  } catch {
+    return "Fecha N/D";
+  }
 }
 
 export function TicketsView({
-  tickets,
+  initialAllTickets,
+  initialTickets,
   departments,
-  initialCreateOpen = false,
-  initialAsunto,
+  initialError = "",
 }: {
-  /** `null` si no se pudo cargar. */
-  tickets: Ticket[] | null;
+  initialAllTickets: TicketItem[];
+  initialTickets: TicketItem[];
   departments: TicketDepartment[];
-  /** Abrir el formulario de alta al entrar (`/tickets?nueva=1`). */
-  initialCreateOpen?: boolean;
-  /** Asunto con el que abre el formulario (`&asunto=…`). */
-  initialAsunto?: string;
+  initialError?: string;
 }) {
-  const router = useRouter();
-  const { user } = useMinisitioSession();
-  const timeZone = useDisplayTimeZone();
-  const [tab, setTab] = useState<TabKey>("open");
-  const [creating, setCreating] = useState(initialCreateOpen);
-  // El id se conserva al cerrar para que el panel no se vacíe mientras sale.
-  const [panel, setPanel] = useState<{ id: string | null; open: boolean }>({ id: null, open: false });
-  const [imagen, setImagen] = useState<ViewerImage | null>(null);
+  // State management
+  const [activeTab, setActiveTab] = useState<TabKey>("open");
+  const [tickets, setTickets] = useState<TicketItem[]>(initialTickets);
+  const [allTickets, setAllTickets] = useState<TicketItem[]>(initialAllTickets); // Store all tickets for counts
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [expandedTickets, setExpandedTickets] = useState<Record<string, boolean>>({}); // Tarjeta expandida/colapsada
+  const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({}); // Formulario de respuesta visible
+  const [ticketReplies, setTicketReplies] = useState<Record<string, string>>({}); // Track replies for each ticket
+  const [submittingReply, setSubmittingReply] = useState<Record<string, boolean>>({}); // Track submission state
+  // Solo la respuesta de la última pestaña pedida actualiza la lista.
+  const lastTicketsRequest = useRef(0);
 
-  // `?nueva=1` solo abre el formulario al entrar: se quita de la URL para que recargar no lo reabra.
-  useEffect(() => {
-    if (initialCreateOpen) window.history.replaceState(null, "", msPath("/tickets"));
-  }, [initialCreateOpen]);
+  // Form state
+  const [formData, setFormData] = useState({
+    id_tickets_departamentos: "",
+    nombre: "",
+    descripcion: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState(initialError);
 
-  const lista = tickets ?? [];
-  const abiertas = lista.filter(estaAbierta);
-  const cerradas = lista.filter((t) => !estaAbierta(t));
-  const visibles = tab === "open" ? abiertas : cerradas;
-  const abierto = lista.find((t) => t.id_tickets === panel.id) ?? null;
+  const loadTickets = async (tab: TabKey, reloadAll: boolean) => {
+    const requestId = ++lastTicketsRequest.current;
+    try {
+      // First, load ALL tickets for counts (if not already loaded, or after creating one)
+      if (reloadAll) {
+        const allTicketsData: TicketsListResult = await listTicketsAction();
+        if (allTicketsData.success) {
+          setAllTickets(allTicketsData.tickets || []);
+        }
+      }
 
-  const abrir = (id: string) => setPanel({ id, open: true });
+      // Then load filtered tickets for current tab
+      const data: TicketsListResult = await listTicketsAction(tab);
+      if (requestId !== lastTicketsRequest.current) return;
+
+      if (data.success) {
+        setTickets(data.tickets || []);
+      } else {
+        setError(data.message || "Error al cargar los tickets");
+      }
+    } catch (error) {
+      console.error("Error loading tickets:", error);
+      setError("Error de conexión al cargar los tickets");
+    }
+  };
+
+  // Antes la recarga colgaba de un useEffect sobre activeTab: solo corre si la pestaña cambia.
+  const handleTabChange = (tab: TabKey) => {
+    if (tab === activeTab) return;
+    setActiveTab(tab);
+    loadTickets(tab, allTickets.length === 0);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const data = await createTicketAction({
+        ...formData,
+      });
+
+      if (data.success) {
+        setMessage(
+          "Solicitud creada exitosamente. Se ha enviado una notificación al departamento correspondiente."
+        );
+        setFormData({
+          id_tickets_departamentos: "",
+          nombre: "",
+          descripcion: "",
+        });
+        setShowCreateForm(false);
+
+        // Recargar todos los tickets (contadores) y los de la pestaña actual
+        loadTickets(activeTab, true);
+
+        // Clear message after 5 seconds
+        setTimeout(() => setMessage(""), 5000);
+      } else {
+        setError(data.message || "Error al crear la solicitud");
+      }
+    } catch {
+      setError("Error de conexión. Intenta nuevamente.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleTicketExpand = (ticketId: string) => {
+    setExpandedTickets((prev) => ({
+      ...prev,
+      [ticketId]: !prev[ticketId],
+    }));
+  };
+
+  const formatReplyDate = (dateString: string | null) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      // Validar que sea una fecha válida
+      if (isNaN(date.getTime())) {
+        return "";
+      }
+      return date.toLocaleString("es-ES");
+    } catch {
+      return "";
+    }
+  };
+
+  const handleSubmitReply = async (ticketId: string) => {
+    const replyText = ticketReplies[ticketId];
+
+    if (!replyText || !replyText.trim()) {
+      alert("Por favor escribe una respuesta");
+      return;
+    }
+
+    setSubmittingReply((prev) => ({
+      ...prev,
+      [ticketId]: true,
+    }));
+
+    try {
+      const data = await replyTicketAction(ticketId, replyText);
+
+      if (data.success) {
+        // Obtener la fecha actual
+        const now = new Date().toISOString();
+
+        // Actualizar el ticket con la nueva respuesta
+        setTickets((prevTickets) =>
+          prevTickets.map((t) =>
+            t.id_tickets === ticketId
+              ? {
+                  ...t,
+                  respuesta_usuario: replyText,
+                  fecha_respuesta_usuario: now,
+                }
+              : t
+          )
+        );
+
+        // Limpiar el campo de respuesta
+        setTicketReplies((prev) => ({
+          ...prev,
+          [ticketId]: "",
+        }));
+
+        alert("Respuesta enviada exitosamente");
+      } else {
+        alert(data.message || "Error al enviar la respuesta");
+      }
+    } catch (error) {
+      console.error("Error sending reply:", error);
+      alert("Error de conexión. Intenta nuevamente.");
+    } finally {
+      setSubmittingReply((prev) => ({
+        ...prev,
+        [ticketId]: false,
+      }));
+    }
+  };
+
+  const handleReplyChange = (ticketId: string, value: string) => {
+    setTicketReplies((prev) => ({
+      ...prev,
+      [ticketId]: value,
+    }));
+  };
+
+  const toggleReply = (ticketId: string) => {
+    setReplyOpen((prev) => ({
+      ...prev,
+      [ticketId]: !prev[ticketId],
+    }));
+  };
+
+  const getStatusColor = (statusId: number) => {
+    return statusId === 1
+      ? "bg-yellow-100 text-yellow-800"
+      : "bg-green-100 text-green-800";
+  };
+
+  const getStatusIcon = (statusId: number) => {
+    return statusId === 1 ? (
+      <AlertCircle className="w-4 h-4" />
+    ) : (
+      <CheckCircle className="w-4 h-4" />
+    );
+  };
 
   return (
-    <div className="mx-auto w-full max-w-[880px]">
-      <div className="mb-1 flex items-center justify-between gap-3 border-b border-stroke-3">
-        <UnderlineTabs
-          label="Mostrar solicitudes"
-          value={tab}
-          onChange={setTab}
-          layoutId="solicitudes-tab"
-          options={[
-            { id: "open", label: "Abiertas", count: abiertas.length },
-            { id: "closed", label: "Cerradas", count: cerradas.length },
-          ]}
-        />
-        <button type="button" onClick={() => setCreating(true)} className={buttonClass("primary", "sm", "mb-1.5")}>
-          <Plus className="h-4 w-4" aria-hidden />
-          Nueva solicitud
-        </button>
+    <div className="min-h-screen bg-canvas p-6">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-[#cba258] to-[#cba258] rounded-xl flex items-center justify-center shadow-lg">
+              <TicketIcon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Solicitudes y reportes
+              </h1>
+              <p className="text-gray-600">
+                Gestiona tus solicitudes de soporte y seguimiento de incidencias
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white px-6 py-3 rounded-lg font-medium flex items-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Nueva Solicitud</span>
+          </button>
+        </div>
       </div>
 
-      <div role="tabpanel" aria-label={tab === "open" ? "Solicitudes abiertas" : "Solicitudes cerradas"}>
-        {tickets === null ? (
-          <div className="pt-4">
-            <LoadError what="tus solicitudes" />
-          </div>
-        ) : visibles.length === 0 ? (
-          <div className="py-12 text-center">
-            <p className="text-body text-fg-2">{tab === "open" ? "No tienes solicitudes abiertas." : "Todavía no tienes solicitudes cerradas."}</p>
-            {tab === "open" && (
-              <button type="button" onClick={() => setCreating(true)} className={buttonClass("outline", "sm", "mt-3")}>
-                <Plus className="h-3.5 w-3.5" aria-hidden />
-                Nueva solicitud
+      {/* Messages */}
+      {message && (
+        <div className="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+          <CheckCircle className="w-5 h-5 text-green-500" />
+          <span>{message}</span>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center space-x-2">
+          <AlertCircle className="w-5 h-5 text-red-500" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className="mb-6">
+        <div className="bg-white rounded-lg p-1 shadow-sm border border-gray-200 inline-flex">
+          <button
+            onClick={() => handleTabChange("open")}
+            className={`px-6 py-3 rounded-md font-medium transition-all duration-200 ${
+              activeTab === "open"
+                ? "bg-gradient-to-r from-[#cba258] to-[#cba258] text-white shadow-md"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Solicitudes Abiertas (
+            {allTickets.filter((t) => t.id_cat_status_tickets === 1).length})
+          </button>
+          <button
+            onClick={() => handleTabChange("closed")}
+            className={`px-6 py-3 rounded-md font-medium transition-all duration-200 ${
+              activeTab === "closed"
+                ? "bg-gradient-to-r from-[#cba258] to-[#cba258] text-white shadow-md"
+                : "text-gray-600 hover:text-gray-900"
+            }`}
+          >
+            Solicitudes Cerradas (
+            {allTickets.filter((t) => t.id_cat_status_tickets === 2).length})
+          </button>
+        </div>
+      </div>
+
+      {/* Tickets List */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+        {tickets.length === 0 ? (
+          <div className="p-12 text-center">
+            <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay solicitudes{" "}
+              {activeTab === "open" ? "abiertas" : "cerradas"}
+            </h3>
+            <p className="text-gray-600 mb-6">
+              {activeTab === "open"
+                ? "Todas tus solicitudes han sido resueltas. ¡Excelente!"
+                : "No tienes solicitudes cerradas aún."}
+            </p>
+            {activeTab === "open" && (
+              <button
+                onClick={() => setShowCreateForm(true)}
+                className="bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Crear Primera Solicitud</span>
               </button>
             )}
           </div>
         ) : (
-          <ul className="-mx-4 divide-y divide-stroke-3 sm:-mx-6">
-            {visibles.map((t) => {
-              const activa = panel.open && panel.id === t.id_tickets;
-              const respondida = Boolean(t.respuesta);
+          <div className="divide-y divide-gray-100">
+            {tickets.map((ticket) => {
+              const pdfSolicitud = ticket.pdf_solicitud;
+              const isSolicitud = !!pdfSolicitud;
+              const isOpen = !!expandedTickets[ticket.id_tickets];
               return (
-                <li key={t.id_tickets}>
+                <div key={ticket.id_tickets}>
+                  {/* Cabecera (clic para expandir) */}
                   <button
                     type="button"
-                    onClick={() => abrir(t.id_tickets)}
-                    aria-current={activa ? "true" : undefined}
-                    className={`block w-full px-4 py-3 text-left outline-none focus-visible:bg-surface-2 sm:px-6 ${activa ? "bg-highlight" : "hover:bg-surface-2"}`}
+                    onClick={() => toggleTicketExpand(ticket.id_tickets)}
+                    aria-expanded={isOpen}
+                    className="w-full text-left px-4 sm:px-6 py-4 flex items-center gap-4 hover:bg-gray-50 transition-colors"
                   >
-                    <span className="flex items-baseline gap-3">
-                      <span className="min-w-0 flex-1 truncate text-message font-semibold text-fg">{t.nombre}</span>
-                      <time dateTime={t.fecha ?? undefined} className="shrink-0 text-caption text-fg-3" suppressHydrationWarning>
-                        {formatShortDate(t.fecha, timeZone)}
-                      </time>
-                    </span>
-                    <span className="mt-0.5 flex items-baseline gap-1.5 text-body text-fg-3">
-                      <span className="shrink-0">{t.departamento || "Administración"}</span>
-                      <span aria-hidden>·</span>
-                      <span className="min-w-0 flex-1 truncate">{vistaPrevia(t)}</span>
-                      {estaAbierta(t) && (
-                        <span className={`shrink-0 text-caption ${respondida ? "font-semibold text-brand" : "text-fg-3"}`}>
-                          {respondida ? "Respondida" : "Sin respuesta"}
-                        </span>
+                    <div
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                        isSolicitud
+                          ? "bg-[#006241]/10 text-[#006241]"
+                          : "bg-[#cba258]/15 text-[#a8853f]"
+                      }`}
+                    >
+                      {isSolicitud ? (
+                        <FileText className="w-5 h-5" />
+                      ) : (
+                        <MessageSquare className="w-5 h-5" />
                       )}
-                    </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm sm:text-[15px] font-semibold text-gray-900 truncate">
+                          {ticket.nombre}
+                        </h3>
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium flex-shrink-0 ${getStatusColor(
+                            ticket.id_cat_status_tickets
+                          )}`}
+                        >
+                          {getStatusIcon(ticket.id_cat_status_tickets)}
+                          {ticket.status_texto}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-x-3 gap-y-1 text-xs text-gray-500 flex-wrap">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="w-3.5 h-3.5" />
+                          {formatTicketDate(ticket.fecha)}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Building2 className="w-3.5 h-3.5" />
+                          {ticket.departamento || "Sin departamento"}
+                        </span>
+                        {ticket.respuesta && (
+                          <span className="inline-flex items-center gap-1 text-blue-600 font-medium">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Respondido
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`w-5 h-5 text-gray-400 flex-shrink-0 transition-transform duration-200 ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                    />
                   </button>
-                </li>
+
+                  {/* Detalle (expandido) */}
+                  {isOpen && (
+                    <div className="px-4 sm:px-6 pb-5 space-y-4">
+                      {cleanDescripcion(ticket.descripcion) && (
+                        <div className="rounded-xl bg-gray-50 border border-gray-100 p-3.5">
+                          <p className="text-sm text-gray-700 whitespace-pre-line leading-relaxed">
+                            {cleanDescripcion(ticket.descripcion)}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Documentos de la solicitud */}
+                      {pdfSolicitud && (
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">
+                            Documentos
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <a
+                              href={pdfSolicitud}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-2 px-3 py-2 bg-[#006241] hover:bg-[#00754A] text-white rounded-lg text-sm font-medium transition-colors"
+                            >
+                              <FileText className="w-4 h-4" />
+                              Ver PDF
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                descargarArchivo(pdfSolicitud, `${ticket.nombre || "solicitud"}.pdf`)
+                              }
+                              className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                            >
+                              <Download className="w-4 h-4" />
+                              Descargar
+                            </button>
+                            {ticket.imagen_solicitud && (
+                              <a
+                                href={ticket.imagen_solicitud}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                              >
+                                <MapPin className="w-4 h-4" />
+                                Ubicación
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Respuesta de Insulae */}
+                      {ticket.respuesta && (
+                        <div className="rounded-xl bg-blue-50 border border-blue-100 p-4">
+                          <h4 className="text-sm font-semibold text-blue-900 mb-1.5 flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4" />
+                            Respuesta de Insulae
+                          </h4>
+                          <p className="text-sm text-blue-800 whitespace-pre-wrap">
+                            {ticket.respuesta}
+                          </p>
+                          {(ticket.pdf_respuesta || ticket.imagen_respuesta) && (
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {ticket.pdf_respuesta && (
+                                <a
+                                  href={ticket.pdf_respuesta}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                  <FileText className="w-4 h-4" />
+                                  Ver PDF
+                                </a>
+                              )}
+                              {ticket.imagen_respuesta && (
+                                <a
+                                  href={ticket.imagen_respuesta}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-blue-200 hover:bg-blue-50 text-blue-700 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                  <ImageIcon className="w-4 h-4" />
+                                  Ver imagen
+                                </a>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Tu respuesta anterior */}
+                      {ticket.respuesta_usuario && (
+                        <div className="rounded-xl bg-gray-50 border border-gray-100 p-4">
+                          <h4 className="text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-2">
+                            <CornerDownRight className="w-4 h-4" />
+                            Tu respuesta
+                            {formatReplyDate(ticket.fecha_respuesta_usuario) && (
+                              <span className="font-normal text-gray-400">
+                                · {formatReplyDate(ticket.fecha_respuesta_usuario)}
+                              </span>
+                            )}
+                          </h4>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                            {ticket.respuesta_usuario}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Responder (solo en abiertas) */}
+                      {activeTab === "open" &&
+                        (replyOpen[ticket.id_tickets] ? (
+                          <div className="rounded-xl border border-gray-200 p-4">
+                            <textarea
+                              value={ticketReplies[ticket.id_tickets] || ""}
+                              onChange={(e) =>
+                                handleReplyChange(ticket.id_tickets, e.target.value)
+                              }
+                              placeholder="Escribe tu respuesta…"
+                              rows={3}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#006241]/30 focus:border-[#006241] resize-none"
+                            />
+                            <div className="mt-3 flex gap-2">
+                              <button
+                                onClick={() => handleSubmitReply(ticket.id_tickets)}
+                                disabled={submittingReply[ticket.id_tickets]}
+                                className="inline-flex items-center gap-2 bg-[#006241] hover:bg-[#00754A] text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {submittingReply[ticket.id_tickets] ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                                    Enviando…
+                                  </>
+                                ) : (
+                                  <>
+                                    <Send className="w-4 h-4" />
+                                    Enviar respuesta
+                                  </>
+                                )}
+                              </button>
+                              <button
+                                onClick={() => toggleReply(ticket.id_tickets)}
+                                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+                              >
+                                Cancelar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => toggleReply(ticket.id_tickets)}
+                            className="inline-flex items-center gap-2 text-[#006241] hover:text-[#00754A] font-medium text-sm transition-colors"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            Responder
+                          </button>
+                        ))}
+                    </div>
+                  )}
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
       </div>
 
-      <SecondaryView
-        open={panel.open}
-        onClose={() => setPanel((p) => ({ ...p, open: false }))}
-        title="Solicitud"
-        context={abierto?.departamento ?? undefined}
-        footer={
-          abierto && estaAbierta(abierto) ? (
-            <Compositor key={abierto.id_tickets} ticket={abierto} onSent={() => router.refresh()} />
-          ) : undefined
-        }
-      >
-        {abierto ? (
-          <Hilo ticket={abierto} user={user} timeZone={timeZone} onImage={setImagen} />
-        ) : (
-          <p className="text-body text-fg-3" role="status">
-            Cargando la solicitud…
-          </p>
-        )}
-      </SecondaryView>
-
-      <NuevaSolicitud
-        open={creating}
-        onClose={() => setCreating(false)}
-        departments={departments}
-        defaultAsunto={initialAsunto}
-        onCreated={(id) => {
-          setTab("open");
-          if (id) abrir(id);
-        }}
-      />
-      <ImageViewer image={imagen} onClose={() => setImagen(null)} />
-    </div>
-  );
-}
-
-function Mensaje({
-  autor,
-  avatar,
-  fecha,
-  timeZone,
-  children,
-}: {
-  autor: string;
-  avatar: React.ReactNode;
-  fecha: string | null | undefined;
-  timeZone?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex gap-2 py-1">
-      {avatar}
-      <div className="min-w-0 flex-1">
-        <p className="flex flex-wrap items-baseline gap-x-2">
-          <span className="text-body font-bold text-fg">{autor}</span>
-          {fecha && (
-            <time dateTime={fecha} className="text-caption text-fg-3" suppressHydrationWarning>
-              {formatShortDate(fecha, timeZone)}
-            </time>
-          )}
-        </p>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function Hilo({
-  ticket,
-  user,
-  timeZone,
-  onImage,
-}: {
-  ticket: Ticket;
-  user: MinisitioUser | null;
-  timeZone?: string;
-  onImage: (image: ViewerImage) => void;
-}) {
-  const abierta = estaAbierta(ticket);
-  const descripcion = cleanDescripcion(ticket.descripcion);
-  const respuestas = Number(Boolean(ticket.respuesta)) + Number(Boolean(ticket.respuesta_usuario));
-  const yo = userDisplayName(user);
-
-  return (
-    <div>
-      <Mensaje autor={yo} avatar={<Avatar user={user} size={36} />} fecha={ticket.fecha} timeZone={timeZone}>
-        <p className="text-message font-semibold text-fg">{ticket.nombre}</p>
-        {descripcion && <p className="text-message whitespace-pre-line text-fg">{descripcion}</p>}
-      </Mensaje>
-
-      <div className="my-3 flex items-center gap-3 text-caption text-fg-3">
-        <span>{respuestas === 0 ? "Sin respuestas" : respuestas === 1 ? "1 respuesta" : `${respuestas} respuestas`}</span>
-        <span aria-hidden className="h-px flex-1 bg-stroke-3" />
-      </div>
-
-      {ticket.respuesta ? (
-        <Mensaje
-          autor={ticket.departamento ? `Administración · ${ticket.departamento}` : "Administración"}
-          avatar={<AdminAvatar />}
-          fecha={ticket.fecha_respuesta}
-          timeZone={timeZone}
-        >
-          <p className="text-message whitespace-pre-wrap text-fg">{ticket.respuesta}</p>
-          {(ticket.imagen_respuesta || ticket.pdf_respuesta) && (
-            <div className="mt-2 flex flex-col items-start gap-2">
-              {ticket.imagen_respuesta && (
-                <AvisoImagen
-                  src={ticket.imagen_respuesta}
-                  titulo={ticket.nombre}
-                  onOpen={() => onImage({ src: ticket.imagen_respuesta ?? "", title: ticket.nombre })}
-                />
-              )}
-              {ticket.pdf_respuesta && <AvisoPdf href={ticket.pdf_respuesta} />}
+      {/* Create Ticket Modal */}
+      {showCreateForm && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] p-6 text-white text-center">
+              <button
+                onClick={() => setShowCreateForm(false)}
+                className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
+              >
+                <svg
+                  className="h-6 w-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-4">
+                <Plus className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-xl font-bold">Crear Nueva Solicitud</h3>
+              <p className="text-white/80 text-sm mt-1">
+                Reporta una incidencia o solicita soporte técnico
+              </p>
             </div>
-          )}
-        </Mensaje>
-      ) : (
-        <p className="text-body text-fg-3">{abierta ? "La administración todavía no responde." : "Se cerró sin respuesta escrita."}</p>
-      )}
 
-      {ticket.respuesta_usuario && (
-        <div className="mt-2">
-          <Mensaje autor={yo} avatar={<Avatar user={user} size={36} />} fecha={ticket.fecha_respuesta_usuario} timeZone={timeZone}>
-            <p className="text-message whitespace-pre-wrap text-fg">{ticket.respuesta_usuario}</p>
-          </Mensaje>
+            {/* Form */}
+            <div className="p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="departamento"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Departamento *
+                  </label>
+                  <select
+                    id="departamento"
+                    value={formData.id_tickets_departamentos}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        id_tickets_departamentos: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    required
+                  >
+                    <option value="">Selecciona un departamento</option>
+                    {departments.map((dept) => (
+                      <option key={dept.id} value={dept.id}>
+                        {dept.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="nombre"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Asunto *
+                  </label>
+                  <input
+                    id="nombre"
+                    type="text"
+                    value={formData.nombre}
+                    onChange={(e) =>
+                      setFormData({ ...formData, nombre: e.target.value })
+                    }
+                    className="w-full px-3 py-3 border border-gray-200 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    placeholder="Breve descripción del problema"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="descripcion"
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                  >
+                    Descripción *
+                  </label>
+                  <textarea
+                    id="descripcion"
+                    value={formData.descripcion}
+                    onChange={(e) =>
+                      setFormData({ ...formData, descripcion: e.target.value })
+                    }
+                    rows={4}
+                    className="w-full px-3 py-3 border border-gray-200 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md resize-none"
+                    placeholder="Describe detalladamente tu solicitud de soporte..."
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                >
+                  {submitting ? (
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Creando solicitud...</span>
+                    </div>
+                  ) : (
+                    <span className="flex items-center justify-center space-x-2">
+                      <Send className="w-5 h-5" />
+                      <span>Crear Solicitud</span>
+                    </span>
+                  )}
+                </button>
+              </form>
+            </div>
+          </div>
         </div>
       )}
-
-      {!abierta && <p className="mt-6 text-center text-caption text-fg-3">Solicitud cerrada</p>}
     </div>
-  );
-}
-
-/** El compositor de Slack: radio 8, borde que se enciende con el foco y ⌘/Ctrl + Enter para enviar. */
-function Compositor({ ticket, onSent }: { ticket: Ticket; onSent: () => void }) {
-  const fieldId = useId();
-  const [texto, setTexto] = useState("");
-  const [enviando, setEnviando] = useState(false);
-  const yaRespondio = Boolean(ticket.respuesta_usuario);
-
-  const enviar = async () => {
-    const value = texto.trim();
-    if (!value || enviando) return;
-    setEnviando(true);
-    try {
-      const res = await replyTicketAction(ticket.id_tickets, value);
-      if (res.success) {
-        setTexto("");
-        toast("Respuesta enviada");
-        onSent();
-      } else {
-        toast(res.message || "No se pudo enviar la respuesta.", "error");
-      }
-    } catch {
-      toast("No se pudo enviar. Revisa tu conexión e inténtalo otra vez.", "error");
-    } finally {
-      setEnviando(false);
-    }
-  };
-
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        void enviar();
-      }}
-      className="rounded-panel border border-stroke-accessible/40 transition-[border-color,box-shadow] duration-fast focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/20"
-    >
-      <label htmlFor={fieldId} className="sr-only">
-        Responder a la administración
-      </label>
-      <textarea
-        id={fieldId}
-        rows={2}
-        value={texto}
-        onChange={(e) => setTexto(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-            e.preventDefault();
-            void enviar();
-          }
-        }}
-        placeholder="Responder a la administración…"
-        className="block max-h-48 min-h-[60px] w-full resize-none bg-transparent px-3 pt-2.5 text-message text-fg outline-none [field-sizing:content] placeholder:text-fg-4 max-sm:text-body-lg"
-      />
-      <div className="flex items-center gap-2 px-2 pb-2">
-        <p className="min-w-0 flex-1 truncate pl-1 text-caption text-fg-3">
-          {/* La tecla solo sirve con teclado; que se reemplaza la respuesta, siempre. */}
-          {yaRespondio ? "Reemplaza tu respuesta anterior." : <span className="pointer-coarse:hidden">⌘/Ctrl + Enter para enviar</span>}
-        </p>
-        <button type="submit" disabled={!texto.trim() || enviando} className={buttonClass("primary", "sm")}>
-          <Send className="h-3.5 w-3.5" aria-hidden />
-          {enviando ? "Enviando…" : "Enviar"}
-        </button>
-      </div>
-    </form>
   );
 }
