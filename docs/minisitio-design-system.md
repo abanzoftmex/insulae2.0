@@ -179,7 +179,9 @@ Notas:
 - **Pestañas** (Avisos, Solicitudes): 40 px, con cifra en caption. El subrayado olivo de 2 px se desliza con el resorte de la píldora del menú.
 - **Cifras de resumen** (`ui/stat-strip.tsx`): en el celular, una por renglón (etiqueta a la izquierda y monto a la derecha; la destacada arriba y grande). Desde tablet van en columnas, con tamaños que dejan caber montos de ocho cifras.
 - **Año de un reporte** (`_reportes/year-buttons.tsx`): botones segmentados de 28 px, con el elegido en olivo.
-- **Tabla mensual de reporte** (Estado de resultados; es el modelo para las demás tablas anchas):
+- **Tabla mensual de reporte** (`_reportes/tabla-mensual.tsx`: `TablaMensual` con `Fila`, `Seccion`, `Subseccion`, `FilaAccion` y `Espacio`; la usan Estado de resultados y Resumen financiero, y es el modelo para las demás tablas anchas):
+  - columnas configurables (`Columna`: título, nombre completo para lectores de pantalla, ancho, separador y destacada) y grupos de encabezado opcionales ("Total del año" | "2025, mes por mes");
+  - la columna destacada (el año elegido) va en crema. Si queda fuera de la vista, por ejemplo en el celular, la tabla se desplaza hasta ella: al instante al cargar y suave al cambiar de año (instantáneo si se pide reducir el movimiento);
   - un solo scroll, el de la página. El encabezado de meses es una copia visual que se queda bajo la barra (`top` de 52 px en el celular y 49 px en escritorio) y sigue el scroll horizontal del cuerpo; la tabla tiene su propio `<thead>` aplanado para lectores de pantalla;
   - `table-fixed` con el mismo `<colgroup>` en las dos tablas, para que las columnas coincidan;
   - primera columna fija, con una sombra cuando quedan columnas ocultas a la izquierda;
@@ -250,6 +252,15 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - `alert()`.
 
 ## 10. Estado
+
+**Hecho (2026-10-29), decimotercera vuelta:**
+- **Resumen financiero:**
+  - una sola tabla por tipo de cuota, con los totales de los tres años visibles (el elegido en crema) y el detalle mes por mes de ese año. Antes eran hasta cinco tablas de unas 40 columnas, con encabezados beige y tarjetas con sombra, y el año elegido solo cambiaba las cifras de arriba;
+  - cuatro cifras (cuotas, otros ingresos, egresos y balance) y una frase con los ingresos del año. Se quitó "Cuotas ordinarias 2025", que repetía la primera;
+  - en extraordinarias solo hay cobros: no se muestra un saldo sin egresos, y se dice dónde ver los gastos extraordinarios;
+  - las filas con el mismo nombre en un año se suman (antes la segunda pisaba a la primera);
+  - error de carga con "Reintentar" que vuelve a pedir la pantalla. Se borraron `compact-financial-table` (y su cartera, que siempre llegaba en cero), la carga del cliente y dos acciones de servidor.
+- **Tabla mensual compartida** (`_reportes/tabla-mensual.tsx`, §6): Estado de resultados ya la usa.
 
 **Hecho (2026-10-29), duodécima vuelta:**
 - **Estado de resultados**, rehecho como estado contable:
@@ -391,19 +402,19 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden:
-1. **Resumen financiero:**
-   - sus tablas (`compact-financial-table`) siguen con encabezados beige, título diminuto y tarjeta con sombra: pasarlas al modelo de la tabla mensual (§6);
-   - la carga y el error siguen con el estilo viejo.
-2. **Reporte general:**
+1. **Reporte general:**
    - tarjeta con "Exportar PDF" rojo y "Actualizar" pizarra, cifras con borde de color y filtros dentro de otra tarjeta;
    - el estado sale en inglés, tal como viene de la base ("AVAILABLE");
    - un saldo de $0.00 se pinta en rojo.
-3. **Tablas anchas con doble scroll:** `WideTableSection` (cartera de cuotas, reporte general) tiene su propio scroll vertical dentro de la página. Pasarla al modelo de la tabla mensual.
-4. **Limpieza:**
+2. **Tablas anchas con doble scroll:** `WideTableSection` (cartera de cuotas, reporte general) tiene su propio scroll vertical dentro de la página. Pasarla al modelo de la tabla mensual.
+3. **Limpieza:**
    - las clases `gray-*` que quedan (Reporte general);
    - 6 clases de Tailwind v3 que en v4 no existen (`flex-shrink-0`), cuatro de ellas en la burbuja de superadmin;
    - la burbuja de superadmin sigue en pizarra (`slate-*`): es interna, pero desentona.
 
-**Dato, no interfaz:** el Resumen financiero y el Estado de resultados no coinciden en 2025 (balance de −$12.1 M frente a −$10.8 M), porque cada uno calcula distinto.
+**Dato, no interfaz (decisión del usuario):** el Resumen financiero del portal no reparte igual que el panel de administración (`modules/financial-summary`), y por eso su balance ordinario 2025 (−$12.1 M) no coincide con el del Estado de resultados (−$10.8 M):
+- **egresos:** el portal resta *todos* los egresos en el balance ordinario, incluidos los "Gastos extraordinarios" ($9.7 M en 2025), y deja sin egresos el balance extraordinario. El panel aparta los de la categoría "Gastos extraordinarios" (`resolveBudgetGroup` + `CATEGORY_MAP`);
+- **ingresos:** el panel cuenta como extraordinarios también el comodato, las cuotas STC y las sanciones; el portal, solo las cuotas extraordinarias.
+- Alinear el portal con el panel cambia cifras que ven los condóminos: solo por los egresos, el balance ordinario 2025 pasaría de −$12.1 M a unos −$2.4 M. Mientras tanto, la pestaña de extraordinarias solo muestra cobros y dice dónde ver los gastos.
 
 **Datos que no son de la interfaz:** la imagen guardada del aviso "13va Asamblea General Ordinaria" es un WebP negro de 600 × 776 (894 bytes); el contenido real está en su PDF.

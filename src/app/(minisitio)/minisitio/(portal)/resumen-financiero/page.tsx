@@ -16,25 +16,17 @@ export default async function ResumenFinancieroPage() {
   });
   const { visibles, seleccionado } = pickVisibleYears(dataAnios);
 
-  // 2) Un ejercicio por consulta: los 3 en paralelo.
+  // 2) Un ejercicio por consulta: los 3 en paralelo. Si falla, la vista ofrece reintentar
+  // (vuelve a pedir esta página).
   let datosPorAnio: Record<number, DatosAnio> = {};
-  let initialError: string | null = null;
+  let error = false;
   try {
-    const entradas = await Promise.all(
-      visibles.map(async (year) => [year, await getResumenFinanciero(session, year)] as const),
-    );
+    const entradas = await Promise.all(visibles.map(async (year) => [year, await getResumenFinanciero(session, year)] as const));
     datosPorAnio = Object.fromEntries(entradas);
   } catch (e) {
     console.error("[minisitio] resumen-financiero:", e);
-    initialError = "Error al cargar los datos financieros. Por favor, intenta de nuevo.";
+    error = true;
   }
 
-  return (
-    <ResumenFinancieroView
-      initialAnios={visibles}
-      initialAnio={seleccionado}
-      initialDatosPorAnio={datosPorAnio}
-      initialError={initialError}
-    />
-  );
+  return <ResumenFinancieroView anios={visibles} anioInicial={seleccionado} datosPorAnio={datosPorAnio} error={error} />;
 }
