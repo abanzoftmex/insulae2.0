@@ -255,6 +255,10 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**2026-10-30, a petición del usuario:**
+- **El login vuelve a su diseño anterior**, el de antes de la décima vuelta, con su ventana de "¿Olvidaste tu contraseña?"; el usuario lo prefiere. Recuperar y crear contraseña siguen con el marco de acceso (`AuthShell`). No rediseñar el login sin pedirlo.
+- Sus dos formularios llevan `method="post"`: si se envían antes de que cargue el JavaScript, la contraseña ya no viaja en la URL (ni queda en el historial o en los logs).
+
 **Hecho (2026-10-29), vigésima vuelta:**
 - **"Cómo pagar" también en Mis saldos:** en el pie del resumen; es la acción principal si hay vencido.
 - **Copiar con confirmación en su lugar** (`ui/copy-button.tsx`, compartido por "Cómo pagar" y Teléfonos):
