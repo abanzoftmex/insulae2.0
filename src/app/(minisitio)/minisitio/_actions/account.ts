@@ -33,19 +33,6 @@ export async function updateRequiresInvoiceAction(requiereFactura: boolean): Pro
   }
 }
 
-/**
- * La constancia fiscal la administra el personal en insulae2.0 (directorio); el minisitio
- * independiente también respondía 501 aquí.
- */
-export async function uploadConstanciaFiscalAction(formData?: FormData): Promise<ActionResult> {
-  await requireCondominoSession();
-  void formData; // se recibe por compatibilidad con la pantalla; aún no se procesa
-  return {
-    success: false,
-    message: "La actualización de la constancia fiscal se realiza por el administrador en insulae2.0.",
-  };
-}
-
 /** Hosts de la 1.0 de donde aún pueden venir logos (nombres de archivo legacy). */
 const ALLOWED_IMAGE_PREFIXES = ["https://sistemasabanza.com/", "https://encuesta.sistemasabanza.com/"];
 

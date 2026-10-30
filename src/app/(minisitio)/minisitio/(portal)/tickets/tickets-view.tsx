@@ -54,12 +54,15 @@ export function TicketsView({
   tickets,
   departments,
   initialCreateOpen = false,
+  initialAsunto,
 }: {
   /** `null` si no se pudo cargar. */
   tickets: Ticket[] | null;
   departments: TicketDepartment[];
   /** Abrir el formulario de alta al entrar (`/tickets?nueva=1`). */
   initialCreateOpen?: boolean;
+  /** Asunto con el que abre el formulario (`&asunto=…`). */
+  initialAsunto?: string;
 }) {
   const router = useRouter();
   const { user } = useMinisitioSession();
@@ -178,6 +181,7 @@ export function TicketsView({
         open={creating}
         onClose={() => setCreating(false)}
         departments={departments}
+        defaultAsunto={initialAsunto}
         onCreated={(id) => {
           setTab("open");
           if (id) abrir(id);

@@ -6,14 +6,12 @@ import { listProperties } from "@/modules/minisitio/infrastructure/queries/prope
 import { listRentals } from "@/modules/minisitio/infrastructure/queries/rentals.queries";
 import { listTickets } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
 import { comunicadoFileUrl } from "./_lib/comunicado-file-url";
-import { formatPhone, telHref } from "./_lib/format";
+import { telefonosDeEmergencia, toContacto, type Contacto } from "./_lib/contactos";
 import { InicioView, type AvisoResumen, type CuentaResumen, type SolicitudesResumen, type TelefonoEmergencia } from "./inicio-view";
 
 export const metadata: Metadata = { title: "Inicio" };
 
-/** Teléfonos que van en Inicio: urgencias médicas primero, luego casetas y seguridad. */
-const URGENCIA_MEDICA = /param[eé]dic|ambulanc|emergenc|bomber|protecci[oó]n civil/i;
-const URGENCIA = /caseta|seguridad|guardia|vigilan/i;
+/** Teléfonos que van en Inicio (urgencias médicas primero, luego casetas; ver _lib/contactos). */
 const MAX_TELEFONOS = 4;
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -99,22 +97,16 @@ export default async function InicioPage() {
       }
     : null;
 
-  const llamables = (contacto?.campos ?? []).flatMap((c) => {
-    const href = telHref(c.contenido ?? "");
-    return href ? [{ id: c.id, nombre: c.titulo, numero: formatPhone(c.contenido), href }] : [];
-  });
-  const urgentes = llamables.filter((t) => URGENCIA_MEDICA.test(t.nombre) || URGENCIA.test(t.nombre));
-  const vistos = new Set<string>();
-  const telefonos: TelefonoEmergencia[] = (urgentes.length ? urgentes : llamables)
-    .sort((a, b) => Number(URGENCIA_MEDICA.test(b.nombre)) - Number(URGENCIA_MEDICA.test(a.nombre)))
-    // Un número por nombre (la caseta principal tiene dos); el resto, en "Todos".
-    .filter((t) => {
-      const key = t.nombre.trim().toLowerCase();
-      if (vistos.has(key)) return false;
-      vistos.add(key);
-      return true;
-    })
-    .slice(0, MAX_TELEFONOS);
+  // Sin emergencias publicadas, los primeros teléfonos que se puedan marcar.
+  const campos = contacto?.campos ?? [];
+  const urgentes = telefonosDeEmergencia(campos, MAX_TELEFONOS);
+  const llamar = (c: Contacto) => c.acciones.find((a) => a.id === "llamar")?.href;
+  const telefonos: TelefonoEmergencia[] = (urgentes.length ? urgentes : campos.map(toContacto).filter((c) => llamar(c)).slice(0, MAX_TELEFONOS)).map((c) => ({
+    id: c.id,
+    nombre: c.nombre,
+    numero: c.valor,
+    href: llamar(c) ?? "",
+  }));
 
   return <InicioView cuenta={cuenta} avisos={avisos} solicitudes={solicitudes} telefonos={telefonos} />;
 }

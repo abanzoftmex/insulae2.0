@@ -236,6 +236,21 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), séptima vuelta:**
+- **Teléfonos de emergencia:**
+  - agrupados en Emergencias (con "Llamar" destacado), Administración y Experiencias, cada contacto con sus acciones y un botón para copiar;
+  - las acciones se arman con el tipo y el contenido (`(portal)/_lib/contactos.ts`, que también usa Inicio), porque los enlaces guardados estaban rotos: `https://tel:…`, números sueltos y `wa.me` sin lada.
+- **Experiencias:**
+  - una galería de carteles con pestañas "Próximas / Anteriores" (si no hay próximas, abre en anteriores y lo dice);
+  - visor de imagen y PDF a un clic;
+  - se quitaron el carrusel con reproducción automática y las tarjetas vacías de relleno.
+- **Mi perfil:**
+  - datos tal como los tiene la administración, con "Pide que lo corrijan" (abre `/tickets?nueva=1&asunto=…`);
+  - el interruptor "Requiero factura" (`ui/switch.tsx`), que se guarda al momento con un toast;
+  - la constancia fiscal se manda por correo a la administración;
+  - las asignaciones a la vista, sin paneles laterales.
+  - Se quitó el "Subir PDF", que siempre fallaba porque su acción era un stub; la acción también se borró.
+
 **Hecho (2026-10-29), sexta vuelta:**
 - **Detalle de propiedad y de comercio** con una pieza compartida (`_components/unidad-detalle.tsx`):
   - nombre y "Ver estado de cuenta";
@@ -311,14 +326,12 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
-1. **Teléfonos de emergencia** con `tel:`, WhatsApp (`wa.me`), `mailto:` y mapa.
-2. **Experiencias** (quitar las tarjetas de relleno) **y Mi perfil.**
-3. **Reportes:**
+1. **Reportes:**
    - paginador compacto, porque Cartera de cuotas pinta 59 números;
    - sin MAYÚSCULAS ni degradados verde y rojo;
    - año por defecto con datos.
-4. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
-5. **Limpieza:**
+2. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
+3. **Limpieza:**
    - 41 clases que no existen en Tailwind v4;
    - 16 `alert()`;
    - unas 825 clases `gray-*`.

@@ -14,9 +14,10 @@ export const metadata: Metadata = { title: "Solicitudes" };
  * cerradas) y los departamentos del formulario. Tras crear o responder, la vista pide
  * router.refresh() y esta página vuelve a consultar.
  *
- * `?nueva=1` abre el formulario de alta (lo usan Inicio y "Buscar o ir a…").
+ * `?nueva=1` abre el formulario de alta (lo usan Inicio y "Buscar o ir a…"); `&asunto=…` lo abre
+ * con el asunto escrito (p. ej. "Corregir mis datos de contacto" desde Mi perfil).
  */
-export default async function TicketsPage({ searchParams }: { searchParams: Promise<{ nueva?: string }> }) {
+export default async function TicketsPage({ searchParams }: { searchParams: Promise<{ nueva?: string; asunto?: string }> }) {
   const [session, params] = await Promise.all([requireCondominoSession(), searchParams]);
 
   const [tickets, departments] = await Promise.all([
@@ -35,5 +36,12 @@ export default async function TicketsPage({ searchParams }: { searchParams: Prom
       }),
   ]);
 
-  return <TicketsView tickets={tickets} departments={departments} initialCreateOpen={params.nueva === "1"} />;
+  return (
+    <TicketsView
+      tickets={tickets}
+      departments={departments}
+      initialCreateOpen={params.nueva === "1"}
+      initialAsunto={params.nueva === "1" ? params.asunto?.slice(0, 150) : undefined}
+    />
+  );
 }
