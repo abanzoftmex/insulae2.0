@@ -253,6 +253,17 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), decimoséptima vuelta:**
+- **Burbuja de superadmin:** con la paleta del portal; antes eran pizarra y verde/ámbar/rojo de Tailwind.
+  - Disparador y encabezado en olivo de noche.
+  - Contador neutro que pasa a crema (< 5 min) y a teja con pulso (< 2 min).
+  - Lista de usuarios con avatares de iniciales; "Cerrar modo" en teja.
+  - Panel con el movimiento de los popovers; Esc lo cierra.
+  - En el celular queda sobre la barra de pestañas (antes la tapaba).
+  - Íconos de lucide en vez de SVG en línea.
+  - La lógica no cambió: cuenta regresiva, extender con contraseña, suplantar, terminar y cerrar el modo.
+- **Limpieza terminada:** no quedan clases `gray-*`, `slate-*`, `flex-shrink-*` ni `alert()` en el minisitio (salvo los colores del PDF del reporte general).
+
 **Hecho (2026-10-29), decimosexta vuelta (revisión de conjunto):**
 - **Auditoría automática** de 17 pantallas del portal y 5 públicas, a 390, 768, 1024 y 1280 px. Se revisó lo siguiente, y al final no queda ningún hallazgo:
   - desbordes horizontales;
@@ -445,11 +456,7 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden:
-1. **Limpieza:**
-   - ya no quedan clases `gray-*` (salvo los colores del PDF del reporte general);
-   - 4 `flex-shrink-0` de Tailwind v3, que en v4 no existen, en la burbuja de superadmin;
-   - la burbuja de superadmin sigue en pizarra (`slate-*`): es interna, pero desentona.
-2. **Reportes de cuotas:** buscar un área exige paginar (1,745 áreas en orden de catálogo). Un buscador en el servidor (por nombre o clave) haría el reporte manejable.
+1. **Reportes de cuotas:** buscar un área exige paginar (1,745 áreas en orden de catálogo). Un buscador en el servidor (por nombre o clave) haría el reporte manejable.
 
 **Dato, no interfaz (decisión del usuario):** el Resumen financiero del portal no reparte igual que el panel de administración (`modules/financial-summary`), y por eso su balance ordinario 2025 (−$12.1 M) no coincide con el del Estado de resultados (−$10.8 M):
 - **egresos:** el portal resta *todos* los egresos en el balance ordinario, incluidos los "Gastos extraordinarios" ($9.7 M en 2025), y deja sin egresos el balance extraordinario. El panel aparta los de la categoría "Gastos extraordinarios" (`resolveBudgetGroup` + `CATEGORY_MAP`);

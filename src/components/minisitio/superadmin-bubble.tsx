@@ -8,8 +8,14 @@
  * Los cambios de identidad (suplantar, terminar suplantación, cerrar el modo) navegan con
  * recarga completa, igual que en el minisitio independiente, para que el servidor vuelva a
  * leer las cookies y todo el portal refleje al usuario correcto.
+ *
+ * Con la paleta del portal (antes, pizarra y verde/ámbar/rojo de Tailwind): el disparador y el
+ * encabezado en olivo de noche, el contador neutro que pasa a crema (< 5 min) y a teja (< 2 min),
+ * y el panel con el movimiento de los popovers. En el celular queda sobre la barra de pestañas.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Check, Clock, Loader2, LogOut, Plus, Power, ShieldCheck, X } from "lucide-react";
 import {
   deactivateSuperadminAction,
   endImpersonationAction,
@@ -20,7 +26,10 @@ import {
 import type { SuperadminUserOption } from "@/modules/minisitio/infrastructure/queries/superadmin.queries";
 import type { MinisitioUser } from "@/modules/minisitio/domain/types";
 import { useMinisitioStore } from "@/stores/minisitio.store";
+import { popover } from "./motion";
 import { msPath } from "./paths";
+import { buttonClass } from "./ui/button";
+import { SearchField } from "./ui/search-field";
 
 type BubbleUser = SuperadminUserOption & { user?: string };
 
@@ -35,6 +44,19 @@ function formatTimeRemaining(expiresAt: number | null): string {
   if (hours > 0) return `${hours}h ${minutes}m`;
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
+
+/** Iniciales para el avatar de la lista ("María López" → "ML"). */
+const iniciales = (nombre: string) =>
+  nombre
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0])
+    .join("")
+    .toUpperCase() || "?";
+
+/** Encima de la barra de pestañas del celular (56 px + aire); en escritorio, a 24 px. */
+const ABAJO = "bottom-[calc(72px+env(safe-area-inset-bottom))] lg:bottom-6";
 
 export function SuperAdminBubble({
   expiresAt: initialExpiresAt,
@@ -102,6 +124,16 @@ export function SuperAdminBubble({
     };
     if (isOpen) document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  // Esc cierra el panel (como los demás popovers del portal).
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
   }, [isOpen]);
 
   // Enfocar el campo de búsqueda al abrir
@@ -222,312 +254,215 @@ export function SuperAdminBubble({
   // Tiempo restante para el contador de la burbuja (se recalcula con cada tick).
   const secondsLeft = expiresAt ? Math.max(0, Math.floor((expiresAt - Date.now()) / 1000)) : 0;
   const countdownLabel = secondsLeft >= 60 ? `${Math.floor(secondsLeft / 60)}m` : `${secondsLeft}s`;
-  // Verde > 5 min · Amarillo 2-5 min · Rojo < 2 min
-  const countdownColor = secondsLeft > 300 ? "bg-emerald-500" : secondsLeft > 120 ? "bg-amber-500" : "bg-red-500";
+  // Neutro > 5 min · crema 2–5 min · teja < 2 min (tokens de aviso del portal).
+  const countdownColor = secondsLeft > 300 ? "bg-chrome-selected text-chrome-selected-ink" : secondsLeft > 120 ? "bg-unread text-chrome-strong" : "bg-mention text-white";
 
   return (
     <>
       {/* Burbuja flotante */}
       <button
+        type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-slate-900 hover:bg-slate-800 rounded-full shadow-lg ring-1 ring-white/10 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200"
-        title="Modo Superadmin"
+        aria-expanded={isOpen}
+        aria-controls="superadmin-panel"
+        aria-label={`Modo superadministrador, expira en ${timeRemaining}${impersonatedUser ? `, sesión de ${impersonatedUser.displayName}` : ""}`}
+        title="Modo superadministrador"
+        className={`fixed right-4 ${ABAJO} z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-chrome-strong text-chrome-ink shadow-panel outline-none transition-colors duration-160 ease-slack hover:bg-chrome focus-visible:ring-2 focus-visible:ring-chrome-focus focus-visible:ring-offset-2 lg:right-6`}
       >
-        <svg
-          className="w-6 h-6 text-white"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={1.8}
-            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-          />
-        </svg>
-
+        <ShieldCheck className="h-5 w-5" aria-hidden />
         {/* Contador de tiempo restante (color según urgencia) */}
         <span
-          className={`absolute -top-1.5 -right-1.5 min-w-[22px] h-[18px] px-1 rounded-full text-[10px] font-bold text-white flex items-center justify-center ring-2 ring-white tabular-nums ${countdownColor} ${
-            secondsLeft <= 60 ? "animate-pulse" : ""
-          }`}
+          aria-hidden
+          className={`absolute -top-1.5 -right-1.5 flex h-[18px] min-w-[22px] items-center justify-center rounded-full px-1 text-[10px] font-bold tabular-nums ring-2 ring-surface ${countdownColor} ${secondsLeft <= 60 ? "animate-pulse-soft" : ""}`}
         >
           {countdownLabel}
         </span>
-
         {/* Indicador: hay un usuario suplantado */}
         {impersonatedUser && (
-          <span className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-brand rounded-full flex items-center justify-center ring-2 ring-white">
-            <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
+          <span aria-hidden className="absolute -right-0.5 -bottom-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-brand ring-2 ring-surface">
+            <Check className="h-2.5 w-2.5 text-white" strokeWidth={3} />
           </span>
         )}
       </button>
 
       {/* Panel desplegable */}
-      {isOpen && (
-        <div
-          ref={panelRef}
-          className="fixed bottom-24 right-6 z-[9999] w-96 max-h-[70vh] bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col"
-        >
-          {/* Header */}
-          <div className="bg-slate-900 p-4 text-white">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2.5">
-                <span className="w-7 h-7 rounded-lg bg-white/10 ring-1 ring-white/10 flex items-center justify-center">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1.8}
-                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
-                    />
-                  </svg>
-                </span>
-                <span className="font-semibold text-sm tracking-tight">Modo Superadmin</span>
-              </div>
-              <button
-                onClick={() => setIsOpen(false)}
-                className="text-white/60 hover:text-white transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Info de sesión */}
-            <div className="flex items-center justify-between">
-              <span className="flex items-center space-x-1.5 text-xs text-white/70">
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Expira en <span className="font-semibold text-white tabular-nums">{timeRemaining}</span></span>
-              </span>
-              <button
-                onClick={() => {
-                  setShowExtend((v) => !v);
-                  setExtendError("");
-                }}
-                className="flex items-center space-x-1 bg-white/10 hover:bg-white/15 ring-1 ring-white/15 rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
-                title="Extender la sesión 15 minutos"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M12 5v14m7-7H5" />
-                </svg>
-                <span>15 min</span>
-              </button>
-            </div>
-
-            {impersonatedUser && (
-              <div className="mt-3 flex items-center space-x-2 bg-white/5 ring-1 ring-white/10 rounded-lg px-2.5 py-1.5">
-                <svg className="w-3.5 h-3.5 text-white/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="text-xs text-white/90 truncate">
-                  Sesión activa como <span className="font-semibold">{impersonatedUser.displayName}</span>
-                </span>
-              </div>
-            )}
-
-            {/* Formulario para extender la sesión (pide la contraseña) */}
-            {showExtend && (
-              <form onSubmit={handleExtend} className="mt-3 space-y-2">
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="password"
-                    autoFocus
-                    value={extendPassword}
-                    onChange={(e) => setExtendPassword(e.target.value)}
-                    placeholder="Contraseña para extender"
-                    className="flex-1 min-w-0 px-3 py-2 rounded-lg text-xs text-white placeholder-white/40 bg-white/10 ring-1 ring-white/15 focus:outline-none focus:ring-2 focus:ring-white/40 transition"
-                  />
-                  <button
-                    type="submit"
-                    disabled={extending || !extendPassword}
-                    className="px-3 py-2 rounded-lg bg-brand hover:bg-brand-accent text-white text-xs font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
-                  >
-                    {extending ? "..." : "+15 min"}
-                  </button>
-                </div>
-                {extendError && (
-                  <p className="text-[11px] text-white bg-red-500/30 ring-1 ring-red-400/30 rounded-md px-2 py-1">{extendError}</p>
-                )}
-              </form>
-            )}
-          </div>
-
-          {/* Buscador y lista de usuarios: solo cuando NO hay un usuario
-              suplantado. Si hay una sesión activa, se debe terminar primero
-              antes de poder cambiar de usuario. */}
-          {!impersonatedUser && (
-            <>
-          {/* Buscador */}
-          <div className="p-3 border-b border-slate-100">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg
-                  className="h-4 w-4 text-slate-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.8}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
-              </div>
-              <input
-                ref={searchInputRef}
-                type="text"
-                className="w-full pl-9 pr-3 py-2.5 border border-slate-200 rounded-lg text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/15 focus:border-slate-400 transition"
-                placeholder="Buscar usuario por nombre o correo..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {impersonateError && (
-            <p role="alert" className="mx-3 mb-2 rounded-md bg-critical-bg px-3 py-2 text-xs font-medium text-overdue">
-              {impersonateError}
-            </p>
-          )}
-
-          {/* Lista de usuarios */}
-          <div className="flex-1 overflow-y-auto max-h-[40vh]">
-            {loading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-6 w-6 border-2 border-slate-200 border-t-slate-900"></div>
-                <span className="ml-2 text-sm text-slate-500">Buscando...</span>
-              </div>
-            ) : usersError ? (
-              <div className="text-center py-8 px-4">
-                <svg className="w-8 h-8 mx-auto mb-2 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M12 9v2m0 4h.01M5.07 19h13.86c1.54 0 2.5-1.67 1.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16c-.77 1.33.19 3 1.73 3z" />
-                </svg>
-                <p className="text-sm text-red-600 font-medium">No se pudieron cargar los usuarios</p>
-                <p className="text-xs text-slate-500 mt-1 break-words">{usersError}</p>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            {...popover}
+            ref={panelRef}
+            id="superadmin-panel"
+            role="dialog"
+            aria-label="Modo superadministrador"
+            style={{ transformOrigin: "bottom right" }}
+            className={`fixed right-4 ${ABAJO} z-[60] mb-14 flex max-h-[70vh] w-[min(360px,calc(100vw-32px))] flex-col overflow-hidden rounded-panel bg-surface shadow-menu lg:right-6`}
+          >
+            {/* Encabezado en olivo de noche: es un modo especial */}
+            <div className="shrink-0 bg-chrome-strong px-4 pt-3 pb-3.5 text-chrome-ink">
+              <div className="flex items-center justify-between gap-3">
+                <p className="flex items-center gap-2 text-body font-bold">
+                  <ShieldCheck className="h-4 w-4" aria-hidden />
+                  Modo superadministrador
+                </p>
                 <button
-                  onClick={() => fetchUsers(search)}
-                  className="mt-3 px-3 py-1.5 text-xs font-medium text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Cerrar"
+                  title="Cerrar (Esc)"
+                  className="-mr-1.5 inline-flex h-7 w-7 items-center justify-center rounded-ctrl text-chrome-ink-soft outline-none hover:bg-chrome-hover hover:text-chrome-ink focus-visible:ring-2 focus-visible:ring-chrome-focus"
                 >
-                  Reintentar
+                  <X className="h-4 w-4" aria-hidden />
                 </button>
               </div>
-            ) : users.length === 0 ? (
-              <div className="text-center py-8 text-sm text-slate-500">
-                <svg className="w-8 h-8 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-                {search ? "No se encontraron usuarios" : "Escribe para buscar usuarios"}
-              </div>
-            ) : (
-              <div className="divide-y divide-slate-100">
-                {users.map((user) => {
-                  const isCurrentUser = currentImpersonatedId === user.id_directorio;
-                  return (
-                    <button
-                      key={user.id_directorio}
-                      onClick={() => !isCurrentUser && handleImpersonate(user)}
-                      disabled={impersonating || isCurrentUser}
-                      className={`w-full text-left px-4 py-3 transition-colors flex items-center space-x-3 disabled:cursor-default ${
-                        isCurrentUser
-                          ? "bg-brand-mint/40 border-l-2 border-brand"
-                          : "hover:bg-slate-50 border-l-2 border-transparent"
-                      }`}
-                    >
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                        isCurrentUser
-                          ? "bg-brand text-white"
-                          : "bg-slate-100 text-slate-500"
-                      }`}>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-900 truncate">
-                          {user.displayName}
-                        </p>
-                        <p className="text-xs text-slate-500 truncate">
-                          {user.email || user.user || `ID: ${user.id_directorio}`}
-                        </p>
-                      </div>
-                      {isCurrentUser ? (
-                        <span className="inline-flex items-center gap-1 text-[11px] text-brand font-semibold flex-shrink-0">
-                          <span className="w-1.5 h-1.5 rounded-full bg-brand"></span>
-                          Activo
-                        </span>
-                      ) : (
-                        <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5l7 7-7 7" />
-                        </svg>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-            </>
-          )}
 
-          {/* Loading overlay al suplantar */}
-          {impersonating && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-2xl">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-slate-200 border-t-slate-900 mx-auto mb-2"></div>
-                <p className="text-sm font-medium text-slate-700">Cambiando de usuario...</p>
-              </div>
-            </div>
-          )}
-
-          {/* Footer - Acciones */}
-          <div className="border-t border-slate-200 p-3 space-y-2">
-            {/* Terminar sesión del usuario suplantado (mantiene el modo superadmin) */}
-            {impersonatedUser && (
-              <button
-                onClick={handleEndImpersonation}
-                disabled={endingImpersonation}
-                className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 rounded-lg transition-colors duration-200 border border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {endingImpersonation ? (
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-slate-300 border-t-slate-700"></div>
-                ) : (
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M16 17l5-5m0 0l-5-5m5 5H9m3 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h3a3 3 0 013 3v1" />
-                  </svg>
-                )}
-                <span className="truncate">
-                  Terminar sesión de {impersonatedUser.displayName}
+              <div className="mt-2 flex items-center justify-between gap-3">
+                <span className="flex items-center gap-1.5 text-caption text-chrome-ink-soft">
+                  <Clock className="h-3.5 w-3.5" aria-hidden />
+                  Expira en <span className="font-semibold text-chrome-ink tabular-nums">{timeRemaining}</span>
                 </span>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowExtend((v) => !v);
+                    setExtendError("");
+                  }}
+                  aria-expanded={showExtend}
+                  title="Extender la sesión 15 minutos"
+                  className="inline-flex h-7 items-center gap-1 rounded-ctrl bg-chrome-field px-2 text-caption font-semibold text-chrome-ink outline-none hover:bg-chrome-field-hover focus-visible:ring-2 focus-visible:ring-chrome-focus"
+                >
+                  <Plus className="h-3.5 w-3.5" aria-hidden />
+                  15 min
+                </button>
+              </div>
+
+              {impersonatedUser && (
+                <p className="mt-2.5 truncate rounded-surface bg-chrome-hover px-2.5 py-1.5 text-caption text-chrome-ink-soft">
+                  Sesión activa como <span className="font-semibold text-chrome-ink">{impersonatedUser.displayName}</span>
+                </p>
+              )}
+
+              {/* Formulario para extender la sesión (pide la contraseña) */}
+              {showExtend && (
+                <form onSubmit={handleExtend} className="mt-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="superadmin-extender" className="sr-only">
+                      Contraseña del superadministrador
+                    </label>
+                    <input
+                      id="superadmin-extender"
+                      type="password"
+                      autoComplete="current-password"
+                      autoFocus
+                      value={extendPassword}
+                      onChange={(e) => setExtendPassword(e.target.value)}
+                      placeholder="Contraseña"
+                      className="h-8 min-w-0 flex-1 rounded-ctrl bg-chrome-field px-2.5 text-body text-chrome-ink outline-none placeholder:text-chrome-label hover:bg-chrome-field-hover focus-visible:ring-2 focus-visible:ring-chrome-focus"
+                    />
+                    <button
+                      type="submit"
+                      disabled={extending || !extendPassword}
+                      className="inline-flex h-8 shrink-0 items-center rounded-ctrl bg-chrome-selected px-3 text-[13px] font-semibold text-chrome-selected-ink outline-none hover:brightness-95 focus-visible:ring-2 focus-visible:ring-chrome-focus disabled:opacity-50"
+                    >
+                      {extending ? "Extendiendo…" : "Extender"}
+                    </button>
+                  </div>
+                  {extendError && (
+                    <p role="alert" className="text-caption text-chrome-danger">
+                      {extendError}
+                    </p>
+                  )}
+                </form>
+              )}
+            </div>
+
+            {/* Buscador y lista de usuarios: solo cuando NO hay un usuario suplantado. Si hay una
+                sesión activa, se debe terminar primero antes de poder cambiar de usuario. */}
+            {!impersonatedUser && (
+              <>
+                <div className="shrink-0 border-b border-stroke-3 p-3">
+                  <SearchField value={search} onChange={setSearch} label="Buscar usuario" placeholder="Buscar por nombre o correo" />
+                </div>
+                {impersonateError && (
+                  <p role="alert" className="mx-3 mt-2 rounded-surface bg-critical-bg px-3 py-2 text-caption font-medium text-overdue">
+                    {impersonateError}
+                  </p>
+                )}
+                <div className="min-h-0 flex-1 overflow-y-auto py-1">
+                  {loading ? (
+                    <p className="flex items-center justify-center gap-2 py-8 text-body text-fg-3">
+                      <Loader2 className="h-4 w-4 animate-spin text-brand" aria-hidden />
+                      Buscando…
+                    </p>
+                  ) : usersError ? (
+                    <div className="px-4 py-8 text-center">
+                      <p className="text-body font-semibold text-fg">No se pudieron cargar los usuarios</p>
+                      <p className="mt-1 text-caption break-words text-fg-3">{usersError}</p>
+                      <button type="button" onClick={() => fetchUsers(search)} className={buttonClass("outline", "sm", "mt-3")}>
+                        Reintentar
+                      </button>
+                    </div>
+                  ) : users.length === 0 ? (
+                    <p className="py-8 text-center text-body text-fg-3">{search ? "Ningún usuario coincide." : "Escribe para buscar un usuario."}</p>
+                  ) : (
+                    <ul>
+                      {users.map((user) => {
+                        const isCurrentUser = currentImpersonatedId === user.id_directorio;
+                        return (
+                          <li key={user.id_directorio}>
+                            <button
+                              type="button"
+                              onClick={() => !isCurrentUser && handleImpersonate(user)}
+                              disabled={impersonating || isCurrentUser}
+                              className="flex w-full items-center gap-3 px-3 py-2 text-left outline-none hover:bg-surface-2 focus-visible:bg-surface-3 disabled:cursor-default"
+                            >
+                              <span aria-hidden className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[22%] bg-surface-3 text-caption font-bold text-fg-2">
+                                {iniciales(user.displayName)}
+                              </span>
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-body font-semibold text-fg">{user.displayName}</span>
+                                <span className="block truncate text-caption text-fg-3">{user.email || user.user || `ID: ${user.id_directorio}`}</span>
+                              </span>
+                              {isCurrentUser && <span className="shrink-0 text-caption font-semibold text-brand">Activo</span>}
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                </div>
+              </>
             )}
 
-            {/* Cerrar modo superadministrador */}
-            <button
-              onClick={handleDeactivate}
-              className="w-full flex items-center justify-center space-x-2 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 border border-red-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M5.636 5.636a9 9 0 1012.728 0M12 3v9" />
-              </svg>
-              <span>Cerrar modo superadministrador</span>
-            </button>
-          </div>
-        </div>
-      )}
+            {/* Cambiando de usuario */}
+            {impersonating && (
+              <div role="status" className="absolute inset-0 z-10 flex items-center justify-center gap-2 bg-surface/85 text-body font-medium text-fg-2">
+                <Loader2 className="h-4 w-4 animate-spin text-brand" aria-hidden />
+                Cambiando de usuario…
+              </div>
+            )}
+
+            {/* Acciones */}
+            <div className="shrink-0 space-y-2 border-t border-stroke-3 p-3">
+              {/* Terminar sesión del usuario suplantado (mantiene el modo superadmin) */}
+              {impersonatedUser && (
+                <button type="button" onClick={handleEndImpersonation} disabled={endingImpersonation} className={buttonClass("outline", "md", "w-full")}>
+                  {endingImpersonation ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <LogOut className="h-4 w-4" aria-hidden />}
+                  <span className="truncate">Terminar sesión de {impersonatedUser.displayName}</span>
+                </button>
+              )}
+              {/* Cerrar modo superadministrador */}
+              <button
+                type="button"
+                onClick={handleDeactivate}
+                className="inline-flex h-9 w-full items-center justify-center gap-2 rounded-panel text-body font-semibold text-overdue outline-none hover:bg-critical-bg focus-visible:ring-2 focus-visible:ring-brand"
+              >
+                <Power className="h-4 w-4" aria-hidden />
+                Cerrar modo superadministrador
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
