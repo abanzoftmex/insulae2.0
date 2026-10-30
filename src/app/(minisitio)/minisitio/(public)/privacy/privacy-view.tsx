@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { acceptPrivacyNoticeAction } from '../../_actions/auth';
 import { msPath } from '@/components/minisitio/paths';
+import { AvisoPrivacidadTexto } from "@/components/minisitio/aviso-privacidad-texto";
 
 /**
  * Aceptación del aviso de privacidad. Solo se muestra a un condómino con sesión que aún no lo
@@ -55,7 +56,7 @@ export function PrivacyView({ notice }: { notice: string }) {
           <div className="px-6 py-8">
             <div className="prose max-w-none">
               {privacyNotice ? (
-                <div dangerouslySetInnerHTML={{ __html: privacyNotice }} />
+                <AvisoPrivacidadTexto texto={privacyNotice} nivelSeccion={3} />
               ) : (
                 <div className="text-gray-600">
                   <h3 className="text-lg font-semibold mb-4">Aviso de Privacidad</h3>

@@ -1,5 +1,6 @@
-import { Shield, FileText } from "lucide-react";
+import { AlertCircle, ArrowUpRight, FileText, Shield } from "lucide-react";
 import { isUsableFileUrl } from "@/shared/infrastructure/storage/storage-paths";
+import { AvisoPrivacidadTexto } from "@/components/minisitio/aviso-privacidad-texto";
 
 const AVISO_PDF_LEGACY_BASE = "https://sistemasabanza.com/insulae/imagenes/proyectos/aviso_privacidad/";
 
@@ -9,9 +10,9 @@ function avisoPdfUrl(archivo: string) {
 }
 
 /**
- * Vista del aviso de privacidad (HTML del proyecto, estilos `.aviso-privacidad-html` de
- * minisitio.css). Sin estado ni interacción: se pinta en el servidor. El título del
- * encabezado lo pone el shell por ruta (antes setPageData).
+ * Vista del aviso de privacidad. El texto llega plano (ver aviso-privacidad-texto.tsx, que le
+ * devuelve títulos, secciones e incisos) y se lee en una columna de ~70 caracteres. Sin estado
+ * ni interacción: se pinta en el servidor. El título del encabezado lo pone el shell por ruta.
  */
 export function AvisoPrivacidadView({
   privacyNotice,
@@ -24,103 +25,67 @@ export function AvisoPrivacidadView({
 }) {
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-        <p>{error}</p>
-      </div>
+      <p role="alert" className="flex items-center gap-2 rounded-xl bg-critical-bg px-4 py-3 text-[13.5px] text-overdue">
+        <AlertCircle aria-hidden className="h-4 w-4 shrink-0" strokeWidth={2} />
+        {error}
+      </p>
     );
   }
 
   return (
     <div className="space-y-6">
       {/* Encabezado */}
-      <div className="bg-white shadow-md rounded-xl p-6 border border-gray-200">
-        <div className="flex items-center space-x-4 mb-4">
-          <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center">
-            <Shield className="w-6 h-6 text-amber-600" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Aviso de Privacidad
-            </h1>
-            <p className="text-gray-600">
-              Información sobre el tratamiento de sus datos personales
-            </p>
-          </div>
+      <div className="flex items-center gap-4">
+        <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-brand-mint shadow-[0_1px_2px_rgb(61_60_34/0.25)]">
+          <Shield aria-hidden className="h-6 w-6" strokeWidth={1.75} />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-[24px] font-bold leading-8 tracking-[-0.02em] text-fg">Aviso de Privacidad</h2>
+          <p className="text-[14px] leading-5 text-fg-3">Información sobre el tratamiento de sus datos personales</p>
         </div>
       </div>
 
       {/* Contenido principal */}
-      <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
-        <div className="p-6">
-          <div className="prose max-w-none">
-            {privacyNotice ? (
-              <div
-                className="aviso-privacidad-html text-gray-700 leading-relaxed"
-                dangerouslySetInnerHTML={{ __html: privacyNotice }}
-              />
-            ) : (
-              <div className="text-gray-600">
-                <h3 className="text-lg font-semibold mb-4">
-                  Aviso de Privacidad
-                </h3>
-                <p className="mb-4">
-                  Este aviso de privacidad describe cómo recopilamos, utilizamos
-                  y protegemos su información personal en el sistema Insulae.
-                </p>
-                <p className="mb-4">
-                  Al utilizar este sistema, usted acepta el tratamiento de sus
-                  datos personales conforme a las políticas establecidas.
-                </p>
-                <p>
-                  Para más información, puede contactar al administrador del
-                  sistema.
-                </p>
-              </div>
-            )}
-          </div>
+      <article className="rounded-2xl border border-stroke-2 bg-card px-5 py-7 sm:px-10 sm:py-10">
+        <div className="mx-auto max-w-[70ch]">
+          {privacyNotice ? (
+            <AvisoPrivacidadTexto texto={privacyNotice} />
+          ) : (
+            <div className="space-y-4 text-[15px] leading-6 text-fg-2">
+              <h3 className="text-[16px] font-semibold text-fg">Aviso de Privacidad</h3>
+              <p>Este aviso de privacidad describe cómo recopilamos, utilizamos y protegemos su información personal en el sistema Insulae.</p>
+              <p>Al utilizar este sistema, usted acepta el tratamiento de sus datos personales conforme a las políticas establecidas.</p>
+              <p>Para más información, puede contactar al administrador del sistema.</p>
+            </div>
+          )}
         </div>
-      </div>
+      </article>
 
-      {/* PDF del Aviso de Privacidad */}
+      {/* PDF del aviso de privacidad */}
       {pdfAviso && (
-        <div className="bg-white shadow-md rounded-xl overflow-hidden border border-gray-200">
-          <div className="p-6">
-            <div className="flex items-center space-x-3 mb-4">
-              <FileText className="w-6 h-6 text-amber-600" />
-              <h2 className="text-xl font-semibold text-gray-900">
-                Documento PDF
-              </h2>
-            </div>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <a
-                href={avisoPdfUrl(pdfAviso)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
-              >
-                <div className="flex items-center space-x-3">
-                  <FileText className="w-5 h-5 text-red-600" />
-                  <span className="font-medium text-gray-900">
-                    Ver Aviso de Privacidad (PDF)
-                  </span>
-                </div>
-                <svg
-                  className="w-5 h-5 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
+        <section className="rounded-2xl border border-stroke-2 bg-card p-5 sm:p-6">
+          <h2 className="mb-3 flex items-center gap-2 text-[16px] font-semibold text-fg">
+            <FileText aria-hidden className="h-5 w-5 text-brand" strokeWidth={1.75} />
+            Documento PDF
+          </h2>
+          <a
+            href={avisoPdfUrl(pdfAviso)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-between gap-3 rounded-xl border border-stroke-2 p-4 outline-none transition-[background-color,border-color] duration-150 hover:border-stroke hover:bg-surface-2 focus-visible:ring-2 focus-visible:ring-brand/45"
+          >
+            <span className="flex items-center gap-3">
+              <FileText aria-hidden className="h-5 w-5 text-overdue" strokeWidth={1.75} />
+              <span className="text-[14px] font-medium text-fg">Ver Aviso de Privacidad (PDF)</span>
+            </span>
+            <ArrowUpRight
+              aria-hidden
+              className="h-4 w-4 text-fg-4 transition-[color,translate] duration-150 group-hover:-translate-y-px group-hover:translate-x-px group-hover:text-brand"
+              strokeWidth={2}
+            />
+            <span className="sr-only">(se abre en otra pestaña)</span>
+          </a>
+        </section>
       )}
     </div>
   );

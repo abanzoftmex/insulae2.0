@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { Eye, FileText } from "lucide-react";
-import { StatusBadge } from "@/components/minisitio/status-badge";
 import { msPath } from "@/components/minisitio/paths";
+import { Tooltip } from "@/components/minisitio/tooltip";
 import { parseNum, type ArrendamientoView } from "./arrendamientos-types";
 
 /** Tabla de comercios (antes `components/ArrendamientosTable.js`). */
@@ -25,15 +25,13 @@ export function ArrendamientosTable({ arrendamientos }: { arrendamientos: Arrend
     );
   };
 
-  // Función para obtener badge de estado financiero
-  const getFinancialStatusBadge = (estadoFinanciero: string) => {
-    const statusMap: Record<string, { color: string; text: string }> = {
-      al_corriente: { color: "bg-green-100 text-green-800", text: "Al corriente" },
-      pendiente: { color: "bg-yellow-100 text-yellow-800", text: "Pendiente" },
-      vencido: { color: "bg-red-100 text-red-800", text: "Vencido" },
-      a_favor: { color: "bg-blue-100 text-blue-800", text: "A favor" },
-    };
-    return statusMap[estadoFinanciero] || statusMap["al_corriente"];
+  // Estado financiero de cada comercio. Antes el objeto se pasaba como `status` a StatusBadge, que
+  // no lo reconocía, y todas las filas decían "Sin estado".
+  const FINANCIAL_STATUS: Record<string, { color: string; dot: string; text: string }> = {
+    al_corriente: { color: "bg-success-bg text-success ring-success/15", dot: "bg-success", text: "Al corriente" },
+    pendiente: { color: "bg-warning-bg text-warning ring-brand-accent/25", dot: "bg-brand-accent", text: "Pendiente" },
+    vencido: { color: "bg-critical-bg text-overdue ring-overdue/15", dot: "bg-overdue", text: "Vencido" },
+    a_favor: { color: "bg-surface-4 text-fg-2 ring-stroke-2", dot: "bg-brand", text: "A favor" },
   };
 
   // Ordenar arrendamientos por área privativa de forma ascendente
@@ -43,158 +41,104 @@ export function ArrendamientosTable({ arrendamientos }: { arrendamientos: Arrend
     return areaA.localeCompare(areaB, "es", { numeric: true });
   });
 
+  const th = "whitespace-nowrap border-b border-stroke-2 bg-surface-2 px-4 py-3 text-[12px] font-semibold text-fg-3";
+  const td = "border-b border-stroke-3 px-4 py-3 text-[13.5px] text-fg tabular-nums";
+  const accion =
+    "inline-flex h-8 w-8 items-center justify-center rounded-lg outline-none transition-colors duration-100 hover:bg-brand/[0.08] hover:text-brand-deep focus-visible:ring-2 focus-visible:ring-brand/45";
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-line overflow-hidden">
-      <div className="overflow-x-auto max-h-[calc(100vh-300px)] overflow-y-auto">
-        <table className="w-full">
-          <thead className="bg-canvas border-b border-line sticky top-0 z-10">
+    <div className="overflow-hidden rounded-2xl border border-stroke-2 bg-card">
+      <div className="scrollbar-slim max-h-[calc(100vh-300px)] overflow-auto">
+        <table className="w-full min-w-[1180px] border-separate border-spacing-0">
+          <thead className="sticky top-0 z-10">
             <tr>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-24">
-                Área Privativa
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-32">
-                Comercio
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-28">
-                Superficie
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-28">
-                M² Construcción
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-24">
-                Indiviso
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-28">
-                Indiviso FAP/Cond.
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-40">
-                Estado Financiero (Saldo Vencido)
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-32">
-                Saldo Pendiente
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-24">
-                Estado
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-32">
-                Barrio
-              </th>
-              <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-32">
-                Uso de Suelo
-              </th>
-              <th className="text-center py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider w-24">
-                Acciones
-              </th>
+              <th scope="col" className={`${th} sticky left-0 z-10 text-left`}>Área Privativa</th>
+              <th scope="col" className={`${th} text-left`}>Comercio</th>
+              <th scope="col" className={`${th} text-right`}>Superficie</th>
+              <th scope="col" className={`${th} text-right`}>M² Construcción</th>
+              <th scope="col" className={`${th} text-right`}>Indiviso</th>
+              <th scope="col" className={`${th} text-right`}>Indiviso FAP/Cond.</th>
+              <th scope="col" className={`${th} text-right`}>Estado Financiero (Saldo Vencido)</th>
+              <th scope="col" className={`${th} text-right`}>Saldo Pendiente</th>
+              <th scope="col" className={`${th} text-left`}>Estado</th>
+              <th scope="col" className={`${th} text-left`}>Barrio</th>
+              <th scope="col" className={`${th} text-left`}>Uso de Suelo</th>
+              <th scope="col" className={`${th} text-center`}>Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-line">
-            {sortedArrendamientos.map((arrendamiento, index) => (
-              <tr key={arrendamiento?.id_arrendamientos ?? index} className="hover:bg-brand-mint/30 transition-colors">
-                <td className="py-4 px-6">
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-gray-900">{arrendamiento?.area_privativa || "N/A"}</div>
-                  </div>
-                </td>
-                <td className="py-4 px-6">
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-gray-900 truncate">{arrendamiento?.nombre_comercio || "Sin nombre"}</div>
-                    <div className="text-xs text-gray-500 truncate">{arrendamiento?.razon_social_comercio || "N/A"}</div>
-                  </div>
-                </td>
-                <td className="py-4 px-6 w-28">
-                  <div className="min-w-0">
-                    <div className="text-sm text-gray-900 font-medium truncate">{formatM2(arrendamiento?.superficie)}</div>
-                  </div>
-                </td>
-                <td className="py-4 px-6 w-28">
-                  <div className="min-w-0">
-                    <div className="text-sm text-gray-900 font-medium truncate">{formatM2(arrendamiento?.m2_construccion)}</div>
-                  </div>
-                </td>
-                <td className="py-4 px-6 w-24">
-                  <span className="text-sm font-medium text-gray-900">{(parseNum(arrendamiento?.indiviso) || 0).toFixed(4)}%</span>
-                </td>
-                <td className="py-4 px-6 w-28">
-                  {arrendamiento?.indiviso_fap_condominio !== null ? (
-                    <span className="text-sm font-medium text-blue-600">
-                      {parseNum(arrendamiento?.indiviso_fap_condominio).toFixed(4)}%
+          <tbody>
+            {sortedArrendamientos.map((arrendamiento, index) => {
+              const pendiente = parseNum(arrendamiento?.saldo_pendiente) || 0;
+              const vencido = parseNum(arrendamiento?.saldo_vencido) || 0;
+              const noVencido = parseNum(arrendamiento?.saldo_pendiente_no_vencido) || 0;
+              const estado = FINANCIAL_STATUS[arrendamiento?.estado_financiero] ?? FINANCIAL_STATUS.al_corriente;
+              const nombre = arrendamiento?.nombre_comercio || "Sin nombre";
+              return (
+                <tr key={arrendamiento?.id_arrendamientos ?? index} className="group bg-card transition-colors duration-100 hover:bg-surface-3">
+                  <td className={`${td} sticky left-0 z-[1] whitespace-nowrap bg-inherit font-medium`}>{arrendamiento?.area_privativa || "N/A"}</td>
+                  <td className={`${td} min-w-44`}>
+                    <div className="truncate font-medium">{nombre}</div>
+                    {arrendamiento?.razon_social_comercio && arrendamiento.razon_social_comercio !== nombre && (
+                      <div className="truncate text-[12.5px] text-fg-3">{arrendamiento.razon_social_comercio}</div>
+                    )}
+                  </td>
+                  <td className={`${td} whitespace-nowrap text-right`}>{formatM2(arrendamiento?.superficie)}</td>
+                  <td className={`${td} whitespace-nowrap text-right`}>{formatM2(arrendamiento?.m2_construccion)}</td>
+                  <td className={`${td} whitespace-nowrap text-right`}>{(parseNum(arrendamiento?.indiviso) || 0).toFixed(4)}%</td>
+                  <td className={`${td} whitespace-nowrap text-right`}>
+                    {arrendamiento?.indiviso_fap_condominio !== null ? (
+                      `${parseNum(arrendamiento?.indiviso_fap_condominio).toFixed(4)}%`
+                    ) : (
+                      <span className="text-fg-4">—</span>
+                    )}
+                  </td>
+                  <td className={`${td} whitespace-nowrap text-right`}>
+                    <div className={`font-semibold ${pendiente > 0 ? "text-overdue" : "text-success"}`}>{formatCurrency(pendiente)}</div>
+                    <div className={`text-[12px] ${vencido > 0 ? "text-overdue/80" : pendiente > 0 ? "text-warning" : "text-fg-3"}`}>
+                      {vencido > 0 ? "Vencido" : pendiente > 0 ? "Pendiente" : "Al corriente"}
+                    </div>
+                  </td>
+                  <td className={`${td} whitespace-nowrap text-right`}>
+                    <div className={`font-semibold ${noVencido > 0 ? "text-warning" : "text-fg-2"}`}>{formatCurrency(noVencido)}</div>
+                    <div className="text-[12px] text-fg-3">No vencido</div>
+                  </td>
+                  <td className={td}>
+                    <span className={`inline-flex h-6 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 text-[12px] font-medium ring-1 ring-inset ${estado.color}`}>
+                      <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${estado.dot}`} />
+                      {estado.text}
                     </span>
-                  ) : (
-                    <span className="text-sm text-gray-400">—</span>
-                  )}
-                </td>
-                <td className="py-4 px-6">
-                  <div className="min-w-0">
-                    <div
-                      className={`text-sm font-medium truncate ${
-                        (parseNum(arrendamiento?.saldo_pendiente) || 0) > 0 ? "text-red-600" : "text-green-600"
-                      }`}
-                    >
-                      {formatCurrency(arrendamiento?.saldo_pendiente || 0)}
+                  </td>
+                  <td className={`${td} max-w-40`}>
+                    <div className="truncate" title={arrendamiento?.barrio || "Sin barrio"}>
+                      {arrendamiento?.barrio || "Sin barrio"}
                     </div>
-                    <div className="text-xs mt-1">
-                      {(parseNum(arrendamiento?.saldo_vencido) || 0) > 0 ? (
-                        <span className="text-red-500 font-medium">Vencido</span>
-                      ) : (parseNum(arrendamiento?.saldo_pendiente) || 0) > 0 ? (
-                        <span className="text-yellow-500 font-medium">Pendiente</span>
-                      ) : (
-                        <span className="text-green-500">Al corriente</span>
-                      )}
+                  </td>
+                  <td className={`${td} min-w-48 text-fg-2`}>{arrendamiento?.uso_suelo || "Sin uso definido"}</td>
+                  <td className={td}>
+                    <div className="flex justify-center gap-1">
+                      <Tooltip title="Ver detalle" position="bottom" className="inline-flex">
+                        <Link
+                          href={msPath(`/arrendamientos/${arrendamiento?.id_arrendamientos}`)}
+                          aria-label={`Ver detalle de ${nombre}`}
+                          className={`${accion} text-brand`}
+                        >
+                          <Eye className="h-4 w-4" strokeWidth={1.75} />
+                        </Link>
+                      </Tooltip>
+                      <Tooltip title="Estado de cuenta" position="bottom" className="inline-flex">
+                        <Link
+                          href={msPath(`/arrendamientos/${arrendamiento?.id_arrendamientos}/estado-cuenta`)}
+                          aria-label={`Estado de cuenta de ${nombre}`}
+                          className={`${accion} text-fg-3`}
+                        >
+                          <FileText className="h-4 w-4" strokeWidth={1.75} />
+                        </Link>
+                      </Tooltip>
                     </div>
-                  </div>
-                </td>
-                <td className="py-4 px-6">
-                  <div className="min-w-0">
-                    <div
-                      className={`text-sm font-medium truncate ${
-                        (parseNum(arrendamiento?.saldo_pendiente_no_vencido) || 0) > 0 ? "text-yellow-600" : "text-gray-600"
-                      }`}
-                    >
-                      {formatCurrency(arrendamiento?.saldo_pendiente_no_vencido || 0)}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-1">No vencido</div>
-                  </div>
-                </td>
-                <td className="py-4 px-6 w-24">
-                  {/* Legacy: se pasa como `status` el objeto {color, text}; StatusBadge no lo reconoce
-                      y pinta "Sin estado" en todas las filas. Se conserva tal cual (ver reporte del port). */}
-                  <StatusBadge
-                    status={getFinancialStatusBadge(arrendamiento?.estado_financiero) as unknown as number}
-                    type="payment"
-                  />
-                </td>
-                <td className="py-4 px-6 max-w-32">
-                  <div className="min-w-0">
-                    <div className="text-sm text-gray-900 truncate">{arrendamiento?.barrio || "Sin barrio"}</div>
-                  </div>
-                </td>
-                <td className="py-4 px-6">
-                  <div className="min-w-0">
-                    <div className="text-sm text-gray-900 whitespace-normal break-words">
-                      {arrendamiento?.uso_suelo || "Sin uso definido"}
-                    </div>
-                  </div>
-                </td>
-                <td className="py-4 px-6 w-24">
-                  <div className="flex justify-center space-x-2">
-                    <Link
-                      href={msPath(`/arrendamientos/${arrendamiento?.id_arrendamientos}`)}
-                      className="inline-flex items-center p-2 text-primary-dark hover:text-primary-light hover:bg-canvas rounded-lg transition-colors"
-                      title="Ver detalle"
-                    >
-                      <Eye className="w-4 h-4" />
-                    </Link>
-                    <Link
-                      href={msPath(`/arrendamientos/${arrendamiento?.id_arrendamientos}/estado-cuenta`)}
-                      className="inline-flex items-center p-2 text-gray-600 hover:text-primary-light hover:bg-canvas rounded-lg transition-colors"
-                      title="Estado de cuenta"
-                    >
-                      <FileText className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

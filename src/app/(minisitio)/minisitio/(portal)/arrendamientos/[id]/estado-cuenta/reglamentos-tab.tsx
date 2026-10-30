@@ -1,6 +1,8 @@
 "use client";
 
-import { BookOpen, ExternalLink, FileText } from "lucide-react";
+import { BookOpen, Download, ExternalLink, FileText } from "lucide-react";
+import { BUTTON } from "@/components/minisitio/ui/list-controls";
+import { StatementSection } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/statement-ui";
 import type { Documento } from "@/modules/minisitio/infrastructure/queries/documents.queries";
 import { documentUrl } from "@/app/(minisitio)/minisitio/(portal)/_lib/estado-cuenta-utils";
 
@@ -23,129 +25,96 @@ export function ReglamentosTab({
   const selectedReglamento = reglamentos.find((doc) => doc.id_proyectos_documentos === selectedReglamentoId);
 
   return (
-    <div className="space-y-8">
-      <div className="bg-white border border-line rounded-none shadow-sm">
-        <div className="bg-gray-50 px-6 py-3 border-b border-line">
-          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Reglamento condominial</h3>
+    <StatementSection title="Reglamento condominial" description="Gestión · Reglamentos del condominio">
+      {reglamentosError ? (
+        <p role="alert" className="rounded-xl bg-critical-bg px-4 py-3 text-[13.5px] text-overdue">
+          {reglamentosError}
+        </p>
+      ) : reglamentos.length === 0 ? (
+        <div className="py-8 text-center">
+          <p className="text-[14px] text-fg-2">No hay reglamentos disponibles en este momento.</p>
+          <p className="mt-1.5 text-[13px] text-fg-3">Contacta a administración para solicitar el reglamento condominial actualizado.</p>
         </div>
-        <div className="px-6 py-6 space-y-6">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-gray-500">Gestión</p>
-            <h4 className="text-sm font-semibold text-gray-900">Reglamentos del condominio</h4>
+      ) : (
+        <div className="space-y-6">
+          {/* Selector rápido */}
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Elegir reglamento">
+            {reglamentos.map((documento) => {
+              const isSelected = documento.id_proyectos_documentos === selectedReglamentoId;
+              return (
+                <button
+                  key={documento.id_proyectos_documentos}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => onSelect(documento.id_proyectos_documentos)}
+                  className={`flex max-w-full items-center gap-2 rounded-full border px-3.5 py-1.5 text-left text-[12.5px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-brand/45 ${
+                    isSelected ? "border-brand bg-brand text-white" : "border-stroke-2 bg-card text-fg-2 hover:border-stroke hover:bg-surface-3"
+                  }`}
+                >
+                  <BookOpen aria-hidden className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+                  <span className="min-w-0 truncate">{documento.nombre}</span>
+                </button>
+              );
+            })}
           </div>
 
-          {reglamentosError ? (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              {reglamentosError}
-            </div>
-          ) : reglamentos.length === 0 ? (
-            <div className="text-center text-sm text-gray-500">
-              <p>No hay reglamentos disponibles en este momento.</p>
-              <p className="mt-2 text-xs text-gray-400">
-                Contacta a administración para solicitar el reglamento condominial actualizado.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="flex flex-wrap gap-2">
-                {reglamentos.map((documento) => {
-                  const isSelected = documento.id_proyectos_documentos === selectedReglamentoId;
-                  return (
-                    <button
-                      key={documento.id_proyectos_documentos}
-                      type="button"
-                      onClick={() => onSelect(documento.id_proyectos_documentos)}
-                      className={`flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-medium transition-colors ${
-                        isSelected
-                          ? "bg-primary-dark text-white border-primary-dark"
-                          : "bg-white text-gray-600 hover:text-gray-900 border-line"
-                      }`}
-                    >
-                      <BookOpen className="h-3 w-3" />
-                      {documento.nombre}
-                    </button>
-                  );
-                })}
+          {selectedReglamento && (
+            <div className="animate-rise-in rounded-xl bg-gold-soft p-5 ring-1 ring-inset ring-brand-accent/25">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold text-warning">Reglamento seleccionado</p>
+                  <h3 className="mt-1 text-[16px] font-semibold leading-6 text-fg">{selectedReglamento.nombre}</h3>
+                  {selectedReglamento.descripcion && <p className="mt-1.5 text-[13.5px] text-fg-2">{selectedReglamento.descripcion}</p>}
+                  <p className="mt-2 text-[12.5px] text-fg-3">Guarda este enlace para consultar el reglamento actualizado en cualquier momento.</p>
+                </div>
+                <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                  <a href={documentUrl(selectedReglamento.archivo)} target="_blank" rel="noopener noreferrer" className={BUTTON.secondary}>
+                    <ExternalLink aria-hidden className="h-4 w-4" strokeWidth={2} />
+                    Ver reglamento
+                  </a>
+                  <a href={documentUrl(selectedReglamento.archivo)} download className={BUTTON.primary}>
+                    <Download aria-hidden className="h-4 w-4" strokeWidth={2} />
+                    Descargar PDF
+                  </a>
+                </div>
               </div>
+            </div>
+          )}
 
-              {selectedReglamento && (
-                <div className="rounded-xl border border-line bg-gray-50 p-6">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        Reglamento seleccionado
-                      </p>
-                      <h4 className="mt-1 text-lg font-semibold text-gray-900">{selectedReglamento.nombre}</h4>
-                      {selectedReglamento.descripcion && (
-                        <p className="mt-2 text-sm text-gray-600">{selectedReglamento.descripcion}</p>
-                      )}
-                      <p className="mt-3 text-xs text-gray-500">
-                        Guarda este enlace para consultar el reglamento actualizado en cualquier momento.
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-stretch gap-2 sm:flex-row">
-                      <a
-                        href={documentUrl(selectedReglamento.archivo)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Ver reglamento
-                      </a>
-                      <a
-                        href={documentUrl(selectedReglamento.archivo)}
-                        download
-                        className="inline-flex items-center justify-center gap-2 rounded-md border border-primary-dark bg-primary-dark px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-dark/90"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Descargar PDF
-                      </a>
-                    </div>
+          <ul className="divide-y divide-stroke-3 overflow-hidden rounded-xl border border-stroke-2">
+            {reglamentos.map((documento) => (
+              <li
+                key={`reglamento-item-${documento.id_proyectos_documentos}`}
+                className="flex flex-col gap-3 bg-card px-4 py-3.5 transition-colors duration-100 hover:bg-surface-2 sm:flex-row sm:items-center sm:justify-between"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand/[0.08] text-brand">
+                    <FileText aria-hidden className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-medium leading-5 text-fg">{documento.nombre}</p>
+                    {documento.descripcion && <p className="text-[12.5px] text-fg-3">{documento.descripcion}</p>}
                   </div>
                 </div>
-              )}
-
-              <div className="space-y-3">
-                {reglamentos.map((documento) => (
-                  <div
-                    key={`reglamento-item-${documento.id_proyectos_documentos}`}
-                    className="flex flex-col gap-3 rounded-lg border border-line bg-white p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+                <div className="flex shrink-0 items-center gap-2">
+                  <button type="button" onClick={() => onSelect(documento.id_proyectos_documentos)} className={`${BUTTON.secondary} h-8 px-3 text-[13px]`}>
+                    Ver detalle
+                  </button>
+                  <a
+                    href={documentUrl(documento.archivo)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${BUTTON.primary} h-8 px-3 text-[13px]`}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100">
-                        <FileText className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-gray-900">{documento.nombre}</p>
-                        {documento.descripcion && <p className="text-xs text-gray-500">{documento.descripcion}</p>}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onSelect(documento.id_proyectos_documentos)}
-                        className="rounded-md border border-gray-300 px-3 py-2 text-xs font-medium text-gray-600 transition-colors hover:text-gray-900"
-                      >
-                        Ver detalle
-                      </button>
-                      <a
-                        href={documentUrl(documento.archivo)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 rounded-md border border-primary-dark bg-primary-dark px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-primary-dark/90"
-                      >
-                        <ExternalLink className="h-3 w-3" />
-                        Abrir
-                      </a>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
+                    <ExternalLink aria-hidden className="h-3.5 w-3.5" strokeWidth={2} />
+                    Abrir
+                  </a>
+                </div>
+              </li>
+            ))}
+          </ul>
         </div>
-      </div>
-    </div>
+      )}
+    </StatementSection>
   );
 }

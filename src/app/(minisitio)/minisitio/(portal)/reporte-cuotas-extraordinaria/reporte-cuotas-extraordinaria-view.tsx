@@ -6,6 +6,7 @@ import { FinancialReportSkeleton } from "@/components/minisitio/skeleton-loaders
 import { cn } from "@/shared/utils/cn";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Paginator } from "@/components/minisitio/ui/paginator";
+import { BUTTON } from "@/components/minisitio/ui/list-controls";
 import type { FeesReport, FeesReportArea } from "@/modules/minisitio/infrastructure/queries/reports.queries";
 import { getFeesReportAction } from "../../_actions/reports";
 import {
@@ -140,7 +141,7 @@ export function ReporteCuotasExtraordinariaView({
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
         <AlertTriangle className="h-12 w-12 text-brand-accent" />
-        <h2 className="text-lg font-bold uppercase tracking-tight text-brand">
+        <h2 className="text-[18px] font-semibold text-fg">
           Error al cargar datos
         </h2>
         <p className="text-sm text-ink-soft">
@@ -149,7 +150,7 @@ export function ReporteCuotasExtraordinariaView({
         <button
           type="button"
           onClick={retryLoadData}
-          className="mt-2 inline-flex items-center gap-2 rounded-pill bg-brand px-6 py-2 text-sm font-semibold text-white transition-standard active-scale hover:bg-brand-uplift"
+          className={`mt-2 ${BUTTON.primary}`}
         >
           <RefreshCw className="h-4 w-4" />
           Reintentar
@@ -369,7 +370,7 @@ export function ReporteCuotasExtraordinariaView({
             type="button"
             onClick={retryLoadData}
             disabled={loading}
-            className="inline-flex items-center justify-center whitespace-nowrap h-8 gap-2 px-3 text-[10px] font-bold uppercase rounded-full border border-[#c8b8a0] bg-white text-[#5a4838] hover:bg-[#faf6f0] transition-standard active-scale disabled:pointer-events-none disabled:opacity-50"
+            className={BUTTON.secondary}
           >
             <RefreshCw className="h-3.5 w-3.5" /> Actualizar
           </button>
@@ -382,14 +383,13 @@ export function ReporteCuotasExtraordinariaView({
           label="Total Unidades"
           value={unidadesEnSistema}
           icon={<Layers className="h-4 w-4" />}
-          iconClassName="bg-[#4c4a24]"
         />
 
         <KpiCard
           label="Ciclo Fiscal"
           value={`${primerAnio} – ${ultimoAnio}`}
           icon={<MapPin className="h-4 w-4" />}
-          iconClassName="bg-[#0e7490]"
+          iconClassName="bg-gold-soft text-warning"
         />
 
         <LegendCard label="Simbología de Extraordinarias" className="col-span-1 md:col-span-2">
@@ -409,7 +409,7 @@ export function ReporteCuotasExtraordinariaView({
             <select
               value={itemsPerPage}
               onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-              className="h-8 w-full rounded-md border border-[#c8b8a0]/50 bg-white px-2 text-xs font-medium outline-none"
+              className="h-9 w-full rounded-[10px] border border-stroke-2 bg-card px-2.5 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 hover:border-stroke focus:border-brand/50 focus:ring-[3px] focus:ring-brand/15"
             >
               <option value={10}>10 por pág</option>
               <option value={30}>30 por pág</option>
@@ -435,9 +435,9 @@ export function ReporteCuotasExtraordinariaView({
 
           {/* THEAD */}
           <thead className="sticky top-0 z-30 shadow-sm">
-            <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
+            <tr className="bg-[#e0d5c8] text-left text-[12px] font-semibold text-[#5a4838]">
               <th className="sticky left-0 top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8] min-w-[290px]">
-                ÁREA PRIVATIVA/ FRACCIÓN DE ÁREA PRIVATIVA
+                Área privativa / Fracción de área privativa
               </th>
 
               {gruposCobro.map((grupo) => (
@@ -450,13 +450,13 @@ export function ReporteCuotasExtraordinariaView({
               ))}
 
               <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold text-center min-w-[180px]">
-                SALDO ACTUAL
+                Saldo actual
               </th>
 
               {monthColumns.map(({ year, month }) => (
                 <th
                   key={`mh-${year}-${month}`}
-                  className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] text-center min-w-[110px]"
+                  className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[11.5px] font-semibold text-[#7a5e44] text-center min-w-[110px] tabular-nums"
                 >
                   {String(month).padStart(2, "0")}/{year}
                 </th>
@@ -472,8 +472,8 @@ export function ReporteCuotasExtraordinariaView({
           {/* TFOOT — Totales de la página actual */}
           <tfoot>
             <tr className="border-t-2 border-[#c8b49a] bg-[#e0d5c8] font-bold text-[#2b1e12]">
-              <td className="sticky left-0 z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2b1e12]">
-                TOTALES
+              <td className="sticky left-0 z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-[13px] font-bold text-[#2b1e12]">
+                Totales
               </td>
 
               {gruposCobro.map((grupo, idx) => (

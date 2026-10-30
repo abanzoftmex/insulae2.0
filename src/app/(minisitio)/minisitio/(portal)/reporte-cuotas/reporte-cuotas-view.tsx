@@ -5,6 +5,7 @@ import { AlertTriangle, Layers, MapPin, RefreshCw } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Paginator } from "@/components/minisitio/ui/paginator";
+import { BUTTON } from "@/components/minisitio/ui/list-controls";
 import type { FeesReport, FeesReportArea } from "@/modules/minisitio/infrastructure/queries/reports.queries";
 import { getFeesReportAction } from "../../_actions/reports";
 import {
@@ -213,7 +214,7 @@ export function ReporteCuotasView({
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <AlertTriangle className="h-12 w-12 text-brand-accent mb-4" />
-        <h2 className="text-lg font-bold uppercase tracking-tight text-brand mb-1">
+        <h2 className="mb-1 text-[18px] font-semibold text-fg">
           Error al cargar datos
         </h2>
         <p className="text-sm text-ink-soft mb-4">
@@ -222,7 +223,7 @@ export function ReporteCuotasView({
         <button
           type="button"
           onClick={retryLoadData}
-          className="inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest transition-standard active-scale hover:bg-brand-uplift"
+          className={BUTTON.primary}
         >
           <RefreshCw className="h-3.5 w-3.5" />
           Reintentar
@@ -313,7 +314,7 @@ export function ReporteCuotasView({
           <button
             type="button"
             onClick={retryLoadData}
-            className="inline-flex items-center justify-center h-8 gap-2 px-3 text-[10px] font-bold uppercase rounded-full border border-[#c8b8a0] bg-white text-[#5a4838] transition-standard active-scale hover:bg-[#faf6f0]"
+            className={BUTTON.secondary}
           >
             <RefreshCw className="h-3.5 w-3.5" /> Actualizar
           </button>
@@ -326,14 +327,13 @@ export function ReporteCuotasView({
           label="Total Unidades"
           value={unidadesEnSistema}
           icon={<Layers className="h-4 w-4" />}
-          iconClassName="bg-[#4c4a24]"
         />
 
         <KpiCard
           label="Ciclo Fiscal"
           value={`${aniosDisponibles[0]} – ${aniosDisponibles[aniosDisponibles.length - 1]}`}
           icon={<MapPin className="h-4 w-4" />}
-          iconClassName="bg-[#0e7490]"
+          iconClassName="bg-gold-soft text-warning"
         />
 
         <LegendCard label="Simbología de Cobranza" className="col-span-1 md:col-span-2">
@@ -353,7 +353,7 @@ export function ReporteCuotasView({
             <select
               value={itemsPerPage}
               onChange={handleItemsPerPageChange}
-              className="h-8 w-full rounded-md border border-[#c8b8a0]/50 bg-white px-2 text-xs font-medium outline-none"
+              className="h-9 w-full rounded-[10px] border border-stroke-2 bg-card px-2.5 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 hover:border-stroke focus:border-brand/50 focus:ring-[3px] focus:ring-brand/15"
             >
               {REGISTROS_POR_PAGINA.map((cantidad) => (
                 <option key={`limit-${cantidad}`} value={cantidad}>
@@ -380,38 +380,38 @@ export function ReporteCuotasView({
 
           {/* THEAD */}
           <thead className="sticky top-0 z-30 shadow-sm">
-            <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
+            <tr className="bg-[#e0d5c8] text-left text-[12px] font-semibold text-[#5a4838]">
               <th className="sticky left-0 top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8] min-w-[290px]">
-                ÁREA PRIVATIVA/ FRACCIÓN DE ÁREA PRIVATIVA
+                Área privativa / Fracción de área privativa
               </th>
               <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[160px]">
-                CARTERA VENCIDA {anioAnterior}
+                Cartera vencida {anioAnterior}
               </th>
               <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[160px]">
-                PAGO ANTICIPADO {anioAnterior}
+                Pago anticipado {anioAnterior}
               </th>
               {aniosDisponibles.map((year) => (
                 <React.Fragment key={`head-anio-${year}`}>
                   <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
-                    CUOTAS ORDINARIAS {year} (ANUAL)
+                    Cuotas ordinarias {year} (anual)
                   </th>
                   <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
-                    CUOTAS ORDINARIAS {year} (MENSUAL)
+                    Cuotas ordinarias {year} (mensual)
                   </th>
                   <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
-                    CUOTAS ORDINARIAS {year} (SALDO ACTUAL)
+                    Cuotas ordinarias {year} (saldo actual)
                   </th>
                 </React.Fragment>
               ))}
               <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold text-center min-w-[180px]">
-                SALDO ACTUAL
+                Saldo actual
               </th>
               {aniosDisponibles.map((year) => (
                 <React.Fragment key={`head-meses-${year}`}>
                   {MESES.map((mesIdx) => (
                     <th
                       key={`head-mes-${year}-${mesIdx}`}
-                      className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] text-center min-w-[110px]"
+                      className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[11.5px] font-semibold text-[#7a5e44] text-center min-w-[110px] tabular-nums"
                     >
                       {String(mesIdx + 1).padStart(2, "0")}/{year}
                     </th>
@@ -504,7 +504,7 @@ export function ReporteCuotasView({
                       {isChild ? `FAP: ${area.nombre}` : `AP: ${area.nombre}`}
                     </p>
                     {tipo === 'apol' && area.es_fusion === 1 && area.areasFusion?.length > 0 && (
-                      <p className="text-[9px] font-semibold uppercase tracking-tight text-[#7a5e44] leading-tight truncate">
+                      <p className="text-[11.5px] font-medium text-[#7a5e44] leading-tight truncate">
                         Fusión de: {(area.areasFusion as FeesReportArea[]).map(f => f.nombre).join(', ')}
                       </p>
                     )}
@@ -599,8 +599,8 @@ export function ReporteCuotasView({
           {/* TFOOT — Totales de la página actual */}
           <tfoot>
             <tr className="border-t-2 border-[#c8b49a] bg-[#e0d5c8] font-bold text-[#2b1e12]">
-              <td className="sticky left-0 z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2b1e12]">
-                TOTALES
+              <td className="sticky left-0 z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-[13px] font-bold text-[#2b1e12]">
+                Totales
               </td>
 
               <td className="px-2 border-r border-[#c8b49a] text-center">

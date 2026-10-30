@@ -169,43 +169,43 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
   };
 
   const renderComercio = (comercio: Comercio, index: number) => (
-    <div key={index} className="border border-gray-200 rounded-lg p-4">
-      <h4 className="font-medium text-gray-900 mb-2">{comercio.nombre}</h4>
+    <div key={index} className="border border-stroke-2 rounded-lg p-4">
+      <h4 className="font-medium text-fg mb-2">{comercio.nombre}</h4>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
         <div>
-          <p className="text-gray-500">Razón Social</p>
+          <p className="text-fg-3">Razón Social</p>
           <p className="font-medium">{comercio.razonSocial || "No registrado"}</p>
         </div>
         <div>
-          <p className="text-gray-500">RFC</p>
+          <p className="text-fg-3">RFC</p>
           <p className="font-medium">{comercio.rfc || "No registrado"}</p>
         </div>
         <div>
-          <p className="text-gray-500">Email</p>
+          <p className="text-fg-3">Email</p>
           <p className="font-medium">{comercio.email || "No registrado"}</p>
         </div>
         <div>
-          <p className="text-gray-500">Teléfono</p>
+          <p className="text-fg-3">Teléfono</p>
           <p className="font-medium">{formatTelefono(comercio.telefono)}</p>
         </div>
       </div>
 
       {(comercio.directorioAdministrativo || comercio.directorioContable) && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <p className="text-sm font-medium text-gray-700 mb-2">Contactos:</p>
+        <div className="mt-3 pt-3 border-t border-stroke-2">
+          <p className="text-sm font-medium text-fg-2 mb-2">Contactos:</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             {comercio.directorioAdministrativo && (
               <div>
-                <p className="text-gray-500">Administrativo</p>
+                <p className="text-fg-3">Administrativo</p>
                 <p className="font-medium">{comercio.directorioAdministrativo.nombre}</p>
-                <p className="text-gray-400">{comercio.directorioAdministrativo.email}</p>
+                <p className="text-fg-4">{comercio.directorioAdministrativo.email}</p>
               </div>
             )}
             {comercio.directorioContable && (
               <div>
-                <p className="text-gray-500">Contable</p>
+                <p className="text-fg-3">Contable</p>
                 <p className="font-medium">{comercio.directorioContable.nombre}</p>
-                <p className="text-gray-400">{comercio.directorioContable.email}</p>
+                <p className="text-fg-4">{comercio.directorioContable.email}</p>
               </div>
             )}
           </div>
@@ -230,12 +230,12 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
                 <TipoIcon className="w-8 h-8 text-primary-dark" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold">
+                <h2 className="text-2xl font-bold">
                   {datosGenerales?.id_cat_tipos_directorio === 2
                     ? datosGenerales?.razon_social
                     : `${datosGenerales?.nombre || ""} ${datosGenerales?.apaterno || ""} ${datosGenerales?.amaterno || ""}`.trim()
                   }
-                </h1>
+                </h2>
                 <p className="text-gray-100">{tipoInfo.tipo}</p>
               </div>
             </div>
@@ -246,16 +246,21 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
                 <Receipt className="w-4 h-4 text-gray-300" />
                 <span className="text-sm text-gray-100">Factura</span>
               </div>
+              {/* Interruptor accesible (role=switch): antes era un botón sin nombre ni estado. */}
               <button
+                type="button"
+                role="switch"
+                aria-checked={requiereFactura}
+                aria-label="Requiero factura"
                 onClick={() => handleToggleRequiereFactura(!requiereFactura)}
                 disabled={actualizandoFactura}
-                className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-primary-dark ${
-                  requiereFactura ? "bg-green-500" : "bg-gray-400"
-                } ${actualizandoFactura ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-primary-dark ${
+                  requiereFactura ? "bg-brand-mint" : "bg-white/25"
+                } ${actualizandoFactura ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
               >
                 <span
-                  className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                    requiereFactura ? "translate-x-5" : "translate-x-1"
+                  className={`inline-block h-[18px] w-[18px] rounded-full shadow-[0_1px_2px_rgb(0_0_0/0.25)] transition-transform duration-200 ease-smooth ${
+                    requiereFactura ? "translate-x-[23px] bg-brand-deep" : "translate-x-[3px] bg-white"
                   }`}
                 />
               </button>
@@ -275,7 +280,7 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
                     href={constanciaFiscalUrl(datosGenerales.constanciaFiscal)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-2 py-1 text-xs text-green-300 hover:text-green-100 transition-colors rounded-md hover:bg-green-800/20"
+                    className="inline-flex items-center px-2 py-1 text-xs text-brand-mint hover:text-white transition-colors rounded-md hover:bg-green-800/20"
                     title="Ver constancia fiscal actual"
                   >
                     <Eye className="w-3 h-3" />
@@ -298,10 +303,10 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
                   <button
                     className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
                       subiendoConstancia
-                        ? "bg-gray-400 text-gray-200 cursor-not-allowed"
+                        ? "bg-white/20 text-white/60 cursor-not-allowed"
                         : datosGenerales?.constanciaFiscal
-                          ? "bg-green-600 hover:bg-green-700 text-white"
-                          : "bg-blue-600 hover:bg-blue-700 text-white"
+                          ? "bg-success-bg text-success hover:bg-white"
+                          : "bg-brand-mint text-brand-deep hover:bg-white"
                     }`}
                     disabled={subiendoConstancia}
                   >
@@ -331,8 +336,8 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
           {mensajeConstancia && (
             <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm ${
               tipoMensajeConstancia === "success"
-                ? "bg-green-100 text-green-800 border border-green-200"
-                : "bg-red-100 text-red-800 border border-red-200"
+                ? "bg-success-bg text-success border border-success/20"
+                : "bg-critical-bg text-overdue border border-overdue/20"
             }`}>
               {tipoMensajeConstancia === "success" ? (
                 <CheckCircle className="w-4 h-4 flex-shrink-0" />
@@ -397,11 +402,11 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
         size="lg"
       >
         <div className="space-y-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-medium text-blue-900 mb-2">
+          <div className="rounded-xl border border-stroke-2 bg-surface-2 p-4">
+            <h3 className="mb-2 font-semibold text-fg">
               Total de asignaciones: {asignaciones?.length || 0}
             </h3>
-            <p className="text-sm text-blue-700">
+            <p className="text-sm text-fg-2">
               Estas son todas las asignaciones activas e inactivas en el condominio para tu cuenta.
             </p>
           </div>
@@ -422,11 +427,11 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
         size="lg"
       >
         <div className="space-y-6">
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-            <h3 className="font-medium text-green-900 mb-2">
+          <div className="rounded-xl border border-success/20 bg-success-bg p-4">
+            <h3 className="mb-2 font-semibold text-success">
               Total de comercios: {comercios?.length || 0}
             </h3>
-            <p className="text-sm text-green-700">
+            <p className="text-sm text-fg-2">
               Estos son todos los comercios asociados a tu cuenta en el directorio.
             </p>
           </div>

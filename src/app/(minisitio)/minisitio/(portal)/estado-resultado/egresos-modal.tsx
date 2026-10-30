@@ -110,14 +110,14 @@ export function EgresosModal({
       <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between p-6 border-b border-line">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-fg">
               Sub-opciones (Conceptos)
             </h2>
-            <p className="text-base text-gray-700 mt-1">
+            <p className="text-base text-fg-2 mt-1">
               {opcionNombre}
             </p>
             {!loading && conceptos.length > 0 && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-fg-3 mt-1">
                 {conceptos.length} concepto(s) - Total: {formatCurrency(conceptos.reduce((sum, c) => sum + c.totalAnual, 0))}
               </p>
             )}
@@ -134,7 +134,7 @@ export function EgresosModal({
             )}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-2 transition-colors"
+              className="text-fg-4 hover:text-fg-3 p-2 transition-colors"
             >
               <X className="w-6 h-6" />
             </button>
@@ -144,13 +144,13 @@ export function EgresosModal({
         <div className="flex-1 overflow-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader className="w-8 h-8 animate-spin text-blue-600 mr-3" />
-              <span className="text-gray-600">Cargando conceptos...</span>
+              <Loader className="w-8 h-8 animate-spin text-brand mr-3" />
+              <span className="text-fg-3">Cargando conceptos...</span>
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md mx-auto">
-                <div className="text-red-600 mb-4">Error: {error}</div>
+              <div className="bg-critical-bg border border-overdue/20 rounded-lg p-6 max-w-md mx-auto">
+                <div className="text-overdue mb-4">Error: {error}</div>
                 <button
                   onClick={fetchConceptos}
                   className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
@@ -161,10 +161,10 @@ export function EgresosModal({
             </div>
           ) : conceptos.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-600 text-lg">
+              <p className="text-fg-3 text-lg">
                 No se encontraron conceptos con gastos para esta opción
               </p>
-              <p className="text-gray-500 text-sm mt-2">
+              <p className="text-fg-3 text-sm mt-2">
                 Año {anio}
               </p>
             </div>
@@ -173,16 +173,16 @@ export function EgresosModal({
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-canvas sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-surface-2">
                       Concepto
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
                       Total Anual
                     </th>
                     {meses.map((mes, idx) => (
                       <th
                         key={idx}
-                        className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider whitespace-nowrap"
+                        className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
                       >
                         {mes}
                       </th>
@@ -193,18 +193,18 @@ export function EgresosModal({
                   {conceptos.map((concepto, idx) => (
                     <tr
                       key={concepto.id}
-                      className={idx % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-50 hover:bg-gray-100"}
+                      className={idx % 2 === 0 ? "bg-white hover:bg-surface-2" : "bg-surface-2 hover:bg-surface-3"}
                     >
-                      <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit">
+                      <td className="px-4 py-3 text-sm text-fg font-medium sticky left-0 bg-inherit">
                         {concepto.nombre}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900">
+                      <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-fg">
                         {formatCurrency(concepto.totalAnual)}
                       </td>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                         <td
                           key={mes}
-                          className="px-4 py-3 text-sm text-right font-mono text-gray-700"
+                          className="px-4 py-3 text-sm text-right tabular-nums text-fg-2"
                         >
                           {formatCurrency(concepto.meses[mes])}
                         </td>
@@ -212,11 +212,11 @@ export function EgresosModal({
                     </tr>
                   ))}
 
-                  <tr className="bg-red-100 font-semibold border-t-2 border-red-300">
-                    <td className="px-4 py-4 text-sm text-red-900 uppercase sticky left-0 bg-red-100">
+                  <tr className="bg-critical-bg font-semibold border-t-2 border-red-300">
+                    <td className="px-4 py-4 text-sm text-overdue sticky left-0 bg-critical-bg">
                       Total General
                     </td>
-                    <td className="px-4 py-4 text-base text-right font-mono font-bold text-red-900">
+                    <td className="px-4 py-4 text-base text-right tabular-nums font-bold text-overdue">
                       {formatCurrency(conceptos.reduce((sum, c) => sum + c.totalAnual, 0))}
                     </td>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => {
@@ -224,7 +224,7 @@ export function EgresosModal({
                       return (
                         <td
                           key={mes}
-                          className="px-4 py-4 text-sm text-right font-mono font-semibold text-red-900"
+                          className="px-4 py-4 text-sm text-right tabular-nums font-semibold text-overdue"
                         >
                           {formatCurrency(totalMes)}
                         </td>
@@ -237,14 +237,14 @@ export function EgresosModal({
           )}
         </div>
 
-        <div className="border-t border-line px-6 py-4 bg-gray-50">
+        <div className="border-t border-line px-6 py-4 bg-surface-2">
           <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-fg-3">
               Año {anio} - {opcionInfo?.nombre || opcionNombre}
             </p>
             <button
               onClick={onClose}
-              className="bg-gray-600 text-white px-6 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+              className="inline-flex h-9 items-center rounded-[10px] bg-brand px-5 text-[13.5px] font-semibold text-white outline-none transition-colors duration-150 hover:bg-brand-hover focus-visible:ring-2 focus-visible:ring-brand/45 focus-visible:ring-offset-2"
             >
               Cerrar
             </button>

@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BookOpen, FileText, Plus } from "lucide-react";
-import { StatusBadge } from "@/components/minisitio/status-badge";
+import { motion, useReducedMotion } from "framer-motion";
+import { AlertTriangle, BookOpen, FileText } from "lucide-react";
+import { BUTTON } from "@/components/minisitio/ui/list-controls";
 import { msPath } from "@/components/minisitio/paths";
 import { useRequireAuth } from "@/components/minisitio/use-minisitio-auth";
 import { useMinisitioLayoutStore } from "@/stores/minisitio-layout.store";
@@ -11,14 +12,15 @@ import type { RentalAccountStatement } from "@/modules/minisitio/infrastructure/
 import type { ProjectInfo } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import type { Documento } from "@/modules/minisitio/infrastructure/queries/documents.queries";
 import type { TicketDepartment } from "@/modules/minisitio/infrastructure/queries/tickets.queries";
+import { formatCurrency, statementFileName } from "@/app/(minisitio)/minisitio/(portal)/_lib/estado-cuenta-utils";
 import {
-  formatCurrency,
-  formatDate,
-  movementBadgeStatus,
-  movementBalance,
-  statementFileName,
-} from "@/app/(minisitio)/minisitio/(portal)/_lib/estado-cuenta-utils";
-import { ButtonSpinner } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/button-spinner";
+  InfoGrid,
+  MovementsTable,
+  PaymentsTable,
+  StatementActions,
+  StatementSection,
+  SummaryStat,
+} from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/statement-ui";
 import { CreateTicketModal } from "@/app/(minisitio)/minisitio/(portal)/_components/estado-cuenta/create-ticket-modal";
 import {
   SendStatementEmailModal,
@@ -58,6 +60,7 @@ export function EstadoCuentaArrendamientoView({
   const [selectedReglamentoId, setSelectedReglamentoId] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const setPageData = useMinisitioLayoutStore((state) => state.setPageData);
+  const reduce = useReducedMotion();
 
   // Configurar el encabezado con el arrendamiento cargado
   useEffect(() => {
@@ -112,306 +115,109 @@ export function EstadoCuentaArrendamientoView({
   });
   const { sendingEmail } = email;
 
+  const pagados = (estadoCuenta?.pagos ?? []).filter((pago) => pago.status === "pagado").slice(0, 3);
+
   const renderEstadoTab = () => (
-    <div className="space-y-8">
-      {/* Información del Comercio - Diseño Contable */}
+    <div className="space-y-6">
+      {/* Información del comercio */}
       {arrendamiento && (
-        <div className="bg-white border border-line rounded-none shadow-sm">
-          <div className="bg-gray-50 px-6 py-3 border-b border-line">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Información del Comercio</h3>
-          </div>
-          <div className="px-6 py-4">
-            <dl className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre Comercial</dt>
-                <dd className="mt-1 text-sm font-mono text-gray-900">{arrendamiento.nombre_comercio}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Razón Social</dt>
-                <dd className="mt-1 text-sm font-mono text-gray-900">{arrendamiento.razon_social_comercio || "N/A"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Área</dt>
-                <dd className="mt-1 text-sm font-mono text-gray-900">{arrendamiento.area_nombre || "N/A"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">RFC</dt>
-                <dd className="mt-1 text-sm font-mono text-gray-900">{arrendamiento.rfc || "No especificado"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Teléfono</dt>
-                <dd className="mt-1 text-sm font-mono text-gray-900">{arrendamiento.telefono || "No especificado"}</dd>
-              </div>
-              <div>
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</dt>
-                <dd className="mt-1 text-sm font-mono text-gray-900">{arrendamiento.email || "No especificado"}</dd>
-              </div>
-            </dl>
-          </div>
-        </div>
+        <StatementSection title="Información del Comercio">
+          <InfoGrid
+            items={[
+              { label: "Nombre Comercial", value: arrendamiento.nombre_comercio },
+              { label: "Razón Social", value: arrendamiento.razon_social_comercio || "N/A" },
+              { label: "Área", value: arrendamiento.area_nombre || "N/A" },
+              { label: "RFC", value: arrendamiento.rfc || <span className="text-fg-4">No especificado</span> },
+              { label: "Teléfono", value: arrendamiento.telefono || <span className="text-fg-4">No especificado</span> },
+              { label: "Email", value: arrendamiento.email || <span className="text-fg-4">No especificado</span> },
+            ]}
+          />
+        </StatementSection>
       )}
 
-      {/* Últimos Pagos Realizados */}
-      {estadoCuenta?.pagos && estadoCuenta.pagos.filter((pago) => pago.status === "pagado").length > 0 && (
-        <div className="bg-white border border-line rounded-none shadow-sm">
-          <div className="bg-gray-50 px-6 py-3 border-b border-line">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Últimos Pagos Realizados</h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-[600px] w-full divide-y divide-line">
-              <thead className="bg-canvas">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line w-1/3">
-                    Folio
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line w-1/3">
-                    Fecha de Pago
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase tracking-wider w-1/3">
-                    Abono Realizado
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
-                {estadoCuenta.pagos
-                  .filter((pago) => pago.status === "pagado")
-                  .slice(0, 3)
-                  .map((pago, index) => (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-gray-900 border-r border-gray-100 w-1/3">
-                        {pago.folio || "N/A"}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-gray-900 border-r border-gray-100 w-1/3">
-                        {formatDate(pago.fecha)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-right text-gray-900 w-1/3">
-                        {formatCurrency(pago.monto)}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+      {/* Últimos pagos realizados */}
+      {pagados.length > 0 && (
+        <StatementSection title="Últimos Pagos Realizados" flush>
+          <PaymentsTable pagos={pagados} />
+        </StatementSection>
       )}
 
-      {/* Resumen Financiero - Estilo Contable */}
+      {/* Resumen financiero */}
       {estadoCuenta && (
-        <div className="bg-white border border-line rounded-none shadow-sm">
-          <div className="bg-gray-50 px-6 py-3 border-b border-line">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Resumen Financiero</h3>
-          </div>
-          <div className="px-6 py-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border-l-4 border-blue-500 pl-4">
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Saldo Total</dt>
-                <dd className="mt-1 text-2xl font-mono font-bold text-gray-900">
-                  {formatCurrency(estadoCuenta.cargosTotales)}
-                </dd>
-              </div>
-              <div className="border-l-4 border-red-500 pl-4">
-                <dt className="text-xs font-medium text-gray-500 uppercase tracking-wide">Saldo Pendiente</dt>
-                <dd className="mt-1 text-2xl font-mono font-bold text-red-700">
-                  {formatCurrency(Math.max(0, estadoCuenta.saldoPendiente || 0))}
-                </dd>
-              </div>
-            </div>
-          </div>
-        </div>
+        <StatementSection title="Resumen Financiero">
+          <dl className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <SummaryStat label="Saldo Total" value={formatCurrency(estadoCuenta.cargosTotales)} />
+            <SummaryStat
+              label="Saldo Pendiente"
+              value={formatCurrency(Math.max(0, estadoCuenta.saldoPendiente || 0))}
+              tone={(estadoCuenta.saldoPendiente || 0) > 0 ? "overdue" : "neutral"}
+            />
+          </dl>
+        </StatementSection>
       )}
 
-      {/* Estado de Cuenta Detallado - Tabla Contable */}
+      {/* Detalle de cargos y movimientos */}
       {estadoCuenta?.movimientos && estadoCuenta.movimientos.length > 0 && (
-        <div className="bg-white border border-line rounded-none shadow-sm">
-          <div className="bg-gray-50 px-6 py-3 border-b border-line">
-            <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
-              Detalle de cargos y movimientos
-            </h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-[900px] w-full divide-y divide-line">
-              <thead className="bg-canvas">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Tipo de Cuota
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Concepto
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Fecha de Cobro
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Fecha Límite de Pago
-                  </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Pagado el
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Cargo
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Abono
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Intereses Moratorios
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Descuento
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-900 uppercase tracking-wider border-r border-line">
-                    Saldo
-                  </th>
-                  <th className="px-4 py-3 text-center text-xs font-semibold text-gray-900 uppercase tracking-wider">
-                    Estado
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
-                {estadoCuenta.movimientos.map((movimiento, index) => {
-                  // Cálculo según PHP: monto - montoAbonado + intereses - descuento
-                  const saldoBruto = movementBalance(movimiento);
-                  const saldo = saldoBruto > 0 ? saldoBruto : 0;
-                  return (
-                    <tr key={index} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-xs text-gray-900 border-r border-gray-100">
-                        {movimiento.grupoCobro || "Arrendamiento"}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-gray-900 border-r border-gray-100 max-w-xs truncate">
-                        {movimiento.concepto || "Sin concepto"}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-gray-900 border-r border-gray-100">
-                        {formatDate(movimiento.fechaPago)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-gray-900 border-r border-gray-100">
-                        {formatDate(movimiento.fechaVigencia)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-gray-900 border-r border-gray-100">
-                        {movimiento.fechaLiquidacion ? formatDate(movimiento.fechaLiquidacion) : "No pagado"}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-right text-gray-900 border-r border-gray-100">
-                        {formatCurrency(movimiento.monto)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-right text-green-700 border-r border-gray-100">
-                        {formatCurrency(movimiento.montoAbonado)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-right text-yellow-700 border-r border-gray-100">
-                        {formatCurrency(movimiento.intereses)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-right text-purple-700 border-r border-gray-100">
-                        {formatCurrency(movimiento.descuento_aplicado || 0)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-xs font-mono text-right text-red-700 border-r border-gray-100">
-                        {formatCurrency(saldo)}
-                      </td>
-                      <td className="px-4 py-3 whitespace-nowrap text-center">
-                        <StatusBadge status={movementBadgeStatus(movimiento.id_cat_status_pago)} type="payment" />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <StatementSection title="Detalle de cargos y movimientos" flush>
+          <MovementsTable movimientos={estadoCuenta.movimientos} defaultGroup="Arrendamiento" unpaidLabel="No pagado" />
+        </StatementSection>
       )}
 
-      {/* Acciones Profesionales */}
-      <div className="bg-white border border-line rounded-none shadow-sm">
-        <div className="bg-gray-50 px-6 py-3 border-b border-line">
-          <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">Acciones</h3>
-        </div>
-        <div className="px-6 py-4">
-          <div className="flex flex-wrap gap-3">
-            <Link
-              href={msPath(`/arrendamientos/${id}`)}
-              className="bg-white text-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors border border-gray-300"
-            >
-              ← Volver al Detalle
-            </Link>
-            <Link
-              href={msPath("/arrendamientos")}
-              className="bg-white text-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors border border-gray-300"
-            >
-              📋 Todos los Arrendamientos
-            </Link>
-            <button
-              className="text-gray-700 px-4 py-2 text-sm font-medium hover:bg-gray-50 transition-colors border border-gray-300 rounded-l-md disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={generatePDF}
-              disabled={!arrendamiento || !estadoCuenta || generatingPDF}
-            >
-              {generatingPDF ? (
-                <>
-                  <ButtonSpinner className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-700 inline" />
-                  Generando PDF...
-                </>
-              ) : (
-                "📄 Descargar Estado de Cuenta"
-              )}
-            </button>
-            <button
-              className="bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
-              onClick={() => setShowCreateForm(true)}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Solicitar ayuda</span>
-            </button>
-            <button
-              className="bg-black text-white px-4 py-2 text-sm font-medium hover:bg-blue-700 transition-colors border border-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={email.openEmailModal}
-              disabled={!arrendamiento || !estadoCuenta || sendingEmail}
-            >
-              {sendingEmail ? (
-                <>
-                  <ButtonSpinner className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" />
-                  Enviando...
-                </>
-              ) : (
-                "✉️ Enviar por Email"
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
+      <StatementActions
+        backHref={msPath(`/arrendamientos/${id}`)}
+        listHref={msPath("/arrendamientos")}
+        listLabel="Todos los Arrendamientos"
+        onDownload={generatePDF}
+        downloading={generatingPDF}
+        downloadDisabled={!arrendamiento || !estadoCuenta}
+        onHelp={() => setShowCreateForm(true)}
+        onEmail={email.openEmailModal}
+        sending={sendingEmail}
+        emailDisabled={!arrendamiento || !estadoCuenta}
+      />
     </div>
   );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      <div className="bg-white border border-line rounded-xl shadow-sm">
-        <div className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-900">Estado de cuenta del comercio</h2>
-            <p className="text-xs text-gray-500">
-              Consulta tus saldos o revisa el reglamento condominial en un solo lugar.
-            </p>
-          </div>
-          <div className="inline-flex rounded-lg bg-gray-100 p-1">
-            <button
-              type="button"
-              onClick={() => setActiveTab("estado")}
-              className={`flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
-                activeTab === "estado"
-                  ? "bg-white text-gray-900 shadow-sm border border-line"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              <FileText className="h-4 w-4" />
-              Estado de cuenta
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("reglamentos")}
-              className={`ml-1 flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
-                activeTab === "reglamentos"
-                  ? "bg-white text-gray-900 shadow-sm border border-line"
-                  : "text-gray-600 hover:text-gray-900"
-              }`}
-            >
-              <BookOpen className="h-4 w-4" />
-              Reglamentos
-            </button>
-          </div>
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 rounded-2xl border border-stroke-2 bg-card px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div>
+          <h2 className="text-[16px] font-semibold leading-6 text-fg">Estado de cuenta del comercio</h2>
+          <p className="text-[13px] leading-5 text-fg-3">Consulta tus saldos o revisa el reglamento condominial en un solo lugar.</p>
+        </div>
+        <div role="tablist" aria-label="Secciones del estado de cuenta" className="inline-flex rounded-[10px] bg-surface-4 p-1 ring-1 ring-inset ring-stroke-3">
+          {(
+            [
+              { key: "estado", label: "Estado de cuenta", icon: FileText },
+              { key: "reglamentos", label: "Reglamentos", icon: BookOpen },
+            ] as const
+          ).map(({ key, label, icon: Icon }) => {
+            const active = activeTab === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setActiveTab(key)}
+                className={`relative flex h-8 items-center gap-2 rounded-md px-3 text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-brand/45 ${
+                  active ? "text-brand-deep" : "text-fg-3 hover:text-fg"
+                }`}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="estado-cuenta-tab"
+                    aria-hidden
+                    className="absolute inset-0 bg-card"
+                    style={{ borderRadius: 6, boxShadow: "0 1px 2px rgb(0 0 0 / 0.1), 0 0 0 1px rgb(0 0 0 / 0.04)" }}
+                    transition={reduce ? { duration: 0 } : { type: "spring", stiffness: 520, damping: 42, mass: 0.9 }}
+                  />
+                )}
+                <Icon aria-hidden className="relative h-4 w-4" strokeWidth={active ? 2 : 1.75} />
+                <span className="relative">{label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -426,44 +232,28 @@ export function EstadoCuentaArrendamientoView({
         />
       )}
 
-      {/* Error Modal */}
+      {/* Error al cargar */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="p-6">
-              <div className="flex items-center mb-4">
-                <div className="flex-shrink-0">
-                  <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"
-                    />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-lg font-medium text-gray-900">Error</h3>
-                </div>
+        <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-brand-deep/45 p-4 backdrop-blur-[2px]" role="presentation">
+          <div role="alertdialog" aria-modal="true" aria-labelledby="estado-cuenta-error" className="animate-rise-in w-full max-w-md rounded-2xl bg-card p-6 shadow-[0_0_0_1px_rgb(61_60_34/0.08),0_24px_64px_-12px_rgb(61_60_34/0.4)]">
+            <div className="flex items-start gap-3">
+              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-critical-bg text-overdue">
+                <AlertTriangle aria-hidden className="h-5 w-5" strokeWidth={2} />
+              </span>
+              <div className="min-w-0">
+                <h3 id="estado-cuenta-error" className="text-[16px] font-semibold text-fg">
+                  Error
+                </h3>
+                <p className="mt-1 text-[13.5px] leading-5 text-fg-3">{loadError}</p>
               </div>
-              <div className="mb-6">
-                <p className="text-sm text-gray-600">{loadError}</p>
-              </div>
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                >
-                  Cerrar
-                </button>
-                <Link
-                  href={msPath("/arrendamientos")}
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Ir a Arrendamientos
-                </Link>
-              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-2.5">
+              <button type="button" onClick={() => setIsModalOpen(false)} className={BUTTON.secondary}>
+                Cerrar
+              </button>
+              <Link href={msPath("/arrendamientos")} onClick={() => setIsModalOpen(false)} className={BUTTON.primary}>
+                Ir a Arrendamientos
+              </Link>
             </div>
           </div>
         </div>

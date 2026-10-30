@@ -3,10 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FileText } from "lucide-react";
+import { ArrowLeft, ArrowRight, Building2, FileText } from "lucide-react";
 import { LoadingSpinner } from "@/components/minisitio/loading-spinner";
 import { useMinisitioAuth } from "@/components/minisitio/use-minisitio-auth";
 import { msPath } from "@/components/minisitio/paths";
+import { BUTTON, EmptyState } from "@/components/minisitio/ui/list-controls";
 import { useMinisitioLayoutStore } from "@/stores/minisitio-layout.store";
 import type { PropertyDetail } from "@/modules/minisitio/infrastructure/queries/properties.queries";
 import { ImageGallery } from "./image-gallery";
@@ -69,7 +70,7 @@ export function PropiedadDetalleView({ id, detail }: { id: string; detail: Prope
   // El legacy dejaba el spinner mientras redirigía a quien no es propietario
   if (!puedeVer) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-[50vh] items-center justify-center">
         <LoadingSpinner />
       </div>
     );
@@ -77,137 +78,124 @@ export function PropiedadDetalleView({ id, detail }: { id: string; detail: Prope
 
   if (!propiedad) {
     return (
-      <div className="min-h-screen bg-canvas flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <div className="text-red-400 text-6xl mb-4">❌</div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Propiedad no encontrada</h3>
-          <p className="text-gray-600 mb-4">La propiedad que buscas no existe o no tienes permisos para verla.</p>
-          <Link
-            href={msPath("/propiedades")}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
-          >
+      <EmptyState
+        icon={Building2}
+        title="Propiedad no encontrada"
+        description="La propiedad que buscas no existe o no tienes permisos para verla."
+        action={
+          <Link href={msPath("/propiedades")} className={BUTTON.primary}>
+            <ArrowLeft aria-hidden className="h-4 w-4" strokeWidth={2.25} />
             Volver a Propiedades
           </Link>
-        </div>
-      </div>
+        }
+      />
     );
   }
 
-  return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      {/* Información clave de la propiedad */}
-      <div className="bg-white border border-gray-200 rounded-md p-4">
-        {/* Métricas de superficie */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm mb-4">
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">M² Totales</div>
-            <div className="font-mono font-semibold text-lg">{formatM2(propiedad.m2_totales)}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">M² Construcción</div>
-            <div className="font-mono font-semibold text-lg">{formatM2(propiedad.m2_construccion)}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">M² Área Común</div>
-            <div className="font-mono font-semibold text-lg">{formatM2(propiedad.m2_area_comun)}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-xs text-gray-500 mb-1">% Indiviso</div>
-            <div className="font-mono font-semibold text-lg">{(propiedad.indiviso || 0.0417).toFixed(4)}%</div>
-          </div>
-        </div>
+  const saldo = balance?.saldo_pendiente ?? 0;
+  const fechaUltimoPago = (() => {
+    if (!balance?.fecha_ultimo_pago) return "Sin registros";
+    const d = new Date(balance.fecha_ultimo_pago);
+    return isNaN(d.getTime()) ? "Sin registros" : d.toLocaleDateString("es-MX", { timeZone: "America/Mexico_City" });
+  })();
 
-        {/* Información del propietario y ubicación */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <div className="flex items-center space-x-6">
-            <div>
-              <div className="text-xs text-gray-500 mb-1">Propietario</div>
-              <div className="text-sm font-medium text-gray-900">
-                {user?.nombre} {user?.apaterno} {user?.amaterno}
-              </div>
-              <div className="text-xs text-gray-600">{user?.email}</div>
-            </div>
-            <div className="border-l border-gray-200 pl-6">
-              <div className="text-xs text-gray-500 mb-1">Contacto</div>
-              <div className="text-sm text-gray-900">{user?.telefono || "No disponible"}</div>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-6 text-sm">
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-1">Barrio</div>
-              <div className="text-sm font-medium">{propiedad.zona || "No especificado"}</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-1">Uso de Suelo</div>
-              <div className="text-sm font-medium">{propiedad.uso_suelo || "No especificado"}</div>
-            </div>
-          </div>
+  return (
+    <div className="space-y-6">
+      {/* Información clave de la propiedad */}
+      <section aria-label="Datos de la propiedad" className="rounded-2xl border border-stroke-2 bg-card">
+        <dl className="grid grid-cols-2 divide-stroke-3 md:grid-cols-4 md:divide-x">
+          {/* El indiviso ya no cae a 0.0417 % cuando no hay dato: se muestra lo que hay (0 %). */}
+          <Superficie label="M² Totales" value={formatM2(propiedad.m2_totales)} />
+          <Superficie label="M² Construcción" value={formatM2(propiedad.m2_construccion)} />
+          <Superficie label="M² Área Común" value={formatM2(propiedad.m2_area_comun)} />
+          <Superficie label="% Indiviso" value={`${(propiedad.indiviso || 0).toFixed(4)}%`} />
+        </dl>
+
+        <div className="grid grid-cols-1 gap-x-8 gap-y-4 border-t border-stroke-3 px-5 py-4 sm:grid-cols-2 lg:grid-cols-4 sm:px-6">
+          <Dato label="Propietario">
+            <span className="block font-medium">{[user?.nombre, user?.apaterno, user?.amaterno].filter(Boolean).join(" ")}</span>
+            {user?.email && <span className="block truncate text-[12.5px] text-fg-3">{user.email}</span>}
+          </Dato>
+          <Dato label="Contacto">{user?.telefono || <span className="text-fg-4">No disponible</span>}</Dato>
+          <Dato label="Barrio">{propiedad.zona || "No especificado"}</Dato>
+          <Dato label="Uso de Suelo">{propiedad.uso_suelo || "No especificado"}</Dato>
         </div>
-      </div>
+      </section>
 
       {/* Resumen financiero simplificado */}
-      <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">Resumen de Cuenta</h2>
-          <Link
-            href={msPath(`/propiedades/${id}/estado-cuenta`)}
-            className="bg-gray-800 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 transition-colors inline-flex items-center"
-          >
-            <FileText className="w-4 h-4 mr-2" />
+      <section aria-labelledby="resumen-cuenta" className="overflow-hidden rounded-2xl border border-stroke-2 bg-card">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-stroke-3 px-5 py-4 sm:px-6">
+          <h2 id="resumen-cuenta" className="text-[16px] font-semibold text-fg">
+            Resumen de Cuenta
+          </h2>
+          <Link href={msPath(`/propiedades/${id}/estado-cuenta`)} className={`group ${BUTTON.primary}`}>
+            <FileText aria-hidden className="h-4 w-4" strokeWidth={2} />
             Estado de Cuenta
+            <ArrowRight aria-hidden className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-0.5" strokeWidth={2.25} />
           </Link>
         </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Saldo actual */}
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm font-medium text-gray-500 mb-2">SALDO ACTUAL</div>
-              <div
-                className={`text-2xl font-bold font-mono ${
-                  (balance?.saldo_pendiente ?? 0) > 0 ? "text-red-600" : "text-green-600"
-                }`}
-              >
-                {formatCurrency(balance?.saldo_pendiente || 0)}
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                {(balance?.saldo_pendiente ?? 0) > 0 ? "Pendiente de pago" : "Al corriente"}
-              </div>
-            </div>
-
-            {/* Último pago */}
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm font-medium text-gray-500 mb-2">ÚLTIMO PAGO</div>
-              <div className="text-2xl font-bold text-gray-900 font-mono">{formatCurrency(balance?.ultimo_pago || 0)}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                {balance?.fecha_ultimo_pago
-                  ? (() => {
-                      try {
-                        const d = new Date(balance.fecha_ultimo_pago);
-                        return isNaN(d.getTime())
-                          ? "Sin registros"
-                          : d.toLocaleDateString("es-MX", { timeZone: "America/Mexico_City" });
-                      } catch {
-                        return "Sin registros";
-                      }
-                    })()
-                  : "Sin registros"}
-              </div>
-            </div>
-
-            {/* Total cargos */}
-            <div className="text-center p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm font-medium text-gray-500 mb-2">TOTAL CARGOS</div>
-              <div className="text-2xl font-bold text-gray-900 font-mono">{formatCurrency(balance?.total_cargos || 0)}</div>
-              <div className="text-xs text-gray-500 mt-1">
-                {(balance?.total_cargos ?? 0) > 0 ? "Periodo actual" : "Sin cargos"}
-              </div>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 gap-3 p-5 sm:p-6 md:grid-cols-3">
+          <Saldo
+            label="Saldo actual"
+            value={formatCurrency(saldo)}
+            caption={saldo > 0 ? "Pendiente de pago" : "Al corriente"}
+            tone={saldo > 0 ? "overdue" : "success"}
+          />
+          <Saldo label="Último pago" value={formatCurrency(balance?.ultimo_pago || 0)} caption={fechaUltimoPago} />
+          <Saldo
+            label="Total cargos"
+            value={formatCurrency(balance?.total_cargos || 0)}
+            caption={(balance?.total_cargos ?? 0) > 0 ? "Periodo actual" : "Sin cargos"}
+          />
         </div>
-      </div>
+      </section>
 
-      {/* Gallery de imágenes del área privativa */}
+      {/* Galería de imágenes del área privativa */}
       <ImageGallery images={images} title={`Imágenes de ${propiedad.nombre || "la Propiedad"}`} />
+    </div>
+  );
+}
+
+function Superficie({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="px-5 py-4 text-center sm:px-6 [&:nth-child(-n+2)]:border-b [&:nth-child(-n+2)]:border-stroke-3 md:[&:nth-child(-n+2)]:border-b-0">
+      <dt className="text-[12px] font-medium text-fg-3">{label}</dt>
+      <dd className="mt-1 text-[18px] font-semibold leading-7 tracking-[-0.01em] text-fg tabular-nums">{value}</dd>
+    </div>
+  );
+}
+
+function Dato({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[12px] font-medium text-fg-3">{label}</p>
+      <div className="mt-0.5 text-[14px] leading-5 text-fg">{children}</div>
+    </div>
+  );
+}
+
+function Saldo({
+  label,
+  value,
+  caption,
+  tone,
+}: {
+  label: string;
+  value: string;
+  caption: string;
+  tone?: "overdue" | "success";
+}) {
+  return (
+    <div className="rounded-xl bg-surface-2 p-4 text-center ring-1 ring-inset ring-stroke-3">
+      <p className="text-[12.5px] font-medium text-fg-3">{label}</p>
+      <p
+        className={`mt-1.5 text-[24px] font-bold leading-8 tracking-[-0.02em] tabular-nums ${
+          tone === "overdue" ? "text-overdue" : tone === "success" ? "text-success" : "text-fg"
+        }`}
+      >
+        {value}
+      </p>
+      <p className="mt-0.5 text-[12px] text-fg-3">{caption}</p>
     </div>
   );
 }

@@ -10,11 +10,17 @@ import {
   TrendingUp,
   Wallet
 } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/shared/utils/cn';
 import { PageBackBadge } from '@/components/ui/page-back-badge';
-import { StatCard } from '@/components/ui/stat-card';
+import { KpiCard } from '../_reportes/report-chrome';
+
+/** Tonos del ícono de los KPI (tenues; el número es lo importante). */
+const KPI_TONE = {
+  success: "bg-success-bg text-success",
+  gold: "bg-gold-soft text-warning",
+  overdue: "bg-critical-bg text-overdue",
+} as const;
 import type { FinancialYears, ResumenFinanciero } from '@/modules/minisitio/infrastructure/queries/financials.queries';
 import { getFinancialYearsAction, getResumenFinancieroAction } from '../../_actions/reports';
 import { CompactFinancialTable, TABLE_TONE, type FinancialTable } from './compact-financial-table';
@@ -408,7 +414,7 @@ export function ResumenFinancieroView({
   if (error) {
     return (
       <div className="rounded-card border border-danger/25 bg-danger/10 p-4">
-        <h2 className="text-xl font-bold uppercase tracking-tight text-danger mb-2">Error</h2>
+        <h2 className="text-xl font-bold text-danger mb-2">Error</h2>
         <p className="text-sm font-medium text-danger">{error}</p>
         <Button variant="destructive" size="sm" className="mt-4" onClick={fetchAllData}>
           Reintentar
@@ -419,21 +425,21 @@ export function ResumenFinancieroView({
 
   const segmentClass = (activo: boolean, ancho: string) =>
     cn(
-      'flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all',
+      'flex items-center rounded-md text-[13px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-brand/45',
       ancho,
-      activo ? 'bg-card text-brand shadow-sm border border-line' : 'text-ink-soft hover:text-ink'
+      activo ? 'bg-card text-brand-deep shadow-[0_1px_2px_rgb(0_0_0/0.1),0_0_0_1px_rgb(0_0_0/0.04)]' : 'text-fg-3 hover:text-fg'
     );
 
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-5 border-b border-brand">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-5 border-b border-stroke-2">
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Resumen Financiero</h1>
-            <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Fase 1 · BETA</Badge>
-            <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
+            <h2 className="text-[26px] font-bold leading-8 tracking-[-0.02em] text-fg">Resumen Financiero</h2>
+            <span className="inline-flex h-6 w-fit items-center rounded-full bg-surface-4 px-2.5 text-[12px] font-medium text-fg-2">Fase 1 · Beta</span>
+            <p className="text-[13.5px] text-fg-3">
               {CONDOMINIO} · Corte {anio} · {ultimaActualizacionTexto}
             </p>
           </div>
@@ -442,7 +448,7 @@ export function ResumenFinancieroView({
         <div className="flex flex-wrap items-center gap-3">
           {/* Year Selector */}
           {anios.length > 1 && (
-            <div className="flex items-center gap-1 p-1 bg-canvas-2 rounded-lg border border-line/50">
+            <div className="flex items-center gap-1 rounded-[10px] bg-surface-4 p-1 ring-1 ring-inset ring-stroke-3">
               {anios.map((year) => (
                 <button
                   key={year}
@@ -457,7 +463,7 @@ export function ResumenFinancieroView({
           )}
 
           {/* Mode Selector */}
-          <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
+          <div className="flex items-center gap-1 rounded-[10px] bg-surface-4 p-1 ring-1 ring-inset ring-stroke-3">
             <button
               type="button"
               onClick={() => setModo('ordinary')}
@@ -477,42 +483,52 @@ export function ResumenFinancieroView({
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         {esOrdinario ? (
-          <StatCard accent="brand" label="Ingresos Ordinarios" value={formatCurrency(kpi.ingresos)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+          <KpiCard label="Ingresos Ordinarios" value={formatCurrency(kpi.ingresos)} icon={<TrendingUp className="h-[18px] w-[18px]" />} />
         ) : (
-          <StatCard accent="cyan" label="Extraordinarios" value={formatCurrency(kpi.ingresos)} icon={<DollarSign className="h-3.5 w-3.5" />} />
+          <KpiCard label="Extraordinarios" value={formatCurrency(kpi.ingresos)} icon={<DollarSign className="h-[18px] w-[18px]" />} />
         )}
-        <StatCard accent="lime" label="Otros Ingresos" value={formatCurrency(kpi.otrosIngresos)} icon={<Plus className="h-3.5 w-3.5" />} />
-        <StatCard accent="brand" label="Ingresos Totales" value={formatCurrency(kpi.ingresosTotales)} icon={<TrendingUp className="h-3.5 w-3.5" />} />
-        <StatCard accent="gold" label="Egresos Totales" value={formatCurrency(kpi.egresos)} icon={<TrendingDown className="h-3.5 w-3.5" />} />
-        <StatCard
-          accent={kpi.balanceAnual >= 0 ? 'emerald' : 'gold'}
+        <KpiCard
+          label="Otros Ingresos"
+          value={formatCurrency(kpi.otrosIngresos)}
+          icon={<Plus className="h-[18px] w-[18px]" />}
+          iconClassName={KPI_TONE.success}
+        />
+        <KpiCard label="Ingresos Totales" value={formatCurrency(kpi.ingresosTotales)} icon={<TrendingUp className="h-[18px] w-[18px]" />} />
+        <KpiCard
+          label="Egresos Totales"
+          value={formatCurrency(kpi.egresos)}
+          icon={<TrendingDown className="h-[18px] w-[18px]" />}
+          iconClassName={KPI_TONE.gold}
+        />
+        <KpiCard
           label="Balance Anual"
-          value={formatCurrency(kpi.balanceAnual)}
-          icon={<Calendar className="h-3.5 w-3.5" />}
+          value={<span className={kpi.balanceAnual < 0 ? "text-overdue" : "text-success"}>{formatCurrency(kpi.balanceAnual)}</span>}
+          icon={<Calendar className="h-[18px] w-[18px]" />}
+          iconClassName={kpi.balanceAnual < 0 ? KPI_TONE.overdue : KPI_TONE.success}
         />
         {esOrdinario ? (
-          <StatCard
-            accent="emerald"
+          <KpiCard
             label={`Cuotas Ord. ${anio} (Anual)`}
             value={formatCurrency(kpi.ingresos)}
-            icon={<Wallet className="h-3.5 w-3.5" />}
+            icon={<Wallet className="h-[18px] w-[18px]" />}
+            iconClassName={KPI_TONE.success}
           />
         ) : (
-          <StatCard
-            accent="emerald"
+          <KpiCard
             label={`Cuotas Extr. Cargadas (Desde ${anios[0]})`}
             value={formatCurrency(kpi.extraordinariasAcumuladas)}
-            icon={<Wallet className="h-3.5 w-3.5" />}
+            icon={<Wallet className="h-[18px] w-[18px]" />}
+            iconClassName={KPI_TONE.success}
           />
         )}
       </div>
 
       {/* Context Info */}
-      <div className="flex items-center gap-2 p-3 bg-canvas/40 border border-line/30 rounded-md">
-        <Info className="h-4 w-4 text-brand-accent shrink-0" />
-        <p className="text-[11px] font-bold text-ink-soft/70 leading-tight uppercase tracking-tight">
+      <div className="flex items-center gap-2 rounded-xl border border-stroke-3 bg-surface-2 px-4 py-2.5">
+        <Info aria-hidden className="h-4 w-4 shrink-0 text-warning" strokeWidth={2} />
+        <p className="text-[13px] leading-5 text-fg-3">
           {`Ámbito: ${CONDOMINIO} · Datos consolidados de Insulae 2.0 · Periodo visual: ${anios.join(' / ')}`}
         </p>
       </div>

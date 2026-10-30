@@ -4,7 +4,7 @@ import { getDashboardSummary } from "@/modules/minisitio/infrastructure/queries/
 import { listRentals } from "@/modules/minisitio/infrastructure/queries/rentals.queries";
 import { DashboardView } from "./dashboard-view";
 
-export const metadata: Metadata = { title: "Dashboard" };
+export const metadata: Metadata = { title: "Panel de Control" };
 
 /** Panel de Control (`/minisitio/dashboard`, antes pages/dashboard.js). */
 export default async function DashboardPage() {

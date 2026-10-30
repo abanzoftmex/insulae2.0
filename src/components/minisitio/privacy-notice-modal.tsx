@@ -6,6 +6,7 @@
  * minisitio independiente), así que en la práctica no aparece; se conserva listo para cuando
  * se persista la aceptación. El texto llega del servidor (`notice`).
  */
+import { AvisoPrivacidadTexto } from "./aviso-privacidad-texto";
 import { useState } from "react";
 import { acceptPrivacyNoticeAction } from "@/app/(minisitio)/minisitio/_actions/auth";
 
@@ -100,10 +101,7 @@ export default function PrivacyNoticeModal({
                     ) : (
                         <div className="prose max-w-none">
                             {privacyNotice ? (
-                                <div
-                                    className="text-gray-700 leading-relaxed"
-                                    dangerouslySetInnerHTML={{ __html: privacyNotice }}
-                                />
+                                <AvisoPrivacidadTexto texto={privacyNotice} nivelSeccion={3} />
                             ) : (
                                 <div className="text-gray-600">
                                     <h3 className="text-lg font-semibold mb-4 text-gray-800">

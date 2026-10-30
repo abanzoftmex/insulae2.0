@@ -3,7 +3,9 @@
 import { useState } from "react";
 import { sendAccountStatementEmailAction } from "@/app/(minisitio)/minisitio/_actions/account";
 import { blobToDataUrl, EMAIL_REGEX } from "@/app/(minisitio)/minisitio/(portal)/_lib/estado-cuenta-utils";
-import { ButtonSpinner } from "./button-spinner";
+import { AlertCircle, Loader2, Mail, Send } from "lucide-react";
+import { BUTTON } from "@/components/minisitio/ui/list-controls";
+import { FIELD, LABEL, Modal, Toast } from "@/components/minisitio/ui/modal";
 
 interface UseStatementEmailOptions {
   /** Correo registrado del condómino (opción "Usar mi email registrado"). */
@@ -20,6 +22,9 @@ export function useStatementEmail({ userEmail, generatePdf, propertyName, userNa
   const [emailAddress, setEmailAddress] = useState(userEmail || "");
   const [useCustomEmail, setUseCustomEmail] = useState(false);
   const [sendingEmail, setSendingEmail] = useState(false);
+  // Antes eran alert(): el error se muestra dentro del modal y el éxito en un aviso.
+  const [formError, setFormError] = useState("");
+  const [sentMessage, setSentMessage] = useState("");
 
   const openEmailModal = () => {
     // Pre-cargar el email del usuario al abrir el modal
@@ -27,6 +32,7 @@ export function useStatementEmail({ userEmail, generatePdf, propertyName, userNa
       setEmailAddress(userEmail);
       setUseCustomEmail(false);
     }
+    setFormError("");
     setShowEmailModal(true);
   };
 
@@ -34,19 +40,21 @@ export function useStatementEmail({ userEmail, generatePdf, propertyName, userNa
     setShowEmailModal(false);
     setEmailAddress("");
     setUseCustomEmail(false);
+    setFormError("");
   };
 
   const sendEmailWithPDF = async () => {
     if (!emailAddress.trim()) {
-      alert("Por favor ingresa una dirección de correo electrónico.");
+      setFormError("Por favor ingresa una dirección de correo electrónico.");
       return;
     }
 
     if (!EMAIL_REGEX.test(emailAddress.trim())) {
-      alert("Por favor ingresa una dirección de correo electrónico válida.");
+      setFormError("Por favor ingresa una dirección de correo electrónico válida.");
       return;
     }
 
+    setFormError("");
     setSendingEmail(true);
 
     try {
@@ -66,14 +74,16 @@ export function useStatementEmail({ userEmail, generatePdf, propertyName, userNa
       });
 
       if (result.success) {
-        alert("PDF enviado exitosamente por correo electrónico.");
+        const destino = emailAddress.trim();
         closeEmailModal();
+        setSentMessage(`PDF enviado exitosamente a ${destino}.`);
+        setTimeout(() => setSentMessage(""), 5000);
       } else {
         throw new Error(result.message || "Error desconocido");
       }
     } catch (error) {
       console.error("Error enviando email:", error);
-      alert("Error al enviar el PDF por correo electrónico. Por favor, inténtalo de nuevo.");
+      setFormError("Error al enviar el PDF por correo electrónico. Por favor, inténtalo de nuevo.");
     } finally {
       setSendingEmail(false);
     }
@@ -89,49 +99,73 @@ export function useStatementEmail({ userEmail, generatePdf, propertyName, userNa
     openEmailModal,
     closeEmailModal,
     sendEmailWithPDF,
+    formError,
+    setFormError,
+    sentMessage,
+    setSentMessage,
   };
 }
 
 export type StatementEmailState = ReturnType<typeof useStatementEmail>;
 
-/** Clases de cada pantalla: la propiedad usa los colores de marca y el comercio, azul. */
-const VARIANTS = {
-  propiedad: {
-    panel: "bg-white rounded-lg shadow-xl max-w-md w-full border-2 border-primary-light",
-    header: "bg-primary-dark text-white px-6 py-4 rounded-t-lg",
-    subtitle: "text-sm text-primary-light/80 mt-1",
-    currentEmailBox: "bg-primary-light/10 p-4 rounded-lg border border-primary-light/30",
-    radio: "h-4 w-4 text-primary-light focus:ring-primary-light border-gray-300",
-    input:
-      "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-light focus:border-transparent",
-    recipient: "font-semibold text-primary-light",
-    submit:
-      "px-4 py-2 text-sm font-medium text-white bg-primary-dark border border-transparent rounded-md hover:bg-primary-light disabled:opacity-50 disabled:cursor-not-allowed flex items-center",
-    note: "El PDF será generado con la misma información que se muestra en pantalla y enviado a la dirección especificada.",
-  },
-  arrendamiento: {
-    panel: "bg-white rounded-lg shadow-xl max-w-md w-full border-2 border-blue-500",
-    header: "bg-blue-600 text-white px-6 py-4 rounded-t-lg",
-    subtitle: "text-sm text-blue-100 mt-1",
-    currentEmailBox: "bg-blue-50 p-4 rounded-lg border border-blue-200",
-    radio: "h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300",
-    input:
-      "w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
-    recipient: "font-semibold text-blue-600",
-    submit:
-      "px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center",
-    note: "El PDF será generado con la información del arrendamiento y enviado a la dirección especificada.",
-  },
+/** Nota de cada pantalla. Antes el comercio usaba azul; ahora ambas van con la marca. */
+const NOTES = {
+  propiedad: "El PDF será generado con la misma información que se muestra en pantalla y enviado a la dirección especificada.",
+  arrendamiento: "El PDF será generado con la información del arrendamiento y enviado a la dirección especificada.",
 } as const;
 
-/** Modal "Enviar Estado de Cuenta por Email" (overlay + diálogo). Se pinta solo si está abierto. */
+/** Opción seleccionable (tarjeta con radio). */
+function OptionCard({
+  id,
+  checked,
+  onSelect,
+  disabled,
+  title,
+  detail,
+  children,
+}: {
+  id: string;
+  checked: boolean;
+  onSelect: () => void;
+  disabled: boolean;
+  title: string;
+  detail?: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`rounded-xl border p-4 transition-[border-color,background-color,box-shadow] duration-150 ${
+        checked ? "border-brand/40 bg-brand/[0.04] shadow-[0_0_0_3px_rgb(93_91_53/0.08)]" : "border-stroke-2 hover:border-stroke"
+      }`}
+    >
+      <label htmlFor={id} className="flex cursor-pointer items-start gap-3">
+        <input
+          type="radio"
+          id={id}
+          name="emailOption"
+          checked={checked}
+          onChange={onSelect}
+          disabled={disabled}
+          className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--color-brand)]"
+        />
+        <span className="min-w-0">
+          <span className="block text-[14px] font-medium text-fg">{title}</span>
+          {detail && <span className="block truncate text-[13px] text-fg-3">{detail}</span>}
+        </span>
+      </label>
+      {children}
+    </div>
+  );
+}
+
+/** Modal "Enviar Estado de Cuenta por Email". */
 export function SendStatementEmailModal({
   variant,
   subjectName,
   userEmail,
   state,
 }: {
-  variant: keyof typeof VARIANTS;
+  variant: keyof typeof NOTES;
   /** Nombre de la propiedad o del comercio que aparece en el encabezado. */
   subjectName: string | null | undefined;
   userEmail: string | null | undefined;
@@ -146,129 +180,115 @@ export function SendStatementEmailModal({
     sendingEmail,
     closeEmailModal,
     sendEmailWithPDF,
+    formError,
+    setFormError,
+    sentMessage,
+    setSentMessage,
   } = state;
-  if (!showEmailModal) return null;
-  const styles = VARIANTS[variant];
 
   return (
     <>
-      {/* Overlay oscuro */}
-      <div className="fixed inset-0 bg-black/50 z-50" onClick={closeEmailModal} />
-
-      {/* Modal */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className={styles.panel}>
-          {/* Header del modal */}
-          <div className={styles.header}>
-            <h3 className="text-lg font-semibold">✉️ Enviar Estado de Cuenta por Email</h3>
-            <p className={styles.subtitle}>
-              Se enviará el PDF del estado de cuenta de: <strong>{subjectName}</strong>
-            </p>
-          </div>
-
-          {/* Contenido del modal */}
-          <div className="p-6">
-            <div className="space-y-4">
-              {/* Opción de usar email actual */}
-              {userEmail && (
-                <div className={styles.currentEmailBox}>
-                  <div className="flex items-center space-x-3">
-                    <input
-                      type="radio"
-                      id="currentEmail"
-                      name="emailOption"
-                      checked={!useCustomEmail}
-                      onChange={() => {
-                        setUseCustomEmail(false);
-                        setEmailAddress(userEmail);
-                      }}
-                      className={styles.radio}
-                      disabled={sendingEmail}
-                    />
-                    <label htmlFor="currentEmail" className="flex-1">
-                      <div className="text-sm font-medium text-gray-900">Usar mi email registrado</div>
-                      <div className="text-sm text-gray-600">{userEmail}</div>
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {/* Opción de usar email personalizado */}
-              <div className="bg-gray-50 p-4 rounded-lg border border-line">
-                <div className="flex items-center space-x-3 mb-3">
-                  <input
-                    type="radio"
-                    id="customEmail"
-                    name="emailOption"
-                    checked={useCustomEmail}
-                    onChange={() => {
-                      setUseCustomEmail(true);
-                      setEmailAddress("");
-                    }}
-                    className={styles.radio}
-                    disabled={sendingEmail}
-                  />
-                  <label htmlFor="customEmail" className="text-sm font-medium text-gray-900">
-                    Usar un email diferente
-                  </label>
-                </div>
-
-                {useCustomEmail && (
-                  <div>
-                    <label htmlFor="customEmailInput" className="block text-sm font-medium text-gray-700 mb-2">
-                      Dirección de Correo Electrónico
-                    </label>
-                    <input
-                      type="email"
-                      id="customEmailInput"
-                      value={emailAddress}
-                      onChange={(e) => setEmailAddress(e.target.value)}
-                      placeholder="ejemplo@correo.com"
-                      className={styles.input}
-                      disabled={sendingEmail}
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-md">
-                <strong>📧 Confirmación:</strong> El estado de cuenta se enviará a:{" "}
-                <span className={styles.recipient}>{emailAddress || "Seleccione una opción"}</span>
-              </div>
-
-              <div className="text-sm text-gray-600 bg-yellow-50 p-3 rounded-md border border-yellow-200">
-                <strong>📄 Nota:</strong> {styles.note}
-              </div>
-            </div>
-          </div>
-
-          {/* Footer del modal */}
-          <div className="bg-gray-50 px-6 py-4 rounded-b-lg flex justify-end space-x-3">
-            <button
-              onClick={closeEmailModal}
+      <Toast message={sentMessage} tone="success" onClose={() => setSentMessage("")} />
+      <Modal
+        open={showEmailModal}
+        onClose={closeEmailModal}
+        title="Enviar Estado de Cuenta por Email"
+        description={`Se enviará el PDF del estado de cuenta de: ${subjectName ?? ""}`}
+        icon={Mail}
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void sendEmailWithPDF();
+          }}
+          className="space-y-3"
+        >
+          {userEmail && (
+            <OptionCard
+              id="currentEmail"
+              checked={!useCustomEmail}
+              onSelect={() => {
+                setUseCustomEmail(false);
+                setEmailAddress(userEmail);
+                setFormError("");
+              }}
               disabled={sendingEmail}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50"
-            >
+              title="Usar mi email registrado"
+              detail={userEmail}
+            />
+          )}
+
+          <OptionCard
+            id="customEmail"
+            checked={useCustomEmail}
+            onSelect={() => {
+              setUseCustomEmail(true);
+              setEmailAddress("");
+              setFormError("");
+            }}
+            disabled={sendingEmail}
+            title="Usar un email diferente"
+          >
+            {useCustomEmail && (
+              <div className="mt-3 pl-7">
+                <label htmlFor="customEmailInput" className={LABEL}>
+                  Dirección de Correo Electrónico
+                </label>
+                <input
+                  type="email"
+                  id="customEmailInput"
+                  value={emailAddress}
+                  onChange={(e) => {
+                    setEmailAddress(e.target.value);
+                    if (formError) setFormError("");
+                  }}
+                  placeholder="ejemplo@correo.com"
+                  autoComplete="email"
+                  autoFocus
+                  aria-invalid={Boolean(formError) || undefined}
+                  aria-describedby={formError ? "email-error" : undefined}
+                  className={`${FIELD} ${formError ? "border-overdue/50 focus:border-overdue/60 focus:ring-overdue/15" : ""}`}
+                  disabled={sendingEmail}
+                />
+              </div>
+            )}
+          </OptionCard>
+
+          {formError && (
+            <p id="email-error" role="alert" className="flex items-start gap-2 rounded-lg bg-critical-bg px-3 py-2.5 text-[13px] text-overdue">
+              <AlertCircle aria-hidden className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2} />
+              {formError}
+            </p>
+          )}
+
+          <div className="space-y-1.5 rounded-xl bg-surface-2 px-4 py-3 text-[13px] leading-5 text-fg-3 ring-1 ring-inset ring-stroke-3">
+            <p>
+              El estado de cuenta se enviará a:{" "}
+              <span className={emailAddress ? "font-semibold text-fg" : "text-fg-4"}>{emailAddress || "Seleccione una opción"}</span>
+            </p>
+            <p>{NOTES[variant]}</p>
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-2">
+            <button type="button" onClick={closeEmailModal} disabled={sendingEmail} className={BUTTON.secondary}>
               Cancelar
             </button>
-            <button onClick={sendEmailWithPDF} disabled={sendingEmail || !emailAddress.trim()} className={styles.submit}>
+            <button type="submit" disabled={sendingEmail || !emailAddress.trim()} className={BUTTON.primary}>
               {sendingEmail ? (
                 <>
-                  <ButtonSpinner className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" />
-                  Enviando...
+                  <Loader2 aria-hidden className="h-4 w-4 animate-spin" strokeWidth={2} />
+                  Enviando…
                 </>
               ) : (
                 <>
-                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
-                  </svg>
+                  <Send aria-hidden className="h-4 w-4" strokeWidth={2} />
                   Enviar PDF
                 </>
               )}
             </button>
           </div>
-        </div>
-      </div>
+        </form>
+      </Modal>
     </>
   );
 }

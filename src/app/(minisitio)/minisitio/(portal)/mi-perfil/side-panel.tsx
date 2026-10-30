@@ -78,14 +78,14 @@ export function SidePanel({
         } w-full ${sizeClasses[size]}`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gray-50 flex-shrink-0">
-          <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+        <div className="flex items-center justify-between p-6 border-b border-stroke-2 bg-surface-2 flex-shrink-0">
+          <h2 className="text-xl font-bold text-fg">{title}</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-200 rounded-lg transition-colors duration-200"
+            className="p-2 hover:bg-surface-4 rounded-lg transition-colors duration-200"
             aria-label="Cerrar panel"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-fg-3" />
           </button>
         </div>
 

@@ -20,44 +20,44 @@ const getCardStyle = (amount: string, isOwner: boolean, statusColor?: StatusColo
   if (isZeroOrMuted(amount)) {
     return isOwner
       ? {
-          bgClass: "bg-[#faf6f0] border-[#c8b8a0]/30",
-          labelClass: "text-[#7a5e44]/60",
-          valueClass: "text-[#5a4838] font-medium",
+          bgClass: "bg-surface-2 border-stroke-3",
+          labelClass: "text-fg-4",
+          valueClass: "text-fg-4 font-medium",
         }
       : {
           bgClass: "bg-[#fdf6fa] border-[#f5e0eb]",
-          labelClass: "text-[#8f1a3d]/60",
-          valueClass: "text-[#35202a] font-medium",
+          labelClass: "text-[#8f1a3d]/50",
+          valueClass: "text-fg-4 font-medium",
         };
   }
 
   if (statusColor === "red") {
     return {
-      bgClass: "bg-rose-50 border-rose-200",
-      labelClass: "text-rose-600/70",
-      valueClass: "text-[#dc2626] font-bold",
+      bgClass: "bg-critical-bg border-overdue/20",
+      labelClass: "text-overdue/70",
+      valueClass: "text-overdue font-semibold",
     };
   }
   if (statusColor === "yellow") {
     return {
-      bgClass: "bg-amber-50 border-amber-200",
-      labelClass: "text-amber-600/70",
-      valueClass: "text-[#d97706] font-bold",
+      bgClass: "bg-warning-bg border-brand-accent/30",
+      labelClass: "text-warning/70",
+      valueClass: "text-warning font-semibold",
     };
   }
   if (statusColor === "green") {
     return {
-      bgClass: "bg-emerald-50 border-emerald-200",
-      labelClass: "text-emerald-700/70",
-      valueClass: "text-[#16a34a] font-bold",
+      bgClass: "bg-success-bg border-success/20",
+      labelClass: "text-success/70",
+      valueClass: "text-success font-semibold",
     };
   }
 
   if (isOwner) {
     return {
-      bgClass: "bg-[#fdfbf7] border-[#c8b8a0]/40",
-      labelClass: "text-[#7a5e44]",
-      valueClass: "text-[#2b1e12] font-bold",
+      bgClass: "bg-card border-stroke-2",
+      labelClass: "text-fg-3",
+      valueClass: "text-fg font-semibold",
     };
   }
   return {
@@ -85,17 +85,17 @@ export function FinancialCards({
     <div className="space-y-0.5">
       <div
         className={cn(
-          "flex items-center justify-between gap-1.5 px-1.5 py-0.5 rounded border transition-colors",
+          "flex items-center justify-between gap-2 px-2 py-1 rounded-md border transition-colors",
           ownerStyle.bgClass
         )}
       >
-        <span className={cn("text-[8px] font-bold shrink-0", ownerStyle.labelClass)}>P</span>
-        <span className={cn("text-[11px] tabular-nums truncate", ownerStyle.valueClass)}>{owner}</span>
+        <span className={cn("text-[10px] font-bold shrink-0", ownerStyle.labelClass)}>P</span>
+        <span className={cn("text-[12.5px] tabular-nums truncate", ownerStyle.valueClass)}>{owner}</span>
       </div>
       {hasCommerce && (
         <div
           className={cn(
-            "flex items-center justify-between gap-1.5 px-1.5 py-0.5 rounded border transition-colors",
+            "flex items-center justify-between gap-2 px-2 py-1 rounded-md border transition-colors",
             commerceStyle.bgClass
           )}
         >
@@ -119,10 +119,9 @@ export function AreaStatusBadge({ label, css = "" }: { label?: string; css?: str
   return (
     <span
       className={cn(
-        "px-2 py-0.5 rounded-full text-[8px] font-bold tracking-widest uppercase border inline-block mt-0.5",
-        isInactive
-          ? "bg-[#fef2f2] text-[#b91c1c] border-[#fecaca]"
-          : "bg-[#ecfdf5] text-[#047857] border-[#a7f3d0]"
+        // La etiqueta llega en MAYÚSCULAS ("ACTIVO"): se muestra en tipo oración.
+        "mt-1 inline-block rounded-full border px-2 py-px text-[11.5px] font-medium lowercase first-letter:uppercase",
+        isInactive ? "bg-critical-bg text-overdue border-overdue/20" : "bg-success-bg text-success border-success/20"
       )}
     >
       {label}

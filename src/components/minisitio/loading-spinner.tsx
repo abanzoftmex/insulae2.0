@@ -14,10 +14,11 @@ export function LoadingSpinner({
   text?: string | null;
 }) {
   return (
-    <div className="flex items-center justify-center p-4">
-      <div className="flex flex-col items-center space-y-2">
-        <div className={`animate-spin rounded-full border-b-2 border-blue-600 ${SIZE_CLASSES[size]}`}></div>
-        {text && <p className="text-sm text-gray-600">{text}</p>}
+    // Aparece a los 400 ms: si la pantalla llega antes, no parpadea.
+    <div className="flex animate-appear-late items-center justify-center p-4" role="status">
+      <div className="flex flex-col items-center gap-3">
+        <div className={`animate-spin rounded-full border-2 border-brand/15 border-t-brand ${SIZE_CLASSES[size]}`} />
+        {text ? <p className="text-[13px] text-fg-3">{text}</p> : <span className="sr-only">Cargando</span>}
       </div>
     </div>
   );

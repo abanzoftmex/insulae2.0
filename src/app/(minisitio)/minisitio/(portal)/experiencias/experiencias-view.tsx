@@ -7,7 +7,7 @@
 import { useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import { Bell, Image as ImageIcon, Star, FileText, Clock } from "lucide-react";
+import { Bell, Image as ImageIcon, Star, FileText, Clock, Sparkles } from "lucide-react";
 import type { ComunicadoDestacado } from "@/modules/minisitio/infrastructure/queries/communications.queries";
 import { isPastCalendarDay, useDisplayTimeZone } from "../_lib/client-dates";
 import { comunicadoFileUrl } from "../_lib/comunicado-file-url";
@@ -45,6 +45,17 @@ function formatExperiencias(comunicados: ComunicadoDestacado[]): ExperienciaSlid
       pdf: comunicado.pdf ? comunicadoFileUrl(comunicado.pdf) : null,
     };
   });
+}
+
+function ExperienciaCard({ href, className, children }: { href: string | null; className: string; children: React.ReactNode }) {
+  return href ? (
+    <a href={href} target="_blank" rel="noopener noreferrer" className={className}>
+      {children}
+      <span className="sr-only">(se abre en otra pestaña)</span>
+    </a>
+  ) : (
+    <div className={className}>{children}</div>
+  );
 }
 
 export function ExperienciasView({
@@ -121,24 +132,24 @@ export function ExperienciasView({
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] px-6 py-4">
+        <div className="overflow-hidden rounded-2xl border border-stroke-2 bg-card">
+          <div className="bg-warning px-5 py-4 sm:px-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Bell className="w-6 h-6 text-white" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                  <Sparkles aria-hidden className="h-5 w-5 text-white" strokeWidth={1.75} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-white">Experiencias Val'Quirico</h3>
-                  <p className="text-white/80 text-sm">
+                  <h3 className="text-[18px] font-semibold leading-6 text-white">Experiencias Val'Quirico</h3>
+                  <p className="text-[13px] text-white/80">
                     Últimas actualizaciones importantes
                   </p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="mx-6 mt-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600">Error: {error}</p>
+          <div className="mx-6 my-6 rounded-xl bg-critical-bg px-4 py-3" role="alert">
+            <p className="text-[13.5px] text-overdue">Error: {error}</p>
           </div>
         </div>
       </div>
@@ -147,16 +158,16 @@ export function ExperienciasView({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] px-6 py-4">
+      <div className="overflow-hidden rounded-2xl border border-stroke-2 bg-card">
+        <div className="bg-warning px-5 py-4 sm:px-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <Bell className="w-6 h-6 text-white" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15">
+                <Sparkles aria-hidden className="h-5 w-5 text-white" strokeWidth={1.75} />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-white">Experiencias Val'Quirico</h3>
-                <p className="text-white/80 text-sm">
+                <h3 className="text-[18px] font-semibold leading-6 text-white">Experiencias Val'Quirico</h3>
+                <p className="text-[13px] text-white/80">
                   Últimas actualizaciones importantes
                 </p>
               </div>
@@ -165,7 +176,9 @@ export function ExperienciasView({
               {expiredCount > 0 && (
                 <button
                   onClick={() => setShowPastEvents(!showPastEvents)}
-                  className="px-4 py-2 bg-white/90 hover:bg-white text-[#cba258] rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+                  type="button"
+                  aria-pressed={showPastEvents}
+                  className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-white px-3.5 text-[13.5px] font-semibold text-warning outline-none transition-colors duration-150 hover:bg-gold-soft focus-visible:ring-2 focus-visible:ring-white/80 focus-visible:ring-offset-2 focus-visible:ring-offset-warning"
                 >
                   <Clock className="w-4 h-4" />
                   {showPastEvents ? 'Ocultar eventos pasados' : `Ver eventos pasados (${expiredCount})`}
@@ -176,9 +189,9 @@ export function ExperienciasView({
                   href={linkGaceta}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white text-[#cba258] rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center"
+                  className="inline-flex h-9 items-center gap-2 rounded-[10px] bg-white px-3.5 text-[13.5px] font-semibold text-warning outline-none transition-colors duration-150 hover:bg-gold-soft focus-visible:ring-2 focus-visible:ring-white/80"
                 >
-                  <FileText className="w-4 h-4 mr-2" />
+                  <FileText aria-hidden className="h-4 w-4" />
                   Ver Gaceta
                 </a>
               )}
@@ -187,18 +200,28 @@ export function ExperienciasView({
         </div>
 
         <div className="p-6">
-          {experiencias.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Bell className="w-8 h-8 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No hay experiencias vigentes
-              </h3>
-              <p className="text-gray-600 mb-4">
+          {/* Sin vigentes (y sin mostrar las pasadas) es un estado vacío claro: antes salían tres
+              cajas punteadas "Sin experiencias adicionales" aunque hubiera nueve eventos pasados. */}
+          {slides.every((s) => s.isEmpty) ? (
+            <div className="py-12 text-center">
+              <span className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-gold-soft text-warning ring-1 ring-inset ring-brand-accent/20">
+                <Sparkles aria-hidden className="h-7 w-7" strokeWidth={1.5} />
+              </span>
+              <h3 className="mb-1.5 text-[16px] font-semibold text-fg">No hay experiencias vigentes</h3>
+              <p className="mx-auto mb-5 max-w-md text-[13.5px] leading-5 text-fg-3">
                 No hay experiencias activas en este momento. Te notificaremos
                 cuando haya nuevas actualizaciones.
               </p>
+              {expiredCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setShowPastEvents(true)}
+                  className="inline-flex h-9 items-center gap-2 rounded-[10px] border border-stroke-2 bg-card px-4 text-[13.5px] font-semibold text-fg-2 outline-none transition-[background-color,border-color] duration-150 hover:border-stroke hover:bg-surface-3 focus-visible:ring-2 focus-visible:ring-brand/45 focus-visible:ring-offset-2"
+                >
+                  <Clock aria-hidden className="h-4 w-4" strokeWidth={2} />
+                  Ver eventos pasados ({expiredCount})
+                </button>
+              )}
             </div>
           ) : (
             <div className="embla" ref={emblaRef}>
@@ -210,32 +233,35 @@ export function ExperienciasView({
                       key={experiencia.id}
                       className="embla__slide pl-4 first:pl-0"
                     >
-                      <div
-                        className={`group relative overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 h-full ${experiencia.isEmpty ? "" : "cursor-pointer"
-                          } ${expired ? 'watermark-expired opacity-75' : ''}`}
+                      {/* La tarjeta abre el PDF o la imagen (antes tenía cursor de enlace pero no hacía nada). */}
+                      <ExperienciaCard
+                        href={experiencia.isEmpty ? null : experiencia.pdf || experiencia.imagen}
+                        className={`group relative flex h-full flex-col overflow-hidden rounded-2xl border border-stroke-2 bg-card outline-none transition-[box-shadow,border-color] duration-200 ease-out focus-visible:ring-2 focus-visible:ring-brand/45 ${
+                          experiencia.isEmpty ? "" : "hover:border-stroke hover:shadow-[0_10px_28px_-14px_rgb(61_60_34/0.28)]"
+                        }`}
                       >
                         {experiencia.isEmpty ? (
                           // Slide vacío con diseño placeholder
-                          <div className="w-full bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center min-h-[250px] border-2 border-dashed border-gray-200">
+                          <div className="flex aspect-[4/5] w-full items-center justify-center bg-surface-2">
                             <div className="text-center">
-                              <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <Bell className="text-gray-400 w-6 h-6" />
+                              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-4">
+                                <Bell aria-hidden className="h-6 w-6 text-fg-4" strokeWidth={1.5} />
                               </div>
-                              <p className="text-gray-400 font-medium text-sm">
+                              <p className="text-[13.5px] font-medium text-fg-3">
                                 Sin experiencias adicionales
                               </p>
-                              <p className="text-gray-300 text-xs mt-1">
+                              <p className="mt-1 text-[12px] text-fg-4">
                                 Próximamente más contenido
                               </p>
                             </div>
                           </div>
                         ) : experiencia.imagen ? (
-                          <div className="w-full bg-gray-50 flex items-center justify-center min-h-[250px]">
+                          <div className="aspect-[4/5] w-full overflow-hidden bg-surface-2">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={experiencia.imagen}
                               alt={experiencia.titulo}
-                              className={`max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500 ${expired ? 'grayscale blur-[0.5px]' : ''}`}
+                              className={`h-full w-full object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.03] motion-reduce:group-hover:scale-100 ${expired ? 'opacity-70 saturate-50' : ''}`}
                               onError={(e) => {
                                 e.currentTarget.src =
                                   "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjI0IiBoZWlnaHQ9IjI0IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0xNSAxMEwxMCAxMEw4IDhMMTEgMTJMMTEgMTVMMTEuNSA5TDIyIDI0SDE3TDE1IDIwTDE1IDEweiIgc3Ryb2tlPSIjOUI5QkE0IiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K";
@@ -244,44 +270,37 @@ export function ExperienciasView({
                             />
                           </div>
                         ) : (
-                          <div className="w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center min-h-[250px]">
+                          <div className="flex aspect-[4/5] w-full items-center justify-center bg-surface-3">
                             <div className="text-center">
-                              <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <ImageIcon className="text-gray-500 w-6 h-6" />
+                              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-surface-4">
+                                <ImageIcon aria-hidden className="h-6 w-6 text-fg-3" strokeWidth={1.5} />
                               </div>
-                              <p className="text-gray-500 font-medium text-sm">
+                              <p className="text-[13.5px] font-medium text-fg-3">
                                 Próximamente
                               </p>
                             </div>
                           </div>
                         )}
 
-                        {/* Overlay - solo para imágenes reales y slides no vacíos */}
-                        {!experiencia.isEmpty && experiencia.imagen && (
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                            <div className="absolute bottom-0 left-0 right-0 text-white p-4">
-                              <h4 className="font-bold mb-1 text-lg">
-                                {experiencia.titulo}
-                              </h4>
-                              <p className="text-white/90 mb-2 text-sm line-clamp-2">
-                                {experiencia.descripcion}
-                              </p>
-                              <div className="flex items-center text-white/80">
-                                <Star className="mr-1 w-3 h-3" />
-                                <span className="text-xs">
-                                  {experiencia.categoria}
+                        {/* Título y datos siempre visibles: antes solo aparecían al pasar el cursor (y nunca en el celular). */}
+                        {!experiencia.isEmpty && (
+                          <div className="flex flex-1 flex-col gap-1 border-t border-stroke-3 px-4 py-3.5">
+                            <h4 className="line-clamp-2 text-[15px] font-semibold leading-5 text-fg">{experiencia.titulo}</h4>
+                            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[12.5px] text-fg-3">
+                              <span className="inline-flex items-center gap-1">
+                                <Star aria-hidden className="h-3.5 w-3.5" />
+                                {experiencia.categoria}
+                              </span>
+                              {expired && (
+                                <span className="inline-flex h-[22px] items-center gap-1.5 rounded-full bg-critical-bg px-2 text-[12px] font-medium text-overdue ring-1 ring-inset ring-overdue/15">
+                                  <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-overdue" />
+                                  Expirado
                                 </span>
-                                {expired && (
-                                  <>
-                                    <span className="mx-2">•</span>
-                                    <span className="text-xs">Expirado</span>
-                                  </>
-                                )}
-                              </div>
+                              )}
                             </div>
                           </div>
                         )}
-                      </div>
+                      </ExperienciaCard>
                     </div>
                   );
                 })}

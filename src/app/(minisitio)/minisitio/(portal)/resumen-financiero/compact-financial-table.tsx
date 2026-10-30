@@ -1,10 +1,13 @@
 import { Fragment } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/shared/utils/cn";
 
 /**
- * Antes `components/reports/CompactFinancialTable.js` del minisitio: puerto exacto de
+ * Antes `components/reports/CompactFinancialTable.js` del minisitio: puerto de
  * `CompactFinancialTable` + `renderRowLabel` + `TABLE_TONE` del resumen financiero del panel.
+ *
+ * La tabla usa `border-separate`: con `border-collapse` los bordes de la columna fija se
+ * quedaban atrás al desplazar. Las celdas fijas llevan fondos opacos (mezcla del tono con el
+ * blanco) para que las cifras no se vean a través.
  */
 export interface FinancialTableYearSlice {
   year: number;
@@ -35,29 +38,36 @@ export interface TableTone {
 
 export const TABLE_TONE = {
   income: {
-    headerBg: "bg-brand-mint/50",
-    firstColBg: "bg-brand-mint/20",
-    totalRowBg: "bg-brand-mint/40",
-    textTone: "text-ink font-bold",
+    headerBg: "bg-[color-mix(in_srgb,var(--color-brand-mint)_60%,white)]",
+    firstColBg: "bg-[color-mix(in_srgb,var(--color-brand-mint)_22%,white)]",
+    totalRowBg: "bg-[color-mix(in_srgb,var(--color-brand-mint)_42%,white)]",
+    textTone: "text-fg font-bold",
   },
   expense: {
-    headerBg: "bg-amber-500/10",
-    firstColBg: "bg-amber-500/[0.03]",
-    totalRowBg: "bg-amber-500/10",
-    textTone: "text-ink font-bold",
+    headerBg: "bg-[color-mix(in_srgb,var(--color-terracotta)_9%,white)]",
+    firstColBg: "bg-[color-mix(in_srgb,var(--color-terracotta)_3%,white)]",
+    totalRowBg: "bg-[color-mix(in_srgb,var(--color-terracotta)_7%,white)]",
+    textTone: "text-fg font-bold",
   },
   balance: {
-    headerBg: "bg-gold-soft",
-    firstColBg: "bg-gold-soft/30",
-    totalRowBg: "bg-gold-soft",
-    textTone: "text-ink font-bold",
+    headerBg: "bg-[color-mix(in_srgb,var(--color-brand-accent)_18%,white)]",
+    firstColBg: "bg-[color-mix(in_srgb,var(--color-brand-accent)_6%,white)]",
+    totalRowBg: "bg-[color-mix(in_srgb,var(--color-brand-accent)_14%,white)]",
+    textTone: "text-fg font-bold",
   },
 } satisfies Record<string, TableTone>;
+
+/** "$0.00" se atenúa (casi todos los meses lo son) y un importe negativo va en teja. */
+function valueTone(value: string) {
+  const n = Number(String(value).replace(/[^\d.-]/g, ""));
+  if (!Number.isFinite(n) || n === 0) return "text-fg-4";
+  return n < 0 ? "text-overdue" : "text-fg-2";
+}
 
 export function renderRowLabel(label: string, isTotal: boolean, textToneClass?: string) {
   if (isTotal) {
     return (
-      <span className={cn("text-[12px] font-bold uppercase tracking-wider", textToneClass)}>{label}</span>
+      <span className={cn("text-[13px] font-bold", textToneClass)}>{label}</span>
     );
   }
   const match = String(label ?? "").match(/^([^(]+)\s*\(([^)]+)\)$/);
@@ -66,12 +76,12 @@ export function renderRowLabel(label: string, isTotal: boolean, textToneClass?: 
     const subtitle = match[2].trim();
     return (
       <div className="flex flex-col py-1">
-        <span className="text-[12px] font-bold text-ink leading-snug">{title}</span>
-        <span className="text-[9px] font-bold text-ink-soft/75 uppercase tracking-wider mt-0.5">{subtitle}</span>
+        <span className="text-[13px] font-medium leading-snug text-fg">{title}</span>
+        <span className="mt-0.5 text-[12px] text-fg-3">{subtitle}</span>
       </div>
     );
   }
-  return <span className="text-[12px] font-bold text-ink leading-snug">{label}</span>;
+  return <span className="text-[13px] font-medium leading-snug text-fg">{label}</span>;
 }
 
 export function CompactFinancialTable({
@@ -91,84 +101,83 @@ export function CompactFinancialTable({
   monthLabels: string[];
   tone: TableTone;
 }) {
+  const th = "h-11 border-b border-stroke-2 px-3 align-middle text-[12px] leading-4";
+  const td = "border-b border-stroke-3 px-3 py-2.5 align-middle text-[12.5px] tabular-nums";
+
   return (
-    <Card className="overflow-hidden border-transparent shadow-layered">
-      <CardHeader className="px-4 py-3 border-b border-line bg-card">
-        <div className="flex flex-col">
-          <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/60">
-            {title}
-          </CardTitle>
-          <h2 className="text-sm font-bold uppercase text-brand mt-0.5">{subtitle}</h2>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="overflow-x-auto overflow-y-hidden no-scrollbar">
-          <table className="w-full text-left border-collapse min-w-480">
-            <thead>
-              <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
+    // `isolate`: las celdas fijas (z-20) no pasan por encima del encabezado del portal al desplazar.
+    <section className="isolate overflow-hidden rounded-2xl border border-stroke-2 bg-card">
+      <div className="border-b border-stroke-2 px-5 py-4">
+        <p className="text-[12.5px] font-medium text-fg-3">{title}</p>
+        <h2 className="mt-0.5 text-[16px] font-semibold leading-6 text-fg">{subtitle}</h2>
+      </div>
+      {/* Con barra visible (delgada): sin ella nada indicaba que hay más meses a la derecha. */}
+      <div className="scrollbar-slim overflow-x-auto overflow-y-hidden">
+        <table className="w-full min-w-480 border-separate border-spacing-0 text-left">
+          <thead>
+            <tr>
+              <th
+                scope="col"
+                className={cn(
+                  th,
+                  "sticky left-0 z-20 w-[260px] min-w-[260px] border-r px-4 shadow-[4px_0_8px_-6px_rgb(61_60_34/0.25)]",
+                  tone.headerBg,
+                  tone.textTone
+                )}
+              >
+                {firstColumnLabel}
+              </th>
+              {table.years.map((year) => (
+                <Fragment key={`head-${year}`}>
+                  <th scope="col" className={cn(th, "border-r px-4 text-right", tone.headerBg, tone.textTone)}>
+                    {annualLabelPrefix} {year}
+                  </th>
+                  {monthLabels.map((m) => (
+                    <th
+                      key={`head-${year}-${m}`}
+                      scope="col"
+                      className={cn(th, "border-r border-r-stroke-3 bg-surface-2 text-right font-medium text-fg-3")}
+                    >
+                      {m} {year}
+                    </th>
+                  ))}
+                </Fragment>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="[&>tr:last-child>td]:border-b-0">
+            {table.rows.map((row) => (
+              <tr key={row.id} className={cn("group", row.isTotal ? tone.totalRowBg : "transition-colors duration-100 hover:bg-surface-2")}>
                 <th
-                  style={{ minWidth: "260px", width: "260px" }}
+                  scope="row"
                   className={cn(
-                    "sticky left-0 z-30 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
-                    tone.headerBg,
-                    tone.textTone
+                    td,
+                    "sticky left-0 z-10 w-[260px] min-w-[260px] border-r border-r-stroke-2 px-4 text-left font-normal shadow-[4px_0_8px_-6px_rgb(61_60_34/0.25)]",
+                    row.isTotal ? tone.totalRowBg : tone.firstColBg
                   )}
                 >
-                  {firstColumnLabel}
+                  {renderRowLabel(row.label, row.isTotal, row.isTotal ? tone.textTone : undefined)}
                 </th>
-                {table.years.map((year) => (
-                  <Fragment key={`head-${year}`}>
-                    <th className={cn("px-4 text-right border-r border-line", tone.headerBg, tone.textTone)}>
-                      {annualLabelPrefix} {year}
-                    </th>
-                    {monthLabels.map((m) => (
-                      <th
-                        key={`head-${year}-${m}`}
-                        className="px-3 text-right border-r border-line/50 font-bold opacity-60"
+                {row.yearly.map((yearSlice) => (
+                  <Fragment key={`body-${row.id}-${yearSlice.year}`}>
+                    <td className={cn(td, "whitespace-nowrap border-r border-r-stroke-2 px-4 text-right font-semibold text-fg")}>
+                      {yearSlice.annualTotal}
+                    </td>
+                    {yearSlice.months.map((val, idx) => (
+                      <td
+                        key={`val-${row.id}-${yearSlice.year}-${idx}`}
+                        className={cn(td, "whitespace-nowrap border-r border-r-stroke-3 text-right", row.isTotal ? "font-semibold text-fg" : valueTone(val))}
                       >
-                        {m} {year}
-                      </th>
+                        {val}
+                      </td>
                     ))}
                   </Fragment>
                 ))}
               </tr>
-            </thead>
-            <tbody className="divide-y divide-line/30">
-              {table.rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className={cn("h-10 hover:bg-canvas/10 transition-colors", row.isTotal && tone.totalRowBg)}
-                >
-                  <td
-                    style={{ minWidth: "260px", width: "260px" }}
-                    className={cn(
-                      "sticky left-0 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
-                      row.isTotal ? tone.textTone : tone.firstColBg
-                    )}
-                  >
-                    {renderRowLabel(row.label, row.isTotal, row.isTotal ? tone.textTone : undefined)}
-                  </td>
-                  {row.yearly.map((yearSlice) => (
-                    <Fragment key={`body-${row.id}-${yearSlice.year}`}>
-                      <td className="px-4 text-right text-[12px] font-bold border-r border-line text-ink">
-                        {yearSlice.annualTotal}
-                      </td>
-                      {yearSlice.months.map((val, idx) => (
-                        <td
-                          key={`val-${row.id}-${yearSlice.year}-${idx}`}
-                          className="px-3 text-right text-[12px] font-medium text-ink-soft border-r border-line/30"
-                        >
-                          {val}
-                        </td>
-                      ))}
-                    </Fragment>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }

@@ -1,10 +1,15 @@
 "use client";
 
 /** Comunicados (antes pages/comunicados.js). Los comunicados llegan cargados desde page.tsx. */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useRequireAuth } from '@/components/minisitio/use-minisitio-auth';
 import type { Comunicado } from '@/modules/minisitio/infrastructure/queries/communications.queries';
-import { Bell, Users, Building, FileText, Image as ImageIcon, Calendar, Filter, CheckCircle, Clock, X } from 'lucide-react';
+import { Bell, Users, Building, FileText, Image as ImageIcon, Calendar, Filter, CheckCircle, Clock, X, Share2 } from 'lucide-react';
+import { Tooltip } from '@/components/minisitio/tooltip';
+import { Toast } from '@/components/minisitio/ui/modal';
+import { BUTTON, EmptyState } from '@/components/minisitio/ui/list-controls';
+import { msPath } from '@/components/minisitio/paths';
 import { isPastCalendarDay, useDisplayTimeZone } from '../_lib/client-dates';
 import { comunicadoFileUrl } from '../_lib/comunicado-file-url';
 
@@ -15,6 +20,41 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
   const [filtro, setFiltro] = useState<Filtro>('todos'); // 'todos', 'propietarios', 'comercios', 'propietarios-comercios'
   const [modalImage, setModalImage] = useState<string | null>(null);
   const timeZone = useDisplayTimeZone();
+  const reduce = useReducedMotion();
+  const [shared, setShared] = useState('');
+
+  // Visor de imagen: Esc para cerrar y la página de atrás quieta.
+  useEffect(() => {
+    if (!modalImage) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setModalImage(null);
+    };
+    const { overflow } = document.body.style;
+    document.body.style.overflow = 'hidden';
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = overflow;
+    };
+  }, [modalImage]);
+
+  // Compartir: hoja nativa del celular o, si no hay, el enlace directo al portapapeles. El enlace
+  // abre Comunicados con la tarjeta enmarcada (?id=, ver search-hit.tsx). Antes el botón no hacía nada.
+  const compartir = async (comunicado: Comunicado) => {
+    const url = `${window.location.origin}${msPath(`/comunicados?id=${encodeURIComponent(comunicado.id_notificaciones)}`)}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: comunicado.nombre, url });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      setShared('Enlace del comunicado copiado.');
+      setTimeout(() => setShared(''), 3000);
+    } catch (error) {
+      // El condómino canceló la hoja de compartir: no es un error.
+      if ((error as DOMException)?.name !== 'AbortError') setShared('No se pudo copiar el enlace.');
+    }
+  };
 
   const formatFecha = (fecha: string | null) => {
     if (!fecha) return "";
@@ -57,276 +97,250 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
       return new Date(b.fechaPublicar ?? 0).getTime() - new Date(a.fechaPublicar ?? 0).getTime();
     });
 
+  const filtros: { key: Filtro; label: string; icon: typeof Bell; count: number; show: boolean }[] = [
+    { key: 'todos', label: 'Todos', icon: Bell, count: comunicados.length, show: true },
+    {
+      key: 'propietarios',
+      label: 'Propietarios',
+      icon: Users,
+      count: comunicados.filter((c) => c.tipo_fijo === 1).length,
+      show: userType === 'propietario' || userType === 'both',
+    },
+    {
+      key: 'comercios',
+      label: 'Comercios',
+      icon: Building,
+      count: comunicados.filter((c) => c.tipo_fijo === 2).length,
+      show: userType === 'arrendatario' || userType === 'both',
+    },
+    {
+      key: 'propietarios-comercios',
+      label: 'Propietarios y Comercios',
+      icon: Building,
+      count: comunicados.filter((c) => c.tipo_fijo === 3).length,
+      show: userType === 'both',
+    },
+  ];
+
+  const dirigidoA = (tipo: number) =>
+    tipo === 1 ? 'Dirigido a: Propietarios' : tipo === 2 ? 'Dirigido a: Comercios' : 'Dirigido a: Propietarios y Comercios';
+
   return (
-    <div className="min-h-screen bg-canvas p-6">
-
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 bg-gradient-to-r from-[#cba258] to-[#cba258] rounded-2xl flex items-center justify-center shadow-lg">
-              <Bell className="w-7 h-7 text-white" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 ">Comunicados</h1>
-              <p className="text-gray-600">Mantente informado sobre las últimas noticias y actualizaciones</p>
-            </div>
-          </div>
-
-
+    <div className="space-y-6">
+      {/* Encabezado */}
+      <div className="flex items-center gap-4">
+        <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand text-brand-mint shadow-[0_1px_2px_rgb(61_60_34/0.25)]">
+          <Bell aria-hidden className="h-6 w-6" strokeWidth={1.75} />
+        </span>
+        <div className="min-w-0">
+          <h2 className="text-[24px] font-bold leading-8 tracking-[-0.02em] text-fg">Comunicados</h2>
+          <p className="text-[14px] leading-5 text-fg-3">Mantente informado sobre las últimas noticias y actualizaciones</p>
         </div>
       </div>
 
-      {/* Filtros Modernos */}
-      <div className="mb-8">
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
-          <div className="flex items-center space-x-3 mb-4">
-            <Filter className="w-5 h-5 text-[#cba258]" />
-            <h3 className="text-lg font-semibold text-gray-900">Filtrar Comunicados</h3>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => setFiltro('todos')}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 ${filtro === 'todos'
-                ? 'bg-gradient-to-r from-[#cba258] to-[#cba258] text-white shadow-lg transform scale-105'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
-                }`}
-            >
-              <Bell className="w-4 h-4" />
-              <span>Todos ({comunicados.length})</span>
-            </button>
-
-            {(userType === 'propietario' || userType === 'both') && (
-              <button
-                onClick={() => setFiltro('propietarios')}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 ${filtro === 'propietarios'
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg transform scale-105'
-                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100 hover:shadow-md'
+      {/* Filtros */}
+      <div className="rounded-2xl border border-stroke-2 bg-card p-4 sm:p-5">
+        <div className="mb-3 flex items-center gap-2">
+          <Filter aria-hidden className="h-4 w-4 text-brand" strokeWidth={2} />
+          <h3 className="text-[14px] font-semibold text-fg">Filtrar Comunicados</h3>
+        </div>
+        <div role="group" aria-label="Filtrar por público" className="flex flex-wrap gap-2">
+          {filtros
+            .filter((f) => f.show)
+            .map(({ key, label, icon: Icon, count }) => {
+              const active = filtro === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setFiltro(key)}
+                  className={`relative inline-flex h-9 items-center gap-2 rounded-full px-4 text-[13.5px] font-medium outline-none transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-brand/45 focus-visible:ring-offset-2 ${
+                    active ? 'text-white' : 'bg-surface-3 text-fg-2 hover:bg-surface-4 hover:text-fg'
                   }`}
-              >
-                <Users className="w-4 h-4" />
-                <span>Propietarios ({comunicados.filter(c => c.tipo_fijo === 1).length})</span>
-              </button>
-            )}
-
-            {(userType === 'arrendatario' || userType === 'both') && (
-              <button
-                onClick={() => setFiltro('comercios')}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 ${filtro === 'comercios'
-                  ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-lg transform scale-105'
-                  : 'bg-green-50 text-green-700 hover:bg-green-100 hover:shadow-md'
-                  }`}
-              >
-                <Building className="w-4 h-4" />
-                <span>Comercios ({comunicados.filter(c => c.tipo_fijo === 2).length})</span>
-              </button>
-            )}
-
-            {(userType === 'both') && (
-              <button
-                onClick={() => setFiltro('propietarios-comercios')}
-                className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 ${filtro === 'propietarios-comercios'
-                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg transform scale-105'
-                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100 hover:shadow-md'
-                  }`}
-              >
-                <Building className="w-4 h-4" />
-                <span>Propietarios y Comercios ({comunicados.filter(c => c.tipo_fijo === 3).length})</span>
-              </button>
-            )}
-          </div>
+                >
+                  {active && (
+                    <motion.span
+                      layoutId="comunicados-filtro"
+                      aria-hidden
+                      className="absolute inset-0 bg-brand"
+                      style={{ borderRadius: 9999 }}
+                      transition={reduce ? { duration: 0 } : { type: 'spring', stiffness: 520, damping: 42, mass: 0.9 }}
+                    />
+                  )}
+                  <Icon aria-hidden className="relative h-4 w-4" strokeWidth={2} />
+                  <span className="relative">{label}</span>
+                  <span
+                    className={`relative rounded-full px-1.5 text-[12px] font-semibold tabular-nums ${
+                      active ? 'bg-white/20 text-white' : 'bg-card text-fg-3'
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
         </div>
       </div>
 
-      {/* Lista de Comunicados Moderna */}
-      <div className="space-y-6">
-        {comunicadosFiltrados.length > 0 ? (
-          comunicadosFiltrados.map((comunicado, index) => {
+      {/* Lista de comunicados */}
+      {comunicadosFiltrados.length > 0 ? (
+        <ul className="space-y-4">
+          {comunicadosFiltrados.map((comunicado, index) => {
             const vencido = isVencido(comunicado.fechaVigencia);
-
+            const mostrarDescripcion = comunicado.descripcion && comunicado.descripcion.trim() !== comunicado.nombre.trim();
             return (
-              <div
-                key={index}
-                className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 group ${vencido ? 'grayscale opacity-75 watermark-expired' : ''
-                  }`}
+              <li
+                key={comunicado.id_notificaciones ?? index}
+                data-search-id={comunicado.id_notificaciones}
+                className={`scroll-mt-24 overflow-hidden rounded-2xl border bg-card transition-[border-color,box-shadow] duration-200 ease-out hover:shadow-[0_10px_28px_-14px_rgb(61_60_34/0.28)] ${
+                  vencido ? 'border-stroke-3' : 'border-stroke-2 hover:border-brand/25'
+                }`}
               >
-                {/* Header del Comunicado */}
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 px-6 py-4 border-b border-gray-200">
-                  <div className="flex flex-col items-start gap-8">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${comunicado.tipo_fijo === 1
-                        ? 'bg-blue-100 text-blue-600'
-                        : comunicado.tipo_fijo === 2
-                          ? 'bg-green-100 text-green-600'
-                          : 'bg-purple-100 text-purple-600'
-                        }`}>
-                        {comunicado.tipo_fijo === 1 ? <Users className="w-5 h-5" /> : <Building className="w-5 h-5" />}
-                      </div>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#cba258] transition-colors duration-200">
-                          {comunicado.nombre}
-                        </h3>
-                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-4 ${comunicado.tipo_fijo === 1
-                          ? 'bg-blue-100 text-blue-800'
-                          : comunicado.tipo_fijo === 2
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-purple-100 text-purple-800'
-                          }`}>
-                          {comunicado.tipo_fijo === 1
-                            ? 'Dirigido a: Propietarios'
-                            : comunicado.tipo_fijo === 2
-                              ? 'Dirigido a: Comercios'
-                              : 'Dirigido a: Propietarios y Comercios'}
+                <div className="flex flex-col gap-4 px-5 py-5 sm:flex-row sm:items-start sm:px-6">
+                  <span
+                    className={`inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${
+                      vencido ? 'bg-surface-3 text-fg-4' : 'bg-brand/[0.08] text-brand'
+                    }`}
+                  >
+                    {comunicado.tipo_fijo === 1 ? (
+                      <Users aria-hidden className="h-5 w-5" strokeWidth={1.75} />
+                    ) : (
+                      <Building aria-hidden className="h-5 w-5" strokeWidth={1.75} />
+                    )}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <h3 className={`text-[18px] font-semibold leading-6 tracking-[-0.01em] ${vencido ? 'text-fg-2' : 'text-fg'}`}>
+                      {comunicado.nombre}
+                    </h3>
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px] text-fg-3">
+                      <span className="inline-flex h-6 items-center rounded-full bg-surface-4 px-2.5 text-[12px] font-medium text-fg-2">
+                        {dirigidoA(comunicado.tipo_fijo)}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <Calendar aria-hidden className="h-3.5 w-3.5" strokeWidth={2} />
+                        Publicado: <strong className="font-semibold text-fg-2">{formatFecha(comunicado.fechaPublicar)}</strong>
+                      </span>
+                      {comunicado.fechaVigencia && (
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock aria-hidden className="h-3.5 w-3.5" strokeWidth={2} />
+                          Vigente hasta: <strong className="font-semibold text-fg-2">{formatFecha(comunicado.fechaVigencia)}</strong>
                         </span>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <span className="flex items-center space-x-1">
-                            <Calendar className="w-4 h-4" />
-                            <span>Publicado: <strong className="font-bold">{formatFecha(comunicado.fechaPublicar)}</strong></span>
-                          </span>
-                          {comunicado.fechaVigencia && (
-                            <span className="flex items-center space-x-1">
-                              <Clock className="w-4 h-4" />
-                              <span>Vigente hasta: <strong className="font-bold">{formatFecha(comunicado.fechaVigencia)}</strong></span>
-                            </span>
-                          )}
-                          {vencido && (
-                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-red-500 text-white filter-none">
-                              <Clock className="w-3 h-3 mr-1" />
-                              Vencido
-                            </span>
-                          )}
-                        </div>
+                      )}
+                      {vencido && (
+                        <span className="inline-flex h-6 items-center gap-1.5 rounded-full bg-critical-bg px-2.5 text-[12px] font-medium text-overdue ring-1 ring-inset ring-overdue/15">
+                          <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-overdue" />
+                          Vencido
+                        </span>
+                      )}
+                    </div>
+
+                    {mostrarDescripcion && (
+                      <p className="mt-4 whitespace-pre-line text-[15px] leading-6 text-fg-2">{comunicado.descripcion}</p>
+                    )}
+
+                    {(comunicado.pdf || comunicado.imagen) && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {comunicado.pdf && (
+                          <a href={comunicadoFileUrl(comunicado.pdf)} target="_blank" rel="noopener noreferrer" className={BUTTON.secondary}>
+                            <FileText aria-hidden className="h-4 w-4 text-overdue" strokeWidth={2} />
+                            Ver PDF
+                          </a>
+                        )}
+                        {comunicado.imagen && (
+                          <button
+                            type="button"
+                            onClick={() => setModalImage(comunicadoFileUrl(comunicado.imagen ?? ''))}
+                            className={BUTTON.secondary}
+                          >
+                            <ImageIcon aria-hidden className="h-4 w-4 text-brand" strokeWidth={2} />
+                            Ver Imagen
+                          </button>
+                        )}
                       </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex space-x-2">
-                      {comunicado.pdf && (
-                        <a
-                          href={comunicadoFileUrl(comunicado.pdf)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg hover:bg-red-100 hover:border-red-300 transition-all duration-200 group/btn"
-                        >
-                          <FileText className="w-4 h-4 mr-2" />
-                          <span className="font-medium">Ver PDF</span>
-                        </a>
-                      )}
-
-                      {comunicado.imagen && (
-                        <button
-                          onClick={() => setModalImage(comunicadoFileUrl(comunicado.imagen ?? ""))}
-                          className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-lg hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 group/btn"
-                        >
-                          <ImageIcon className="w-4 h-4 mr-2" />
-                          <span className="font-medium">Ver Imagen</span>
-                        </button>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Contenido del Comunicado */}
-                <div className="px-6 py-6">
-                  <div className="prose prose-gray max-w-none">
-                    <p className="text-gray-700 leading-relaxed text-lg">
-                      {comunicado.descripcion}
-                    </p>
-                  </div>
+                <div className="flex items-center justify-between border-t border-stroke-3 bg-surface-2 px-5 py-2.5 sm:px-6">
+                  {vencido ? (
+                    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-fg-3">
+                      <Clock aria-hidden className="h-4 w-4" strokeWidth={2} />
+                      Vencido
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-[13px] font-medium text-success">
+                      <CheckCircle aria-hidden className="h-4 w-4" strokeWidth={2} />
+                      Publicado
+                    </span>
+                  )}
+                  <Tooltip title="Compartir" position="bottom" className="inline-flex">
+                    <button
+                      type="button"
+                      onClick={() => void compartir(comunicado)}
+                      aria-label={`Compartir «${comunicado.nombre}»`}
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-fg-3 outline-none transition-colors duration-100 hover:bg-surface-4 hover:text-brand-deep focus-visible:ring-2 focus-visible:ring-brand/45"
+                    >
+                      <Share2 className="h-4 w-4" strokeWidth={2} />
+                    </button>
+                  </Tooltip>
                 </div>
-
-                {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm">
-                      {vencido ? (
-                        <div className="flex items-center space-x-2 text-red-500 filter-none">
-                          <Clock className="w-4 h-4" />
-                          <span className="font-medium">Vencido</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-2 text-green-500">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Publicado</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button className="text-gray-400 hover:text-gray-600 transition-colors duration-200">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              </li>
             );
-          })
-        ) : (
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-12 text-center">
-            <div className="mx-auto w-24 h-24 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full flex items-center justify-center mb-6">
-              <Bell className="w-12 h-12 text-gray-400" />
-            </div>
-
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">
-              {filtro === 'todos' ? 'No hay comunicados' : 'Sin comunicados en esta categoría'}
-            </h3>
-
-            <p className="text-gray-600 mb-6 max-w-md mx-auto">
-              {filtro === 'todos'
-                ? 'Aún no se han publicado comunicados. Te notificaremos cuando haya nuevas actualizaciones.'
-                : `No hay comunicados disponibles para ${filtro === 'propietarios' ? 'propietarios' :
-                  filtro === 'comercios' ? 'comercios' :
-                    'propietarios y comercios'
+          })}
+        </ul>
+      ) : (
+        <EmptyState
+          icon={Bell}
+          title={filtro === 'todos' ? 'No hay comunicados' : 'Sin comunicados en esta categoría'}
+          description={
+            filtro === 'todos'
+              ? 'Aún no se han publicado comunicados. Te notificaremos cuando haya nuevas actualizaciones.'
+              : `No hay comunicados disponibles para ${
+                  filtro === 'propietarios' ? 'propietarios' : filtro === 'comercios' ? 'comercios' : 'propietarios y comercios'
                 } en este momento.`
-              }
-            </p>
-
-            {filtro !== 'todos' && (
-              <button
-                onClick={() => setFiltro('todos')}
-                className="bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2 transition-all duration-200 hover:shadow-lg"
-              >
-                <span>Ver todos los comunicados</span>
-                <Bell className="w-4 h-4" />
+          }
+          action={
+            filtro !== 'todos' ? (
+              <button type="button" onClick={() => setFiltro('todos')} className={BUTTON.primary}>
+                <Bell aria-hidden className="h-4 w-4" strokeWidth={2} />
+                Ver todos los comunicados
               </button>
-            )}
-          </div>
-        )}
-      </div>
+            ) : undefined
+          }
+        />
+      )}
 
-      {/* Modal de Imagen */}
-      {
-        modalImage && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+      <Toast message={shared} tone={shared.startsWith('No') ? 'error' : 'success'} onClose={() => setShared('')} />
+
+      {/* Visor de imagen */}
+      {modalImage && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Imagen del comunicado"
+          className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4"
+          onClick={() => setModalImage(null)}
+        >
+          <button
+            type="button"
             onClick={() => setModalImage(null)}
+            aria-label="Cerrar imagen"
+            autoFocus
+            className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-full bg-white/15 text-white outline-none backdrop-blur-sm transition-colors duration-150 hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white/80"
           >
-            <div className="relative max-w-7xl max-h-[90vh] w-full">
-              <button
-                onClick={() => setModalImage(null)}
-                className="absolute -top-12 right-0 text-white hover:text-gray-300 transition-colors duration-200"
-              >
-                <X className="w-8 h-8" />
-              </button>
-              <div
-                className="bg-white rounded-2xl shadow-2xl overflow-hidden"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={modalImage}
-                  alt="Comunicado"
-                  className="w-full h-auto max-h-[85vh] object-contain"
-                />
-              </div>
-            </div>
-          </div>
-        )
-      }
-    </div >
+            <X className="h-5 w-5" strokeWidth={2} />
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={modalImage}
+            alt="Comunicado"
+            onClick={(e) => e.stopPropagation()}
+            className="animate-rise-in max-h-[88vh] max-w-full rounded-xl object-contain shadow-2xl"
+          />
+        </div>
+      )}
+    </div>
   );
 }

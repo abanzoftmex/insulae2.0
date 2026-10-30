@@ -110,11 +110,11 @@ export function ConceptosModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-line">
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-fg">
               Conceptos Detallados: {grupoNombre}
             </h2>
             {!loading && conceptos.length > 0 && (
-              <p className="text-sm text-gray-600 mt-1">
+              <p className="text-sm text-fg-3 mt-1">
                 {conceptos.length} concepto(s) • Total: {formatCurrency(conceptos.reduce((sum, c) => sum + c.totalAnual, 0))}
               </p>
             )}
@@ -131,7 +131,7 @@ export function ConceptosModal({
             )}
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 p-2"
+              className="text-fg-4 hover:text-fg-3 p-2"
             >
               <X className="w-6 h-6" />
             </button>
@@ -142,12 +142,12 @@ export function ConceptosModal({
         <div className="flex-1 overflow-auto">
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader className="w-8 h-8 animate-spin text-blue-600 mr-3" />
-              <span className="text-gray-600">Cargando conceptos...</span>
+              <Loader className="w-8 h-8 animate-spin text-brand mr-3" />
+              <span className="text-fg-3">Cargando conceptos...</span>
             </div>
           ) : error ? (
             <div className="text-center py-12">
-              <div className="text-red-600 mb-4">❌ Error: {error}</div>
+              <div className="text-overdue mb-4">❌ Error: {error}</div>
               <button
                 onClick={fetchConceptos}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
@@ -157,7 +157,7 @@ export function ConceptosModal({
             </div>
           ) : conceptos.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-600">
+              <p className="text-fg-3">
                 No se encontraron conceptos con gastos para este grupo
               </p>
             </div>
@@ -166,19 +166,19 @@ export function ConceptosModal({
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-canvas">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-surface-2 z-10">
                       Categoría
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand">
                       Concepto
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
                       Total Anual
                     </th>
                     {meses.map((mes, idx) => (
                       <th
                         key={idx}
-                        className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider whitespace-nowrap"
+                        className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
                       >
                         {mes}
                       </th>
@@ -189,21 +189,21 @@ export function ConceptosModal({
                   {conceptos.map((concepto, idx) => (
                     <tr
                       key={concepto.id}
-                      className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
+                      className={idx % 2 === 0 ? "bg-white" : "bg-surface-2"}
                     >
-                      <td className="px-4 py-3 text-sm text-gray-600 font-medium sticky left-0 bg-inherit z-10">
+                      <td className="px-4 py-3 text-sm text-fg-3 font-medium sticky left-0 bg-inherit z-10">
                         {concepto.categoria}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900">
+                      <td className="px-4 py-3 text-sm text-fg">
                         {concepto.nombre}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900">
+                      <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-fg">
                         {formatCurrency(concepto.totalAnual)}
                       </td>
                       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
                         <td
                           key={mes}
-                          className="px-4 py-3 text-sm text-right font-mono text-gray-700"
+                          className="px-4 py-3 text-sm text-right tabular-nums text-fg-2"
                         >
                           {formatCurrency(concepto.meses[mes])}
                         </td>
@@ -211,15 +211,15 @@ export function ConceptosModal({
                     </tr>
                   ))}
                 </tbody>
-                <tfoot className="bg-gray-100">
+                <tfoot className="bg-surface-3">
                   <tr>
                     <td
                       colSpan={2}
-                      className="px-4 py-3 text-sm font-semibold text-gray-900"
+                      className="px-4 py-3 text-sm font-semibold text-fg"
                     >
                       TOTAL
                     </td>
-                    <td className="px-4 py-3 text-sm text-right font-mono font-bold text-gray-900">
+                    <td className="px-4 py-3 text-sm text-right tabular-nums font-bold text-fg">
                       {formatCurrency(conceptos.reduce((sum, c) => sum + c.totalAnual, 0))}
                     </td>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => {
@@ -230,7 +230,7 @@ export function ConceptosModal({
                       return (
                         <td
                           key={mes}
-                          className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900"
+                          className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-fg"
                         >
                           {formatCurrency(totalMes)}
                         </td>

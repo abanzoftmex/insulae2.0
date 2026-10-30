@@ -61,6 +61,7 @@
      Los deltas están calibrados en OKLab; ver el histórico de insulae2.0. */
   --color-nav: #f6f4ec;             /* superficie del rail                    */
   --color-nav-sunken: #e7e4d5;      /* módulos hundidos, buscador, footer     */
+  --color-nav-well: #ece9dc;        /* módulo del rail del portal: medio escalón entre nav y sunken */
   --color-nav-hover: #dcd8c6;       /* hover de ítem DENTRO del módulo        */
   --color-nav-pressed: #d1ccb7;     /* siguiente escalón, sin uso hoy         */
   --color-nav-line: #d9d4be;        /* hairline legible DENTRO del módulo     */
@@ -106,8 +107,8 @@
      capa simula el labio del canal atrapando la luz cenital — sin ella un fondo
      más oscuro solo se ve como una caja, no como algo incrustado. */
   --shadow-nav-well:
-    inset 0 1px 3px rgb(61 60 34 / 0.13),
-    inset 0 0 0 1px rgb(61 60 34 / 0.07),
+    inset 0 1px 2px rgb(61 60 34 / 0.09),
+    inset 0 0 0 1px rgb(61 60 34 / 0.055),
     0 1px 0 rgb(255 255 255 / 0.9);
 
   /* Curvas: `smooth` para geometría (ancho, alto), `out-quint` para opacidad, `exit` para salidas */
@@ -151,6 +152,7 @@
   --color-success-bg: #ecf5ec;
   --color-critical-bg: #fbefef;
   --color-overdue: #922f12;                          /* "vencido": teja del sello, 7.97:1 sobre blanco */
+  --color-vino: #4f140d;                             /* letras del logotipo, 14.6:1 sobre blanco */
 
   /* Elevación de Slack (docs/slack-design-analysis.md §2.6): toda superficie flotante lleva un
      anillo de 1 px de tinta al 13 % más una sola sombra difusa; el contenido en reposo, nada. */
@@ -354,6 +356,141 @@
   &:hover::-webkit-scrollbar-thumb,
   &:focus-within::-webkit-scrollbar-thumb {
     background-color: rgb(251 248 240 / 0.22);
+  }
+}
+
+/* Etiqueta del rail colapsado: entra 4 px desde el ícono con un fundido corto. */
+@utility tooltip-pop {
+  animation: tooltip-in 140ms var(--ease-out-quint) both;
+
+  &[data-side="bottom"] {
+    animation-name: tooltip-in-y;
+  }
+}
+
+/* Submenú flotante del rail colapsado: crece desde su esquina, como un menú contextual. */
+@utility flyout-pop {
+  transform-origin: top left;
+  animation: flyout-in 180ms var(--ease-out-quint) both;
+}
+
+@keyframes tooltip-in {
+  from { opacity: 0; transform: translateX(-4px); }
+}
+@keyframes tooltip-in-y {
+  from { opacity: 0; transform: translateY(-4px); }
+}
+@keyframes flyout-in {
+  from { opacity: 0; transform: translateX(-6px) scale(0.98); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip-pop,
+  .flyout-pop {
+    animation: fade-in 100ms linear both;
+  }
+}
+
+/* Lista del rail: los bordes se difuminan solo cuando hay módulos ocultos más allá
+   (data-fade-* los pone la barra lateral al medir el scroll). */
+@utility rail-scroll {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    #000 var(--fade-top),
+    #000 calc(100% - var(--fade-bottom)),
+    transparent 100%
+  );
+
+  &[data-fade-top] {
+    --fade-top: 24px;
+  }
+
+  &[data-fade-bottom] {
+    --fade-bottom: 24px;
+  }
+}
+
+/* Elemento al que se llega desde el buscador global: anillo dorado que se desvanece. */
+[data-search-hit] {
+  animation: search-hit 2600ms var(--ease-out-quint) both;
+}
+
+@keyframes search-hit {
+  0%,
+  55% {
+    box-shadow: 0 0 0 3px rgb(181 140 66 / 0.55), 0 0 0 8px rgb(241 234 193 / 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgb(181 140 66 / 0), 0 0 0 8px rgb(241 234 193 / 0);
+  }
+}
+
+/* Ilustración de Val'Quirico (components/minisitio/valquirico-art.tsx): la bandera de la
+   torre ondea despacio y la campana se mece una vez al pasar el cursor por su tarjeta. */
+.vq-flag {
+  transform-box: fill-box;
+  transform-origin: left center;
+  animation: vq-flag 3.6s ease-in-out infinite;
+}
+
+@keyframes vq-flag {
+  50% {
+    transform: scaleX(0.84) skewY(5deg);
+  }
+}
+
+.vq-flag-hover {
+  transform-box: fill-box;
+  transform-origin: left center;
+}
+
+.vq-scene:hover .vq-flag-hover {
+  animation: vq-flag 3.6s ease-in-out infinite;
+}
+
+.vq-bell {
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+
+.vq-scene:hover .vq-bell,
+.vq-scene:focus-within .vq-bell {
+  animation: vq-bell 1.6s var(--ease-smooth) both;
+}
+
+@keyframes vq-bell {
+  18% { rotate: 16deg; }
+  40% { rotate: -11deg; }
+  60% { rotate: 6deg; }
+  80% { rotate: -2deg; }
+}
+
+/* Punto "en horario": un halo que crece y se apaga, sin parpadeo. */
+.status-live::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: inherit;
+  animation: status-live 2.4s var(--ease-out-quint) infinite;
+}
+
+@keyframes status-live {
+  0% { opacity: 0.55; transform: scale(1); }
+  70%,
+  100% { opacity: 0; transform: scale(2.6); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vq-flag,
+  .vq-scene:hover .vq-flag-hover,
+  .vq-scene:hover .vq-bell,
+  .vq-scene:focus-within .vq-bell,
+  .status-live::after {
+    animation: none;
   }
 }
 

@@ -10,6 +10,7 @@ import { listNotificacionesAction } from "../../_actions/account";
 import type { NotificacionesPage } from "@/modules/minisitio/infrastructure/queries/communications.queries";
 import { Bell, RefreshCw, ChevronDown } from "lucide-react";
 import { useDisplayTimeZone } from "../_lib/client-dates";
+import { categoriaComunicado } from "@/components/minisitio/comunicado-categoria";
 
 export function NotificacionesView({ initialData }: { initialData: NotificacionesPage }) {
   const [loading, setLoading] = useState(false);
@@ -62,27 +63,28 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
     switch (tipo) {
       case "urgente":
         return {
-          border: "border-l-4 border-red-500",
-          bg: "bg-red-50",
-          text: "text-red-900",
-          subtext: "text-red-700",
-          date: "text-red-500",
+          border: "border-l-[3px] border-overdue",
+          bg: "bg-critical-bg",
+          text: "text-overdue",
+          subtext: "text-fg-2",
+          date: "text-fg-3",
         };
       case "warning":
         return {
-          border: "border-l-4 border-yellow-500",
-          bg: "bg-yellow-50",
-          text: "text-yellow-900",
-          subtext: "text-yellow-700",
-          date: "text-yellow-500",
+          border: "border-l-[3px] border-brand-accent",
+          bg: "bg-warning-bg",
+          text: "text-fg",
+          subtext: "text-fg-2",
+          date: "text-fg-3",
         };
       default:
+        // Aviso normal: tarjeta neutra con el filo olivo (antes todo era azul).
         return {
-          border: "border-l-4 border-blue-500",
-          bg: "bg-blue-50",
-          text: "text-blue-900",
-          subtext: "text-blue-700",
-          date: "text-blue-500",
+          border: "border border-stroke-2 border-l-[3px] border-l-brand",
+          bg: "bg-card",
+          text: "text-fg",
+          subtext: "text-fg-2",
+          date: "text-fg-3",
         };
     }
   };
@@ -100,17 +102,17 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
   return (
     <div >
       {/* Header con botón de actualizar */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+      <div className="rounded-2xl border border-stroke-2 bg-card mb-6">
+        <div className="flex items-center justify-between p-6 border-b border-stroke-2">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-primary-light bg-opacity-20 rounded-lg flex items-center justify-center">
               <Bell className="w-5 h-5 text-primary-dark" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Notificaciones de Hoy</h1>
-              <p className="text-sm text-gray-600">
+              <h2 className="text-xl font-bold text-fg">Notificaciones de Hoy</h2>
+              <p className="text-sm text-fg-3">
                 {notificaciones.length > 0
-                  ? `Tienes ${notificaciones.length} notificación${notificaciones.length !== 1 ? 'es' : ''} de hoy ${pagination.total > notificaciones.length ? `de ${pagination.total}` : ''}`
+                  ? `Tienes ${notificaciones.length} ${notificaciones.length !== 1 ? 'notificaciones' : 'notificación'} de hoy ${pagination.total > notificaciones.length ? `de ${pagination.total}` : ''}`
                   : 'No hay notificaciones nuevas para hoy. Las notificaciones importantes aparecerán aquí.'
                 }
               </p>
@@ -137,7 +139,7 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="rounded-2xl border border-stroke-2 bg-card p-6">
         {notificaciones.length > 0 ? (
         <div className="space-y-4">
           {notificaciones.map((notificacion, index) => {
@@ -145,24 +147,25 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
             return (
               <div
                 key={notificacion.id || index}
-                className={`rounded-lg pl-4 pr-4 py-4 hover:bg-opacity-80 transition-colors ${styles.border} ${styles.bg}`}
+                className={`rounded-xl px-5 py-4 transition-shadow duration-200 hover:shadow-[0_8px_24px_-14px_rgb(61_60_34/0.3)] ${styles.border} ${styles.bg}`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
-                      <h3 className={`font-semibold text-lg ${styles.text}`}>
+                      <h3 className={`text-[16px] font-semibold leading-6 ${styles.text}`}>
                         {notificacion.titulo}
                       </h3>
                       {notificacion.tipo === "urgente" && (
                         <div className="ml-2 flex-shrink-0">
-                          <div className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+                          <div className="w-3 h-3 bg-overdue rounded-full animate-pulse"></div>
                         </div>
                       )}
                     </div>
 
-                    <p className={`${styles.subtext} leading-relaxed mb-3`}>
-                      {notificacion.mensaje}
-                    </p>
+                    {/* Si el mensaje repite el título, no se pinta dos veces. */}
+                    {notificacion.mensaje && notificacion.mensaje.trim() !== notificacion.titulo?.trim() && (
+                      <p className={`${styles.subtext} mb-3 whitespace-pre-line text-[14.5px] leading-6`}>{notificacion.mensaje}</p>
+                    )}
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
@@ -175,9 +178,10 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
                         </p>
                         {notificacion.categoria && (
                           <span
-                            className={`text-xs px-2 py-1 rounded-full ${styles.bg} ${styles.subtext} border`}
+                            className="inline-flex h-[22px] items-center rounded-full bg-surface-4 px-2 text-[12px] font-medium text-fg-2"
                           >
-                            {notificacion.categoria}
+                            {/* La categoría llega como código ("3"): se muestra el público. */}
+                            {categoriaComunicado(String(notificacion.categoria))}
                           </span>
                         )}
                       </div>
@@ -190,7 +194,7 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
 
           {/* Botón Cargar Más */}
           {pagination.hasMore && (
-            <div className="text-center pt-6 border-t border-gray-200">
+            <div className="text-center pt-6 border-t border-stroke-2">
               <button
                 onClick={handleLoadMore}
                 disabled={loadingMore}
@@ -208,7 +212,7 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
                   </>
                 )}
               </button>
-              <p className="text-sm text-gray-500 mt-2">
+              <p className="text-sm text-fg-3 mt-2">
                 Mostrando {notificaciones.length} de {pagination.total}{" "}
                 notificaciones
               </p>
@@ -217,13 +221,13 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
         </div>
       ) : (
         <div className="text-center py-12">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Bell className="w-8 h-8 text-gray-400" />
+          <div className="w-16 h-16 bg-surface-3 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Bell className="w-8 h-8 text-fg-4" />
           </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
+          <h3 className="text-lg font-medium text-fg mb-2">
             No hay notificaciones
           </h3>
-          <p className="text-gray-600 mb-6">
+          <p className="text-fg-3 mb-6">
             No hay notificaciones nuevas para hoy. Las notificaciones importantes aparecerán aquí.
           </p>
           <button
