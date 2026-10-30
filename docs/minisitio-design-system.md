@@ -177,6 +177,15 @@ Notas:
   - "Hoy", "Ayer" o el día con nombre;
   - lo nuevo lleva `highlight` y la etiqueta "Nuevo" en `mention`.
 - **Pestañas** (Avisos, Solicitudes): 40 px, con cifra en caption. El subrayado olivo de 2 px se desliza con el resorte de la píldora del menú.
+- **Cifras de resumen** (`ui/stat-strip.tsx`): en el celular, una por renglón (etiqueta a la izquierda y monto a la derecha; la destacada arriba y grande). Desde tablet van en columnas, con tamaños que dejan caber montos de ocho cifras.
+- **Año de un reporte** (`_reportes/year-buttons.tsx`): botones segmentados de 28 px, con el elegido en olivo.
+- **Tabla mensual de reporte** (Estado de resultados; es el modelo para las demás tablas anchas):
+  - un solo scroll, el de la página. El encabezado de meses es una copia visual que se queda bajo la barra (`top` de 52 px en el celular y 49 px en escritorio) y sigue el scroll horizontal del cuerpo; la tabla tiene su propio `<thead>` aplanado para lectores de pantalla;
+  - `table-fixed` con el mismo `<colgroup>` en las dos tablas, para que las columnas coincidan;
+  - primera columna fija, con una sombra cuando quedan columnas ocultas a la izquierda;
+  - secciones con título, subtotales y totales en `surface-2` y negritas, sin bandas de color; solo los negativos del balance van en `overdue`;
+  - un mes sin movimientos se marca con "—" y no con "$0.00";
+  - los grupos se abren con un chevrón que gira 90° (160 ms). Muestran sus 10 conceptos principales y "Ver los N restantes".
 - **Estados:**
   - **carga:** esqueleto con pulso 1 → .65 → 1 en 1 s, y spinner solo si tarda más de 400 ms;
   - **vacío:** una frase y, si aplica, la acción;
@@ -241,6 +250,15 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - `alert()`.
 
 ## 10. Estado
+
+**Hecho (2026-10-29), duodécima vuelta:**
+- **Estado de resultados**, rehecho como estado contable:
+  - arriba, ingresos, egresos y balance, con una frase que dice cuánto superaron unos a otros;
+  - abajo, una sola tabla con ingresos, egresos y balance, mes por mes y con los meses alineados (antes, tres tablas de anchos distintos con tarjetas, sombras e íconos);
+  - el año se cambia con botones; la tabla anterior queda atenuada mientras llega el nuevo año. Ya no hay "Actualizar".
+- **Desglose de egresos, que nunca funcionó:** el chevrón de cada grupo pedía "opciones" a un stub que siempre devolvía vacío, y "Ver conceptos" abría un modal sin datos. Ahora cada grupo se abre en sus conceptos presupuestales reales, de mayor a menor gasto, armados con los mismos egresos que ya se leían (sin otra consulta). Se borraron ese modal, otro que nunca se montaba, los dos stubs, la consulta que solo usaba ese otro modal y seis acciones de servidor que quedaron sin uso.
+- **Grupos de egreso con nombre:** la migración dejó el nombre del grupo en `category` y en `name` el tipo de presupuesto, así que salían cuatro "Presupuesto ordinario". Ahora se llaman por su categoría ("Gastos de seguridad"…), con el tipo como detalle, en el orden del catálogo. En el **Resumen financiero** esto corrige un error de cuentas: fusionaba filas por nombre y cada "Presupuesto ordinario" pisaba al anterior, de modo que las filas no sumaban el total.
+- **Cifras de resumen en el celular:** una por renglón; antes "-$10,841,545.12" se cortaba. Verificado sin desbordes en cuatro pantallas a 390, 768 y 1280 px.
 
 **Hecho (2026-10-29), undécima vuelta:**
 - **Aviso de privacidad:**
@@ -373,17 +391,16 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - **Solicitudes:** acepta `?nueva=1`.
 
 **Pendiente**, en orden:
-1. **Estado de resultados** (vista y modales de conceptos y egresos):
-   - cifras con sombra e ícono (pasarlas a `StatStrip`);
-   - subtotales en verde, resaltados naranja y botones rojo, verde y azul;
-   - la columna "Concepto" parte los nombres en tres renglones;
-   - los encabezados beige de `compact-financial-table`.
+1. **Resumen financiero:**
+   - sus tablas (`compact-financial-table`) siguen con encabezados beige, título diminuto y tarjeta con sombra: pasarlas al modelo de la tabla mensual (§6);
+   - la carga y el error siguen con el estilo viejo.
 2. **Reporte general:**
    - tarjeta con "Exportar PDF" rojo y "Actualizar" pizarra, cifras con borde de color y filtros dentro de otra tarjeta;
    - el estado sale en inglés, tal como viene de la base ("AVAILABLE");
    - un saldo de $0.00 se pinta en rojo.
-3. **Limpieza:**
-   - 114 clases `gray-*` (todas en esas dos pantallas);
+3. **Tablas anchas con doble scroll:** `WideTableSection` (cartera de cuotas, reporte general) tiene su propio scroll vertical dentro de la página. Pasarla al modelo de la tabla mensual.
+4. **Limpieza:**
+   - las clases `gray-*` que quedan (Reporte general);
    - 6 clases de Tailwind v3 que en v4 no existen (`flex-shrink-0`), cuatro de ellas en la burbuja de superadmin;
    - la burbuja de superadmin sigue en pizarra (`slate-*`): es interna, pero desentona.
 

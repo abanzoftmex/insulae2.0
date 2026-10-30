@@ -14,16 +14,25 @@ type MonthMap = Record<number, number>;
 export interface FinancialGroup {
   id: string;
   nombre: string;
+  /** Texto secundario del grupo (en egresos, el tipo de presupuesto: "Presupuesto ordinario"). */
+  detalle?: string;
+  /** Orden del catálogo de presupuesto (egresos); sin él, el de aparición. */
+  orden?: number;
   /** mesesPorAnio["2026"][mes 1-12] = importe */
   mesesPorAnio: Record<string, MonthMap>;
   totalAnual: number;
+}
+
+/** Concepto presupuestal de egreso, con el grupo al que pertenece (desglose del estado de resultados). */
+export interface FinancialConcept extends FinancialGroup {
+  groupId: string;
 }
 
 export interface Financials {
   success: true;
   years: number[];
   income: { ordinaryGroups: FinancialGroup[]; extraordinaryGroups: FinancialGroup[]; otherIncome: FinancialGroup[] };
-  expense: { groups: FinancialGroup[] };
+  expense: { groups: FinancialGroup[]; concepts: FinancialConcept[] };
 }
 
 function ensureGroup(map: Map<string, FinancialGroup>, id: string, nombre: string): FinancialGroup {
@@ -82,7 +91,7 @@ const loadFinancials = cache(async (condominiumId: string, yearsKey: string): Pr
       select: {
         date: true,
         amount: true,
-        budgetConcept: { select: { id: true, name: true, group: { select: { id: true, name: true } } } },
+        budgetConcept: { select: { id: true, name: true, group: { select: { id: true, name: true, category: true, order: true } } } },
       },
     }),
   ]);
@@ -105,10 +114,29 @@ const loadFinancials = cache(async (condominiumId: string, yearsKey: string): Pr
   }
 
   const expGroups = new Map<string, FinancialGroup>();
+  const expConcepts = new Map<string, FinancialConcept>();
   for (const e of expenses) {
-    const gid = e.budgetConcept?.group?.id || "sin-grupo";
-    const gname = e.budgetConcept?.group?.name || "Sin grupo";
-    addToGroup(ensureGroup(expGroups, gid, gname), e.date.getFullYear(), e.date.getMonth() + 1, num(e.amount));
+    const grupo = e.budgetConcept?.group;
+    const gid = grupo?.id || "sin-grupo";
+    // La migración dejó el nombre del grupo en `category` ("Gastos de seguridad") y en `name` el
+    // tipo de presupuesto, igual en casi todos ("Presupuesto ordinario"): se mostraban cuatro
+    // grupos con el mismo nombre. "OTHER" es el valor por omisión de `category`.
+    const gname = grupo ? (grupo.category && grupo.category !== "OTHER" ? grupo.category : grupo.name) : "Sin grupo";
+    const [year, month, amount] = [e.date.getFullYear(), e.date.getMonth() + 1, num(e.amount)];
+    const g = ensureGroup(expGroups, gid, gname);
+    if (grupo) {
+      g.orden = grupo.order;
+      if (gname !== grupo.name) g.detalle = grupo.name;
+    }
+    addToGroup(g, year, month, amount);
+    // Mismo recorrido, por concepto: es el desglose de cada grupo (antes las "opciones" llegaban vacías).
+    const cid = e.budgetConcept?.id || `${gid}:sin-concepto`;
+    let concept = expConcepts.get(cid);
+    if (!concept) {
+      concept = { id: cid, nombre: e.budgetConcept?.name || "Sin concepto", groupId: gid, mesesPorAnio: {}, totalAnual: 0 };
+      expConcepts.set(cid, concept);
+    }
+    addToGroup(concept, year, month, amount);
   }
 
   return {
@@ -119,7 +147,10 @@ const loadFinancials = cache(async (condominiumId: string, yearsKey: string): Pr
       extraordinaryGroups: [...incExt.values()],
       otherIncome: [...incOther.values()],
     },
-    expense: { groups: [...expGroups.values()] },
+    expense: {
+      groups: [...expGroups.values()].sort((a, b) => (a.orden ?? 1e9) - (b.orden ?? 1e9)),
+      concepts: [...expConcepts.values()],
+    },
   };
 });
 
@@ -226,13 +257,21 @@ export type Ingresos = ReturnType<typeof mapIngresos>;
 export function mapEgresosGrupos(fin: Financials, anio: number) {
   const groups = fin.expense.groups;
   const totalesPorMes = sumByMonth(groups, anio);
+  const opcionesDe = (groupId: string) =>
+    fin.expense.concepts
+      .filter((c) => c.groupId === groupId)
+      .map((c) => ({ id: c.id, nombre: c.nombre, meses: monthsObj(c, anio), totalAnual: annualForYear(c, anio) }))
+      .filter((c) => c.totalAnual !== 0)
+      .sort((a, b) => b.totalAnual - a.totalAnual);
   return {
     grupos: groups.map((g) => ({
       id: g.id,
       nombre: g.nombre,
+      detalle: g.detalle ?? null,
       meses: monthsObj(g, anio),
       totalAnual: annualForYear(g, anio),
-      opciones: [] as unknown[],
+      /** Conceptos presupuestales del grupo, de mayor a menor gasto en el año. */
+      opciones: opcionesDe(g.id),
     })),
     totalesPorMes,
     totalAnual: totalOf(totalesPorMes),
@@ -277,85 +316,6 @@ export async function getEstadoResultadoEgresosGrupos(session: CondominoTokenPay
   const fin = await getFinancials(session, [anio]);
   return { success: true as const, anio, egresos: mapEgresosGrupos(fin, anio) };
 }
-
-/** Opciones (conceptos presupuestales) por grupo de egreso: sin equivalente en insulae2.0 (vacío válido). */
-export function getEstadoResultadoEgresosOpciones() {
-  return { success: true as const, opciones: [] as unknown[] };
-}
-
-/** Conceptos por opción de egreso: sin equivalente en insulae2.0 (vacío válido). */
-export function getEstadoResultadoEgresosConceptos(opcionIdInput: string | null, anio: number) {
-  const opcionId = opcionIdInput || null;
-  return {
-    success: true as const,
-    opcionId,
-    anio,
-    opcion: opcionId ? { id_cat_grupos_presupuesto: opcionId, nombre: "", id_cat_grupos_cobro: null } : null,
-    conceptos: [] as unknown[],
-    totalConceptos: 0,
-    totalGeneral: 0,
-  };
-}
-
-/** Conceptos de egreso de un grupo presupuestal, por mes (drill-down del estado de resultados). */
-export async function getExpenseConcepts(session: CondominoTokenPayload, groupId: string, anio: number) {
-  const start = new Date(anio, 0, 1);
-  const end = new Date(anio + 1, 0, 1);
-
-  const expenses = await prisma.expense.findMany({
-    where: {
-      condominiumId: session.condominiumId,
-      isActive: true,
-      date: { gte: start, lt: end },
-      ...(groupId ? { budgetConcept: { group: { id: groupId } } } : {}),
-    },
-    select: {
-      date: true,
-      amount: true,
-      budgetConcept: { select: { id: true, name: true, group: { select: { id: true, name: true } } } },
-    },
-  });
-
-  const byConcept = new Map<string, { id: string; nombre: string; categoria: string; meses: MonthMap; totalAnual: number }>();
-  for (const e of expenses) {
-    const cid = e.budgetConcept?.id || "sin-concepto";
-    if (!byConcept.has(cid)) {
-      const meses: MonthMap = {};
-      for (let m = 1; m <= 12; m++) meses[m] = 0;
-      byConcept.set(cid, {
-        id: cid,
-        nombre: e.budgetConcept?.name || "Sin concepto",
-        categoria: e.budgetConcept?.group?.name || "General",
-        meses,
-        totalAnual: 0,
-      });
-    }
-    const c = byConcept.get(cid)!;
-    const month = e.date.getMonth() + 1;
-    const amount = num(e.amount);
-    c.meses[month] = round2(c.meses[month] + amount);
-    c.totalAnual = round2(c.totalAnual + amount);
-  }
-
-  const conceptos = [...byConcept.values()];
-  const opcion = conceptos.length
-    ? { id_cat_grupos_presupuesto: groupId, nombre: conceptos[0].categoria, id_cat_grupos_cobro: null }
-    : groupId
-      ? { id_cat_grupos_presupuesto: groupId, nombre: "", id_cat_grupos_cobro: null }
-      : null;
-
-  return {
-    success: true as const,
-    opcionId: groupId || null,
-    anio,
-    opcion,
-    conceptos,
-    totalConceptos: conceptos.length,
-    totalGeneral: round2(conceptos.reduce((a, c) => a + c.totalAnual, 0)),
-  };
-}
-
-export type ExpenseConcepts = Awaited<ReturnType<typeof getExpenseConcepts>>;
 
 // ---- Resumen financiero ----
 

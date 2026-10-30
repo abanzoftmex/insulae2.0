@@ -7,9 +7,12 @@ import {
   getFinancialYears,
 } from "@/modules/minisitio/infrastructure/queries/financials.queries";
 import { requirePropietario } from "../_reportes/require-propietario";
-import { EstadoResultadoView, type EstadoResultadoInitialData } from "./estado-resultado-view";
+import { EstadoResultadoView } from "./estado-resultado-view";
 
 export const metadata: Metadata = { title: "Estado de Resultados" };
+
+/** Años que ofrecía el selector del minisitio; se conservan junto a los años con movimientos. */
+const ANIOS_DEL_MINISITIO = [2023, 2024, 2025];
 
 export default async function EstadoResultadoPage({
   searchParams,
@@ -21,8 +24,8 @@ export default async function EstadoResultadoPage({
 
   const { anio } = await searchParams;
 
-  // Año: el de la URL si viene, o el más reciente con datos reales (igual que la pantalla vieja).
-  // Los años con datos también alimentan el selector, para poder volver al año por defecto.
+  // Año: el de la URL si viene, o el más reciente con ingresos o egresos. Cambiarlo es navegar:
+  // la vista hace router.push(?anio=) y esta página vuelve a consultar.
   const yr = await getFinancialYears(session).catch(() => null);
   let year = parseInt(String(Array.isArray(anio) ? anio[0] : (anio ?? "")), 10);
   if (!year || Number.isNaN(year)) {
@@ -39,22 +42,17 @@ export default async function EstadoResultadoPage({
     if (r.status === "rejected") console.error("[minisitio] estado-resultado:", r.reason);
   }
 
-  const initialData: EstadoResultadoInitialData | null =
+  const data =
     totales.status === "fulfilled"
       ? {
           totales: totales.value,
           ingresos: ingresos.status === "fulfilled" ? ingresos.value.ingresos : null,
           egresos: egresos.status === "fulfilled" ? egresos.value.egresos : null,
-          ingresosError: ingresos.status === "rejected" ? "Error cargando ingresos" : null,
-          egresosError: egresos.status === "rejected" ? "Error cargando egresos" : null,
+          ingresosError: ingresos.status === "rejected",
+          egresosError: egresos.status === "rejected",
         }
       : null;
+  const anios = [...new Set([...(yr?.anios ?? []), ...ANIOS_DEL_MINISITIO, year])].sort((a, b) => a - b);
 
-  return (
-    <EstadoResultadoView
-      initialData={initialData}
-      initialError={initialData ? null : "Error al obtener totales"}
-      aniosConDatos={yr?.anios ?? []}
-    />
-  );
+  return <EstadoResultadoView data={data} anio={year} anios={anios} anioEnCurso={yr?.currentYear ?? new Date().getFullYear()} />;
 }

@@ -6,12 +6,6 @@
  */
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
 import {
-  getEstadoResultadoEgresosConceptos,
-  getEstadoResultadoEgresosGrupos,
-  getEstadoResultadoEgresosOpciones,
-  getEstadoResultadoIngresos,
-  getEstadoResultadoTotales,
-  getExpenseConcepts,
   getFinancialYears,
   getResumenFinanciero,
 } from "@/modules/minisitio/infrastructure/queries/financials.queries";
@@ -37,39 +31,6 @@ function toYear(anio: number | string | null | undefined): number {
 export async function getFinancialYearsAction() {
   const session = await requireCondominoSession();
   return getFinancialYears(session);
-}
-
-export async function getEstadoResultadoTotalesAction(anio: number | string) {
-  const session = await requirePropietarioSession();
-  return getEstadoResultadoTotales(session, toYear(anio));
-}
-
-export async function getEstadoResultadoIngresosAction(anio: number | string) {
-  const session = await requirePropietarioSession();
-  return getEstadoResultadoIngresos(session, toYear(anio));
-}
-
-export async function getEstadoResultadoEgresosGruposAction(anio: number | string) {
-  const session = await requirePropietarioSession();
-  return getEstadoResultadoEgresosGrupos(session, toYear(anio));
-}
-
-export async function getEstadoResultadoEgresosOpcionesAction(grupoId: string, anio: number | string) {
-  await requirePropietarioSession();
-  void grupoId; // sin equivalente en insulae2.0: siempre vacío, como antes
-  void anio;
-  return getEstadoResultadoEgresosOpciones();
-}
-
-export async function getEstadoResultadoEgresosConceptosAction(opcionId: string | null, anio: number | string) {
-  await requirePropietarioSession();
-  return getEstadoResultadoEgresosConceptos(opcionId, toYear(anio));
-}
-
-/** Conceptos de egreso de un grupo presupuestal (modal de conceptos del estado de resultados). */
-export async function getExpenseConceptsAction(grupoId: string, anio: number | string) {
-  const session = await requirePropietarioSession();
-  return getExpenseConcepts(session, grupoId || "", toYear(anio));
 }
 
 /** Las cuatro consultas del resumen financiero en una sola ida al servidor. */

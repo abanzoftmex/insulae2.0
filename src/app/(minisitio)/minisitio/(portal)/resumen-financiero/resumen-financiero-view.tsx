@@ -2,10 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { Button } from '@/components/ui/button';
-import { cn } from '@/shared/utils/cn';
 import type { FinancialYears, ResumenFinanciero } from '@/modules/minisitio/infrastructure/queries/financials.queries';
 import { getFinancialYearsAction, getResumenFinancieroAction } from '../../_actions/reports';
 import { CompactFinancialTable, TABLE_TONE, type FinancialTable } from './compact-financial-table';
+import { YearButtons } from '../_reportes/year-buttons';
 import { pickVisibleYears } from './visible-years';
 import { StatStrip } from '@/components/minisitio/ui/stat-strip';
 import { UnderlineTabs } from '@/components/minisitio/ui/tabs';
@@ -421,24 +421,7 @@ export function ResumenFinancieroView({
             { id: 'extraordinary' as const, label: 'Cuotas extraordinarias' },
           ]}
         />
-        {anios.length > 1 && (
-          <div role="group" aria-label="Año" className="mb-1.5 flex gap-1">
-            {anios.map((year) => (
-              <button
-                key={year}
-                type="button"
-                onClick={() => setAnio(year)}
-                aria-pressed={anio === year}
-                className={cn(
-                  'inline-flex h-7 items-center rounded-ctrl px-2.5 text-[13px] font-semibold tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-brand',
-                  anio === year ? 'bg-brand text-white' : 'text-fg-2 hover:bg-surface-3',
-                )}
-              >
-                {year}
-              </button>
-            ))}
-          </div>
-        )}
+        <YearButtons years={anios} value={anio} onChange={setAnio} className="mb-1.5" />
       </div>
       <p className="text-caption text-fg-3">
         {[CONDOMINIO, `Corte ${anio}`, ultimaActualizacionTexto !== 'No disponible' && ultimaActualizacionTexto, 'Datos consolidados de Insulae 2.0'].filter(Boolean).join(' · ')}

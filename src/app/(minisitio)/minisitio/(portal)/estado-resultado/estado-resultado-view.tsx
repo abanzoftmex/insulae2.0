@@ -1,948 +1,400 @@
 "use client";
 
-import React, { useEffect, useEffectEvent, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import {
-  TrendingUp,
-  TrendingDown,
-  ChevronDown,
-  ChevronRight,
-  RefreshCw,
-  BarChart3,
-  AlertTriangle,
-  Eye,
-} from "lucide-react";
-import { FinancialReportSkeleton, TableSkeleton } from "@/components/minisitio/skeleton-loaders";
+/**
+ * Estado de resultados del condominio: ingresos, egresos y balance de un año, mes por mes, en una
+ * sola tabla para que los meses queden alineados (antes eran tres tablas de anchos distintos,
+ * tarjetas con sombra y bandas de color). Cada grupo de egreso se abre en sus conceptos
+ * presupuestales, de mayor a menor gasto: antes el chevrón abría siempre una lista vacía y "Ver
+ * conceptos", un modal sin datos. El año vive en la URL (?anio=): al cambiarlo, el servidor vuelve
+ * a pintar la pantalla y mientras tanto la tabla anterior queda atenuada.
+ */
+import { Fragment, useOptimistic, useRef, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { ChevronRight } from "lucide-react";
+import type { EgresosGrupos, Ingresos, getEstadoResultadoTotales } from "@/modules/minisitio/infrastructure/queries/financials.queries";
 import { msPath } from "@/components/minisitio/paths";
 import { buttonClass } from "@/components/minisitio/ui/button";
-import { fieldClass } from "@/components/minisitio/ui/field";
-import type {
-  EgresosGrupos,
-  Ingresos,
-  getEstadoResultadoTotales,
-} from "@/modules/minisitio/infrastructure/queries/financials.queries";
-import {
-  getEstadoResultadoEgresosGruposAction,
-  getEstadoResultadoEgresosOpcionesAction,
-  getEstadoResultadoIngresosAction,
-  getEstadoResultadoTotalesAction,
-  getFinancialYearsAction,
-} from "../../_actions/reports";
-import { EgresosModal } from "./egresos-modal";
+import { LoadError } from "@/components/minisitio/ui/load-error";
+import { StatStrip } from "@/components/minisitio/ui/stat-strip";
+import { formatCurrency } from "../_lib/format";
+import { YearButtons } from "../_reportes/year-buttons";
 
-export type EstadoResultadoTotalesResult = Awaited<ReturnType<typeof getEstadoResultadoTotales>>;
-
-/**
- * Totales de las tarjetas. La pantalla vieja leía `result.totales.{totalIngresos, egresos,
- * balance}` (forma de la API anterior a insulae2.0); la consulta actual los devuelve planos.
- */
-interface Totales {
-  totalIngresos: number;
-  egresos: number;
-  balance: number;
-}
-
-/** Opción (concepto presupuestal) de un grupo de egreso. */
-interface OpcionEgreso {
-  id: string;
-  nombre: string;
-  totalAnual: number;
-  meses: Record<number, number>;
-}
-
-type GrupoEgreso = Omit<EgresosGrupos["grupos"][number], "opciones"> & { opciones: OpcionEgreso[] };
-type EgresosState = Omit<EgresosGrupos, "grupos"> & { grupos: GrupoEgreso[] };
-
-interface EstadoResultadoData {
-  anio: number;
-  totales: Totales;
-  ingresos: Ingresos | null;
-  egresos: EgresosState | null;
-}
-
-interface Balance {
-  porMes: Record<number, number>;
-  anual: number;
-}
-
-/**
- * Carga inicial (servidor). Como en la carga progresiva de antes, cada sección falla por
- * separado: sin totales no hay pantalla; sin ingresos o egresos solo esa tabla muestra su error.
- */
-export interface EstadoResultadoInitialData {
-  totales: EstadoResultadoTotalesResult;
+/** Carga del servidor: cada sección falla por separado; sin totales no hay pantalla. */
+export interface EstadoResultadoData {
+  totales: Awaited<ReturnType<typeof getEstadoResultadoTotales>>;
   ingresos: Ingresos | null;
   egresos: EgresosGrupos | null;
-  ingresosError: string | null;
-  egresosError: string | null;
 }
 
-const meses = [
-  "Enero",
-  "Febrero",
-  "Marzo",
-  "Abril",
-  "Mayo",
-  "Junio",
-  "Julio",
-  "Agosto",
-  "Septiembre",
-  "Octubre",
-  "Noviembre",
-  "Diciembre",
-];
+type Meses = Record<number, number>;
+type Estilo = "normal" | "grupo" | "detalle" | "subtotal" | "total";
 
-const toTotales = (result: EstadoResultadoTotalesResult): Totales => ({
-  totalIngresos: result.totalIngresos,
-  egresos: result.totalEgresos,
-  balance: result.balance,
-});
+const MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const NUMEROS = MESES.map((_, i) => i + 1);
+/** Conceptos visibles al abrir un grupo; el resto, con "Ver los N restantes". */
+const PRIMEROS = 10;
 
-const toEgresosState = (egresos: EgresosGrupos): EgresosState => ({
-  ...egresos,
-  grupos: egresos.grupos.map((g) => ({ ...g, opciones: g.opciones as OpcionEgreso[] })),
-});
+const sumar = (a: Meses, b: Meses, signo = 1): Meses => Object.fromEntries(NUMEROS.map((m) => [m, (a[m] || 0) + signo * (b[m] || 0)]));
 
-// Balance por mes a partir de ingresos y egresos
-const calculateBalance = (ingresos: Ingresos | null, egresos: EgresosState | null): Balance => {
-  if (!ingresos || !egresos) return { porMes: {}, anual: 0 };
-
-  const balancePorMes: Record<number, number> = {};
-  let balanceAnual = 0;
-
-  for (let mes = 1; mes <= 12; mes++) {
-    const totalIngresosMes =
-      (ingresos.totalesPrincipalesPorMes?.[mes] || 0) +
-      (ingresos.totalesOtrosPorMes?.[mes] || 0);
-    const totalEgresosMes = egresos.totalesPorMes?.[mes] || 0;
-
-    balancePorMes[mes] = totalIngresosMes - totalEgresosMes;
-    balanceAnual += balancePorMes[mes];
-  }
-
-  return { porMes: balancePorMes, anual: balanceAnual };
+/** Peso y color de cada tipo de fila; el balance cambia el color a "vencido" cuando es negativo. */
+const ESTILOS: Record<Estilo, { fila: string; etiqueta: string; total: [string, string]; mes: [string, string] }> = {
+  normal: {
+    fila: "group hover:bg-surface-2",
+    etiqueta: "bg-surface px-4 font-normal text-fg group-hover:bg-surface-2",
+    total: ["font-semibold", "text-fg"],
+    mes: ["font-normal", "text-fg-2"],
+  },
+  grupo: {
+    fila: "group hover:bg-surface-2",
+    etiqueta: "bg-surface px-4 font-semibold text-fg group-hover:bg-surface-2",
+    total: ["font-semibold", "text-fg"],
+    mes: ["font-semibold", "text-fg"],
+  },
+  detalle: {
+    fila: "group animate-fade-in hover:bg-surface-2",
+    etiqueta: "bg-surface pr-4 pl-10 font-normal text-fg-2 group-hover:bg-surface-2",
+    total: ["font-normal", "text-fg-2"],
+    mes: ["font-normal", "text-fg-3"],
+  },
+  subtotal: {
+    fila: "bg-surface-2",
+    etiqueta: "bg-surface-2 px-4 font-semibold text-fg",
+    total: ["font-semibold", "text-fg"],
+    mes: ["font-semibold", "text-fg-2"],
+  },
+  total: {
+    fila: "bg-surface-2",
+    etiqueta: "bg-surface-2 px-4 font-bold text-fg",
+    total: ["font-bold", "text-fg"],
+    mes: ["font-bold", "text-fg"],
+  },
 };
 
-const formatCurrency = (amount: number | null | undefined) => {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
-    minimumFractionDigits: 2,
-  }).format(amount || 0);
-};
+/** Mismo ancho de columnas en el encabezado a la vista y en el cuerpo (tabla de ancho fijo). */
+const TABLA = "w-[calc(var(--er-etiqueta)_+_1580px)] min-w-full table-fixed border-separate border-spacing-0 text-body";
+const CELDA = "h-10 border-b border-stroke-3 px-3 text-right whitespace-nowrap tabular-nums";
+/** Primera columna: fija al desplazar a lo ancho, con sombra cuando quedan columnas ocultas a la izquierda. */
+const FIJA = "sticky left-0 z-10 group-data-[desplazado]/tabla:shadow-[6px_0_8px_-6px_rgb(0_0_0/0.14)]";
+/** Etiqueta de una fila; el padding horizontal lo pone cada estilo. */
+const ETIQUETA = `${FIJA} border-r border-b border-stroke-3 py-2 text-left`;
+
+function Columnas() {
+  return (
+    <colgroup>
+      <col className="w-(--er-etiqueta)" />
+      <col className="w-[140px]" />
+      {NUMEROS.map((m) => (
+        <col key={m} className="w-[120px]" />
+      ))}
+    </colgroup>
+  );
+}
+
+function Monto({ valor, className }: { valor: number; className: string }) {
+  return (
+    <td className={`${CELDA} ${className}`}>
+      {valor === 0 ? (
+        <>
+          <span aria-hidden className="font-normal text-fg-4">
+            —
+          </span>
+          <span className="sr-only">Sin movimientos</span>
+        </>
+      ) : (
+        formatCurrency(valor)
+      )}
+    </td>
+  );
+}
+
+function Fila({
+  etiqueta,
+  total,
+  meses,
+  estilo = "normal",
+  conSigno = false,
+}: {
+  etiqueta: React.ReactNode;
+  total: number;
+  meses: Meses;
+  estilo?: Estilo;
+  /** Negativos en el color de "vencido" (el balance). */
+  conSigno?: boolean;
+}) {
+  const e = ESTILOS[estilo];
+  const clase = ([peso, color]: [string, string], valor: number) => `${peso} ${conSigno && valor < 0 ? "text-overdue" : color}`;
+  return (
+    <tr className={e.fila}>
+      <th scope="row" className={`${ETIQUETA} ${e.etiqueta}`}>
+        {etiqueta}
+      </th>
+      <Monto valor={total} className={`border-r border-stroke-3 ${clase(e.total, total)}`} />
+      {NUMEROS.map((m) => (
+        <Monto key={m} valor={meses[m] || 0} className={clase(e.mes, meses[m] || 0)} />
+      ))}
+    </tr>
+  );
+}
+
+function Seccion({ titulo }: { titulo: string }) {
+  return (
+    <tr>
+      <th scope="rowgroup" className={`${FIJA} border-b border-stroke-2 bg-surface px-4 pt-6 pb-2 text-left text-body-lg font-bold text-fg`}>
+        {titulo}
+      </th>
+      <td colSpan={13} className="border-b border-stroke-2" />
+    </tr>
+  );
+}
+
+/** Subtítulo dentro de una sección (p. ej. "Otros ingresos", que repite nombres de las cuotas). */
+function Subseccion({ titulo }: { titulo: string }) {
+  return (
+    <tr>
+      <th scope="row" className={`${FIJA} border-b border-stroke-3 bg-surface px-4 pt-4 pb-1.5 text-left text-body font-semibold text-fg-2`}>
+        {titulo}
+      </th>
+      <td colSpan={13} className="border-b border-stroke-3" />
+    </tr>
+  );
+}
 
 export function EstadoResultadoView({
-  initialData,
-  initialError,
-  aniosConDatos = [],
+  data,
+  anio,
+  anios,
+  anioEnCurso,
 }: {
-  initialData: EstadoResultadoInitialData | null;
-  initialError: string | null;
-  /** Años con movimientos reales (getFinancialYears): se suman a las opciones fijas del selector. */
-  aniosConDatos?: number[];
+  data: (EstadoResultadoData & { ingresosError: boolean; egresosError: boolean }) | null;
+  anio: number;
+  /** Años para elegir (con movimientos y los que ofrecía el minisitio). */
+  anios: number[];
+  anioEnCurso: number;
 }) {
-  // El año sigue viviendo en la URL (?anio=): el selector la actualiza y el cambio recarga los datos.
-  const searchParams = useSearchParams();
-  const anioParam = searchParams.get("anio");
+  const router = useRouter();
+  const [pendiente, startTransition] = useTransition();
+  const [anioVisible, setAnioVisible] = useOptimistic(anio);
+  const [abiertos, setAbiertos] = useState<ReadonlySet<string>>(() => new Set());
+  const [completos, setCompletos] = useState<ReadonlySet<string>>(() => new Set());
+  const marcoRef = useRef<HTMLDivElement>(null);
+  const cabeceraRef = useRef<HTMLDivElement>(null);
+  const cuerpoRef = useRef<HTMLDivElement>(null);
 
-  const [loading, setLoading] = useState(false);
-  const [loadingIngresos, setLoadingIngresos] = useState(false);
-  const [loadingEgresos, setLoadingEgresos] = useState(false);
-  const [data, setData] = useState<EstadoResultadoData | null>(() =>
-    initialData
-      ? {
-          anio: initialData.totales.anio,
-          totales: toTotales(initialData.totales),
-          ingresos: initialData.ingresos,
-          egresos: initialData.egresos ? toEgresosState(initialData.egresos) : null,
-        }
-      : null,
-  );
-  const [expandedEgresos, setExpandedEgresos] = useState<Record<string, boolean>>({});
-  const [loadingOpciones, setLoadingOpciones] = useState<Record<string, boolean>>({});
-  const [modalOpcionId, setModalOpcionId] = useState<string | null>(null);
-  const [modalOpcionNombre, setModalOpcionNombre] = useState("");
-  const [showModal, setShowModal] = useState(false);
-  const [apiError, setApiError] = useState<{ message: string; details: string } | null>(
-    initialError ? { message: initialError, details: "Error al cargar el estado de resultado" } : null,
-  );
-  const [ingresosError, setIngresosError] = useState<string | null>(initialData?.ingresosError ?? null);
-  const [egresosError, setEgresosError] = useState<string | null>(initialData?.egresosError ?? null);
-
-  // Carga progresiva de datos
-  const loadDataProgressively = async (param: string | null) => {
-    try {
-      // Paso 1: Cargar solo totales (súper rápido)
-      const year = await loadTotales(param);
-
-      // Paso 2: Cargar detalles de ingresos
-      setLoadingIngresos(true);
-      await loadIngresosDetails(year);
-
-      // Paso 3: Cargar grupos de egresos (sin detalles)
-      setLoadingEgresos(true);
-      await loadEgresosGroups(year);
-    } catch (error) {
-      console.error("Error en carga progresiva:", error);
-      setApiError({
-        message: error instanceof Error ? error.message : String(error),
-        details: "Error al cargar el estado de resultado",
-      });
-    } finally {
-      setLoading(false);
-      setLoadingIngresos(false);
-      setLoadingEgresos(false);
-    }
+  // El encabezado a la vista sigue al cuerpo a lo ancho, y la primera columna lleva sombra en
+  // cuanto hay columnas ocultas a la izquierda (sin estado: no se vuelve a pintar al desplazar).
+  const sincronizar = (e: React.UIEvent<HTMLDivElement>) => {
+    const x = e.currentTarget.scrollLeft;
+    if (cabeceraRef.current) cabeceraRef.current.scrollLeft = x;
+    marcoRef.current?.toggleAttribute("data-desplazado", x > 0);
   };
 
-  const loadTotales = async (param: string | null) => {
-    // Año: el de la URL si viene, o el más reciente con datos reales (desarrollo nuevo)
-    let year = parseInt(param ?? "", 10);
-    if (!year || Number.isNaN(year)) {
-      try {
-        const yr = await getFinancialYearsAction();
-        year = yr?.latest || new Date().getFullYear();
-      } catch {
-        year = new Date().getFullYear();
-      }
-    }
-
-    let result: EstadoResultadoTotalesResult;
-    try {
-      result = await getEstadoResultadoTotalesAction(year);
-    } catch {
-      throw new Error("Error al obtener totales");
-    }
-
-    // Crear estructura básica con solo totales
-    setData({
-      anio: result.anio,
-      totales: toTotales(result),
-      ingresos: null, // Se cargará después
-      egresos: null, // Se cargará después
+  const cambiarAnio = (nuevo: number) =>
+    startTransition(() => {
+      setAnioVisible(nuevo);
+      router.push(msPath(`/estado-resultado?anio=${nuevo}`), { scroll: false });
+    });
+  const alternar = (setter: typeof setAbiertos, id: string) =>
+    setter((previo) => {
+      const siguiente = new Set(previo);
+      if (!siguiente.delete(id)) siguiente.add(id);
+      return siguiente;
     });
 
-    setLoading(false); // Ya podemos mostrar los totales
-    return result.anio;
-  };
+  const periodo = anio === anioEnCurso ? `Del 1 de enero de ${anio} a hoy` : `Del 1 de enero al 31 de diciembre de ${anio}`;
+  const encabezado = (
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 border-b border-stroke-3 pb-3">
+      <p className="text-body text-fg-3">{periodo} · Montos en pesos</p>
+      <YearButtons years={anios} value={anioVisible} onChange={cambiarAnio} />
+    </div>
+  );
 
-  const loadIngresosDetails = async (year: number) => {
-    try {
-      setIngresosError(null);
-      const result = await getEstadoResultadoIngresosAction(year);
-
-      setData((prevData) => (prevData ? { ...prevData, ingresos: result.ingresos } : prevData));
-    } catch (error) {
-      console.error("Error cargando ingresos:", error);
-      setIngresosError("Error cargando ingresos");
-    } finally {
-      setLoadingIngresos(false);
-    }
-  };
-
-  const retryIngresos = () => {
-    setLoadingIngresos(true);
-    loadIngresosDetails(data?.anio || new Date().getFullYear());
-  };
-
-  const loadEgresosGroups = async (year: number) => {
-    try {
-      setEgresosError(null);
-      const result = await getEstadoResultadoEgresosGruposAction(year);
-
-      setData((prevData) => (prevData ? { ...prevData, egresos: toEgresosState(result.egresos) } : prevData));
-    } catch (error) {
-      console.error("Error cargando egresos:", error);
-      setEgresosError("Error cargando egresos");
-    } finally {
-      setLoadingEgresos(false);
-    }
-  };
-
-  const retryEgresos = () => {
-    setLoadingEgresos(true);
-    loadEgresosGroups(data?.anio || new Date().getFullYear());
-  };
-
-  // Al cambiar `?anio=` (selector o atrás/adelante del navegador) se recargan los datos de ese año.
-  const anioCargadoRef = useRef(anioParam);
-  const onAnioParamChange = useEffectEvent((param: string | null) => {
-    loadDataProgressively(param);
-  });
-  useEffect(() => {
-    if (anioCargadoRef.current === anioParam) return;
-    anioCargadoRef.current = anioParam;
-    onAnioParamChange(anioParam);
-  }, [anioParam]);
-
-  const retryLoadData = () => {
-    setApiError(null);
-    setData(null);
-    setLoading(true);
-    loadDataProgressively(anioParam);
-  };
-
-  const toggleEgreso = async (grupoId: string) => {
-    const isCurrentlyExpanded = expandedEgresos[grupoId];
-
-    // Si se está cerrando, solo actualizar el estado
-    if (isCurrentlyExpanded) {
-      setExpandedEgresos((prev) => ({
-        ...prev,
-        [grupoId]: false,
-      }));
-      return;
-    }
-
-    // Si se está abriendo, verificar si ya tiene opciones cargadas
-    const grupo = data?.egresos?.grupos.find((g) => g.id === grupoId);
-
-    if (!grupo || !data) {
-      console.error("Grupo no encontrado:", grupoId);
-      return;
-    }
-
-    // Si ya tiene opciones cargadas, solo expandir
-    if (grupo.opciones && grupo.opciones.length > 0) {
-      setExpandedEgresos((prev) => ({
-        ...prev,
-        [grupoId]: true,
-      }));
-      return;
-    }
-
-    // Si no tiene opciones, cargarlas
-    setLoadingOpciones((prev) => ({ ...prev, [grupoId]: true }));
-
-    try {
-      const result = await getEstadoResultadoEgresosOpcionesAction(grupoId, data.anio);
-
-      if (result.success) {
-        // Actualizar el grupo con las opciones cargadas
-        setData((prevData) =>
-          prevData && prevData.egresos
-            ? {
-                ...prevData,
-                egresos: {
-                  ...prevData.egresos,
-                  grupos: prevData.egresos.grupos.map((g) =>
-                    g.id === grupoId ? { ...g, opciones: result.opciones as OpcionEgreso[] } : g,
-                  ),
-                },
-              }
-            : prevData,
-        );
-
-        // Expandir el grupo
-        setExpandedEgresos((prev) => ({
-          ...prev,
-          [grupoId]: true,
-        }));
-      }
-    } catch (error) {
-      console.error("Error cargando opciones:", error);
-      // Mostrar error pero mantener la UI funcional
-    } finally {
-      setLoadingOpciones((prev) => ({ ...prev, [grupoId]: false }));
-    }
-  };
-
-  const openConceptosModal = (opcionId: string, opcionNombre: string) => {
-    setModalOpcionId(opcionId);
-    setModalOpcionNombre(opcionNombre);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setModalOpcionId(null);
-    setModalOpcionNombre("");
-    setShowModal(false);
-  };
-
-  // Mostrar skeleton mientras carga
-  if (loading && !data) {
-    return <FinancialReportSkeleton />;
-  }
-
-  // Error sin datos
-  if (!data && apiError) {
+  if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <AlertTriangle className="w-16 h-16 text-warning mx-auto mb-4"/>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Error al cargar datos
-          </h2>
-          <p className="text-gray-600 mb-4">
-            {apiError?.message || "Error desconocido"}
-          </p>
-          <button
-            onClick={retryLoadData}
-            className="bg-brand-deep text-white px-6 py-2 rounded-lg hover:bg-gray-800 inline-flex items-center"
-          >
-            <RefreshCw className="w-4 h-4 mr-2"/>
-            Reintentar
-          </button>
-        </div>
+      <div className="space-y-5">
+        {encabezado}
+        <LoadError what="el estado de resultados" />
       </div>
     );
   }
 
-  // Datos mínimos cargados, mostrar la página con skeletons selectivos
-  if (!data) {
-    return <FinancialReportSkeleton />;
-  }
-
-  const { anio, ingresos, egresos, totales } = data;
-  // Hasta tener ingresos y egresos, el balance anual es el de los totales (igual que antes).
-  const balance: Balance =
-    ingresos && egresos ? calculateBalance(ingresos, egresos) : { anual: totales.balance, porMes: {} };
+  const { totales, ingresos, egresos } = data;
+  const balance = totales.balance;
+  const ingresosPorMes = ingresos ? sumar(ingresos.totalesPrincipalesPorMes, ingresos.totalesOtrosPorMes) : null;
 
   return (
-    <div className="space-y-6">
-      {/* Periodo y año; el título ya lo pone el shell. */}
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-stroke-3 pb-3">
-        <p className="text-body text-fg-3">Del 1 de enero al 31 de diciembre de {anio}</p>
-        <div className="flex items-center gap-2">
-          <label htmlFor="er-anio" className="sr-only">
-            Año
-          </label>
-          <select
-            id="er-anio"
-            value={anio}
-            onChange={(e) => {
-              const nuevoAnio = e.target.value;
-              window.history.pushState(null, "", msPath(`/estado-resultado?anio=${nuevoAnio}`));
+    <div className="space-y-5">
+      {encabezado}
+
+      <StatStrip
+        label={`Resultado ${anio}`}
+        items={[
+          { id: "ingresos", label: "Ingresos", value: formatCurrency(totales.totalIngresos) },
+          { id: "egresos", label: "Egresos", value: formatCurrency(totales.totalEgresos) },
+          {
+            id: "balance",
+            label: "Balance",
+            value: formatCurrency(balance),
+            tone: balance < 0 ? "overdue" : balance > 0 ? "success" : undefined,
+          },
+        ]}
+        footer={
+          balance === 0 ? (
+            "Los ingresos y los egresos del año quedaron iguales."
+          ) : (
+            <>
+              Los {balance < 0 ? "egresos superaron a los ingresos" : "ingresos superaron a los egresos"} por{" "}
+              <span className="font-semibold text-fg tabular-nums">{formatCurrency(Math.abs(balance))}</span>.
+            </>
+          )
+        }
+      />
+
+      {data.ingresosError && <LoadError what="el detalle de los ingresos" />}
+      {data.egresosError && <LoadError what="el detalle de los egresos" />}
+
+      {(ingresos || egresos) && (
+        <div
+          ref={marcoRef}
+          className={`group/tabla rounded-panel border border-stroke-2 transition-opacity duration-160 ease-slack [--er-etiqueta:180px] sm:[--er-etiqueta:300px] ${pendiente ? "opacity-60" : ""}`}
+        >
+          {/* Encabezado a la vista: se queda bajo la barra al desplazar la página (un solo scroll, el
+              de la página) y sigue el scroll horizontal del cuerpo. La tabla trae el suyo para
+              lectores de pantalla. */}
+          <div
+            ref={cabeceraRef}
+            aria-hidden
+            onWheel={(e) => {
+              if (e.deltaX && cuerpoRef.current) cuerpoRef.current.scrollLeft += e.deltaX;
             }}
-            className={`${fieldClass} h-8 w-auto pr-8`}
+            className="sticky top-[52px] z-[15] overflow-hidden rounded-t-panel bg-surface lg:top-[49px]"
           >
-            {/* Mismas opciones fijas que el minisitio, más los años con datos y el año mostrado
-                (por defecto, el más reciente con ingresos o egresos). */}
-            {Array.from(new Set([Number(anio), ...aniosConDatos, 2025, 2024, 2023]))
-              .filter((y) => Number.isFinite(y))
-              .sort((a, b) => b - a)
-              .map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-          </select>
-          <button type="button" onClick={retryLoadData} className={buttonClass("outline", "sm")}>
-            <RefreshCw className="h-3.5 w-3.5" aria-hidden />
-            Actualizar
-          </button>
-        </div>
-      </div>
-
-      {/* Cards de Resumen */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Total Ingresos */}
-        <div className="bg-white border border-stroke-2 rounded-lg p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-success">
-              Total Ingresos
-            </h3>
-            <TrendingUp className="w-5 h-5 text-success"/>
-          </div>
-          {totales ? (
-            <p className="text-2xl font-bold text-success mt-2">
-              {formatCurrency(totales.totalIngresos)}
-            </p>
-          ) : ingresos ? (
-            <p className="text-2xl font-bold text-success mt-2">
-              {formatCurrency(ingresos.totalPrincipalesAnual + ingresos.totalOtrosAnual)}
-            </p>
-          ) : (
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-32 mt-2"></div>
-            </div>
-          )}
-          <p className="text-sm text-success mt-1">
-            Año {anio}
-          </p>
-        </div>
-
-        {/* Total Egresos */}
-        <div className="bg-white border border-stroke-2 rounded-lg p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-overdue">
-              Total Egresos
-            </h3>
-            <TrendingDown className="w-5 h-5 text-overdue"/>
-          </div>
-          {totales ? (
-            <p className="text-2xl font-bold text-overdue mt-2">
-              {formatCurrency(totales.egresos)}
-            </p>
-          ) : egresos ? (
-            <p className="text-2xl font-bold text-overdue mt-2">
-              {formatCurrency(egresos.totalAnual)}
-            </p>
-          ) : (
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-32 mt-2"></div>
-            </div>
-          )}
-          <p className="text-sm text-overdue mt-1">
-            Año {anio}
-          </p>
-        </div>
-
-        {/* Balance Final */}
-        <div className={`bg-white border rounded-lg p-6 shadow-sm ${
-          (totales?.balance || balance?.anual || 0) >= 0 ? 'border-stroke-2' : 'border-stroke-2'
-        }`}>
-          <div className="flex items-center justify-between">
-            <h3 className={`text-sm font-semibold ${
-              (totales?.balance || balance?.anual || 0) >= 0 ? 'text-success' : 'text-overdue'
-            }`}>
-              Balance Final
-            </h3>
-            <BarChart3 className={`w-5 h-5 ${
-              (totales?.balance || balance?.anual || 0) >= 0 ? 'text-success' : 'text-overdue'
-            }`} />
-          </div>
-          {totales ? (
-            <p className={`text-2xl font-bold mt-2 ${
-              totales.balance >= 0 ? 'text-success' : 'text-overdue'
-            }`}>
-              {formatCurrency(totales.balance)}
-            </p>
-          ) : balance ? (
-            <p className={`text-2xl font-bold mt-2 ${
-              balance.anual >= 0 ? 'text-success' : 'text-overdue'
-            }`}>
-              {formatCurrency(balance.anual)}
-            </p>
-          ) : (
-            <div className="animate-pulse">
-              <div className="h-8 bg-gray-200 rounded w-32 mt-2"></div>
-            </div>
-          )}
-          <p className={`text-sm mt-1 ${
-            (totales?.balance || balance?.anual || 0) >= 0 ? 'text-success' : 'text-overdue'
-          }`}>
-            {(totales?.balance || balance?.anual || 0) >= 0 ? 'Superávit' : 'Déficit'} {anio}
-          </p>
-        </div>
-      </div>
-
-      {/* INGRESOS */}
-      <div className="bg-white border border-line shadow-sm overflow-x-auto">
-        <div className="bg-surface-2 px-6 py-4 border-b border-stroke-2">
-          <div className="flex items-center">
-            <TrendingUp className="w-5 h-5 text-success mr-2"/>
-            <h2 className="text-base font-semibold text-success">
-              Ingresos
-            </h2>
-          </div>
-        </div>
-
-        {/* Contenido de Ingresos */}
-        {ingresosError ? (
-          <div className="p-6 text-center">
-            <div className="bg-surface-2 border border-stroke-2 rounded-lg p-4">
-              <AlertTriangle className="w-6 h-6 text-overdue mx-auto mb-2"/>
-              <h3 className="font-semibold text-overdue">Error cargando ingresos</h3>
-              <p className="text-sm text-overdue mb-3">{ingresosError}</p>
-              <button
-                onClick={retryIngresos}
-                className="bg-overdue text-white px-4 py-2 rounded-md hover:bg-red-700 inline-flex items-center text-sm"
-              >
-                <RefreshCw className="w-4 h-4 mr-2"/>
-                Reintentar
-              </button>
-            </div>
-          </div>
-        ) : loadingIngresos || !ingresos ? (
-          <div className="p-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="animate-spin w-4 h-4 border-2 border-stroke border-t-transparent rounded-full"></div>
-              <span className="text-sm text-gray-600">Cargando detalles de ingresos...</span>
-            </div>
-            <TableSkeleton rows={4} cols={14} />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-line">
-              <thead className="bg-canvas">
+            <table className={TABLA}>
+              <Columnas />
+              <tbody>
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-gray-50 z-10">
-                    Concepto
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
-                    Anual
-                  </th>
-                  {meses.map((mes, idx) => (
-                    <th
-                      key={idx}
-                      className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
-                    >
-                      {mes}
+                  <th className={`${FIJA} h-10 border-r border-b border-stroke-2 bg-surface px-4 text-left text-caption font-semibold text-fg-3`}>Concepto</th>
+                  <th className="h-10 border-r border-b border-stroke-2 px-3 text-right text-caption font-semibold text-fg-3">Total {anio}</th>
+                  {MESES.map((mes) => (
+                    <th key={mes} className="h-10 border-b border-stroke-2 px-3 text-right text-caption font-semibold text-fg-3 capitalize">
+                      {mes.slice(0, 3)}
                     </th>
                   ))}
                 </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-line">
-                {/* Cuotas Ordinarias y Extraordinarias */}
-                {ingresos.principales.map((ingreso, idx) => (
-                <tr
-                  key={ingreso.id}
-                  className={idx % 2 === 0 ?"bg-white":"bg-gray-50"}
-                >
-                  <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit z-10">
-                    {ingreso.nombre}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-900">
-                    {formatCurrency(ingreso.totalAnual)}
-                  </td>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
-                    <td
-                      key={mes}
-                      className="px-4 py-3 text-sm text-right tabular-nums text-gray-700"
-                    >
-                      {formatCurrency(ingreso.meses[mes])}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-
-              {/* Subtotal Principales */}
-              <tr className="bg-surface-2 font-semibold">
-                <td className="px-4 py-3 text-sm text-success sticky left-0 bg-surface-2 z-10">
-                  Subtotal Ingresos Principales
-                </td>
-                <td className="px-4 py-3 text-sm text-right tabular-nums font-bold text-success">
-                  {formatCurrency(ingresos.totalPrincipalesAnual)}
-                </td>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
-                  <td
-                    key={mes}
-                    className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-success"
-                  >
-                    {formatCurrency(ingresos.totalesPrincipalesPorMes[mes])}
-                  </td>
-                ))}
-              </tr>
-
-              {/* Otros Ingresos */}
-              {ingresos.otros.length > 0 &&
-                ingresos.otros.map((ingreso, idx) => (
-                  <tr
-                    key={ingreso.id}
-                    className={idx % 2 === 0 ?"bg-white":"bg-gray-50"}
-                  >
-                    <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit z-10">
-                      {ingreso.nombre}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-900">
-                      {formatCurrency(ingreso.totalAnual)}
-                    </td>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
-                      <td
-                        key={mes}
-                        className="px-4 py-3 text-sm text-right tabular-nums text-gray-700"
-                      >
-                        {formatCurrency(ingreso.meses[mes])}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-
-              {/* Subtotal Otros */}
-              {ingresos.otros.length > 0 && (
-                <tr className="bg-surface-2 font-semibold">
-                  <td className="px-4 py-3 text-sm text-success sticky left-0 bg-surface-2 z-10">
-                    Subtotal Otros Ingresos
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right tabular-nums font-bold text-success">
-                    {formatCurrency(ingresos.totalOtrosAnual)}
-                  </td>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
-                    <td
-                      key={mes}
-                      className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-success"
-                    >
-                      {formatCurrency(ingresos.totalesOtrosPorMes[mes])}
-                    </td>
-                  ))}
-                </tr>
-              )}
-
-              {/* Total Ingresos */}
-              <tr className="bg-surface-2 font-bold border-t-2 border-stroke">
-                <td className="px-4 py-4 text-sm text-success sticky left-0 bg-surface-2 z-10">
-                  Total Ingresos
-                </td>
-                <td className="px-4 py-4 text-base text-right tabular-nums font-bold text-success">
-                  {formatCurrency(ingresos.totalAnual)}
-                </td>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => {
-                  const totalMes =
-                    (ingresos.totalesPrincipalesPorMes[mes] || 0) +
-                    (ingresos.totalesOtrosPorMes[mes] || 0);
-                  return (
-                    <td
-                      key={mes}
-                      className="px-4 py-4 text-sm text-right tabular-nums font-bold text-success"
-                    >
-                      {formatCurrency(totalMes)}
-                    </td>
-                  );
-                })}
-              </tr>
-            </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      {/* EGRESOS */}
-      <div className="bg-white border border-line shadow-sm">
-        <div className="bg-surface-2 px-6 py-4 border-b border-stroke-2">
-          <div className="flex items-center">
-            <TrendingDown className="w-5 h-5 text-overdue mr-2"/>
-            <h2 className="text-base font-semibold text-overdue">
-              Egresos
-            </h2>
-          </div>
-        </div>
-
-        {/* Contenido de Egresos */}
-        {egresosError ? (
-          <div className="p-6 text-center">
-            <div className="bg-surface-2 border border-stroke-2 rounded-lg p-4">
-              <AlertTriangle className="w-6 h-6 text-overdue mx-auto mb-2"/>
-              <h3 className="font-semibold text-overdue">Error cargando egresos</h3>
-              <p className="text-sm text-overdue mb-3">{egresosError}</p>
-              <button
-                onClick={retryEgresos}
-                className="bg-overdue text-white px-4 py-2 rounded-md hover:bg-red-700 inline-flex items-center text-sm"
-              >
-                <RefreshCw className="w-4 h-4 mr-2"/>
-                Reintentar
-              </button>
-            </div>
-          </div>
-        ) : loadingEgresos || !egresos ? (
-          <div className="p-6">
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="animate-spin w-4 h-4 border-2 border-stroke border-t-transparent rounded-full"></div>
-              <span className="text-sm text-gray-600">Cargando grupos de egresos...</span>
-            </div>
-            <TableSkeleton rows={5} cols={14} />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-line">
-              <thead className="bg-canvas">
-                <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-gray-50 z-10">
-                    Concepto
-                  </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
-                    Anual
-                  </th>
-                  {meses.map((mes, idx) => (
-                    <th
-                      key={idx}
-                      className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
-                    >
-                      {mes}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-line">
-                {egresos.grupos.map((grupo, grupoIdx) => (
-                <React.Fragment key={grupo.id}>
-                  {/* Grupo Principal */}
-                  <tr className="bg-gray-100 hover:bg-gray-150">
-                    <td className="px-4 py-3 text-sm text-gray-900 font-bold sticky left-0 bg-gray-100 z-10">
-                      <div className="flex items-center">
-                        <button
-                          className="flex items-center cursor-pointer hover:text-gray-700 transition-colors"
-                          onClick={() => toggleEgreso(grupo.id)}
-                          disabled={loadingOpciones[grupo.id]}
-                        >
-                          {loadingOpciones[grupo.id] ? (
-                            <div className="animate-spin w-4 h-4 mr-2 border-2 border-gray-600 border-t-transparent rounded-full"></div>
-                          ) : expandedEgresos[grupo.id] ? (
-                            <ChevronDown className="w-4 h-4 mr-2"/>
-                          ) : (
-                            <ChevronRight className="w-4 h-4 mr-2"/>
-                          )}
-                          {grupoIdx + 1}. {grupo.nombre}
-                        </button>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-right tabular-nums font-bold text-gray-900">
-                      {formatCurrency(grupo.totalAnual)}
-                    </td>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
-                      <td
-                        key={mes}
-                        className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-900"
-                      >
-                        {formatCurrency(grupo.meses[mes])}
-                      </td>
-                    ))}
-                  </tr>
-
-                  {/* Opciones del Grupo (expandidas) */}
-                  {expandedEgresos[grupo.id] &&
-                    grupo.opciones?.map((opcion, opcionIdx) => (
-                      <tr
-                        key={opcion.id}
-                        className="bg-gray-50 hover:bg-gray-100 cursor-pointer"
-                        onClick={() => openConceptosModal(opcion.id, `${grupo.nombre} - ${opcion.nombre}`)}
-                        title="Click para ver conceptos detallados"
-                      >
-                        <td className="px-4 py-3 text-sm text-gray-800 font-semibold sticky left-0 bg-gray-50 z-10">
-                          <div className="flex items-center justify-between pl-6">
-                            <div className="flex items-center">
-                              <span className="w-6 text-gray-400 mr-2">
-                                {String.fromCharCode(97 + opcionIdx)})
-                              </span>
-                              {opcion.nombre}
-                            </div>
-                            <div className="flex items-center text-brand text-xs">
-                              <Eye className="w-3 h-3 mr-1"/>
-                              Ver conceptos
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-right tabular-nums font-semibold text-gray-800">
-                          {formatCurrency(opcion.totalAnual)}
-                        </td>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(
-                          (mes) => (
-                            <td
-                              key={mes}
-                              className="px-4 py-3 text-sm text-right tabular-nums text-gray-700"
-                            >
-                              {formatCurrency(opcion.meses[mes])}
-                            </td>
-                          )
-                        )}
-                      </tr>
-                    ))}
-                </React.Fragment>
-              ))}
-
-              {/* Total Egresos */}
-              <tr className="bg-surface-2 font-bold border-t-2 border-stroke">
-                <td className="px-4 py-4 text-sm text-overdue sticky left-0 bg-surface-2 z-10">
-                  Total Egresos
-                </td>
-                <td className="px-4 py-4 text-base text-right tabular-nums font-bold text-overdue">
-                  {formatCurrency(egresos.totalAnual)}
-                </td>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => (
-                  <td
-                    key={mes}
-                    className="px-4 py-4 text-sm text-right tabular-nums font-bold text-overdue"
-                  >
-                    {formatCurrency(egresos.totalesPorMes[mes])}
-                  </td>
-                ))}
-              </tr>
               </tbody>
             </table>
           </div>
-        )}
-      </div>
 
-      {/* BALANCE */}
-      <div className="bg-white border border-line shadow-sm overflow-x-auto">
-        <div
-          className={`px-6 py-4 ${
-            (balance?.anual || 0) >= 0 ? "bg-surface-2" : "bg-orange-50"
-          }`}
-        >
-          <div className="flex items-center mb-4">
-            <BarChart3
-              className={`w-6 h-6 mr-3 ${
-                (balance?.anual || 0) >= 0 ? "text-brand" : "text-orange-600"
-              }`}
-            />
-            <span
-              className={`text-lg font-bold ${
-                (balance?.anual || 0) >= 0 ? "text-brand" : "text-orange-900"
-              }`}
-            >
-              Balance del Periodo
-            </span>
+          <div
+            ref={cuerpoRef}
+            role="region"
+            aria-label={`Ingresos y egresos de ${anio}, mes por mes`}
+            aria-busy={pendiente}
+            tabIndex={0}
+            onScroll={sincronizar}
+            className="overflow-x-auto rounded-b-panel outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          >
+            <table className={TABLA}>
+              <caption className="sr-only">Estado de resultados {anio}, en pesos. Un guion indica un mes sin movimientos.</caption>
+              <Columnas />
+              <thead>
+                <tr className="[&>th]:h-0 [&>th]:border-0 [&>th]:p-0 [&>th]:text-[0px] [&>th]:leading-[0]">
+                  <th scope="col">Concepto</th>
+                  <th scope="col">Total {anio}</th>
+                  {MESES.map((mes) => (
+                    <th key={mes} scope="col">
+                      {mes}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              {ingresos && ingresosPorMes && (
+                <tbody>
+                  <Seccion titulo="Ingresos" />
+                  {ingresos.principales.map((i) => (
+                    <Fila key={i.id} etiqueta={i.nombre} total={i.totalAnual} meses={i.meses} />
+                  ))}
+                  {ingresos.otros.length > 0 && (
+                    <>
+                      <Fila estilo="subtotal" etiqueta="Subtotal de ingresos principales" total={ingresos.totalPrincipalesAnual} meses={ingresos.totalesPrincipalesPorMes} />
+                      <Subseccion titulo="Otros ingresos" />
+                      {ingresos.otros.map((i) => (
+                        <Fila key={i.id} etiqueta={i.nombre} total={i.totalAnual} meses={i.meses} />
+                      ))}
+                      <Fila estilo="subtotal" etiqueta="Subtotal de otros ingresos" total={ingresos.totalOtrosAnual} meses={ingresos.totalesOtrosPorMes} />
+                    </>
+                  )}
+                  <Fila estilo="total" etiqueta="Total de ingresos" total={ingresos.totalAnual} meses={ingresosPorMes} />
+                </tbody>
+              )}
+
+              {egresos && (
+                <tbody>
+                  <Seccion titulo="Egresos" />
+                  {egresos.grupos.map((grupo) => {
+                    const abierto = abiertos.has(grupo.id);
+                    const completo = completos.has(grupo.id);
+                    const cuantos = grupo.opciones.length;
+                    const visibles = abierto ? (completo ? grupo.opciones : grupo.opciones.slice(0, PRIMEROS)) : [];
+                    const etiqueta =
+                      cuantos === 0 ? (
+                        grupo.nombre
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => alternar(setAbiertos, grupo.id)}
+                          aria-expanded={abierto}
+                          className="-mx-1 flex w-full items-center gap-1.5 rounded-ctrl px-1 py-0.5 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                        >
+                          <ChevronRight aria-hidden className={`h-4 w-4 shrink-0 text-fg-3 transition-transform duration-160 ease-slack ${abierto ? "rotate-90" : ""}`} />
+                          <span className="min-w-0">
+                            <span className="block">{grupo.nombre}</span>
+                            <span className="block text-caption font-normal text-fg-3">
+                              {[grupo.detalle, `${cuantos} ${cuantos === 1 ? "concepto" : "conceptos"}`].filter(Boolean).join(" · ")}
+                            </span>
+                          </span>
+                        </button>
+                      );
+                    return (
+                      <Fragment key={grupo.id}>
+                        <Fila estilo="grupo" etiqueta={etiqueta} total={grupo.totalAnual} meses={grupo.meses} />
+                        {visibles.map((o) => (
+                          <Fila key={o.id} estilo="detalle" etiqueta={o.nombre} total={o.totalAnual} meses={o.meses} />
+                        ))}
+                        {abierto && cuantos > PRIMEROS && (
+                          <tr className="animate-fade-in">
+                            <th scope="row" className={`${ETIQUETA} bg-surface pr-4 pl-8 font-normal`}>
+                              <button type="button" onClick={() => alternar(setCompletos, grupo.id)} className={buttonClass("ghost", "sm")}>
+                                {completo ? `Ver solo los ${PRIMEROS} principales` : `Ver los ${cuantos - PRIMEROS} conceptos restantes`}
+                              </button>
+                            </th>
+                            <td colSpan={13} className="border-b border-stroke-3" />
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                  <Fila estilo="total" etiqueta="Total de egresos" total={egresos.totalAnual} meses={egresos.totalesPorMes} />
+                </tbody>
+              )}
+
+              {ingresosPorMes && egresos && (
+                <tbody>
+                  <tr aria-hidden>
+                    <td colSpan={14} className="h-4 border-b border-stroke-2" />
+                  </tr>
+                  <Fila estilo="total" conSigno etiqueta="Balance (ingresos − egresos)" total={balance} meses={sumar(ingresosPorMes, egresos.totalesPorMes, -1)} />
+                </tbody>
+              )}
+            </table>
           </div>
         </div>
+      )}
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-line">
-            <thead className="bg-canvas">
-              <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-brand sticky left-0 bg-gray-50 z-10">
-                  Balance
-                </th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-brand">
-                  Anual
-                </th>
-                {meses.map((mes, idx) => (
-                  <th
-                    key={idx}
-                    className="px-4 py-3 text-right text-xs font-semibold text-brand whitespace-nowrap"
-                  >
-                    {mes}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                className={(balance?.anual || 0) >= 0 ?"bg-surface-2":"bg-orange-100"}
-              >
-                <td
-                  className={`px-4 py-4 text-sm font-bold sticky left-0 z-10 ${
-                    (balance?.anual || 0) >= 0
-                      ? "bg-surface-2 text-brand"
-                      : "bg-orange-100 text-orange-900"
-                  }`}
-                >
-                  Balance Final
-                </td>
-                <td
-                  className={`px-4 py-4 text-base text-right tabular-nums font-bold ${
-                    (balance?.anual || 0) >= 0 ? "text-brand" : "text-orange-900"
-                  }`}
-                >
-                  {formatCurrency(balance?.anual || 0)}
-                </td>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((mes) => {
-                  const balanceMes = balance?.porMes?.[mes] || 0;
-                  return (
-                    <td
-                      key={mes}
-                      className={`px-4 py-4 text-sm text-right tabular-nums font-semibold ${
-                        balanceMes >= 0 ? "text-brand" : "text-orange-900"
-                      }`}
-                    >
-                      {formatCurrency(balanceMes)}
-                    </td>
-                  );
-                })}
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Modal de Conceptos Detallados */}
-      <EgresosModal
-        isOpen={showModal}
-        onClose={closeModal}
-        opcionId={modalOpcionId}
-        opcionNombre={modalOpcionNombre}
-        anio={anio}
-      />
+      <p className="text-caption text-fg-3">
+        Ingresos y egresos registrados por la administración en {anio}. Un guion (—) indica un mes sin movimientos; los conceptos de cada grupo
+        van de mayor a menor gasto.
+      </p>
     </div>
   );
 }
