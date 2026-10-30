@@ -1,7 +1,7 @@
 /**
  * Cifras de resumen en una sola tarjeta, separadas por líneas finas (gap de 1 px sobre el color
  * del borde: sirve con cualquier número de columnas). Con tres cifras, la primera ocupa el ancho
- * en el celular; con cuatro, van en pares.
+ * en el celular; con cuatro, van en pares; con seis, en dos filas de tres.
  */
 export interface StatItem {
   id: string;
@@ -17,7 +17,8 @@ const TONE = { overdue: "text-overdue", success: "text-success" } as const;
 
 export function StatStrip({ label, items, footer }: { label: string; items: StatItem[]; footer?: React.ReactNode }) {
   const cuatro = items.length >= 4;
-  const columnas = cuatro ? "lg:grid-cols-4" : items.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
+  // Con seis, dos filas de tres: en una sola fila los montos de ocho cifras no caben.
+  const columnas = items.length >= 5 ? "sm:grid-cols-3" : cuatro ? "lg:grid-cols-4" : items.length === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2";
   return (
     <section aria-label={label} className="overflow-hidden rounded-panel border border-stroke-2">
       <dl className={`grid grid-cols-2 gap-px bg-stroke-3 ${columnas}`}>

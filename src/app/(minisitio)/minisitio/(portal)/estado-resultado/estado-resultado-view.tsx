@@ -14,6 +14,8 @@ import {
 } from "lucide-react";
 import { FinancialReportSkeleton, TableSkeleton } from "@/components/minisitio/skeleton-loaders";
 import { msPath } from "@/components/minisitio/paths";
+import { buttonClass } from "@/components/minisitio/ui/button";
+import { fieldClass } from "@/components/minisitio/ui/field";
 import type {
   EgresosGrupos,
   Ingresos,
@@ -398,47 +400,37 @@ export function EstadoResultadoView({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white border border-line shadow-sm">
-        <div className="bg-gray-50 px-6 py-4 border-b border-line">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">
-                Resumen Financiero
-              </h1>
-              <p className="text-sm text-gray-600 mt-1">
-                Del 1 de Enero {anio} al 31 de Diciembre {anio}
-              </p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <select
-                value={anio}
-                onChange={(e) => {
-                  const nuevoAnio = e.target.value;
-                  window.history.pushState(null, "", msPath(`/estado-resultado?anio=${nuevoAnio}`));
-                }}
-                className="border border-gray-300 rounded px-3 py-2 text-sm bg-white"
-              >
-                {/* Mismas opciones fijas que el minisitio, más los años con datos y el año
-                    mostrado (el año por defecto es el más reciente con datos, p. ej. 2026). */}
-                {Array.from(new Set([Number(anio), ...aniosConDatos, 2025, 2024, 2023]))
-                  .filter((y) => Number.isFinite(y))
-                  .sort((a, b) => b - a)
-                  .map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-              </select>
-              <button
-                onClick={retryLoadData}
-                className="bg-gray-600 text-white px-4 py-2 text-sm font-medium hover:bg-gray-700 inline-flex items-center border border-gray-700"
-              >
-                <RefreshCw className="w-4 h-4 mr-2"/>
-                Actualizar
-              </button>
-            </div>
-          </div>
+      {/* Periodo y año; el título ya lo pone el shell. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-stroke-3 pb-3">
+        <p className="text-body text-fg-3">Del 1 de enero al 31 de diciembre de {anio}</p>
+        <div className="flex items-center gap-2">
+          <label htmlFor="er-anio" className="sr-only">
+            Año
+          </label>
+          <select
+            id="er-anio"
+            value={anio}
+            onChange={(e) => {
+              const nuevoAnio = e.target.value;
+              window.history.pushState(null, "", msPath(`/estado-resultado?anio=${nuevoAnio}`));
+            }}
+            className={`${fieldClass} h-8 w-auto pr-8`}
+          >
+            {/* Mismas opciones fijas que el minisitio, más los años con datos y el año mostrado
+                (por defecto, el más reciente con ingresos o egresos). */}
+            {Array.from(new Set([Number(anio), ...aniosConDatos, 2025, 2024, 2023]))
+              .filter((y) => Number.isFinite(y))
+              .sort((a, b) => b - a)
+              .map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+          </select>
+          <button type="button" onClick={retryLoadData} className={buttonClass("outline", "sm")}>
+            <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+            Actualizar
+          </button>
         </div>
       </div>
 

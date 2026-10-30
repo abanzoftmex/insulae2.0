@@ -131,7 +131,7 @@ export async function getFinancialYears(session: CondominoTokenPayload) {
   const cid = session.condominiumId;
   // Antes se traían TODAS las filas de las cuatro tablas solo para leer el año; ahora la base
   // devuelve los años distintos. EXTRACT trabaja en UTC, igual que el servidor en producción.
-  const [yearRows, anyIncome, anyExpense, anyCharge, anyPayment] = await Promise.all([
+  const [yearRows, movimientoRows, anyIncome, anyExpense, anyCharge, anyPayment] = await Promise.all([
     prisma.$queryRaw<{ y: number }[]>`
       SELECT DISTINCT y FROM (
         SELECT EXTRACT(YEAR FROM "date")::int AS y FROM "Income" WHERE "condominiumId" = ${cid} AND "isActive" = true
@@ -140,6 +140,13 @@ export async function getFinancialYears(session: CondominoTokenPayload) {
         UNION SELECT EXTRACT(YEAR FROM "dueDate")::int FROM "Charge" WHERE "condominiumId" = ${cid} AND "dueDate" IS NOT NULL
         UNION SELECT EXTRACT(YEAR FROM "paidAt")::int FROM "Payment" WHERE "condominiumId" = ${cid}
       ) AS t`,
+    // Último año con ingresos o egresos registrados: el que tiene sentido abrir por defecto en los
+    // reportes de resultados (los cargos se generan por adelantado y dejaban el año actual en ceros).
+    prisma.$queryRaw<{ y: number | null }[]>`
+      SELECT max(y)::int AS y FROM (
+        SELECT EXTRACT(YEAR FROM "date")::int AS y FROM "Income" WHERE "condominiumId" = ${cid} AND "isActive" = true
+        UNION SELECT EXTRACT(YEAR FROM "date")::int FROM "Expense" WHERE "condominiumId" = ${cid} AND "isActive" = true
+      ) AS t WHERE y BETWEEN 2015 AND ${currentYear() + 1}`,
     prisma.income.findFirst({ where: { condominiumId: cid, isActive: true }, select: { id: true } }),
     prisma.expense.findFirst({ where: { condominiumId: cid, isActive: true }, select: { id: true } }),
     prisma.charge.findFirst({ where: { condominiumId: cid }, select: { id: true } }),
@@ -157,8 +164,9 @@ export async function getFinancialYears(session: CondominoTokenPayload) {
   return {
     success: true as const,
     anios: sorted,
-    // El año por defecto = el más reciente con datos.
-    latest: sorted[sorted.length - 1],
+    // El año por defecto = el más reciente con ingresos o egresos (si está entre los visibles);
+    // si no hay, el más reciente con cualquier dato.
+    latest: sorted.includes(Number(movimientoRows[0]?.y)) ? Number(movimientoRows[0]?.y) : sorted[sorted.length - 1],
     currentYear: thisYear,
     hasData: Boolean(anyIncome || anyExpense || anyCharge || anyPayment),
   };

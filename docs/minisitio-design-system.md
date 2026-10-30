@@ -236,6 +236,13 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 ## 10. Estado
 
+**Hecho (2026-10-29), novena vuelta:**
+- **Año por defecto:** los reportes abren en el último año con ingresos o egresos (2025), no en 2026 en ceros. Los cargos se generan por adelantado y empujaban el año actual.
+- **Resumen financiero:**
+  - pestañas de tipo de cuota, selector de año y seis cifras en `StatStrip` (dos filas de tres);
+  - sin el título duplicado, la pastilla "Fase 1 · Beta" ni el "No disponible".
+- **Estado de resultados:** el periodo como título (antes decía "Resumen financiero"), el selector con los campos del portal y "Actualizar" outline.
+
 **Hecho (2026-10-29), octava vuelta:**
 - **Reportes:**
   - las piezas compartidas (`_reportes/report-chrome.tsx` y `financial-cards.tsx`) pasaron del pergamino del panel al lenguaje del portal, con la misma API: cifras sin chips de ícono, leyenda con puntos, filtros sin banda olivo y celdas P/C con el color de su estado sobre fondo neutro;
@@ -339,9 +346,9 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 
 **Pendiente**, en orden: cada pantalla todavía trae su encabezado y estilo viejos dentro del shell nuevo.
 1. **Reportes, lo que falta:**
-   - en Resumen financiero, los chips de ícono de sus cifras y la pastilla "Fase 1 · Beta";
-   - en Estado de resultados, el título "Resumen financiero" y el botón "Actualizar" oscuro;
-   - año por defecto con datos (hoy abren en 2026, en ceros).
+   - las cifras de Estado de resultados siguen con sombra e ícono (pasarlas a `StatStrip`);
+   - los encabezados beige de `compact-financial-table`.
+   - **Dato, no interfaz:** el Resumen financiero y el Estado de resultados no coinciden en 2025 (balance de −$12.1 M frente a −$10.8 M), porque cada uno calcula distinto.
 2. **Login y recuperación de contraseña**, `error.tsx` y `not-found.tsx`.
 3. **Limpieza:**
    - 41 clases que no existen en Tailwind v4;

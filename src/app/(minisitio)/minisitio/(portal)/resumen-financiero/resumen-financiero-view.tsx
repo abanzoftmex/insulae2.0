@@ -1,23 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  Calendar,
-  DollarSign,
-  Info,
-  Plus,
-  TrendingDown,
-  TrendingUp,
-  Wallet
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/shared/utils/cn';
-import { StatCard } from '@/components/ui/stat-card';
 import type { FinancialYears, ResumenFinanciero } from '@/modules/minisitio/infrastructure/queries/financials.queries';
 import { getFinancialYearsAction, getResumenFinancieroAction } from '../../_actions/reports';
 import { CompactFinancialTable, TABLE_TONE, type FinancialTable } from './compact-financial-table';
 import { pickVisibleYears } from './visible-years';
+import { StatStrip } from '@/components/minisitio/ui/stat-strip';
+import { UnderlineTabs } from '@/components/minisitio/ui/tabs';
 
 // Único condominio del minisitio: los endpoints financieros no devuelven su nombre.
 const CONDOMINIO = "Val'Quirico";
@@ -416,104 +407,63 @@ export function ResumenFinancieroView({
     );
   }
 
-  const segmentClass = (activo: boolean, ancho: string) =>
-    cn(
-      'flex items-center rounded-md text-[10px] font-bold   transition-all',
-      ancho,
-      activo ? 'bg-card text-brand shadow-sm border border-line' : 'text-ink-soft hover:text-ink'
-    );
-
   return (
     <div className="space-y-5 animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 pb-5 border-b border-brand">
-        <div className="flex items-start gap-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand">Resumen Financiero</h1>
-            <Badge variant="brand"className="w-fit rounded-full px-4 py-2 text-[10px]">Fase 1 · BETA</Badge>
-            <p className="text-ink-soft/80 text-[11px] font-bold">
-              {CONDOMINIO} · Corte {anio} · {ultimaActualizacionTexto}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Year Selector */}
-          {anios.length > 1 && (
-            <div className="flex items-center gap-1 p-1 bg-canvas-2 rounded-lg border border-line/50">
-              {anios.map((year) => (
-                <button
-                  key={year}
-                  type="button"
-                  onClick={() => setAnio(year)}
-                  className={segmentClass(anio === year,'h-8 px-3')}
-                >
-                  {year}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Mode Selector */}
-          <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
-            <button
-              type="button"
-              onClick={() => setModo('ordinary')}
-              className={segmentClass(esOrdinario,'h-8 px-4')}
-            >
-              Cuotas Ordinarias
-            </button>
-            <button
-              type="button"
-              onClick={() => setModo('extraordinary')}
-              className={segmentClass(!esOrdinario,'h-8 px-4')}
-            >
-              Cuotas Extraordinarias
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* KPI Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-        {esOrdinario ? (
-          <StatCard accent="brand"label="Ingresos Ordinarios"value={formatCurrency(kpi.ingresos)} icon={<TrendingUp className="h-3.5 w-3.5"/>} />
-        ) : (
-          <StatCard accent="cyan"label="Extraordinarios"value={formatCurrency(kpi.ingresos)} icon={<DollarSign className="h-3.5 w-3.5"/>} />
-        )}
-        <StatCard accent="lime"label="Otros Ingresos"value={formatCurrency(kpi.otrosIngresos)} icon={<Plus className="h-3.5 w-3.5"/>} />
-        <StatCard accent="brand"label="Ingresos Totales"value={formatCurrency(kpi.ingresosTotales)} icon={<TrendingUp className="h-3.5 w-3.5"/>} />
-        <StatCard accent="gold"label="Egresos Totales"value={formatCurrency(kpi.egresos)} icon={<TrendingDown className="h-3.5 w-3.5"/>} />
-        <StatCard
-          accent={kpi.balanceAnual >= 0 ? 'emerald' : 'gold'}
-          label="Balance Anual"
-          value={formatCurrency(kpi.balanceAnual)}
-          icon={<Calendar className="h-3.5 w-3.5"/>}
+      {/* Tipo de cuota y año; el título ya lo pone el shell. */}
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2 border-b border-stroke-3">
+        <UnderlineTabs
+          label="Tipo de cuota"
+          value={esOrdinario ? 'ordinary' : 'extraordinary'}
+          onChange={(value) => setModo(value)}
+          layoutId="rf-modo-tab"
+          options={[
+            { id: 'ordinary' as const, label: 'Cuotas ordinarias' },
+            { id: 'extraordinary' as const, label: 'Cuotas extraordinarias' },
+          ]}
         />
-        {esOrdinario ? (
-          <StatCard
-            accent="emerald"
-            label={`Cuotas Ord. ${anio} (Anual)`}
-            value={formatCurrency(kpi.ingresos)}
-            icon={<Wallet className="h-3.5 w-3.5"/>}
-          />
-        ) : (
-          <StatCard
-            accent="emerald"
-            label={`Cuotas Extr. Cargadas (Desde ${anios[0]})`}
-            value={formatCurrency(kpi.extraordinariasAcumuladas)}
-            icon={<Wallet className="h-3.5 w-3.5"/>}
-          />
+        {anios.length > 1 && (
+          <div role="group" aria-label="Año" className="mb-1.5 flex gap-1">
+            {anios.map((year) => (
+              <button
+                key={year}
+                type="button"
+                onClick={() => setAnio(year)}
+                aria-pressed={anio === year}
+                className={cn(
+                  'inline-flex h-7 items-center rounded-ctrl px-2.5 text-[13px] font-semibold tabular-nums outline-none focus-visible:ring-2 focus-visible:ring-brand',
+                  anio === year ? 'bg-brand text-white' : 'text-fg-2 hover:bg-surface-3',
+                )}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
         )}
       </div>
+      <p className="text-caption text-fg-3">
+        {[CONDOMINIO, `Corte ${anio}`, ultimaActualizacionTexto !== 'No disponible' && ultimaActualizacionTexto, 'Datos consolidados de Insulae 2.0'].filter(Boolean).join(' · ')}
+      </p>
 
-      {/* Context Info */}
-      <div className="flex items-center gap-2 p-3 bg-canvas/40 border border-line/30 rounded-md">
-        <Info className="h-4 w-4 text-brand-accent shrink-0"/>
-        <p className="text-[11px] font-bold text-ink-soft/70 leading-tight">
-          {`Ámbito: ${CONDOMINIO} · Datos consolidados de Insulae 2.0 · Periodo visual: ${anios.join(' / ')}`}
-        </p>
-      </div>
+      <StatStrip
+        label={`Resumen ${anio}`}
+        items={[
+          esOrdinario
+            ? { id: 'ingresos', label: 'Ingresos ordinarios', value: formatCurrency(kpi.ingresos) }
+            : { id: 'ingresos', label: 'Extraordinarios', value: formatCurrency(kpi.ingresos) },
+          { id: 'otros', label: 'Otros ingresos', value: formatCurrency(kpi.otrosIngresos) },
+          { id: 'totales', label: 'Ingresos totales', value: formatCurrency(kpi.ingresosTotales) },
+          { id: 'egresos', label: 'Egresos totales', value: formatCurrency(kpi.egresos) },
+          {
+            id: 'balance',
+            label: 'Balance anual',
+            value: formatCurrency(kpi.balanceAnual),
+            tone: kpi.balanceAnual < 0 ? 'overdue' : kpi.balanceAnual > 0 ? 'success' : undefined,
+          },
+          esOrdinario
+            ? { id: 'cuotas', label: `Cuotas ordinarias ${anio}`, value: formatCurrency(kpi.ingresos) }
+            : { id: 'cuotas', label: `Extraordinarias desde ${anios[0]}`, value: formatCurrency(kpi.extraordinariasAcumuladas) },
+        ]}
+      />
 
       {/* Main Content Sections */}
       <div className="space-y-6">
