@@ -7,11 +7,9 @@
  * pago aceptadas). Todo sale del pie de los recibos que la administración edita en el panel; antes
  * el portal mostraba el adeudo sin decir cómo pagarlo.
  */
-import { Copy } from "lucide-react";
 import type { InstruccionesPago } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { SecondaryView } from "@/components/minisitio/shell/secondary-view";
-import { buttonClass } from "@/components/minisitio/ui/button";
-import { toast } from "@/stores/minisitio-toast.store";
+import { CopyButton } from "@/components/minisitio/ui/copy-button";
 import { MINISITIO_TIME_ZONE } from "../_lib/client-dates";
 import type { MovimientoEstadoCuenta } from "./estado-cuenta/statement-parts";
 
@@ -41,23 +39,6 @@ function conceptoDePago(unidad: string, movimientos: MovimientoEstadoCuenta[]) {
   const tipo = /extraordinari/i.test(`${pendiente.grupoCobro ?? ""} ${pendiente.concepto}`) ? "Cuota Extraordinaria" : "Cuota Ordinaria";
   const vence = pendiente.fechaVigencia ? new Date(pendiente.fechaVigencia) : new Date();
   return `${unidad}, ${tipo} ${mesYAnio(Number.isNaN(vence.getTime()) ? new Date() : vence)}`;
-}
-
-function Copiar({ valor, etiqueta, aviso }: { valor: string; etiqueta: string; aviso: string }) {
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(valor);
-      toast(aviso, "success");
-    } catch {
-      toast("No se pudo copiar. Selecciónalo y cópialo a mano.", "error");
-    }
-  };
-  return (
-    <button type="button" onClick={copiar} aria-label={etiqueta} className={buttonClass("outline", "sm", "shrink-0")}>
-      <Copy className="h-3.5 w-3.5" aria-hidden />
-      Copiar
-    </button>
-  );
 }
 
 /**
@@ -129,9 +110,10 @@ export function ComoPagar({
                 <li key={c.clabe} className="flex items-center gap-3 px-3 py-2.5">
                   <span className="min-w-0 flex-1">
                     <span className="block text-caption font-semibold text-fg-3">{c.banco}</span>
-                    <span className="block text-body-lg font-semibold text-fg tabular-nums">{clabeLegible(c.clabe)}</span>
+                    {/* 14 px: en el panel de 400 px, junto al botón, a 16 no cabe sin partirse. */}
+                    <span className="block text-body font-semibold whitespace-nowrap text-fg tabular-nums">{clabeLegible(c.clabe)}</span>
                   </span>
-                  <Copiar valor={c.clabe} etiqueta={`Copiar la CLABE de ${c.banco}`} aviso={`CLABE de ${c.banco} copiada`} />
+                  <CopyButton valor={c.clabe} etiqueta={`Copiar la CLABE de ${c.banco}`} aviso={`CLABE de ${c.banco} copiada`} />
                 </li>
               ))}
             </ul>
@@ -151,7 +133,7 @@ export function ComoPagar({
             </h3>
             <div className="mt-2 flex items-center gap-3 rounded-panel border border-stroke-2 px-3 py-2.5">
               <span className="min-w-0 flex-1 text-body font-semibold text-fg">{concepto}</span>
-              <Copiar valor={concepto} etiqueta="Copiar el concepto del pago" aviso="Concepto copiado" />
+              <CopyButton valor={concepto} etiqueta="Copiar el concepto del pago" aviso="Concepto copiado" />
             </div>
             <p className="mt-2 text-caption text-fg-3">Así la administración identifica tu pago. Cambia el mes o el tipo de cuota si pagas otra cosa.</p>
           </section>

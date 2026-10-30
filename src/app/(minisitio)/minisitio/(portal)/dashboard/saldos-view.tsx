@@ -7,14 +7,17 @@
  */
 import { useDeferredValue, useState } from "react";
 import Link from "next/link";
-import { ChevronRight, CircleCheck } from "lucide-react";
+import { ChevronRight, CircleCheck, Landmark } from "lucide-react";
+import type { InstruccionesPago } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { msPath } from "@/components/minisitio/paths";
+import { buttonClass } from "@/components/minisitio/ui/button";
 import { LoadError } from "@/components/minisitio/ui/load-error";
 import { SearchField } from "@/components/minisitio/ui/search-field";
 import { StatStrip } from "@/components/minisitio/ui/stat-strip";
 import { UnderlineTabs } from "@/components/minisitio/ui/tabs";
 import { formatCurrency, normalizeSearch } from "../_lib/format";
 import { resumenUnidades, type ConteoUnidades } from "../_lib/saldos";
+import { ComoPagar } from "../_components/como-pagar";
 
 export interface UnidadSaldo {
   id: string;
@@ -47,7 +50,14 @@ const TIPO = { propiedad: "Propiedad", comercio: "Comercio" } as const;
 const numero = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 2 });
 const porcentaje = new Intl.NumberFormat("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 4 });
 
-export function SaldosView({ data }: { data: { resumen: Resumen; unidades: UnidadSaldo[] } | null }) {
+export function SaldosView({
+  data,
+  pago,
+}: {
+  data: { resumen: Resumen; unidades: UnidadSaldo[] } | null;
+  /** "Cómo pagar"; `null` si la administración no lo ha publicado o no se pudo cargar. */
+  pago: InstruccionesPago | null;
+}) {
   if (!data) {
     return (
       <div className="mx-auto w-full max-w-[1040px]">
@@ -55,11 +65,12 @@ export function SaldosView({ data }: { data: { resumen: Resumen; unidades: Unida
       </div>
     );
   }
-  return <Saldos resumen={data.resumen} unidades={data.unidades} />;
+  return <Saldos resumen={data.resumen} unidades={data.unidades} pago={pago} />;
 }
 
-function Saldos({ resumen, unidades }: { resumen: Resumen; unidades: UnidadSaldo[] }) {
+function Saldos({ resumen, unidades, pago }: { resumen: Resumen; unidades: UnidadSaldo[]; pago: InstruccionesPago | null }) {
   const [filtro, setFiltro] = useState<Filtro>(resumen.vencido > 0 ? "adeudo" : "todas");
+  const [pagar, setPagar] = useState(false);
   const [busqueda, setBusqueda] = useState("");
   const consulta = normalizeSearch(useDeferredValue(busqueda)).trim();
 
@@ -93,12 +104,21 @@ function Saldos({ resumen, unidades }: { resumen: Resumen; unidades: UnidadSaldo
           { id: "a-favor", label: "A favor", value: formatCurrency(resumen.aFavor), tone: resumen.aFavor > 0 ? "success" : undefined },
         ]}
         footer={
-          <p className="flex items-center gap-2">
-            {resumen.vencido === 0 && <CircleCheck className="h-4 w-4 shrink-0 text-success" strokeWidth={2.25} aria-hidden />}
-            {resumenUnidades(resumen.propiedades, resumen.comercios)}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+            <p className="flex items-center gap-2">
+              {resumen.vencido === 0 && <CircleCheck className="h-4 w-4 shrink-0 text-success" strokeWidth={2.25} aria-hidden />}
+              {resumenUnidades(resumen.propiedades, resumen.comercios)}
+            </p>
+            {pago && (resumen.vencido > 0 || resumen.porVencer > 0) && (
+              <button type="button" onClick={() => setPagar(true)} className={buttonClass(resumen.vencido > 0 ? "primary" : "outline", "sm")}>
+                <Landmark className="h-3.5 w-3.5" aria-hidden />
+                Cómo pagar
+              </button>
+            )}
+          </div>
         }
       />
+      {pago && <ComoPagar open={pagar} onClose={() => setPagar(false)} info={pago} />}
 
       <section aria-labelledby="saldos-unidades" className="mt-8">
         <h2 id="saldos-unidades" className="text-body-lg font-bold text-fg">

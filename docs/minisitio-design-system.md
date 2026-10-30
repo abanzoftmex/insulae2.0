@@ -177,7 +177,9 @@ Notas:
   - "Hoy", "Ayer" o el día con nombre;
   - lo nuevo lleva `highlight` y la etiqueta "Nuevo" en `mention`.
 - **Pestañas** (Avisos, Solicitudes): 40 px, con cifra en caption. El subrayado olivo de 2 px se desliza con el resorte de la píldora del menú.
-- **Cifras de resumen** (`ui/stat-strip.tsx`): en el celular, una por renglón (etiqueta a la izquierda y monto a la derecha; la destacada arriba y grande). Desde tablet van en columnas, con tamaños que dejan caber montos de ocho cifras.
+- **Cifras de resumen** (`ui/stat-strip.tsx`): se acomodan al ancho de su propia tarjeta (`@container`), no al de la ventana.
+  - Angostas: una por renglón (etiqueta a la izquierda, monto a la derecha; con número impar, la primera arriba y grande).
+  - Con espacio: en columnas, con tamaños medidos para que quepan montos de ocho cifras.
 - **Año de un reporte** (`_reportes/year-buttons.tsx`): botones segmentados de 28 px, con el elegido en olivo.
 - **Tabla mensual de reporte** (`_reportes/tabla-mensual.tsx`: `TablaMensual` con `Fila`, `Seccion`, `Subseccion`, `FilaAccion` y `Espacio`; la usan Estado de resultados y Resumen financiero, y es el modelo para las demás tablas anchas):
   - columnas configurables (`Columna`: título, nombre completo para lectores de pantalla, ancho, separador y destacada) y grupos de encabezado opcionales ("Total del año" | "2025, mes por mes");
@@ -252,6 +254,14 @@ Con `prefers-reduced-motion`, `MotionConfig reducedMotion="user"` quita los desp
 - `alert()`.
 
 ## 10. Estado
+
+**Hecho (2026-10-29), vigésima vuelta:**
+- **"Cómo pagar" también en Mis saldos:** en el pie del resumen; es la acción principal si hay vencido.
+- **Copiar con confirmación en su lugar** (`ui/copy-button.tsx`, compartido por "Cómo pagar" y Teléfonos):
+  - el ícono cambia a una palomita durante 1.5 s (80 ms, respeta "reducir movimiento");
+  - el texto pasa a "Copiado" y además sale el toast;
+  - el botón con texto tiene ancho fijo, así que "Copiado" no empuja la CLABE.
+- **Cifras de resumen con container queries:** `StatStrip` se acomoda al ancho de su tarjeta y no al de la ventana. Con la vista secundaria abierta, el contenido se angosta y los montos de ocho cifras se cortaban ("$10,598,795…"). Verificado sin desbordes en 8 pantallas, a 390, 768, 1024, 1280 y 1440 px, con y sin el panel abierto.
 
 **Hecho (2026-10-29), decimonovena vuelta:**
 - **"Cómo pagar"** (`(portal)/_components/como-pagar.tsx`). Antes, el portal mostraba el adeudo sin decir cómo pagarlo. Ahora hay un panel en la vista secundaria con:

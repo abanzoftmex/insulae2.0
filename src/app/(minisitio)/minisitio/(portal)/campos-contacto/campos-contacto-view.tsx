@@ -5,10 +5,10 @@
  * "Llamar" destacado), luego administración y experiencias. Cada contacto trae sus acciones
  * (llamar, WhatsApp, escribir, mapa) y un botón para copiar el dato.
  */
-import { ArrowUpRight, Copy, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { ArrowUpRight, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { buttonClass } from "@/components/minisitio/ui/button";
+import { CopyButton } from "@/components/minisitio/ui/copy-button";
 import { LoadError } from "@/components/minisitio/ui/load-error";
-import { toast } from "@/stores/minisitio-toast.store";
 import { GRUPOS, type AccionContacto, type Contacto } from "../_lib/contactos";
 
 const ICONO = { llamar: Phone, whatsapp: MessageCircle, correo: Mail, mapa: MapPin } as const;
@@ -49,7 +49,7 @@ export function CamposContactoView({ contactos }: { contactos: Contacto[] | null
                     <span className="block text-body font-semibold text-fg">{c.nombre}</span>
                     <span className="flex items-center gap-1">
                       <span className="min-w-0 text-body break-words text-fg-2 tabular-nums">{c.valor}</span>
-                      {c.valor && <CopiarBoton valor={c.valor} nombre={c.nombre} />}
+                      {c.valor && <CopyButton soloIcono valor={c.valor} etiqueta={`Copiar ${c.nombre}`} aviso={`Copiado: ${c.valor}`} />}
                     </span>
                   </span>
                   <span className="flex shrink-0 gap-2">
@@ -83,24 +83,3 @@ function Accion({ accion, nombre, destacada }: { accion: AccionContacto; nombre:
   );
 }
 
-function CopiarBoton({ valor, nombre }: { valor: string; nombre: string }) {
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(valor);
-      toast(`Copiado: ${valor}`, "info");
-    } catch {
-      toast("No se pudo copiar. Selecciónalo y cópialo a mano.", "error");
-    }
-  };
-  return (
-    <button
-      type="button"
-      onClick={copiar}
-      aria-label={`Copiar ${nombre}`}
-      title="Copiar"
-      className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-ctrl text-fg-4 outline-none hover:bg-surface-3 hover:text-fg-2 focus-visible:ring-2 focus-visible:ring-brand"
-    >
-      <Copy className="h-3.5 w-3.5" aria-hidden />
-    </button>
-  );
-}

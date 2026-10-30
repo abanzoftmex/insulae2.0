@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireCondominoSession } from "@/shared/application/auth/condomino-session";
 import { listProperties } from "@/modules/minisitio/infrastructure/queries/properties.queries";
 import { listRentals } from "@/modules/minisitio/infrastructure/queries/rentals.queries";
+import { getPaymentInstructions } from "@/modules/minisitio/infrastructure/queries/project.queries";
 import { SaldosView, type UnidadSaldo } from "./saldos-view";
 
 export const metadata: Metadata = { title: "Mis saldos" };
@@ -22,7 +23,7 @@ const detalle = (...parts: (string | null | undefined)[]) =>
 export default async function SaldosPage() {
   const session = await requireCondominoSession();
 
-  const [propiedades, comercios] = await Promise.all([
+  const [propiedades, comercios, pago] = await Promise.all([
     listProperties(session).catch((error) => {
       console.error("[minisitio] Mis saldos: propiedades:", error);
       return null;
@@ -31,8 +32,13 @@ export default async function SaldosPage() {
       console.error("[minisitio] Mis saldos: comercios:", error);
       return null;
     }),
+    // "Cómo pagar": si falla, simplemente no se ofrece.
+    getPaymentInstructions().catch((error) => {
+      console.error("[minisitio] Mis saldos: instrucciones de pago:", error);
+      return null;
+    }),
   ]);
-  if (!propiedades || !comercios) return <SaldosView data={null} />;
+  if (!propiedades || !comercios) return <SaldosView data={null} pago={null} />;
 
   const unidades: UnidadSaldo[] = [
     ...propiedades.propiedades.map((p) => ({
@@ -62,6 +68,7 @@ export default async function SaldosPage() {
 
   return (
     <SaldosView
+      pago={pago}
       data={{
         unidades,
         resumen: {
