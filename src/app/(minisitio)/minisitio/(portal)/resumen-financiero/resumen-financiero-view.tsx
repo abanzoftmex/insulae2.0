@@ -252,11 +252,14 @@ export function ResumenFinancieroView({
   initialAnio,
   initialDatosPorAnio,
   initialError,
+  generadoEnTexto,
 }: {
   initialAnios: number[];
   initialAnio: number;
   initialDatosPorAnio: Record<number, DatosAnio>;
   initialError: string | null;
+  /** Hora en que el servidor armó los datos: el corte cuando las piezas no traen su propia fecha. */
+  generadoEnTexto: string;
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(initialError);
@@ -308,8 +311,8 @@ export function ResumenFinancieroView({
       textoActualizacion(yearData?.cuentasExtraordinarias)
     ];
 
-    return candidates.find((value): value is string => typeof value === 'string' && value.trim() !== '') || 'No disponible';
-  }, [datosPorAnio, anio]);
+    return candidates.find((value): value is string => typeof value === 'string' && value.trim() !== '') || generadoEnTexto;
+  }, [datosPorAnio, anio, generadoEnTexto]);
 
   const tablasOrdinarias = useMemo(() => {
     const balanceDe = (year: number): BalanceAnio | undefined => datosPorAnio[year]?.balanceOrdinarias;
@@ -472,10 +475,10 @@ export function ResumenFinancieroView({
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          {/* Year Selector */}
+          {/* Year Selector: del más reciente al más antiguo, como el panel (las tablas van al revés). */}
           {anios.length > 1 && (
             <div className="flex items-center gap-1 p-1 bg-canvas-2 rounded-lg border border-line/50">
-              {anios.map((year) => (
+              {[...anios].sort((a, b) => b - a).map((year) => (
                 <button
                   key={year}
                   type="button"

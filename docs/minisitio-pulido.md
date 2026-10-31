@@ -123,8 +123,20 @@ El cliente pidió que Resumen Financiero, Cuotas Ordinarias y Cuotas Extraordina
   - las celdas fijas son opacas (el mismo tono mezclado con blanco);
   - las tablas usan `border-separate`;
   - columnas y años salen de las consultas del portal; la estructura de datos del panel no cambió.
+- **Revisado en pantalla lado a lado (2026-10-31)**, en local con la cuenta demo, que el minisitio deja entrar como propietario. Se ajustó:
+  - el selector de años del Resumen va del más reciente al más antiguo, como el panel;
+  - el "Corte" del Resumen muestra la hora de la consulta en lugar de "No disponible";
+  - los subtítulos de cuotas dicen "Listado de áreas privativas con estado de cuotas…", como el panel.
+- **Los datos no coinciden con el panel**, porque el portal usa sus propias consultas (`financials.queries`, `reports.queries`) y el panel los módulos `financial-summary` y `fee-report`:
+  - en el Resumen, el portal clasifica "Cartera vencida 2017-2024" y "Cuotas ordinarias" dentro de Otros ingresos, y le faltan renglones ("Cuota única STC", "Sanción");
+  - por eso los KPI de 2025 no cuadran: ingresos ordinarios 17.6 M frente a 27.2 M, y egresos 42.8 M frente a 32.9 M;
+  - en cuotas, el portal lista 1745 unidades (incluye fracciones, con claves repetidas) y el ciclo 2024–2026; el panel lista 1185 áreas principales y el ciclo 2025–2026;
+  - en extraordinarias, el portal separa Condóminos y Comercios en dos columnas; el panel usa una sola.
+- **En el panel**, la gráfica "Actividad Financiera" del Resumen mide 0 px de alto y no se ve, porque `FinancialChart` toma la altura de su contenedor y ahí no tiene una.
 
 ## Pendientes de decisión del usuario
+
+- Reportes Condominales: decidir si el portal toma los datos de los módulos del panel para que las cifras coincidan.
 
 - Panel de Control: la métrica "Saldo Pendiente" muestra el saldo **vencido** (igual que producción).
 - Detalle de comercio: "Saldo Total" se toma del saldo pendiente (el campo viejo ya no existe).

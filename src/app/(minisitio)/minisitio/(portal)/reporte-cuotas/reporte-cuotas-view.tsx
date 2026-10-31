@@ -321,7 +321,7 @@ export function ReporteCuotasView({
       <ReportHeader
         backSlot={<PageBackBadge className="mt-1.5 shrink-0" />}
         title="Estado de Cartera Ordinaria"
-        subtitle={`${unidadesEnSistema} unidades privativas · Corte ${ultimaActualizacionTexto}`}
+        subtitle={`Listado de áreas privativas con estado de cuotas ${aniosDisponibles[0]}–${aniosDisponibles[aniosDisponibles.length - 1]}. · Corte ${ultimaActualizacionTexto}`}
         actions={
           <Button
             type="button"

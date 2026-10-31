@@ -29,12 +29,20 @@ export default async function ResumenFinancieroPage() {
     initialError = "Error al cargar los datos financieros. Por favor, intenta de nuevo.";
   }
 
+  // Hora de la consulta, como el "Corte" del panel; en la zona del condominio (el servidor va en UTC).
+  const generadoEnTexto = new Intl.DateTimeFormat("es-MX", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Mexico_City",
+  }).format(new Date());
+
   return (
     <ResumenFinancieroView
       initialAnios={visibles}
       initialAnio={seleccionado}
       initialDatosPorAnio={datosPorAnio}
       initialError={initialError}
+      generadoEnTexto={generadoEnTexto}
     />
   );
 }

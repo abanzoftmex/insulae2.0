@@ -386,7 +386,7 @@ export function ReporteCuotasExtraordinariaView({
       <ReportHeader
         backSlot={<PageBackBadge className="mt-1.5 shrink-0" />}
         title="Estado de Cartera Extraordinaria"
-        subtitle={`${unidadesEnSistema} unidades privativas · Corte ${ultimaActualizacionTexto}`}
+        subtitle={`Listado de áreas privativas con estado de cuotas extraordinarias ${primerAnio}–${ultimoAnio}. · Corte ${ultimaActualizacionTexto}`}
         actions={
           <Button
             type="button"
