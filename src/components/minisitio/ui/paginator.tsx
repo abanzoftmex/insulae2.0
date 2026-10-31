@@ -5,7 +5,7 @@ import { cn } from "@/shared/utils/cn";
 
 /**
  * Variante de `@/components/ui/paginator` para paginación con estado de cliente: en vez de
- * hrefs recibe `onPageChange(page)`.
+ * hrefs recibe `onPageChange(page)`. Se ve igual que el del panel.
  *
  * Muestra una ventana de páginas (1 … 5 6 [7] 8 9 … 59) en vez de todas: con 59 páginas el
  * paginador ocupaba tres renglones de círculos.
@@ -48,35 +48,37 @@ export function Paginator({
 
   const hasPrev = page > 1;
   const hasNext = page < totalPages;
+  // Mismas clases que el paginador del panel (`@/components/ui/paginator`).
   const step =
-    "inline-flex h-9 items-center gap-1 rounded-lg px-2.5 text-[13px] font-medium text-fg-2 outline-none transition-colors duration-100 hover:bg-surface-3 hover:text-fg focus-visible:ring-2 focus-visible:ring-brand/45 disabled:pointer-events-none disabled:opacity-35";
+    "flex items-center gap-1 h-8 px-2.5 rounded-full bg-white border border-line text-[10px] font-bold uppercase tracking-widest text-ink transition-colors outline-none hover:bg-[#5a4838] hover:text-white hover:border-[#5a4838] focus-visible:ring-2 focus-visible:ring-brand-accent disabled:opacity-30 disabled:pointer-events-none";
 
   return (
     <nav
       aria-label="Paginación"
-      className="flex flex-col items-center justify-between gap-3 rounded-2xl border border-stroke-2 bg-card px-3 py-2.5 sm:flex-row sm:px-4"
+      className="flex flex-col sm:flex-row items-center justify-between gap-4 px-1 py-2 bg-[#faf6f0]/30 rounded-2xl border border-line/30"
     >
-      <p className="flex items-center gap-2 text-[13px] text-fg-3 tabular-nums">
-        {totalRows !== undefined && (
+      <div className="flex items-center gap-3">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 tabular-nums">
+          {totalRows !== undefined && (
+            <span>
+              {totalRows.toLocaleString("es-MX")} {rowsLabel} &middot;{" "}
+            </span>
+          )}
           <span>
-            <span className="font-semibold text-fg-2">{totalRows.toLocaleString("es-MX")}</span> {rowsLabel} ·{" "}
+            página {page} de {totalPages}
           </span>
-        )}
-        <span>
-          Página <span className="font-semibold text-fg-2">{page}</span> de {totalPages}
-        </span>
+        </p>
         {isPending && <Loader2 aria-label="Cargando" className="h-3.5 w-3.5 animate-spin text-brand" />}
-      </p>
+      </div>
 
-      <div className="flex items-center gap-0.5">
+      <div className="flex items-center flex-wrap gap-1.5">
         <button type="button" onClick={() => navigate(page - 1)} disabled={!hasPrev || isPending} className={step}>
-          <ChevronLeft aria-hidden className="h-4 w-4" strokeWidth={2} />
-          <span className="hidden sm:inline">Anterior</span>
+          <ChevronLeft aria-hidden className="h-3.5 w-3.5" /> Ant.
         </button>
 
         {pageWindow(page, totalPages).map((item, i) =>
           item === "gap" ? (
-            <span key={`gap-${i}`} aria-hidden className="w-7 text-center text-[13px] text-fg-4">
+            <span key={`gap-${i}`} aria-hidden className="w-6 text-center text-[10px] font-bold text-ink-soft/70">
               …
             </span>
           ) : (
@@ -88,8 +90,10 @@ export function Paginator({
               aria-current={item === page ? "page" : undefined}
               aria-label={`Página ${item}`}
               className={cn(
-                "h-9 min-w-9 rounded-lg px-2 text-[13px] font-medium tabular-nums outline-none transition-colors duration-100 focus-visible:ring-2 focus-visible:ring-brand/45",
-                item === page ? "bg-brand text-white shadow-[0_1px_2px_rgb(61_60_34/0.25)]" : "text-fg-2 hover:bg-surface-3 hover:text-fg",
+                "h-8 w-8 flex items-center justify-center rounded-full border text-[10px] font-bold transition-all outline-none focus-visible:ring-2 focus-visible:ring-brand-accent",
+                item === page
+                  ? "bg-[#5a4838] border-[#5a4838] text-white shadow-sm"
+                  : "bg-white border-line text-ink hover:bg-[#5a4838]/10 hover:text-[#5a4838] hover:border-[#5a4838]/30",
               )}
             >
               {item}
@@ -98,8 +102,7 @@ export function Paginator({
         )}
 
         <button type="button" onClick={() => navigate(page + 1)} disabled={!hasNext || isPending} className={step}>
-          <span className="hidden sm:inline">Siguiente</span>
-          <ChevronRight aria-hidden className="h-4 w-4" strokeWidth={2} />
+          Sig. <ChevronRight aria-hidden className="h-3.5 w-3.5" />
         </button>
       </div>
     </nav>

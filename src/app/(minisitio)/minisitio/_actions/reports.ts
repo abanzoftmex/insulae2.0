@@ -78,9 +78,10 @@ export async function getResumenFinancieroAction(anio: number | string, fondoRes
   return getResumenFinanciero(session, toYear(anio), fondoReserva);
 }
 
-export async function getFeesReportAction(input: { tipo: FeesReportType; page?: number; limit?: number }) {
+/** `q` busca por nombre o clave del área (la consulta lo limpia y lo recorta). */
+export async function getFeesReportAction(input: { tipo: FeesReportType; page?: number; limit?: number; q?: string }) {
   const session = await requirePropietarioSession();
-  return getFeesReport(session, input);
+  return getFeesReport(session, { ...input, q: typeof input.q === "string" ? input.q : undefined });
 }
 
 export async function getGeneralReportAction() {

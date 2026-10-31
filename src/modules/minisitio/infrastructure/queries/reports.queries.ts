@@ -16,6 +16,8 @@ export interface FeesReportArea {
   id: string;
   nombre: string;
   iniciales: string;
+  /** Barrio del área (columna "Ubicación"); sin dato vale "Centro", como en el reporte del panel. */
+  zona: string;
   id_cat_status: number;
   es_fusion: number;
   status: { nombre: string; css: string };
@@ -91,6 +93,7 @@ export async function getFeesReport(
         id: true,
         name: true,
         code: true,
+        zone: true,
         status: true,
         isFusion: true,
         charges: {
@@ -171,6 +174,7 @@ export async function getFeesReport(
       id: a.id,
       nombre: a.name,
       iniciales: a.code || a.name,
+      zona: a.zone || "Centro",
       id_cat_status: st.id_cat_status,
       es_fusion: a.isFusion ? 1 : 0,
       status: { nombre: st.status_nombre, css: st.id_cat_status === 1 ? "statusDespierto" : "statusInactivo" },

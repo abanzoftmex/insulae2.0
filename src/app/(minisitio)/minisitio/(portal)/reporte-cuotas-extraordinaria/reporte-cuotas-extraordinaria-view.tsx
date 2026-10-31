@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, Layers, MapPin, RefreshCw } from "lucide-react";
+import { AlertTriangle, Filter, Layers, MapPin, RefreshCw, X } from "lucide-react";
 import { FinancialReportSkeleton } from "@/components/minisitio/skeleton-loaders";
 import { cn } from "@/shared/utils/cn";
+import { Button } from "@/components/ui/button";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { Paginator } from "@/components/minisitio/ui/paginator";
-import { BUTTON } from "@/components/minisitio/ui/list-controls";
 import type { FeesReport, FeesReportArea } from "@/modules/minisitio/infrastructure/queries/reports.queries";
 import { getFeesReportAction } from "../../_actions/reports";
 import {
@@ -16,6 +16,8 @@ import {
   type VencimientoStatus,
 } from "../_reportes/financial-cards";
 import {
+  FIELD_INPUT,
+  FIELD_SELECT,
   ReportHeader,
   KpiCard,
   LegendCard,
@@ -76,25 +78,28 @@ export function ReporteCuotasExtraordinariaView({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(initialData ? Math.ceil(initialData.total / initialLimit) : 1);
   const [itemsPerPage, setItemsPerPage] = useState(initialLimit); // Mostrar más filas por página
+  // Texto del campo "Buscar" y la búsqueda ya aplicada (la que usan la paginación y el selector).
+  const [busqueda, setBusqueda] = useState("");
+  const [busquedaAplicada, setBusquedaAplicada] = useState("");
 
   // Columnas mensuales por año: salen de los CARGOS reales (crecen solas con la data)
   const [aniosDisponibles, setAniosDisponibles] = useState<number[]>(() =>
     initialData?.anios?.length ? initialData.anios : [new Date().getFullYear()],
   );
 
-  const loadData = async (page: number, limit: number) => {
+  const loadData = async (page: number, limit: number, q = busquedaAplicada) => {
     setLoading(true);
 
     try {
       let result: FeesReport;
       try {
-        result = await getFeesReportAction({ tipo: "extraordinaria", page, limit });
+        result = await getFeesReportAction({ tipo: "extraordinaria", page, limit, q });
       } catch {
         throw new Error("Error al cargar reporte");
       }
 
       setData(result);
-      setTotalPages(Math.ceil(result.total / limit));
+      setTotalPages(Math.max(1, Math.ceil(result.total / limit)));
 
       // Años de columnas = años con cargos reales (crece solo cuando llega 2027)
       if (result.anios?.length) {
@@ -133,6 +138,13 @@ export function ReporteCuotasExtraordinariaView({
     loadData(1, value);
   };
 
+  const aplicarBusqueda = (q: string) => {
+    setBusqueda(q);
+    setBusquedaAplicada(q);
+    setCurrentPage(1);
+    loadData(1, itemsPerPage, q);
+  };
+
   if (loading && !data) {
     return <FinancialReportSkeleton />;
   }
@@ -141,7 +153,7 @@ export function ReporteCuotasExtraordinariaView({
     return (
       <div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
         <AlertTriangle className="h-12 w-12 text-brand-accent" />
-        <h2 className="text-[18px] font-semibold text-fg">
+        <h2 className="text-lg font-bold uppercase tracking-tight text-brand">
           Error al cargar datos
         </h2>
         <p className="text-sm text-ink-soft">
@@ -150,9 +162,9 @@ export function ReporteCuotasExtraordinariaView({
         <button
           type="button"
           onClick={retryLoadData}
-          className={`mt-2 ${BUTTON.primary}`}
+          className="mt-2 inline-flex items-center justify-center gap-2 h-9 px-4 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest transition-standard active-scale hover:bg-brand-uplift"
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className="h-3.5 w-3.5" />
           Reintentar
         </button>
       </div>
@@ -296,10 +308,20 @@ export function ReporteCuotasExtraordinariaView({
           area.id_cat_status === 4 && "opacity-50"
         )}
       >
+        {/* Sticky Column: Ubicación */}
+        <td
+          className={cn(
+            "sticky left-0 z-20 w-[120px] min-w-[120px] max-w-[120px] px-3 text-xs font-bold text-[#5a4838] uppercase break-words border-r border-[#ddd0be] transition-colors",
+            rowBg
+          )}
+        >
+          {area.zona}
+        </td>
+
         {/* Sticky Column: Área Privativa / Fracción */}
         <td
           className={cn(
-            "sticky left-0 z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors",
+            "sticky left-[120px] z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors",
             rowBg
           )}
         >
@@ -366,14 +388,16 @@ export function ReporteCuotasExtraordinariaView({
         title="Estado de Cartera Extraordinaria"
         subtitle={`${unidadesEnSistema} unidades privativas · Corte ${ultimaActualizacionTexto}`}
         actions={
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={retryLoadData}
             disabled={loading}
-            className={BUTTON.secondary}
+            className="h-8 gap-2 px-3 text-[10px] font-bold uppercase rounded-full border-[#c8b8a0] bg-white text-[#5a4838] hover:bg-[#faf6f0]"
           >
             <RefreshCw className="h-3.5 w-3.5" /> Actualizar
-          </button>
+          </Button>
         }
       />
 
@@ -389,7 +413,7 @@ export function ReporteCuotasExtraordinariaView({
           label="Ciclo Fiscal"
           value={`${primerAnio} – ${ultimoAnio}`}
           icon={<MapPin className="h-4 w-4" />}
-          iconClassName="bg-gold-soft text-warning"
+          iconClassName="bg-[#0e7490]"
         />
 
         <LegendCard label="Simbología de Extraordinarias" className="col-span-1 md:col-span-2">
@@ -401,22 +425,60 @@ export function ReporteCuotasExtraordinariaView({
         </LegendCard>
       </div>
 
-      {/* ── BARRA DE FILTROS ── */}
+      {/* ── BARRA DE FILTROS (DISEÑO DEL PANEL) ── */}
       <FilterPanel>
-        <div className="p-4 flex flex-wrap items-end gap-3">
-          <div className="w-40">
-            <FieldLabel>Registros por página</FieldLabel>
+        <form
+          className="p-4 flex flex-wrap items-end gap-3"
+          onSubmit={(event) => {
+            event.preventDefault();
+            aplicarBusqueda(busqueda.trim());
+          }}
+        >
+          <div className="flex-1 min-w-[200px]">
+            <FieldLabel htmlFor="reporte-extra-buscar">Buscar</FieldLabel>
+            <input
+              id="reporte-extra-buscar"
+              type="search"
+              value={busqueda}
+              onChange={(event) => setBusqueda(event.target.value)}
+              placeholder="Código, nombre de área..."
+              maxLength={60}
+              className={FIELD_INPUT}
+            />
+          </div>
+
+          <div className="w-32">
+            <FieldLabel htmlFor="reporte-extra-registros">Registros</FieldLabel>
             <select
+              id="reporte-extra-registros"
               value={itemsPerPage}
               onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-              className="h-9 w-full rounded-[10px] border border-stroke-2 bg-card px-2.5 text-[13.5px] text-fg outline-none transition-[border-color,box-shadow] duration-150 hover:border-stroke focus:border-brand/50 focus:ring-[3px] focus:ring-brand/15"
+              className={FIELD_SELECT}
             >
               <option value={10}>10 por pág</option>
               <option value={30}>30 por pág</option>
               <option value={50}>50 por pág</option>
             </select>
           </div>
-        </div>
+
+          <div className="flex gap-2">
+            <Button type="submit" disabled={loading} className="h-8 text-[10px] font-bold uppercase gap-1.5 bg-[#4c4a24] hover:bg-[#3b3a1c] text-white">
+              <Filter className="h-3 w-3" /> Filtrar
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              title="Eliminar filtros"
+              aria-label="Eliminar filtros"
+              disabled={loading || (!busqueda && !busquedaAplicada)}
+              onClick={() => aplicarBusqueda("")}
+              className="h-8 text-[10px] font-bold uppercase px-3 border border-[#c8b8a0]"
+            >
+              <X className="h-3.5 w-3.5 text-[#7a5e44]" />
+            </Button>
+          </div>
+        </form>
       </FilterPanel>
 
       {/* ── PAGINADOR NÚMEROS (CIRCULAR) ── */}
@@ -435,9 +497,12 @@ export function ReporteCuotasExtraordinariaView({
 
           {/* THEAD */}
           <thead className="sticky top-0 z-30 shadow-sm">
-            <tr className="bg-[#e0d5c8] text-left text-[12px] font-semibold text-[#5a4838]">
-              <th className="sticky left-0 top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8] min-w-[290px]">
-                Área privativa / Fracción de área privativa
+            <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
+              <th className="sticky left-0 top-0 z-50 px-3 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8] w-[120px] min-w-[120px] max-w-[120px]">
+                UBICACIÓN
+              </th>
+              <th className="sticky left-[120px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8] min-w-[290px]">
+                ÁREA PRIVATIVA/ FRACCIÓN DE ÁREA PRIVATIVA
               </th>
 
               {gruposCobro.map((grupo) => (
@@ -450,13 +515,13 @@ export function ReporteCuotasExtraordinariaView({
               ))}
 
               <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold text-center min-w-[180px]">
-                Saldo actual
+                SALDO ACTUAL
               </th>
 
               {monthColumns.map(({ year, month }) => (
                 <th
                   key={`mh-${year}-${month}`}
-                  className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[11.5px] font-semibold text-[#7a5e44] text-center min-w-[110px] tabular-nums"
+                  className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] text-center min-w-[110px] tabular-nums"
                 >
                   {String(month).padStart(2, "0")}/{year}
                 </th>
@@ -466,14 +531,24 @@ export function ReporteCuotasExtraordinariaView({
 
           {/* TBODY */}
           <tbody className="divide-y divide-[#e8ddd0] text-[#2b1e12]">
+            {flatRows.length === 0 && (
+              <tr className="bg-white">
+                <td className="sticky left-0 z-20 bg-white px-3 py-6 text-[11px] font-bold uppercase tracking-widest text-[#7a5e44]" colSpan={2}>
+                  {busquedaAplicada ? `Sin resultados para «${busquedaAplicada}»` : "Sin unidades para mostrar"}
+                </td>
+              </tr>
+            )}
             {flatRows.map((entry, rowIdx) => renderRow(entry, rowIdx))}
           </tbody>
 
           {/* TFOOT — Totales de la página actual */}
           <tfoot>
             <tr className="border-t-2 border-[#c8b49a] bg-[#e0d5c8] font-bold text-[#2b1e12]">
-              <td className="sticky left-0 z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-[13px] font-bold text-[#2b1e12]">
-                Totales
+              <td className="sticky left-0 z-20 w-[120px] min-w-[120px] max-w-[120px] border-r border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs uppercase font-bold text-[#5a4838]">
+                —
+              </td>
+              <td className="sticky left-[120px] z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2b1e12]">
+                TOTALES
               </td>
 
               {gruposCobro.map((grupo, idx) => (

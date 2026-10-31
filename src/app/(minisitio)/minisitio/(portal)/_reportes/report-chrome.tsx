@@ -4,7 +4,9 @@ import { cn } from "@/shared/utils/cn";
 
 /**
  * Piezas de cromo compartidas por los reportes de cuotas (antes
- * `components/reports/ReportChrome.js` del minisitio), calcadas del reporte de cuotas del panel.
+ * `components/reports/ReportChrome.js` del minisitio), calcadas de los reportes de cuotas del
+ * panel (`src/app/(admin)/reporte-cuotas/page.tsx`): mismas clases, para que ambos portales
+ * se vean iguales.
  */
 
 /** Encabezado de página: badge de regreso + título olivo + subtítulo + acciones */
@@ -24,7 +26,7 @@ export function ReportHeader({
   return (
     <div
       className={cn(
-        "flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-stroke-2",
+        "flex flex-col md:flex-row md:items-end justify-between gap-4 pb-5 border-b border-[#4c4a24]/20",
         className
       )}
     >
@@ -32,8 +34,10 @@ export function ReportHeader({
         {backSlot}
         <div className="flex min-w-0 flex-1 flex-col gap-2">
           {/* h2: el h1 de la pantalla es el título del encabezado del portal. */}
-          <h2 className="text-[26px] font-bold leading-8 tracking-[-0.02em] text-fg">{title}</h2>
-          {subtitle && <p className="text-[13.5px] leading-5 text-fg-3">{subtitle}</p>}
+          <h2 className="text-3xl font-extrabold text-[#4c4a24] tracking-tighter uppercase">{title}</h2>
+          {subtitle && (
+            <p className="text-[#7a5e44] text-[11px] font-bold uppercase tracking-tight">{subtitle}</p>
+          )}
         </div>
       </div>
 
@@ -43,16 +47,11 @@ export function ReportHeader({
 }
 
 /** Tarjeta KPI blanca sobre pergamino, con cuadro de icono a la derecha */
-/**
- * Tarjeta de una cifra: etiqueta e ícono arriba, la cifra abajo a todo el ancho. La cifra se
- * ajusta al ancho de SU tarjeta (unidades de contenedor): en seis columnas un importe de ocho
- * cifras no cabía y se metía debajo del ícono.
- */
 export function KpiCard({
   label,
   value,
   icon,
-  iconClassName = "bg-brand/[0.08] text-brand",
+  iconClassName = "bg-[#4c4a24]",
   className,
 }: {
   label: ReactNode;
@@ -62,14 +61,21 @@ export function KpiCard({
   className?: string;
 }) {
   return (
-    <div className={cn("@container flex flex-col justify-between gap-2 rounded-2xl border border-stroke-2 bg-card p-4", className)}>
-      <div className="flex items-start justify-between gap-3">
-        <p className="min-w-0 text-[12.5px] font-medium leading-[18px] text-fg-3">{label}</p>
-        {icon && (
-          <div className={cn("-mr-0.5 -mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px]", iconClassName)}>{icon}</div>
-        )}
+    <div
+      className={cn(
+        "p-4 rounded-xl bg-white border border-[#c8b8a0]/40 shadow-xs flex items-center justify-between",
+        className
+      )}
+    >
+      <div>
+        <p className="text-[9px] font-bold uppercase tracking-widest text-[#7a5e44]">{label}</p>
+        <p className="text-2xl font-bold text-[#2b1e12] tabular-nums mt-0.5">{value}</p>
       </div>
-      <p className="truncate text-[length:clamp(17px,11.5cqi,24px)] font-bold leading-8 tracking-[-0.02em] text-fg tabular-nums">{value}</p>
+      {icon && (
+        <div className={cn("h-9 w-9 rounded-lg text-white flex items-center justify-center", iconClassName)}>
+          {icon}
+        </div>
+      )}
     </div>
   );
 }
@@ -87,24 +93,24 @@ export function LegendCard({
   return (
     <div
       className={cn(
-        "flex items-center justify-between rounded-2xl border border-stroke-2 bg-card p-4",
+        "p-4 rounded-xl bg-white border border-[#c8b8a0]/40 shadow-xs flex items-center justify-between",
         className
       )}
     >
       <div>
-        <p className="text-[12.5px] font-medium text-fg-3">{label}</p>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">{children}</div>
+        <p className="text-[9px] font-bold uppercase tracking-widest text-[#7a5e44]">{label}</p>
+        <div className="flex items-center gap-2 mt-1.5 flex-wrap">{children}</div>
       </div>
     </div>
   );
 }
 
 const LEGEND_TONES = {
-  owner: "bg-surface-3 border-stroke-2 text-fg-2",
+  owner: "bg-[#faf6f0] border-[#c8b8a0]/40 text-[#7a5e44]",
   commerce: "bg-[#fdf6fa] border-[#f5e0eb] text-[#8f1a3d]",
-  ok: "bg-success-bg border-success/20 text-success",
-  warn: "bg-warning-bg border-brand-accent/30 text-warning",
-  late: "bg-critical-bg border-overdue/20 text-overdue",
+  ok: "bg-emerald-50 border-emerald-200 text-emerald-700",
+  warn: "bg-amber-50 border-amber-200 text-amber-700",
+  late: "bg-rose-50 border-rose-200 text-rose-700",
 };
 
 /** Pastilla de leyenda (P: Propietario / C: Comercio y estados de vencimiento) */
@@ -116,7 +122,7 @@ export function LegendPill({
   children?: ReactNode;
 }) {
   return (
-    <span className={cn("inline-flex h-6 items-center rounded-full border px-2.5 text-[12px] font-medium", LEGEND_TONES[tone] ?? LEGEND_TONES.owner)}>
+    <span className={cn("px-2.5 py-1 rounded-full text-[10px] font-bold border", LEGEND_TONES[tone] ?? LEGEND_TONES.owner)}>
       {children}
     </span>
   );
@@ -133,11 +139,10 @@ export function FilterPanel({
   className?: string;
 }) {
   return (
-    <div className={cn("overflow-hidden rounded-2xl border border-stroke-2 bg-card", className)}>
-      {/* Cabecera clara: antes era una banda olivo con MAYÚSCULAS. */}
-      <div className="flex items-center gap-2 border-b border-stroke-3 px-4 py-3">
-        <Filter aria-hidden className="h-4 w-4 text-brand" strokeWidth={2} />
-        <p className="text-[13.5px] font-semibold text-fg">{title}</p>
+    <div className={cn("overflow-hidden rounded-card border border-[#c8b8a0]/40 bg-white shadow-sm", className)}>
+      <div className="px-4 py-2.5 bg-[#4c4a24] text-white flex items-center gap-2 rounded-t-card">
+        <Filter aria-hidden className="h-3.5 w-3.5 text-white/80" />
+        <p className="text-[10px] font-bold uppercase tracking-widest text-white">{title}</p>
       </div>
       {children}
     </div>
@@ -145,11 +150,20 @@ export function FilterPanel({
 }
 
 /** Etiqueta de campo dentro de la barra de filtros */
-export function FieldLabel({ children, className }: { children?: ReactNode; className?: string }) {
+export function FieldLabel({
+  children,
+  htmlFor,
+  className,
+}: {
+  children?: ReactNode;
+  htmlFor?: string;
+  className?: string;
+}) {
   return (
     <label
+      htmlFor={htmlFor}
       className={cn(
-        "mb-1.5 block text-[12.5px] font-semibold leading-4 text-fg-2",
+        "text-[10px] font-bold uppercase tracking-widest text-[#7a5e44] leading-none mb-1.5 block",
         className
       )}
     >
@@ -157,6 +171,12 @@ export function FieldLabel({ children, className }: { children?: ReactNode; clas
     </label>
   );
 }
+
+/** Campo de texto y selector de la barra de filtros. */
+export const FIELD_INPUT =
+  "h-8 w-full rounded-md border border-[#c8b8a0]/50 bg-white px-3 text-xs outline-none focus:border-[#4c4a24]";
+export const FIELD_SELECT =
+  "h-8 w-full rounded-md border border-[#c8b8a0]/50 bg-white px-2 text-xs font-medium outline-none focus:border-[#4c4a24]";
 
 /**
  * Contenedor a sangre de la tabla extensiva: bordes pergamino arriba/abajo,
@@ -167,8 +187,9 @@ export function WideTableSection({ children, className }: { children?: ReactNode
     <section
       className={cn(
         // A sangre del contenido: los márgenes negativos son exactamente el relleno del <main>
-        // (p-4 sm:p-6 lg:p-8). Antes llegaban a -40 px en escritorio y la tabla se salía.
-        "isolate overflow-hidden border-t border-b border-stroke-2 bg-card -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 rounded-none",
+        // del portal (p-4 sm:p-6 lg:p-8); el panel usa los de su propio <main>.
+        // `isolate`: las celdas fijas no pasan por encima del encabezado del portal al desplazar.
+        "isolate overflow-hidden border-t border-b border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 rounded-none",
         className
       )}
     >
@@ -176,18 +197,18 @@ export function WideTableSection({ children, className }: { children?: ReactNode
         dangerouslySetInnerHTML={{
           __html: `
           .fap-inventory-table td {
-            border-top: 1px solid var(--color-stroke-3) !important;
+            border-top: 1px solid #e5d8c8 !important;
           }
           .fap-block-start td {
-            border-top: 2px solid rgb(93 91 53 / 0.35) !important;
+            border-top: 2.5px solid #a89678 !important;
           }
           .fap-block-end td {
-            border-bottom: 2px solid rgb(93 91 53 / 0.35) !important;
+            border-bottom: 2.5px solid #a89678 !important;
           }
         `,
         }}
       />
-      <div className="scrollbar-slim max-h-[75vh] overflow-auto">{children}</div>
+      <div className="overflow-auto max-h-[75vh]">{children}</div>
     </section>
   );
 }
@@ -196,7 +217,7 @@ export function WideTableSection({ children, className }: { children?: ReactNode
 export function ReportFootnote({ children }: { children?: ReactNode }) {
   return (
     <div className="flex justify-between items-center py-4 px-2">
-      <p className="text-[12.5px] text-fg-3">{children}</p>
+      <p className="text-[11px] font-bold text-[#7a5e44] uppercase tracking-widest">{children}</p>
     </div>
   );
 }

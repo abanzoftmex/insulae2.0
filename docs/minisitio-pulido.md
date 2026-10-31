@@ -109,6 +109,21 @@ Segunda pasada pedida por el usuario, con prioridad en diseño, color y SVG. Los
   - el color se ve en la marca junto al título, en el ícono al pasar el cursor y en el ícono y el marcador del activo. En reposo los íconos son neutros, e Inicio conserva el marcador dorado;
   - el pueblo (`ValquiricoVista`, bandera solo al pasar el cursor) va al final del menú, dentro del desplazamiento: si sobra alto se asienta sobre la cuenta y, si no, queda después del último módulo, sin quitarle espacio a las opciones. Se pliega con el rail.
 
+## Reportes Condominales homologados con el panel (2026-10-30)
+
+El cliente pidió que Resumen Financiero, Cuotas Ordinarias y Cuotas Extraordinarias del portal se vean como sus equivalentes del panel (Financiero → Resumen, Cuotas Ordinarias y Cuotas Extraordinarias). Para esas tres pantallas se deshace el pulido de la fila 7: vuelven las MAYÚSCULAS, la banda olivo de filtros, los `StatCard` y los colores del panel.
+
+- **Piezas compartidas** (`_reportes/report-chrome.tsx`, `financial-cards.tsx`, `resumen-financiero/compact-financial-table.tsx`, `ui/paginator.tsx`): mismas clases que `src/app/(admin)/reporte-cuotas/page.tsx` y `resumen-financiero/page.tsx`. Solo las usan estas tres pantallas.
+- **Resumen**: agrega la tarjeta "Actividad Financiera" con `FinancialChart`, que en el portal faltaba. Usa las mismas series que el panel y una altura fija de 280 px, porque el componente toma la altura de su contenedor. Los egresos y el saldo ordinarios usan los tonos rojo y dorado del panel (`TABLE_TONE.ordinaryExpense` / `ordinaryBalance`).
+- **Cuotas**: agrega la columna fija "Ubicación" (`PrivateArea.zone`, "Centro" si no hay dato, igual que el panel) y el campo "Buscar" con Filtrar y ✕ (busca por nombre o clave; la consulta ya lo soportaba).
+- **Diferencias que se mantienen**:
+  - sin la columna "Acciones" ni los botones Exportar, Plantilla, Seguridad y Reporte, que son del administrador;
+  - KPI del Resumen en seis columnas solo desde 2xl, porque el contenido del portal es más angosto;
+  - el paginador conserva la ventana de páginas;
+  - las celdas fijas son opacas (el mismo tono mezclado con blanco);
+  - las tablas usan `border-separate`;
+  - columnas y años salen de las consultas del portal; la estructura de datos del panel no cambió.
+
 ## Pendientes de decisión del usuario
 
 - Panel de Control: la métrica "Saldo Pendiente" muestra el saldo **vencido** (igual que producción).
