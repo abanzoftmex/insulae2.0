@@ -36,84 +36,30 @@ export const dynamic = "force-dynamic";
 
 function renderFinancialCards(
   cell: FeeReportCellVM,
-  paymentStatusColor?: "green" | "red" | "yellow",
 ): React.ReactNode {
   const ownerAmount = cell.ownerLabel;
   const commerceAmount = cell.commerceLabel;
   const showCommerce = cell.hasCommerce;
 
-  const isZeroOrMuted = (amount: string) => {
-    const clean = amount.trim();
-    if (clean.startsWith("-")) return true;
-    const hasNonZeroDigits = /[1-9]/.test(clean);
-    return !hasNonZeroDigits;
-  };
-
-  const getCardStyle = (amount: string, isOwner: boolean) => {
-    if (isZeroOrMuted(amount)) {
-      return isOwner
-        ? {
-            bgClass: "bg-[#faf6f0] border-[#c8b8a0]/30",
-            labelClass: "text-[#7a5e44]/60",
-            valueClass: "text-[#5a4838] font-medium"
-          }
-        : {
-            bgClass: "bg-[#fdf6fa] border-[#f5e0eb]",
-            labelClass: "text-[#8f1a3d]/60",
-            valueClass: "text-[#35202a] font-medium"
-          };
-    }
-
-    if (paymentStatusColor === "red") {
-      return {
-        bgClass: "bg-rose-50 border-rose-200",
-        labelClass: "text-rose-600/70",
-        valueClass: "text-[#dc2626] font-bold"
-      };
-    }
-    if (paymentStatusColor === "yellow") {
-      return {
-        bgClass: "bg-amber-50 border-amber-200",
-        labelClass: "text-amber-600/70",
-        valueClass: "text-[#d97706] font-bold"
-      };
-    }
-    if (paymentStatusColor === "green") {
-      return {
-        bgClass: "bg-emerald-50 border-emerald-200",
-        labelClass: "text-emerald-700/70",
-        valueClass: "text-[#16a34a] font-bold"
-      };
-    }
-
-    if (isOwner) {
-      return {
-        bgClass: "bg-[#fdfbf7] border-[#c8b8a0]/40",
-        labelClass: "text-[#7a5e44]",
-        valueClass: "text-[#2b1e12] font-bold"
-      };
-    } else {
-      return {
-        bgClass: "bg-[#fff5f7] border-[#f5c0d0]/40",
-        labelClass: "text-[#8f1a3d]",
-        valueClass: "text-[#501020] font-bold"
-      };
-    }
-  };
-
-  const ownerStyle = getCardStyle(ownerAmount, true);
-  const commerceStyle = getCardStyle(commerceAmount, false);
-
   return (
     <div className="space-y-0.5">
-      <div className={cn("flex items-center justify-between gap-1.5 px-1.5 py-0.5 rounded border transition-colors", ownerStyle.bgClass)}>
-        <span className={cn("text-[8px] font-bold shrink-0", ownerStyle.labelClass)}>P</span>
-        <span className={cn("text-[11px] tabular-nums truncate", ownerStyle.valueClass)}>{ownerAmount}</span>
+      {/* Propietario: Equivalente exacto a .bubbleA.buBB1 del Legacy */}
+      <div
+        title="Propietario"
+        className="flex items-center justify-between gap-1.5 px-1.5 py-0.5 rounded border transition-colors bg-[#e0ecff] border-[#c7dbff]"
+      >
+        <span className="text-[8px] font-bold text-[#1e3a8a]/70 shrink-0">P</span>
+        <span className="text-[11px] font-bold text-[#1e293b] tabular-nums truncate">{ownerAmount}</span>
       </div>
+
+      {/* Comercio: Equivalente exacto a .bubbleA.buBB2 del Legacy */}
       {showCommerce && (
-        <div className={cn("flex items-center justify-between gap-1.5 px-1.5 py-0.5 rounded border transition-colors", commerceStyle.bgClass)}>
-          <span className={cn("text-[8px] font-bold shrink-0", commerceStyle.labelClass)}>C</span>
-          <span className={cn("text-[11px] tabular-nums truncate", commerceStyle.valueClass)}>{commerceAmount}</span>
+        <div
+          title="Comercio"
+          className="flex items-center justify-between gap-1.5 px-1.5 py-0.5 rounded border transition-colors bg-[#fff5c7] border-[#ffde6b]"
+        >
+          <span className="text-[8px] font-bold text-[#78350f]/80 shrink-0">C</span>
+          <span className="text-[11px] font-bold text-[#1e293b] tabular-nums truncate">{commerceAmount}</span>
         </div>
       )}
     </div>
@@ -354,76 +300,80 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
         nextHref={buildHref(Math.min(vm.totalPages, vm.page + 1))}
       />
 
-      {/* ── TABLA EXTENSIVA CON CSS Y ESTILO IDÉNTICO A ÁREAS PRIVATIVAS ── */}
-      <section className="overflow-hidden border-t border-b border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm -mx-4 md:-mx-6 lg:-mx-10 -mb-4 md:-mb-6 lg:-mb-8 rounded-none">
+      {/* ── TABLA EXTENSIVA CON CSS Y ESTILO IDÉNTICO A ÁREAS PRIVATIVAS / LEGACY ── */}
+      <section className="overflow-hidden border border-slate-200 bg-white shadow-xs -mx-4 md:-mx-6 lg:-mx-10 -mb-4 md:-mb-6 lg:-mb-8 rounded-none">
         <style dangerouslySetInnerHTML={{ __html: `
           .fap-inventory-table td {
-            border-top: 1px solid #e5d8c8 !important;
+            border-top: 1px solid #e2e8f0 !important;
           }
           .fap-block-start td {
-            border-top: 2.5px solid #a89678 !important;
+            border-top: 2px solid #99d7df !important;
           }
           .fap-block-end td {
-            border-bottom: 2.5px solid #a89678 !important;
+            border-bottom: 2px solid #cbd5e1 !important;
           }
         `}} />
         <div className="overflow-auto max-h-[75vh]">
           <table className="fap-inventory-table min-w-max border-separate border-spacing-0 text-sm">
             
-            {/* THEAD */}
-            <thead className="sticky top-0 z-30 shadow-sm">
-              <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
-                <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8] min-w-[100px]">
+            {/* THEAD - Replicación fiel de clases Legacy: colColum1, colColum4 y meses */}
+            <thead className="sticky top-0 z-30 shadow-xs">
+              <tr className="text-left text-[10px] font-bold uppercase tracking-widest">
+                <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[100px]">
                   ACCIONES
                 </th>
-                <th className="sticky left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8] min-w-[110px]">
+                <th className="sticky left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[110px]">
                   UBICACIÓN
                 </th>
-                <th className="sticky left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8] min-w-[290px]">
+                <th className="sticky left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[290px]">
                   ÁREA PRIVATIVA/ FRACCIÓN DE ÁREA PRIVATIVA
                 </th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[160px]">
+
+                {/* Finanzas (Legacy colColum4: var(--color-success-light) -> #a9d8a0) */}
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[160px]">
                   CARTERA VENCIDA {previousYear}
                 </th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[160px]">
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[160px]">
                   PAGO ANTICIPADO {previousYear}
                 </th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[180px]">
                   CUOTAS ORDINARIAS {primaryYear} (ANUAL)
                 </th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[180px]">
                   CUOTAS ORDINARIAS {primaryYear} (MENSUAL)
                 </th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[180px]">
                   CUOTAS ORDINARIAS {primaryYear} (SALDO ACTUAL)
                 </th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[180px]">
                   CUOTAS ORDINARIAS {secondaryYear} (ANUAL)
                 </th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[180px]">
                   CUOTAS ORDINARIAS {secondaryYear} (MENSUAL)
                 </th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[180px]">
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[180px]">
                   CUOTAS ORDINARIAS {secondaryYear} (SALDO ACTUAL)
                 </th>
-                <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold text-center min-w-[180px]">
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold text-center min-w-[180px]">
                   SALDO ACTUAL
                 </th>
+
+                {/* Meses (Legacy: var(--color-primary-lighter) -> #e0ecff) */}
                 {Array.from({ length: 12 }, (_, i) => (
-                  <th key={`m1-${i}`} className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] text-center min-w-[110px]">
+                  <th key={`m1-${i}`} className="px-3 py-3 border-b border-r border-[#c7dbff] bg-[#e0ecff] text-[#1e3a8a] text-[9px] font-bold text-center min-w-[110px]">
                     {String(i + 1).padStart(2, "0")}/{primaryYear}
                   </th>
                 ))}
                 {Array.from({ length: 12 }, (_, i) => (
-                  <th key={`m2-${i}`} className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] text-center min-w-[110px]">
+                  <th key={`m2-${i}`} className="px-3 py-3 border-b border-r border-[#c7dbff] bg-[#e0ecff] text-[#1e3a8a] text-[9px] font-bold text-center min-w-[110px]">
                     {String(i + 1).padStart(2, "0")}/{secondaryYear}
                   </th>
                 ))}
               </tr>
             </thead>
 
-            {/* TBODY */}
-            <tbody className="divide-y divide-[#e8ddd0] text-[#2b1e12]">
+            {/* TBODY - Filas limpias blancas como en el Legacy */}
+            <tbody className="divide-y divide-[#e2e8f0] text-slate-800">
               {vm.rows.map((row, rowIdx) => {
                 const isChild = row.isChild;
                 const nextRow = vm.rows[rowIdx + 1];
@@ -432,11 +382,18 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
                 const isBlockStart = isParent;
                 const isBlockEnd = (isChild || isParent) && (!nextRow || !nextRow.isChild);
 
-                const rowBg = isParent
-                  ? "bg-[#dfcfb9]"
+                // En el Legacy las filas son blancas
+                const rowBg = "bg-white hover:bg-slate-50/70";
+
+                // Acciones en Legacy: .colAP1 (#c0f8ff) para Padre, .colAP2 (#e8ffdb) para AP individual, neutral para FAP
+                const actionsBg = isParent
+                  ? "bg-[#c0f8ff]"
                   : isChild
-                  ? "bg-[#f0e6d6]"
-                  : "bg-white";
+                  ? "bg-[#f8fafc]"
+                  : "bg-[#e8ffdb]";
+
+                // Columnas fijas 2 y 3 en Legacy: .stickyL1 y .stickyL2 tienen fondo gris claro hsl(0 0% 94.54%) -> #f1f1f1
+                const stickyInfoBg = "bg-[#f1f1f1]";
 
                 const blockRowClass = cn(
                   isBlockStart && "fap-block-start",
@@ -447,57 +404,57 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
                   <tr
                     key={row.id}
                     className={cn(
-                      "h-12 border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] group",
+                      "h-12 border-t border-[#e2e8f0] transition-colors group",
                       rowBg,
                       blockRowClass
                     )}
                   >
-                    {/* Sticky Column 1: Acciones (Red de 6 botones coloridos igual que en Áreas Privativas) */}
-                    <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
+                    {/* Sticky Column 1: Acciones */}
+                    <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#cbd5e1] shadow-xs transition-colors", actionsBg)}>
                       {renderRowActionButtons(row.id, isChild)}
                     </td>
 
                     {/* Sticky Column 2: Ubicación */}
-                    <td className={cn("sticky left-[100px] z-20 px-3 text-xs font-bold text-[#5a4838] uppercase border-r border-[#ddd0be] transition-colors", rowBg)}>
+                    <td className={cn("sticky left-[100px] z-20 px-3 text-xs font-bold text-slate-700 uppercase border-r border-[#cbd5e1] transition-colors", stickyInfoBg)}>
                       {row.zone}
                     </td>
 
                     {/* Sticky Column 3: Área Privativa / Fracción */}
-                    <td className={cn("sticky left-[210px] z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
-                      <p className="font-bold text-[#2b1e12] leading-tight truncate">{row.areaLabel}</p>
+                    <td className={cn("sticky left-[210px] z-20 px-3 border-r-2 border-[#cbd5e1] shadow-xs transition-colors", stickyInfoBg)}>
+                      <p className="font-bold text-slate-900 leading-tight truncate">{row.areaLabel}</p>
                       <StatusBadge label={row.statusLabel} css={row.statusCss} />
                     </td>
 
                     {/* Cartera Vencida & Pago Anticipado */}
-                    <td className="px-2 border-r border-[#e8ddd0] text-center">{renderFinancialCards(row.pastDue)}</td>
-                    <td className="px-2 border-r border-[#e8ddd0] text-center">{renderFinancialCards(row.prepaid)}</td>
+                    <td className="px-2 border-r border-[#e2e8f0] text-center">{renderFinancialCards(row.pastDue)}</td>
+                    <td className="px-2 border-r border-[#e2e8f0] text-center">{renderFinancialCards(row.prepaid)}</td>
 
                     {/* Primary Year */}
                     {row.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
                       <React.Fragment key={yc.year}>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">{renderFinancialCards(yc.annual)}</td>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">{renderFinancialCards(yc.monthly)}</td>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">{renderFinancialCards(yc.balance)}</td>
+                        <td className="px-2 border-r border-[#e2e8f0] text-center">{renderFinancialCards(yc.annual)}</td>
+                        <td className="px-2 border-r border-[#e2e8f0] text-center">{renderFinancialCards(yc.monthly)}</td>
+                        <td className="px-2 border-r border-[#e2e8f0] text-center">{renderFinancialCards(yc.balance)}</td>
                       </React.Fragment>
                     ))}
 
                     {/* Secondary Year */}
                     {row.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
                       <React.Fragment key={yc.year}>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">{renderFinancialCards(yc.annual)}</td>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">{renderFinancialCards(yc.monthly)}</td>
-                        <td className="px-2 border-r border-[#e8ddd0] text-center">{renderFinancialCards(yc.balance)}</td>
+                        <td className="px-2 border-r border-[#e2e8f0] text-center">{renderFinancialCards(yc.annual)}</td>
+                        <td className="px-2 border-r border-[#e2e8f0] text-center">{renderFinancialCards(yc.monthly)}</td>
+                        <td className="px-2 border-r border-[#e2e8f0] text-center">{renderFinancialCards(yc.balance)}</td>
                       </React.Fragment>
                     ))}
 
                     {/* Saldo Actual Consolidado */}
-                    <td className="px-2 border-r-2 border-[#d0b898] bg-[#f0e0c8]/30 font-bold text-center">
+                    <td className="px-2 border-r border-[#e2e8f0] font-bold text-center">
                       {renderFinancialCards(row.totalBalance)}
                     </td>
 
                     {/* Monthly Cells (24 meses) */}
                     {row.monthlyCells.map((mc, idx) => (
-                      <td key={`mc-${idx}-${row.id}`} className="px-2 border-r border-[#e8ddd0] text-center">
+                      <td key={`mc-${idx}-${row.id}`} className="px-2 border-r border-[#e2e8f0] text-center">
                         {renderFinancialCards(mc)}
                       </td>
                     ))}
@@ -508,40 +465,40 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
 
             {/* TFOOT — Totales */}
             <tfoot>
-              <tr className="border-t-2 border-[#c8b49a] bg-[#e0d5c8] font-bold text-[#2b1e12]">
-                <td className="sticky left-0 z-20 border-r border-[#c8b49a] bg-[#e0d5c8] px-2 py-2 text-center text-xs">
+              <tr className="border-t-2 border-[#cbd5e1] bg-[#dfdfdf] font-bold text-slate-800">
+                <td className="sticky left-0 z-20 border-r border-[#cbd5e1] bg-[#dfdfdf] px-2 py-2 text-center text-xs">
                   —
                 </td>
-                <td className="sticky left-[100px] z-20 border-r border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs uppercase font-bold text-[#5a4838]">
+                <td className="sticky left-[100px] z-20 border-r border-[#cbd5e1] bg-[#dfdfdf] px-3 py-2 text-xs uppercase font-bold text-slate-700">
                   —
                 </td>
-                <td className="sticky left-[210px] z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2b1e12]">
+                <td className="sticky left-[210px] z-20 border-r-2 border-[#cbd5e1] bg-[#dfdfdf] px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-900">
                   TOTALES
                 </td>
 
-                <td className="px-2 border-r border-[#c8b49a] text-center">{renderFinancialCards(vm.totalsRow.pastDue)}</td>
-                <td className="px-2 border-r border-[#c8b49a] text-center">{renderFinancialCards(vm.totalsRow.prepaid)}</td>
+                <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(vm.totalsRow.pastDue)}</td>
+                <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(vm.totalsRow.prepaid)}</td>
 
                 {vm.totalsRow.yearCells.filter(yc => yc.year === primaryYear).map(yc => (
                   <React.Fragment key={`tot-${yc.year}`}>
-                    <td className="px-2 border-r border-[#c8b49a] text-center">{renderFinancialCards(yc.annual)}</td>
-                    <td className="px-2 border-r border-[#c8b49a] text-center">{renderFinancialCards(yc.monthly)}</td>
-                    <td className="px-2 border-r border-[#c8b49a] text-center">{renderFinancialCards(yc.balance)}</td>
+                    <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(yc.annual)}</td>
+                    <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(yc.monthly)}</td>
+                    <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(yc.balance)}</td>
                   </React.Fragment>
                 ))}
 
                 {vm.totalsRow.yearCells.filter(yc => yc.year === secondaryYear).map(yc => (
                   <React.Fragment key={`tot-${yc.year}`}>
-                    <td className="px-2 border-r border-[#c8b49a] text-center">{renderFinancialCards(yc.annual)}</td>
-                    <td className="px-2 border-r border-[#c8b49a] text-center">{renderFinancialCards(yc.monthly)}</td>
-                    <td className="px-2 border-r border-[#c8b49a] text-center">{renderFinancialCards(yc.balance)}</td>
+                    <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(yc.annual)}</td>
+                    <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(yc.monthly)}</td>
+                    <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(yc.balance)}</td>
                   </React.Fragment>
                 ))}
 
-                <td className="px-2 border-r-2 border-[#d0b898] bg-[#f0e0c8] text-center">{renderFinancialCards(vm.totalsRow.totalBalance)}</td>
+                <td className="px-2 border-r border-[#cbd5e1] text-center">{renderFinancialCards(vm.totalsRow.totalBalance)}</td>
 
                 {vm.totalsRow.monthlyCells.map((mc, idx) => (
-                  <td key={`tot-mc-${idx}`} className="px-2 border-r border-[#c8b49a] text-center">
+                  <td key={`tot-mc-${idx}`} className="px-2 border-r border-[#cbd5e1] text-center">
                     {renderFinancialCards(mc)}
                   </td>
                 ))}
