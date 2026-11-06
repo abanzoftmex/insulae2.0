@@ -63,7 +63,7 @@ export async function getFeesReport(
   let anios: number[] = [thisYear];
   if (groupIds.length) {
     const yearCharges = await prisma.charge.findMany({
-      where: { condominiumId: session.condominiumId, chargeGroupId: { in: groupIds }, status: { not: "CANCELED" } },
+      where: { condominiumId: session.condominiumId, chargeGroupId: { in: groupIds }, isCollectible: true, status: { not: "CANCELED" } },
       select: { periodYear: true, dueDate: true },
     });
     const ys = new Set<number>();
@@ -87,6 +87,7 @@ export async function getFeesReport(
         status: true,
         isFusion: true,
         charges: {
+          where: { isCollectible: true },
           select: {
             amount: true,
             paidAmount: true,

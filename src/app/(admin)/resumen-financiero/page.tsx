@@ -221,16 +221,17 @@ export default async function ResumenFinancieroPage({
   if (privateAreaListing) {
     if (selectedYear === 2025) {
       ordinaryAnnualSum = privateAreaListing.summary.estimatedAnnualOrdinaryIncome;
+    } else if (selectedYear === 2026) {
+      ordinaryAnnualSum =
+        privateAreaListing.summary.estimatedAnnualOrdinaryIncome2026 ??
+        privateAreaListing.rows.reduce((acc, row) => {
+          const c26 = row.financialCells.ordinary_2026_annual;
+          const ownerVal = typeof c26?.owner === "number" ? c26.owner : parseFloat(String(c26?.owner).replace(/[^0-9.-]+/g, "")) || 0;
+          const commVal = typeof c26?.commerce === "number" ? c26.commerce : parseFloat(String(c26?.commerce).replace(/[^0-9.-]+/g, "")) || 0;
+          return acc + ownerVal + commVal;
+        }, 0);
     } else {
-      for (const row of privateAreaListing.rows) {
-        const key = `ordinary_${selectedYear}_annual` as keyof typeof row.financialCells;
-        const annualCell = row.financialCells[key];
-        if (annualCell) {
-          const ownerVal = typeof annualCell.owner === "number" ? annualCell.owner : parseFloat(String(annualCell.owner).replace(/[^0-9.-]+/g, "")) || 0;
-          const commVal = typeof annualCell.commerce === "number" ? annualCell.commerce : parseFloat(String(annualCell.commerce).replace(/[^0-9.-]+/g, "")) || 0;
-          ordinaryAnnualSum += ownerVal + commVal;
-        }
-      }
+      ordinaryAnnualSum = 0;
     }
   }
 
@@ -238,6 +239,7 @@ export default async function ResumenFinancieroPage({
     where: {
       periodYear: { gte: 2024 },
       status: { not: "CANCELED" },
+      isCollectible: true,
       chargeGroup: {
         kind: { in: ["EXTRA_CONDO", "EXTRA_COMMERCE"] },
       },
@@ -399,7 +401,7 @@ export default async function ResumenFinancieroPage({
           <StatCard 
             accent="emerald" 
             label={`Cuotas Ord. ${vm.selectedYear} (Anual)`} 
-            value={formatCurrency(ordinaryAnnualSum > 0 ? ordinaryAnnualSum : ordIncomeValue)} 
+            value={formatCurrency(selectedYear < 2025 ? 0 : (ordinaryAnnualSum > 0 ? ordinaryAnnualSum : ordIncomeValue))} 
             icon={<Wallet className="h-3.5 w-3.5" />} 
           />
         ) : (

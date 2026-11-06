@@ -53,6 +53,8 @@ export class GetPrivateAreaListingUseCase
   async execute(input?: RawFilters): Promise<PrivateAreaListing | null> {
     const page = normalizePositiveInt(input?.page, 1);
     const requestedPageSize = normalizePositiveInt(input?.pageSize, DEFAULT_PAGE_SIZE);
+    const isUnpaginated = requestedPageSize >= 1000;
+    const pageSize = isUnpaginated ? requestedPageSize : Math.min(requestedPageSize, MAX_PAGE_SIZE);
 
     const filters: PrivateAreaListingFilters = {
       query: (input?.query ?? "").trim(),
@@ -61,7 +63,7 @@ export class GetPrivateAreaListingUseCase
       m2Min: normalizeNumber(input?.m2Min),
       m2Max: normalizeNumber(input?.m2Max),
       page,
-      pageSize: Math.min(requestedPageSize, MAX_PAGE_SIZE),
+      pageSize,
       paginateByTopLevel: input?.paginateByTopLevel === true,
     };
 

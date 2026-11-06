@@ -21,7 +21,7 @@ export async function getPropertyAccountStatement(session: CondominoTokenPayload
       select: { id: true, code: true, name: true, zone: true, m2Original: true, m2Construction: true, indiviso: true },
     }),
     prisma.charge.findMany({
-      where: { privateAreaId: id, responsibility: "OWNER" },
+      where: { privateAreaId: id, responsibility: "OWNER", isCollectible: true },
       orderBy: [{ periodYear: "asc" }, { periodMonth: "asc" }],
       select: {
         amount: true,
@@ -35,7 +35,7 @@ export async function getPropertyAccountStatement(session: CondominoTokenPayload
       },
     }),
     prisma.payment.findMany({
-      where: { privateAreaId: id },
+      where: { privateAreaId: id, isVisibleInFinancialSummary: true },
       orderBy: { paidAt: "desc" },
       take: 20,
       select: { id: true, paidAt: true, amount: true, method: true, reference: true },
@@ -131,7 +131,7 @@ export async function getRentalAccountStatement(session: CondominoTokenPayload, 
         },
       },
       charges: {
-        where: { responsibility: "COMMERCE" },
+        where: { responsibility: "COMMERCE", isCollectible: true },
         orderBy: [{ periodYear: "asc" }, { periodMonth: "asc" }],
         select: {
           amount: true,

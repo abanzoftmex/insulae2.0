@@ -54,7 +54,7 @@ export async function GET() {
     while (curr <= end) {
       const m = curr.getUTCMonth();
       const y = curr.getUTCFullYear();
-      monthLabels.push({ label: `${shortMonths[m]} ${y}`, key: `month_${y}_${m + 1}` });
+      monthLabels.push({ label: `${shortMonths[m]} ${y}`, key: `month_${y}_${String(m + 1).padStart(2, "0")}` });
       curr.setUTCMonth(curr.getUTCMonth() + 1);
     }
 

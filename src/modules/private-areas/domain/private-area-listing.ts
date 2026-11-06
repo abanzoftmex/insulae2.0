@@ -121,6 +121,7 @@ export interface PrivateAreaListingSummary {
   totalOriginalM2: number;
   totalUpdatedM2: number;
   estimatedAnnualOrdinaryIncome: number;
+  estimatedAnnualOrdinaryIncome2026?: number;
   estimatedMonthlyOrdinaryIncome: number;
   estimatedOutstandingBalance: number;
 }

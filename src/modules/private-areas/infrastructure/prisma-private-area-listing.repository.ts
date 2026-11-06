@@ -141,6 +141,7 @@ type PrivateAreaSnapshot = {
       payment?: {
         legacyId?: number | null;
         paidAt?: Date | null;
+        isVisibleInFinancialSummary?: boolean | null;
       } | null;
     }>;
   }>;
@@ -148,7 +149,14 @@ type PrivateAreaSnapshot = {
     id: string;
     date: Date;
     amount: Prisma.Decimal | number;
-    chargeGroupId: string | null;
+    legacyId?: number | null;
+    isConfirmed?: boolean | null;
+    chargeGroupId?: string | null;
+    chargeGroup?: {
+      name: string;
+      chargeType: string | null;
+      kind?: string | null;
+    } | null;
   }>;
 };
 
@@ -414,46 +422,55 @@ function splitMonthlyCharges(
   year: number,
   month: number,
   inMemoryAllocationsByChargeId: Map<string, number>,
-  currentOrdinaryYear: number,
-  isCommerceArea?: boolean,
+  _currentOrdinaryYear: number,
+  _isCommerceArea?: boolean,
 ): PrivateAreaFinancialSplit {
   const split: PrivateAreaFinancialSplit = { owner: 0, commerce: 0, isPaid: false };
+  const today = new Date();
 
-  const ordinaryCharges = charges.filter(
+  const matchingCharges = charges.filter(
     (charge) =>
       charge.isCollectible &&
-      isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY),
+      isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
+      charge.periodYear === year &&
+      charge.periodMonth === month,
   );
 
-  for (const charge of ordinaryCharges) {
-    // Sum database allocations paid IN THIS MONTH (paidAt matches year & month)
-    const paidInMonthFromDb = (charge.allocations ?? []).reduce((sum: number, alloc: any) => {
-      const rawDate = alloc.payment?.paidAt ?? alloc.createdAt;
-      if (!rawDate) return sum;
-      const paidDate = new Date(rawDate);
-      const allocYear = paidDate.getFullYear();
-      const allocMonth = paidDate.getMonth() + 1;
-      if (allocYear === year && allocMonth === month) {
-        return sum + decimalToNumber(alloc.amount);
-      }
-      return sum;
-    }, 0);
-
-    let inMem = 0;
-    if (charge.periodYear === year && charge.periodMonth === month) {
-      inMem = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
-    }
-
-    const paidInMonth = paidInMonthFromDb + inMem;
-
-    if (charge.responsibility === "COMMERCE" || isCommerceArea) {
-      split.commerce += paidInMonth;
-    } else {
-      split.owner += paidInMonth;
-    }
+  if (matchingCharges.length === 0) {
+    return split;
   }
 
-  if (split.commerce > 0 || split.owner > 0) {
+  let anyPaid = false;
+  for (const charge of matchingCharges) {
+    const amount = decimalToNumber(charge.amount);
+    const dbPaid = (charge.allocations ?? []).reduce((sum: number, alloc: any) => {
+      if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
+      return sum + decimalToNumber(alloc.amount);
+    }, 0);
+    const inMem = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
+    const paid = dbPaid + inMem;
+    const interest = decimalToNumber(charge.interestAmount);
+    const discount = decimalToNumber(charge.discountAmount);
+    const pending = Math.max(0, amount - paid - discount + interest);
+
+    const isDueToday = !charge.dueDate || new Date(charge.dueDate) <= today;
+    const isPaid = pending <= 0.005 && paid > 0;
+
+    let cellValue = 0;
+    if (isPaid) {
+      cellValue = amount;
+      anyPaid = true;
+    } else if (isDueToday) {
+      cellValue = pending;
+    } else {
+      // Future unbilled month
+      cellValue = 0;
+    }
+
+    addToFinancialSplit(split, charge.responsibility, cellValue);
+  }
+
+  if (anyPaid) {
     split.isPaid = true;
   }
 
@@ -467,7 +484,10 @@ function toPendingAmount(
   const amount = decimalToNumber(charge.amount);
   const dbPaid =
     charge.allocations?.reduce(
-      (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+      (sum: number, alloc: any) => {
+        if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
+        return sum + decimalToNumber(alloc.amount);
+      },
       0,
     ) ?? decimalToNumber(charge.paidAmount);
   const inMemoryAllocated = inMemoryAllocationsByChargeId?.get(charge.id) ?? 0;
@@ -482,9 +502,9 @@ function addToFinancialSplit(
   split: PrivateAreaFinancialSplit,
   responsibility: "OWNER" | "COMMERCE",
   value: number,
-  isCommerceArea?: boolean,
+  _isCommerceArea?: boolean,
 ): void {
-  if (responsibility === "COMMERCE" || isCommerceArea) {
+  if (responsibility === "COMMERCE") {
     split.commerce += value;
     return;
   }
@@ -541,6 +561,7 @@ function buildFinancialCells(
   const ordinaryCurrentAnnual = splitCharges(
     charges,
     (charge) =>
+      charge.isCollectible &&
       isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
       charge.periodYear === currentOrdinaryYear,
     (charge) => decimalToNumber(charge.amount),
@@ -561,6 +582,7 @@ function buildFinancialCells(
   const ordinaryNextAnnual = splitCharges(
     charges,
     (charge) =>
+      charge.isCollectible &&
       isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
       charge.periodYear === nextOrdinaryYear,
     (charge) => decimalToNumber(charge.amount),
@@ -599,6 +621,7 @@ function buildFinancialCells(
     advance_2024: splitCharges(
       charges,
       (charge) =>
+        charge.isCollectible &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
         charge.periodYear === previousOrdinaryYear,
       (charge) => decimalToNumber(charge.paidAmount),
@@ -619,6 +642,7 @@ function buildFinancialCells(
     extra_condo_2024_2025: splitCharges(
       charges,
       (charge) =>
+        charge.isCollectible &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.EXTRA_CONDO) &&
         charge.periodYear >= previousOrdinaryYear &&
         charge.periodYear <= currentOrdinaryYear,
@@ -639,6 +663,7 @@ function buildFinancialCells(
     extra_commerce_2024_2025: splitCharges(
       charges,
       (charge) =>
+        charge.isCollectible &&
         isChargeGroup(charge, CHARGE_GROUP_KIND.EXTRA_COMMERCE) &&
         charge.periodYear >= previousOrdinaryYear &&
         charge.periodYear <= currentOrdinaryYear,
@@ -658,19 +683,26 @@ function buildFinancialCells(
     ),
     stc: splitCharges(
       charges,
-      (charge) => isChargeGroup(charge, CHARGE_GROUP_KIND.STC),
+      (charge) =>
+        charge.isCollectible &&
+        isChargeGroup(charge, CHARGE_GROUP_KIND.STC),
       (charge) => decimalToNumber(charge.amount),
       isCommerceArea,
     ),
     stc_outstanding: splitCharges(
       charges,
-      (charge) => charge.isCollectible && isDueToday(charge) && isChargeGroup(charge, CHARGE_GROUP_KIND.STC),
+      (charge) =>
+        charge.isCollectible &&
+        isDueToday(charge) &&
+        isChargeGroup(charge, CHARGE_GROUP_KIND.STC),
       (charge) => toPendingAmount(charge, inMemoryAllocationsByChargeId),
       isCommerceArea,
     ),
     sancion: splitCharges(
       charges,
-      (charge) => isChargeGroup(charge, CHARGE_GROUP_KIND.SANCTION),
+      (charge) =>
+        charge.isCollectible &&
+        isChargeGroup(charge, CHARGE_GROUP_KIND.SANCTION),
       (charge) => decimalToNumber(charge.amount),
       isCommerceArea,
     ),
@@ -685,7 +717,9 @@ function buildFinancialCells(
     ),
     comodato: splitCharges(
       charges,
-      (charge) => isChargeGroup(charge, CHARGE_GROUP_KIND.COMODATO),
+      (charge) =>
+        charge.isCollectible &&
+        isChargeGroup(charge, CHARGE_GROUP_KIND.COMODATO),
       (charge) => decimalToNumber(charge.amount),
       isCommerceArea,
     ),
@@ -1068,6 +1102,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
                     select: {
                       legacyId: true,
                       paidAt: true,
+                      isVisibleInFinancialSummary: true,
                     },
                   },
                 },
@@ -1081,6 +1116,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               legacyId: true,
               date: true,
               amount: true,
+              isConfirmed: true,
               chargeGroupId: true,
               chargeGroup: {
                 select: {
@@ -1182,13 +1218,27 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         const allocatedLegacyIds = new Set<string>();
         for (const charge of charges) {
           for (const alloc of charge.allocations) {
-            if (alloc.payment?.legacyId !== null && alloc.payment?.legacyId !== undefined) {
+            if (
+              alloc.payment?.isVisibleInFinancialSummary !== false &&
+              alloc.payment?.legacyId !== null &&
+              alloc.payment?.legacyId !== undefined
+            ) {
               allocatedLegacyIds.add(String(alloc.payment.legacyId));
             }
           }
         }
 
+        const getIncomeResponsibility = (inc: any): "COMMERCE" | "OWNER" => {
+          const cgName = (inc.chargeGroup?.name || "").toLowerCase();
+          const cgType = (inc.chargeGroup?.chargeType || "").toLowerCase();
+          if (cgName.includes("comercio") || cgType.includes("comercio")) return "COMMERCE";
+          return "OWNER";
+        };
+
         for (const income of sortedIncomes) {
+          if (income.isConfirmed === false) {
+            continue;
+          }
           if (
             income.legacyId !== null &&
             income.legacyId !== undefined &&
@@ -1199,14 +1249,21 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
             continue;
           }
 
+          const incResp = getIncomeResponsibility(income);
+          const incKind = resolveChargeGroupKind(income.chargeGroup);
           let remainingIncome = decimalToNumber(income.amount);
 
           for (const charge of sortedCharges) {
             if (remainingIncome <= 0.005) break;
+            if (charge.responsibility !== incResp) continue;
+            if (resolveChargeGroupKind(charge.chargeGroup) !== incKind) continue;
 
             const dbPaid =
               charge.allocations?.reduce(
-                (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+                (sum: number, alloc: any) => {
+                  if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
+                  return sum + decimalToNumber(alloc.amount);
+                },
                 0,
               ) ?? decimalToNumber(charge.paidAmount);
             const prevAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
@@ -1265,7 +1322,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           amount2025 = ordinaryCharge2025 ? decimalToNumber(ordinaryCharge2025.amount) : 0;
           if (amount2025 === 0) {
             const monthlyCharges2025 = area.charges.filter(
-              (c: any) => resolveChargeGroupKind(c.chargeGroup) === "ORDINARY" && c.periodYear === 2025
+              (c: any) => c.isCollectible && resolveChargeGroupKind(c.chargeGroup) === "ORDINARY" && c.periodYear === 2025
             );
             if (monthlyCharges2025.length > 0) {
               const sum = monthlyCharges2025.reduce((acc: number, c: any) => acc + decimalToNumber(c.amount), 0);
@@ -1283,7 +1340,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           amount2026 = ordinaryCharge2026 ? decimalToNumber(ordinaryCharge2026.amount) : 0;
           if (amount2026 === 0) {
             const monthlyCharges2026 = area.charges.filter(
-              (c: any) => resolveChargeGroupKind(c.chargeGroup) === "ORDINARY" && c.periodYear === 2026
+              (c: any) => c.isCollectible && resolveChargeGroupKind(c.chargeGroup) === "ORDINARY" && c.periodYear === 2026
             );
             if (monthlyCharges2026.length > 0) {
               const sum = monthlyCharges2026.reduce((acc: number, c: any) => acc + decimalToNumber(c.amount), 0);
@@ -1294,22 +1351,40 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
           }
         }
 
-        financialCells.ordinary_2025_annual = {
-          owner: isCommerceArea ? 0 : amount2025 * 12,
-          commerce: isCommerceArea ? amount2025 * 12 : 0,
-        };
-        financialCells.ordinary_2025_monthly = {
-          owner: isCommerceArea ? 0 : amount2025,
-          commerce: isCommerceArea ? amount2025 : 0,
-        };
-        financialCells.ordinary_2026_annual = {
-          owner: isCommerceArea ? 0 : amount2026 * 12,
-          commerce: isCommerceArea ? amount2026 * 12 : 0,
-        };
-        financialCells.ordinary_2026_monthly = {
-          owner: isCommerceArea ? 0 : amount2026,
-          commerce: isCommerceArea ? amount2026 : 0,
-        };
+        if (isNoLandUse) {
+          financialCells.ordinary_2025_annual = { owner: 0, commerce: 0 };
+          financialCells.ordinary_2025_monthly = { owner: 0, commerce: 0 };
+          financialCells.ordinary_2026_annual = { owner: 0, commerce: 0 };
+          financialCells.ordinary_2026_monthly = { owner: 0, commerce: 0 };
+        } else {
+          // If no charges existed for 2025 in financialCells, populate from configured amount2025
+          const cell2025 = financialCells.ordinary_2025_annual;
+          if (!cell2025 || (cell2025.owner === 0 && cell2025.commerce === 0)) {
+            const resp = isCommerceArea ? "COMMERCE" : "OWNER";
+            financialCells.ordinary_2025_annual = {
+              owner: resp === "OWNER" ? amount2025 * 12 : 0,
+              commerce: resp === "COMMERCE" ? amount2025 * 12 : 0,
+            };
+            financialCells.ordinary_2025_monthly = {
+              owner: resp === "OWNER" ? amount2025 : 0,
+              commerce: resp === "COMMERCE" ? amount2025 : 0,
+            };
+          }
+
+          // If no charges existed for 2026 in financialCells, populate from configured amount2026
+          const cell2026 = financialCells.ordinary_2026_annual;
+          if (!cell2026 || (cell2026.owner === 0 && cell2026.commerce === 0)) {
+            const resp = isCommerceArea ? "COMMERCE" : "OWNER";
+            financialCells.ordinary_2026_annual = {
+              owner: resp === "OWNER" ? amount2026 * 12 : 0,
+              commerce: resp === "COMMERCE" ? amount2026 * 12 : 0,
+            };
+            financialCells.ordinary_2026_monthly = {
+              owner: resp === "OWNER" ? amount2026 : 0,
+              commerce: resp === "COMMERCE" ? amount2026 : 0,
+            };
+          }
+        }
       }
 
       const ordinaryAnnualCell = financialCells.ordinary_2025_annual ?? emptyFinancialSplit();
@@ -1332,7 +1407,10 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       for (const charge of collectibleCharges) {
         const amount = decimalToNumber(charge.amount);
         const dbPaid = charge.allocations?.reduce(
-          (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+          (sum: number, alloc: any) => {
+            if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
+            return sum + decimalToNumber(alloc.amount);
+          },
           0,
         ) ?? decimalToNumber(charge.paidAmount);
         const inMemoryAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
@@ -1675,6 +1753,10 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
       totalOriginalM2: prefilteredRows.reduce((acc, row) => acc + row.m2Original, 0),
       totalUpdatedM2: prefilteredRows.reduce((acc, row) => acc + row.m2Updated, 0),
       estimatedAnnualOrdinaryIncome: activeRows.reduce((acc, row) => acc + row.annualOrdinaryFee, 0),
+      estimatedAnnualOrdinaryIncome2026: activeRows.reduce((acc, row) => {
+        const c26 = row.financialCells.ordinary_2026_annual;
+        return acc + (c26 ? (Number(c26.owner) || 0) + (Number(c26.commerce) || 0) : 0);
+      }, 0),
       estimatedMonthlyOrdinaryIncome: activeRows.reduce((acc, row) => acc + row.monthlyOrdinaryFee, 0),
       estimatedOutstandingBalance: prefilteredRows.reduce((acc, row) => acc + row.outstandingBalance, 0),
     };

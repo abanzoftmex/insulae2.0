@@ -12,9 +12,9 @@ export type ChargeGroupKind =
   (typeof CHARGE_GROUP_KIND)[keyof typeof CHARGE_GROUP_KIND];
 
 type ChargeGroupLike = {
-  name: string | null | undefined;
-  chargeType: string | null | undefined;
-};
+  name?: string | null | undefined;
+  chargeType?: string | null | undefined;
+} | null | undefined;
 
 function tokenize(value: string): string[] {
   return value.split(/[^a-z0-9]+/).filter((token) => token.length > 0);
@@ -33,6 +33,9 @@ function includesAny(value: string, candidates: string[]): boolean {
 }
 
 export function resolveChargeGroupKind(group: ChargeGroupLike): ChargeGroupKind {
+  if (!group) {
+    return CHARGE_GROUP_KIND.OTHER;
+  }
   const name = normalizeToken(group.name);
   const chargeType = normalizeToken(group.chargeType);
   const nameTokens = tokenize(name);

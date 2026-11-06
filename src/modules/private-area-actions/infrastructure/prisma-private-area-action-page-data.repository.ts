@@ -13,6 +13,7 @@ import {
   toPrivateAreaStatus,
   toPrivateAreaStatusLabel,
 } from "@/shared/domain/private-area-status";
+import { resolveChargeGroupKind } from "@/shared/domain/charge-group-kind";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 function decimalToNumber(value: unknown): number {
@@ -270,6 +271,7 @@ export class PrismaPrivateAreaActionPageDataRepository
           select: {
             id: true,
             legacyId: true,
+            isConfirmed: true,
             date: true,
             paymentMethod: true,
             concept: true,
@@ -501,27 +503,47 @@ export class PrismaPrivateAreaActionPageDataRepository
       const allocatedLegacyIds = new Set<number>();
       for (const charge of charges) {
         for (const alloc of charge.allocations) {
-          if (alloc.payment.legacyId !== null) {
+          if (
+            alloc.payment.isVisibleInFinancialSummary !== false &&
+            alloc.payment.legacyId !== null
+          ) {
             allocatedLegacyIds.add(alloc.payment.legacyId);
           }
         }
       }
 
+      const getIncomeResponsibility = (inc: any): "COMMERCE" | "OWNER" => {
+        const cgName = (inc.chargeGroup?.name || "").toLowerCase();
+        const cgType = (inc.chargeGroup?.chargeType || "").toLowerCase();
+        if (cgName.includes("comercio") || cgType.includes("comercio")) return "COMMERCE";
+        return "OWNER";
+      };
+
       for (const income of sortedIncomes) {
+        if (income.isConfirmed === false) {
+          continue;
+        }
         if (income.legacyId !== null && allocatedLegacyIds.has(income.legacyId)) {
           // This income is already represented as a Payment with allocations in the database.
           // Skip simulating it in memory to prevent double-allocation!
           continue;
         }
 
+        const incResp = getIncomeResponsibility(income);
+        const incKind = resolveChargeGroupKind(income.chargeGroup);
         let remainingIncome = decimalToNumber(income.amount);
 
         // Always allocate to the oldest pending charge first (FIFO)
         for (const charge of sortedCharges) {
           if (remainingIncome <= 0.005) break;
+          if (charge.responsibility !== incResp) continue;
+          if (resolveChargeGroupKind(charge.chargeGroup) !== incKind) continue;
 
           const dbPaid = charge.allocations.reduce(
-            (sum: number, alloc: any) => sum + decimalToNumber(alloc.amount),
+            (sum: number, alloc: any) => {
+              if (alloc.payment.isVisibleInFinancialSummary === false) return sum;
+              return sum + decimalToNumber(alloc.amount);
+            },
             0,
           );
           const prevAllocated = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;

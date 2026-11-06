@@ -1132,6 +1132,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           label,
           miscCatalogId: catalog.id,
           kind: catalog.chargeGroup?.kind ?? null,
+          quotaPeriodStart: catalog.quotaPeriodStart,
+          quotaPeriodEnd: catalog.quotaPeriodEnd,
         };
       });
 
@@ -1142,6 +1144,8 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
           label: r.label,
           miscCatalogId: "",
           kind: r.kind,
+          quotaPeriodStart: null as Date | null,
+          quotaPeriodEnd: null as Date | null,
         }));
 
     const ordinaryOtherCatalogRows = (miscIncomeCatalogs as MiscIncomeCatalogSnapshot[])
@@ -1187,6 +1191,26 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         Object.fromEntries(visibleYears.map((year) => [year, createZeroSeries()])),
       ]),
     );
+
+    const addAmountToRowYear = (
+      row: (typeof ordinaryIncomeRowsSource)[number] | undefined | null,
+      year: number,
+      month: number,
+      amount: number,
+    ) => {
+      if (!row) return;
+      if (row.quotaPeriodStart) {
+        const startYear = row.quotaPeriodStart.getUTCFullYear();
+        const endYear = row.quotaPeriodEnd ? row.quotaPeriodEnd.getUTCFullYear() : startYear;
+        if (year < startYear || year > endYear) {
+          return;
+        }
+      }
+      const series = ordinaryIncomeByRowAndYear.get(row.id)?.[year];
+      if (series) {
+        addAmountToSeries(series, month, amount);
+      }
+    };
     const ordinaryOtherIncomeByRowAndYear = new Map<string, Record<number, number[]>>(
       ordinaryOtherCatalogRows.map((row) => [
         row.id,
@@ -1341,12 +1365,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       addAmountToSeries(monthlyByKind[extendedKind], month, amount);
 
       if (bucket === "ordinary") {
-        row.ordinaryIncome += amount;
-        // Track cash vs bank split
-        if (detail.payment.method === "CASH") {
-          addAmountToSeries(ordinaryCashIncomeMonthly, month, amount);
+        if (requestedYear >= 2025) {
+          row.ordinaryIncome += amount;
+          // Track cash vs bank split
+          if (detail.payment.method === "CASH") {
+            addAmountToSeries(ordinaryCashIncomeMonthly, month, amount);
+          } else {
+            addAmountToSeries(ordinaryBankIncomeMonthly, month, amount);
+          }
         } else {
-          addAmountToSeries(ordinaryBankIncomeMonthly, month, amount);
+          row.otherIncome += amount;
         }
       } else if (bucket === "extraordinary") {
         row.extraordinaryIncome += amount;
@@ -1386,8 +1414,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
         const ordRow = ordinaryIncomeRowByKind.get(chargeGroupKind);
         if (ordRow) {
-          const series = ordinaryIncomeByRowAndYear.get(ordRow.id)?.[year];
-          if (series) addAmountToSeries(series, month, amount);
+          addAmountToRowYear(ordRow, year, month, amount);
         }
       }
     }
@@ -1405,12 +1432,16 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       addAmountToSeries(monthlyByKind[extendedKind], month, amount);
 
       if (bucket === "ordinary") {
-        row.ordinaryIncome += amount;
-        // Track cash vs bank split
-        if ((income as IncomeSnapshot).paymentMethod === "CASH") {
-          addAmountToSeries(ordinaryCashIncomeMonthly, month, amount);
+        if (requestedYear >= 2025) {
+          row.ordinaryIncome += amount;
+          // Track cash vs bank split
+          if ((income as IncomeSnapshot).paymentMethod === "CASH") {
+            addAmountToSeries(ordinaryCashIncomeMonthly, month, amount);
+          } else {
+            addAmountToSeries(ordinaryBankIncomeMonthly, month, amount);
+          }
         } else {
-          addAmountToSeries(ordinaryBankIncomeMonthly, month, amount);
+          row.otherIncome += amount;
         }
       } else if (bucket === "extraordinary") {
         row.extraordinaryIncome += amount;
@@ -1429,16 +1460,12 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
 
         const ordRow = ordinaryIncomeRowByKind.get(kind);
         if (ordRow) {
-          const series = ordinaryIncomeByRowAndYear.get(ordRow.id)?.[requestedYear];
-          if (series) addAmountToSeries(series, month, amount);
+          addAmountToRowYear(ordRow, requestedYear, month, amount);
         }
       } else {
         const ordIncomeRow = ordinaryIncomeRowByMiscCatalogId.get(income.miscCatalogId);
         if (ordIncomeRow) {
-          const byYear = ordinaryIncomeByRowAndYear.get(ordIncomeRow.id);
-          if (byYear?.[requestedYear]) {
-            addAmountToSeries(byYear[requestedYear], month, amount);
-          }
+          addAmountToRowYear(ordIncomeRow, requestedYear, month, amount);
         }
 
         const ordinaryRow = ordinaryOtherRowByMiscCatalogId.get(income.miscCatalogId);
@@ -1471,35 +1498,30 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
         continue;
       }
 
+      const month = getMonth(income.date);
+      const amount = decimalToNumber(income.amount);
+
       const incomeKind =
         income.chargeGroupId !== null
           ? (chargeGroupKindById.get(income.chargeGroupId) ?? null)
           : null;
-      if (incomeKind !== null) {
-        const extraordinaryRow = extraordinaryIncomeRowByKind.get(incomeKind);
-        if (extraordinaryRow) {
-          const month = getMonth(income.date);
-          const amount = decimalToNumber(income.amount);
-          addAmountToSeries(
-            extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year],
-            month,
-            amount,
-          );
-        }
-
-        const ordRow = ordinaryIncomeRowByKind.get(incomeKind);
-        if (ordRow) {
-          const month = getMonth(income.date);
-          const amount = decimalToNumber(income.amount);
-          const series = ordinaryIncomeByRowAndYear.get(ordRow.id)?.[year];
-          if (series) addAmountToSeries(series, month, amount);
-        }
-      }
-
-      const month = getMonth(income.date);
-      const amount = decimalToNumber(income.amount);
-
       if (income.miscCatalogId === null) {
+        if (incomeKind !== null) {
+          const extraordinaryRow = extraordinaryIncomeRowByKind.get(incomeKind);
+          if (extraordinaryRow) {
+            addAmountToSeries(
+              extraordinaryIncomeByRowAndYear[extraordinaryRow.id][year],
+              month,
+              amount,
+            );
+          }
+
+          const ordRow = ordinaryIncomeRowByKind.get(incomeKind);
+          if (ordRow) {
+            addAmountToRowYear(ordRow, year, month, amount);
+          }
+        }
+
         const isCoreKind = income.chargeGroupId !== null &&
           [CHARGE_GROUP_KIND.ORDINARY, CHARGE_GROUP_KIND.STC, CHARGE_GROUP_KIND.SANCTION, CHARGE_GROUP_KIND.COMODATO].includes(
             chargeGroupKindById.get(income.chargeGroupId) as any
@@ -1516,10 +1538,7 @@ export class PrismaFinancialSummaryRepository implements FinancialSummaryReposit
       if (income.miscCatalogId) {
         const ordIncomeRow = ordinaryIncomeRowByMiscCatalogId.get(income.miscCatalogId);
         if (ordIncomeRow) {
-          const byYear = ordinaryIncomeByRowAndYear.get(ordIncomeRow.id);
-          if (byYear?.[year]) {
-            addAmountToSeries(byYear[year], month, amount);
-          }
+          addAmountToRowYear(ordIncomeRow, year, month, amount);
         }
       }
 

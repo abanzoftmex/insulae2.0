@@ -243,6 +243,7 @@ export class PrismaLandUseFormRepository implements LandUseFormRepository {
       prisma.charge.findMany({
         where: {
           condominiumId: condominium.id,
+          isCollectible: true,
           privateArea: {
             isActive: true,
           },
