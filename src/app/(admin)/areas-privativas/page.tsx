@@ -128,91 +128,26 @@ function renderFinancialCards(
   ownerAmount: string,
   commerceAmount: string,
   showCommerce: boolean,
-  paymentStatusColor?: "green" | "red" | "yellow",
-  isPaid?: boolean,
 ): ReactNode {
-  const isZeroOrMuted = (amount: string) => {
-    const clean = amount.trim();
-    if (clean.startsWith("-")) {
-      return true;
-    }
-    const hasNonZeroDigits = /[1-9]/.test(clean);
-    return !hasNonZeroDigits;
-  };
-
-  const getCardStyle = (amount: string, isOwner: boolean) => {
-    if (isPaid) {
-      return {
-        bgClass: "bg-emerald-50 border-emerald-100",
-        labelClass: "text-emerald-600/60",
-        valueClass: "text-[#16a34a] font-bold"
-      };
-    }
-
-    if (isZeroOrMuted(amount)) {
-      return isOwner
-        ? {
-            bgClass: "bg-[#faf6f0] border-[#c8b8a0]/30",
-            labelClass: "text-[#7a5e44]/60",
-            valueClass: "text-[#5a4838] font-medium"
-          }
-        : {
-            bgClass: "bg-[#fdf6fa] border-[#f5e0eb]",
-            labelClass: "text-[#8f1a3d]/60",
-            valueClass: "text-[#35202a] font-medium"
-          };
-    }
-
-    if (paymentStatusColor === "red") {
-      return {
-        bgClass: "bg-rose-50 border-rose-100",
-        labelClass: "text-rose-600/60",
-        valueClass: "text-[#dc2626] font-bold"
-      };
-    }
-    if (paymentStatusColor === "yellow") {
-      return {
-        bgClass: "bg-amber-50 border-amber-100",
-        labelClass: "text-amber-600/60",
-        valueClass: "text-[#d97706] font-bold"
-      };
-    }
-    if (paymentStatusColor === "green") {
-      return {
-        bgClass: "bg-emerald-50 border-emerald-100",
-        labelClass: "text-emerald-600/60",
-        valueClass: "text-[#16a34a] font-bold"
-      };
-    }
-
-    if (isOwner) {
-      return {
-        bgClass: "bg-brand-deep/3 border-brand-deep/5",
-        labelClass: "text-brand-deep/60",
-        valueClass: "text-brand-deep font-bold"
-      };
-    } else {
-      return {
-        bgClass: "bg-danger/5 border-danger/5",
-        labelClass: "text-danger/60",
-        valueClass: "text-danger/80 font-bold"
-      };
-    }
-  };
-
-  const ownerStyle = getCardStyle(ownerAmount, true);
-  const commerceStyle = getCardStyle(commerceAmount, false);
-
   return (
     <div className="space-y-0.5">
-      <div className={cn("flex items-center justify-between gap-2 px-1.5 py-0.5 rounded border transition-colors", ownerStyle.bgClass)}>
-        <span className={cn("text-[8px] font-bold", ownerStyle.labelClass)}>P</span>
-        <span className={cn("text-xs", ownerStyle.valueClass)}>{ownerAmount}</span>
+      {/* Propietario: Equivalente exacto a .bubbleA.buBB1 del Legacy */}
+      <div
+        title="Propietario"
+        className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded border transition-colors bg-[#e0ecff] border-[#c7dbff]"
+      >
+        <span className="text-[8px] font-bold text-[#1e3a8a]/70">P</span>
+        <span className="text-xs font-bold text-[#1e293b] tabular-nums">{ownerAmount}</span>
       </div>
+
+      {/* Comercio: Equivalente exacto a .bubbleA.buBB2 del Legacy */}
       {showCommerce && (
-        <div className={cn("flex items-center justify-between gap-2 px-1.5 py-0.5 rounded border transition-colors", commerceStyle.bgClass)}>
-          <span className={cn("text-[8px] font-bold", commerceStyle.labelClass)}>C</span>
-          <span className={cn("text-xs", commerceStyle.valueClass)}>{commerceAmount}</span>
+        <div
+          title="Comercio"
+          className="flex items-center justify-between gap-2 px-1.5 py-0.5 rounded border transition-colors bg-[#fff5c7] border-[#ffde6b]"
+        >
+          <span className="text-[8px] font-bold text-[#78350f]/80">C</span>
+          <span className="text-xs font-bold text-[#1e293b] tabular-nums">{commerceAmount}</span>
         </div>
       )}
     </div>
@@ -616,83 +551,98 @@ export default async function AreasPrivativasPage(props: PageProps) {
       />
 
       {/* Main Extensive Table */}
-      <section className="overflow-hidden border-t border-b border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm -mx-4 md:-mx-6 lg:-mx-10 -mb-4 md:-mb-6 lg:-mb-8 rounded-none">
+      <section className="overflow-hidden border border-slate-200 bg-white shadow-xs -mx-4 md:-mx-6 lg:-mx-10 -mb-4 md:-mb-6 lg:-mb-8 rounded-none">
         <style dangerouslySetInnerHTML={{ __html: `
           .fap-inventory-table td {
-            border-top: 1px solid #e5d8c8 !important;
+            border-top: 1px solid #e2e8f0 !important;
           }
           .fap-block-start td {
-            border-top: 2.5px solid #a89678 !important;
+            border-top: 2px solid #99d7df !important;
           }
           .fap-block-end td {
-            border-bottom: 2.5px solid #a89678 !important;
+            border-bottom: 2px solid #cbd5e1 !important;
           }
         `}} />
         <div className="overflow-auto max-h-[75vh]">
           <table className="fap-inventory-table table-fixed border-separate border-spacing-0" style={{ width: `${fullTableWidth}px` }}>
             <colgroup>{colWidths.map((w, i) => <col key={i} style={{ width: `${w}px` }} />)}</colgroup>
             
-            {/* THEAD */}
-            <thead className="sticky top-0 z-30 shadow-sm">
-              <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
-                <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Acciones</th>
-                <th className="sticky left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#c8b49a] bg-[#e0d5c8]">Ubicación</th>
-                <th className="sticky left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8]">Área privativa/ Fracción de área privativa</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Tipo de Apol</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Nivel</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Superficie m2 área privativa actualizado</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Superficie m2 área privativa original</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso del área privativa</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Áreas comunes del condominio</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales área privativa</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 construcción áreas comunes</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 de construcción AP/FAPA</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Áreas comunes subcondominio</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">m2 Totales FAPA</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">% Indiviso FAPA</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Indiviso FAPA/Condominio</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Uso de suelo</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Cartera vencida 2017-2024</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] bg-brand-deep/3 text-brand-deep/50">Pago Anticipado 2024</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (anual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (mensual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2025 (saldo actual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (anual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (mensual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas ordinarias 2026 (saldo actual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas extraordinarias - Condóminos 2024 - 2025</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas extraordinarias - Condóminos 2024 - 2025 (saldo actual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuota extraordinaria - Comercios 2024 - 2025</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuota extraordinaria - Comercios 2024 - 2025 (saldo actual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas STC</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Cuotas STC (saldo actual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Sanción</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Sanción (saldo actual)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Comodato</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Comodato (saldo actual)</th>
-                <th className="px-3 py-3 border-b border-[#d0b898] bg-[#f0e0c8] text-[#6a3810] font-bold">Saldo actual</th>
+            {/* THEAD - Replicación fiel de clases Legacy: colColum1, colColum2, colColum3, colColum4 y meses */}
+            <thead className="sticky top-0 z-30 shadow-xs">
+              <tr className="text-left text-[10px] font-bold uppercase tracking-widest">
+                {/* Sticky 1-3: Cabecera Neutral Slate */}
+                <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Acciones</th>
+                <th className="sticky left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Ubicación</th>
+                <th className="sticky left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Área privativa/ Fracción de área privativa</th>
+
+                {/* Superficies e Indivisos (Legacy colColum2: #dfdfdf) */}
+                <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Tipo de Apol</th>
+                <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Nivel</th>
+                <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Superficie m2 área privativa actualizado</th>
+                <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Superficie m2 área privativa original</th>
+                <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Indiviso del área privativa</th>
+                <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">m2 Áreas comunes del condominio</th>
+                <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">m2 Totales área privativa</th>
+                <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">m2 construcción áreas comunes</th>
+
+                {/* M2 y % FAP (Legacy colColum3: var(--color-warning-light) -> #ffdc6b) */}
+                <th className="px-3 py-3 border-b border-r border-[#e5c350] bg-[#ffdc6b] text-[#451a03] font-bold">m2 de construcción AP/FAPA</th>
+                <th className="px-3 py-3 border-b border-r border-[#e5c350] bg-[#ffdc6b] text-[#451a03] font-bold">m2 Áreas comunes subcondominio</th>
+                <th className="px-3 py-3 border-b border-r border-[#e5c350] bg-[#ffdc6b] text-[#451a03] font-bold">m2 Totales FAPA</th>
+                <th className="px-3 py-3 border-b border-r border-[#e5c350] bg-[#ffdc6b] text-[#451a03] font-bold">% Indiviso FAPA</th>
+                <th className="px-3 py-3 border-b border-r border-[#e5c350] bg-[#ffdc6b] text-[#451a03] font-bold">Indiviso FAPA/Condominio</th>
+
+                {/* Finanzas (Legacy colColum4: var(--color-success-light) -> #a9d8a0) */}
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Uso de suelo</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cartera vencida 2017-2024</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Pago Anticipado 2024</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas ordinarias 2025 (anual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas ordinarias 2025 (mensual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas ordinarias 2025 (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas ordinarias 2026 (anual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas ordinarias 2026 (mensual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas ordinarias 2026 (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas extraordinarias - Condóminos 2024 - 2025</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas extraordinarias - Condóminos 2024 - 2025 (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuota extraordinaria - Comercios 2024 - 2025</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuota extraordinaria - Comercios 2024 - 2025 (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas STC</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Cuotas STC (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Sanción</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Sanción (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Comodato</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Comodato (saldo actual)</th>
+                <th className="px-3 py-3 border-b border-r border-[#8ec084] bg-[#a9d8a0] text-[#14300a] font-bold">Saldo actual</th>
+
+                {/* Meses (Legacy: var(--color-primary-lighter) -> #e0ecff) */}
                 {monthLabels.map(m => (
-                  <th key={m.key} className="px-3 py-3 border-b border-[#d8c8b4] bg-[#ece5d8] text-[9px] font-semibold text-[#7a5e44] leading-snug">{m.label}</th>
+                  <th key={m.key} className="px-3 py-3 border-b border-r border-[#c7dbff] bg-[#e0ecff] text-[#1e3a8a] text-[9px] font-bold leading-snug">{m.label}</th>
                 ))}
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Propietario inicial<br />(BLOCKCHAIN) Historia</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Propietario legal<br />(Esta columna es para el INIDIVISO)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Dominio actual<br />(Esta columna es para el ESTADO DE CUENTA)</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Dominio pleno</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Arrendatario / Usuario</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Contacto administrativo del arrendamiento</th>
-                <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0]">Contacto operativo del arrendamiento</th>
+
+                {/* Directorio / Contactos (Legacy colColum1: var(--color-primary-light) -> #c7dbff) */}
+                <th className="px-3 py-3 border-b border-r border-[#b0c8f5] bg-[#c7dbff] text-[#1e3a8a] font-bold">Propietario inicial<br />(BLOCKCHAIN) Historia</th>
+                <th className="px-3 py-3 border-b border-r border-[#b0c8f5] bg-[#c7dbff] text-[#1e3a8a] font-bold">Propietario legal<br />(Esta columna es para el INIDIVISO)</th>
+                <th className="px-3 py-3 border-b border-r border-[#b0c8f5] bg-[#c7dbff] text-[#1e3a8a] font-bold">Dominio actual<br />(Esta columna es para el ESTADO DE CUENTA)</th>
+                <th className="px-3 py-3 border-b border-r border-[#b0c8f5] bg-[#c7dbff] text-[#1e3a8a] font-bold">Dominio pleno</th>
+                <th className="px-3 py-3 border-b border-r border-[#b0c8f5] bg-[#c7dbff] text-[#1e3a8a] font-bold">Arrendatario / Usuario</th>
+                <th className="px-3 py-3 border-b border-r border-[#b0c8f5] bg-[#c7dbff] text-[#1e3a8a] font-bold">Contacto administrativo del arrendamiento</th>
+                <th className="px-3 py-3 border-b border-r border-[#b0c8f5] bg-[#c7dbff] text-[#1e3a8a] font-bold">Contacto operativo del arrendamiento</th>
               </tr>
             </thead>
 
-            {/* TBODY */}
-            <tbody className="divide-y divide-[#e8ddd0] text-[#2b1e12]">
+            {/* TBODY - Filas limpias blancas como en el Legacy */}
+            <tbody className="divide-y divide-[#e2e8f0] text-slate-800">
               {vm.rows.map((row, rowIdx) => {
                 const actions = legacyActionsByPrivateAreaId[row.id] ?? [];
                 const hasCom = row.hasRentalLabel === "Si";
                 const empty = "$0.00";
                 const f = (k: string) => {
                   const s = row.financialCells[k as keyof typeof row.financialCells];
-                  return renderFinancialCards(s?.owner ?? empty, s?.commerce ?? empty, hasCom, row.paymentStatusColor, s?.isPaid);
+                  return renderFinancialCards(
+                    s?.owner ?? empty,
+                    s?.commerce ?? empty,
+                    hasCom || (s?.commerce !== undefined && s?.commerce !== empty),
+                  );
                 };
 
                 const isParent = row.hierarchyLabel === "Padre";
@@ -702,11 +652,18 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 const nextRow = vm.rows[rowIdx + 1];
                 const isBlockEnd = (isChild || isParent) && (!nextRow || nextRow.hierarchyLabel !== "Hijo");
 
-                const rowBg = isParent
-                  ? "bg-[#dfcfb9]"
+                // En el Legacy las filas son blancas
+                const rowBg = "bg-white hover:bg-slate-50/70";
+
+                // Acciones en Legacy: .colAP1 (#c0f8ff) para Padre, .colAP2 (#e8ffdb) para AP individual, neutral para FAP
+                const actionsBg = isParent
+                  ? "bg-[#c0f8ff]"
                   : isChild
-                  ? "bg-[#f0e6d6]"
-                  : "bg-white";
+                  ? "bg-[#f8fafc]"
+                  : "bg-[#e8ffdb]";
+
+                // Columnas fijas 2 y 3 en Legacy: .stickyL1 y .stickyL2 tienen fondo gris claro hsl(0 0% 94.54%) -> #f1f1f1
+                const stickyInfoBg = "bg-[#f1f1f1]";
 
                 const blockRowClass = cn(
                   isBlockStart && "fap-block-start",
@@ -716,10 +673,10 @@ export default async function AreasPrivativasPage(props: PageProps) {
                 );
                 
                 return (
-                  <tr key={`${row.id}-${rowIdx}`} className={cn("h-12 border-t border-[#e8ddd0] transition-colors hover:brightness-[0.97] group", rowBg, blockRowClass)}>
+                  <tr key={`${row.id}-${rowIdx}`} className={cn("h-12 border-t border-[#e2e8f0] transition-colors group", rowBg, blockRowClass)}>
                     
                     {/* Sticky Column 1: Acciones */}
-                    <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
+                    <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#cbd5e1] shadow-xs transition-colors", actionsBg)}>
                       <div className="flex flex-wrap gap-1 w-[80px]">
                         {actions.map((act) => {
                           let isEnabled = act.isEnabled;
@@ -736,66 +693,66 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     </td>
 
                     {/* Sticky Column 2: Ubicación */}
-                    <td className={cn("sticky left-[100px] z-20 px-3 text-xs font-bold text-[#5a4838] uppercase border-r border-[#ddd0be] transition-colors", rowBg)}>
+                    <td className={cn("sticky left-[100px] z-20 px-3 text-xs font-bold text-slate-700 uppercase border-r border-[#cbd5e1] transition-colors", stickyInfoBg)}>
                       {row.zone}
                     </td>
 
                     {/* Sticky Column 3: Área / Fracción */}
-                    <td className={cn("sticky left-[210px] z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors", rowBg)}>
-                      <p className="font-bold text-[#2b1e12] leading-tight truncate">{row.name}</p>
+                    <td className={cn("sticky left-[210px] z-20 px-3 border-r-2 border-[#cbd5e1] shadow-xs transition-colors", stickyInfoBg)}>
+                      <p className="font-bold text-slate-900 leading-tight truncate">{row.name}</p>
                       <div className="flex gap-1.5 mt-0.5">
-                        <span className="px-1.5 py-px rounded-xs bg-[#faf6f0] border border-[#c8b8a0]/30 text-xs font-bold text-[#7a5e44]/80 uppercase">{row.code}</span>
+                        <span className="px-1.5 py-px rounded-xs bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 uppercase">{row.code}</span>
                         <Badge variant={row.statusTone === "active" ? "success" : "danger"} className="rounded-full px-2 py-0.5 text-[8px] font-bold tracking-widest">{row.statusLabel}</Badge>
                       </div>
                     </td>
 
-                    <td className="px-3 border-r border-[#e8ddd0]">
+                    <td className="px-3 border-r border-[#e2e8f0]">
                       {renderHierarchyBadge(row.hierarchyLabel)}
-                      <p className="text-xs text-[#7a5e44]/60 italic mt-0.5">P: {row.parentName}</p>
+                      <p className="text-xs text-slate-500 italic mt-0.5">P: {row.parentName}</p>
                     </td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0]">{row.level}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Updated}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Original}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indiviso}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2CommonArea}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums font-bold">{row.totalAreaM2}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2ConstructionCommonArea}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2Construction}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2CommonAreaChildren}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.m2ConstructionChildren}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indivisoFap}</td>
-                    <td className="px-3 text-xs border-r border-[#e8ddd0] tabular-nums">{row.indivisoCondominio}</td>
-                    <td className="px-3 border-r border-[#e8ddd0]">
+                    <td className="px-3 text-xs border-r border-[#e2e8f0]">{row.level}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.m2Updated}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.m2Original}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.indiviso}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.m2CommonArea}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums font-bold">{row.totalAreaM2}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.m2ConstructionCommonArea}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.m2Construction}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.m2CommonAreaChildren}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.m2ConstructionChildren}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.indivisoFap}</td>
+                    <td className="px-3 text-xs border-r border-[#e2e8f0] tabular-nums">{row.indivisoCondominio}</td>
+                    <td className="px-3 border-r border-[#e2e8f0]">
                       <Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.useTypeInitials}</Badge>
                     </td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("arrears_2017_2024")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("advance_2024")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_annual")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_monthly")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2025_outstanding")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_annual")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_monthly")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("ordinary_2026_outstanding")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("extra_condo_2024_2025")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("extra_condo_2024_2025_outstanding")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("extra_commerce_2024_2025")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("extra_commerce_2024_2025_outstanding")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("stc")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("stc_outstanding")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("sancion")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("sancion_outstanding")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("comodato")}</td>
-                    <td className="px-2 border-r border-[#e8ddd0]">{f("comodato_outstanding")}</td>
-                    <td className="px-2 border-r-2 border-[#d0b898] bg-[#f0e0c8]/20">{f("total_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("arrears_2017_2024")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("advance_2024")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("ordinary_2025_annual")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("ordinary_2025_monthly")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("ordinary_2025_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("ordinary_2026_annual")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("ordinary_2026_monthly")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("ordinary_2026_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("extra_condo_2024_2025")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("extra_condo_2024_2025_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("extra_commerce_2024_2025")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("extra_commerce_2024_2025_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("stc")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("stc_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("sancion")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("sancion_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("comodato")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("comodato_outstanding")}</td>
+                    <td className="px-2 border-r border-[#e2e8f0]">{f("total_outstanding")}</td>
                     {monthLabels.map(m => (
-                      <td key={m.key} className="px-2 border-r border-[#e8ddd0] opacity-90 scale-95">{f(m.key)}</td>
+                      <td key={m.key} className="px-2 border-r border-[#e2e8f0]">{f(m.key)}</td>
                     ))}
-                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.ownerInitialHistory)}</td>
-                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.ownerLegal)}</td>
-                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.domainCurrent)}</td>
-                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.domainFull)}</td>
-                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.tenantUsers)}</td>
-                    <td className="px-3 border-r border-[#e8ddd0]">{renderPartyContacts(row.rentalAdministrativeContacts)}</td>
+                    <td className="px-3 border-r border-[#e2e8f0]">{renderPartyContacts(row.ownerInitialHistory)}</td>
+                    <td className="px-3 border-r border-[#e2e8f0]">{renderPartyContacts(row.ownerLegal)}</td>
+                    <td className="px-3 border-r border-[#e2e8f0]">{renderPartyContacts(row.domainCurrent)}</td>
+                    <td className="px-3 border-r border-[#e2e8f0]">{renderPartyContacts(row.domainFull)}</td>
+                    <td className="px-3 border-r border-[#e2e8f0]">{renderPartyContacts(row.tenantUsers)}</td>
+                    <td className="px-3 border-r border-[#e2e8f0]">{renderPartyContacts(row.rentalAdministrativeContacts)}</td>
                     <td className="px-3">{renderPartyContacts(row.rentalOperationalContacts)}</td>
                   </tr>
                 );

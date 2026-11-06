@@ -112,7 +112,7 @@ export async function GET() {
       const getFinancialText = (key: string) => {
         const cell = area.financialCells[key as keyof typeof area.financialCells];
         if (!cell) return "$0.00";
-        if (area.hasRentalLabel === "Si") {
+        if (area.hasRentalLabel === "Si" || (cell.commerce && cell.commerce !== "$0.00")) {
           return `P: ${cell.owner} / C: ${cell.commerce}`;
         }
         return cell.owner;

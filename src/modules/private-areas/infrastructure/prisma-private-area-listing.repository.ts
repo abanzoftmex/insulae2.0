@@ -142,6 +142,8 @@ type PrivateAreaSnapshot = {
         legacyId?: number | null;
         paidAt?: Date | null;
         isVisibleInFinancialSummary?: boolean | null;
+        legacyStatusCode?: number | null;
+        isLegacyActive?: boolean | null;
       } | null;
     }>;
   }>;
@@ -414,7 +416,13 @@ function toPublicPartyContact(contact: PartyContact): Omit<PartyContact, "id"> {
 }
 
 function emptyFinancialSplit(): PrivateAreaFinancialSplit {
-  return { owner: 0, commerce: 0, isPaid: false };
+  return {
+    owner: 0,
+    commerce: 0,
+    isPaid: false,
+    isOwnerPaid: false,
+    isCommercePaid: false,
+  };
 }
 
 function splitMonthlyCharges(
@@ -425,8 +433,13 @@ function splitMonthlyCharges(
   _currentOrdinaryYear: number,
   _isCommerceArea?: boolean,
 ): PrivateAreaFinancialSplit {
-  const split: PrivateAreaFinancialSplit = { owner: 0, commerce: 0, isPaid: false };
-  const today = new Date();
+  const split: PrivateAreaFinancialSplit = {
+    owner: 0,
+    commerce: 0,
+    isPaid: false,
+    isOwnerPaid: false,
+    isCommercePaid: false,
+  };
 
   const matchingCharges = charges.filter(
     (charge) =>
@@ -440,39 +453,42 @@ function splitMonthlyCharges(
     return split;
   }
 
-  let anyPaid = false;
+  let ownerPaidSum = 0;
+  let ownerTotalCharge = 0;
+  let commercePaidSum = 0;
+  let commerceTotalCharge = 0;
+
   for (const charge of matchingCharges) {
     const amount = decimalToNumber(charge.amount);
     const dbPaid = (charge.allocations ?? []).reduce((sum: number, alloc: any) => {
       if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
+      if (alloc.payment?.legacyStatusCode === 2) return sum;
+      if (alloc.payment?.isLegacyActive === false) return sum;
       return sum + decimalToNumber(alloc.amount);
     }, 0);
     const inMem = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
     const paid = dbPaid + inMem;
-    const interest = decimalToNumber(charge.interestAmount);
-    const discount = decimalToNumber(charge.discountAmount);
-    const pending = Math.max(0, amount - paid - discount + interest);
 
-    const isDueToday = !charge.dueDate || new Date(charge.dueDate) <= today;
-    const isPaid = pending <= 0.005 && paid > 0;
-
-    let cellValue = 0;
-    if (isPaid) {
-      cellValue = amount;
-      anyPaid = true;
-    } else if (isDueToday) {
-      cellValue = pending;
+    if (charge.responsibility === "COMMERCE") {
+      commercePaidSum += paid;
+      commerceTotalCharge += amount;
     } else {
-      // Future unbilled month
-      cellValue = 0;
+      ownerPaidSum += paid;
+      ownerTotalCharge += amount;
     }
-
-    addToFinancialSplit(split, charge.responsibility, cellValue);
   }
 
-  if (anyPaid) {
-    split.isPaid = true;
-  }
+  split.owner = ownerPaidSum;
+  split.commerce = commercePaidSum;
+
+  const isOwnerPaid =
+    ownerTotalCharge > 0 && ownerPaidSum >= ownerTotalCharge - 0.005 && ownerPaidSum > 0;
+  const isCommercePaid =
+    commerceTotalCharge > 0 && commercePaidSum >= commerceTotalCharge - 0.005 && commercePaidSum > 0;
+
+  split.isOwnerPaid = isOwnerPaid;
+  split.isCommercePaid = isCommercePaid;
+  split.isPaid = isOwnerPaid || isCommercePaid;
 
   return split;
 }
@@ -486,6 +502,8 @@ function toPendingAmount(
     charge.allocations?.reduce(
       (sum: number, alloc: any) => {
         if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
+        if (alloc.payment?.legacyStatusCode === 2) return sum;
+        if (alloc.payment?.isLegacyActive === false) return sum;
         return sum + decimalToNumber(alloc.amount);
       },
       0,
@@ -1103,6 +1121,8 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
                       legacyId: true,
                       paidAt: true,
                       isVisibleInFinancialSummary: true,
+                      legacyStatusCode: true,
+                      isLegacyActive: true,
                     },
                   },
                 },
@@ -1217,9 +1237,11 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         // Build a set of legacyIds of payments that already have allocations in the database
         const allocatedLegacyIds = new Set<string>();
         for (const charge of charges) {
-          for (const alloc of charge.allocations) {
+          for (const alloc of charge.allocations ?? []) {
             if (
               alloc.payment?.isVisibleInFinancialSummary !== false &&
+              alloc.payment?.legacyStatusCode !== 2 &&
+              alloc.payment?.isLegacyActive !== false &&
               alloc.payment?.legacyId !== null &&
               alloc.payment?.legacyId !== undefined
             ) {
@@ -1236,7 +1258,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         };
 
         for (const income of sortedIncomes) {
-          if (income.isConfirmed === false) {
+          if (income.isConfirmed !== true) {
             continue;
           }
           if (
@@ -1262,6 +1284,8 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
               charge.allocations?.reduce(
                 (sum: number, alloc: any) => {
                   if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
+                  if (alloc.payment?.legacyStatusCode === 2) return sum;
+                  if (alloc.payment?.isLegacyActive === false) return sum;
                   return sum + decimalToNumber(alloc.amount);
                 },
                 0,
@@ -1409,6 +1433,8 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         const dbPaid = charge.allocations?.reduce(
           (sum: number, alloc: any) => {
             if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
+            if (alloc.payment?.legacyStatusCode === 2) return sum;
+            if (alloc.payment?.isLegacyActive === false) return sum;
             return sum + decimalToNumber(alloc.amount);
           },
           0,
