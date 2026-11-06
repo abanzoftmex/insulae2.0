@@ -486,7 +486,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                   <td colSpan={4} className="py-4 px-3 text-center text-gray-500 italic">No hay pagos registrados</td>
                 </tr>
               ) : (
-                visiblePaymentMovements.map(payment => (
+                visiblePaymentMovements.slice(0, 5).map(payment => (
                   <tr key={payment.paymentId} className="border-b border-[#e1ebf6] last:border-0">
                     <td className="py-2 px-3 font-bold">{payment.reference || payment.paymentId.substring(0, 8)}</td>
                     <td className="py-2 px-3">{getPaymentMethodLabel(payment.method)}</td>

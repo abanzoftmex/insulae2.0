@@ -142,7 +142,7 @@ export class PrismaIncomeRepository implements IncomeRepository {
         chargeGroupId: input.chargeGroupId ?? null,
         privateAreaId: input.privateAreaId ?? null,
         isActive: true,
-        isConfirmed: false,
+        isConfirmed: true,
       },
       include: incomeIncludes,
     });

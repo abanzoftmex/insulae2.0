@@ -271,10 +271,13 @@ export class PrismaPrivateAreaActionPageDataRepository
           select: {
             id: true,
             legacyId: true,
+            isActive: true,
             isConfirmed: true,
+            externalSource: true,
             date: true,
             paymentMethod: true,
             concept: true,
+            reference: true,
             notes: true,
             amount: true,
             chargeGroupId: true,
@@ -282,6 +285,7 @@ export class PrismaPrivateAreaActionPageDataRepository
               select: {
                 name: true,
                 chargeType: true,
+                kind: true,
               },
             },
             miscCatalog: {
@@ -479,6 +483,53 @@ export class PrismaPrivateAreaActionPageDataRepository
     const inMemoryAllocationsByChargeId = new Map<string, number>();
     const inMemoryAllocationDatesByChargeId = new Map<string, Set<string>>();
 
+    const getIncomeResponsibility = (inc: any): "COMMERCE" | "OWNER" => {
+      const cgName = (inc.chargeGroup?.name || "").toLowerCase();
+      const cgType = (inc.chargeGroup?.chargeType || "").toLowerCase();
+      const mcName = ((inc as any).miscCatalog?.name || "").toLowerCase();
+      const concept = (inc.concept || "").toLowerCase();
+      const notes = (inc.notes || "").toLowerCase();
+
+      if (
+        cgName.includes("comercio") ||
+        cgType.includes("comercio") ||
+        cgType === "EXTRA_COMMERCE" ||
+        mcName.includes("comercio") ||
+        concept.includes("comercio") ||
+        notes.includes("comercio")
+      ) {
+        return "COMMERCE";
+      }
+
+      if (
+        cgName.includes("propietario") ||
+        cgName.includes("condómino") ||
+        cgName.includes("condomino") ||
+        cgType.includes("condo") ||
+        cgType === "EXTRA_CONDO" ||
+        mcName.includes("propietario") ||
+        concept.includes("propietario") ||
+        notes.includes("propietario")
+      ) {
+        return "OWNER";
+      }
+
+      if (area.charges && area.charges.length > 0) {
+        const incKind = resolveChargeGroupKind(inc.chargeGroup);
+        const matchingCharges = area.charges.filter(
+          (c) => resolveChargeGroupKind(c.chargeGroup) === incKind
+        );
+        const candidateCharges = matchingCharges.length > 0 ? matchingCharges : area.charges;
+        const hasCommerce = candidateCharges.some((c) => c.responsibility === "COMMERCE");
+        const hasOwner = candidateCharges.some((c) => c.responsibility === "OWNER");
+
+        if (hasCommerce && !hasOwner) return "COMMERCE";
+        if (hasOwner && !hasCommerce) return "OWNER";
+      }
+
+      return "OWNER";
+    };
+
     const calculateAllocationsForArea = (charges: any[], incomes: any[]) => {
       const sortedCharges = [...charges].sort((a, b) => {
         if (a.periodYear !== b.periodYear) {
@@ -512,15 +563,14 @@ export class PrismaPrivateAreaActionPageDataRepository
         }
       }
 
-      const getIncomeResponsibility = (inc: any): "COMMERCE" | "OWNER" => {
-        const cgName = (inc.chargeGroup?.name || "").toLowerCase();
-        const cgType = (inc.chargeGroup?.chargeType || "").toLowerCase();
-        if (cgName.includes("comercio") || cgType.includes("comercio")) return "COMMERCE";
-        return "OWNER";
-      };
-
       for (const income of sortedIncomes) {
-        if (income.isConfirmed === false) {
+        if (income.isActive === false) {
+          continue;
+        }
+        if (
+          income.isConfirmed === false &&
+          (income.externalSource !== null || income.legacyId !== null)
+        ) {
           continue;
         }
         if (income.legacyId !== null && allocatedLegacyIds.has(income.legacyId)) {
@@ -677,29 +727,27 @@ export class PrismaPrivateAreaActionPageDataRepository
 
     // Include Incomes that are not tied to charges
     for (const income of area.incomes) {
+      if (income.isActive === false) {
+        continue;
+      }
+      if (
+        income.isConfirmed === false &&
+        (income.externalSource !== null || income.legacyId !== null)
+      ) {
+        continue;
+      }
       if (income.legacyId !== null && paymentLegacyIds.has(income.legacyId)) {
         // Skip duplicate legacy incomes already added as Payments
         continue;
       }
       if (!paymentMovementsById.has(income.id)) {
-        const cgName = income.chargeGroup?.name || "";
-        const mcName = (income as any).miscCatalog?.name || "";
-        const cgType = (income.chargeGroup as any)?.chargeType || "";
-
-        const isComercio =
-          cgName.toLowerCase().includes("comercio") ||
-          cgName.toLowerCase().includes("comercios") ||
-          mcName.toLowerCase().includes("comercio") ||
-          mcName.toLowerCase().includes("comercios") ||
-          cgType === "EXTRA_COMMERCE";
-
-        const responsibility = isComercio ? "COMMERCE" : "OWNER";
+        const responsibility = getIncomeResponsibility(income);
 
         paymentMovementsById.set(income.id, {
           paymentId: income.id,
           paidAt: income.date,
           method: toPaymentMethod(income.paymentMethod || "OTHER"),
-          reference: income.concept,
+          reference: (income as any).reference?.trim() || income.concept || "—",
           notes: income.notes,
           allocatedAmount: decimalToNumber(income.amount), // Count the whole income as allocated to the area
           paymentTotalAmount: decimalToNumber(income.amount),

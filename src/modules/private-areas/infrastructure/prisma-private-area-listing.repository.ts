@@ -1134,15 +1134,25 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
             select: {
               id: true,
               legacyId: true,
+              isActive: true,
               date: true,
               amount: true,
               isConfirmed: true,
+              externalSource: true,
+              concept: true,
+              reference: true,
+              notes: true,
               chargeGroupId: true,
               chargeGroup: {
                 select: {
                   name: true,
                   chargeType: true,
                   kind: true,
+                },
+              },
+              miscCatalog: {
+                select: {
+                  name: true,
                 },
               },
             },
@@ -1253,12 +1263,58 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         const getIncomeResponsibility = (inc: any): "COMMERCE" | "OWNER" => {
           const cgName = (inc.chargeGroup?.name || "").toLowerCase();
           const cgType = (inc.chargeGroup?.chargeType || "").toLowerCase();
-          if (cgName.includes("comercio") || cgType.includes("comercio")) return "COMMERCE";
+          const mcName = ((inc as any).miscCatalog?.name || "").toLowerCase();
+          const concept = (inc.concept || "").toLowerCase();
+          const notes = (inc.notes || "").toLowerCase();
+
+          if (
+            cgName.includes("comercio") ||
+            cgType.includes("comercio") ||
+            cgType === "EXTRA_COMMERCE" ||
+            mcName.includes("comercio") ||
+            concept.includes("comercio") ||
+            notes.includes("comercio")
+          ) {
+            return "COMMERCE";
+          }
+
+          if (
+            cgName.includes("propietario") ||
+            cgName.includes("condómino") ||
+            cgName.includes("condomino") ||
+            cgType.includes("condo") ||
+            cgType === "EXTRA_CONDO" ||
+            mcName.includes("propietario") ||
+            concept.includes("propietario") ||
+            notes.includes("propietario")
+          ) {
+            return "OWNER";
+          }
+
+          if (charges && charges.length > 0) {
+            const incKind = resolveChargeGroupKind(inc.chargeGroup);
+            const matchingCharges = charges.filter(
+              (c: any) => resolveChargeGroupKind(c.chargeGroup) === incKind
+            );
+            const candidateCharges = matchingCharges.length > 0 ? matchingCharges : charges;
+            const hasCommerce = candidateCharges.some((c: any) => c.responsibility === "COMMERCE");
+            const hasOwner = candidateCharges.some((c: any) => c.responsibility === "OWNER");
+
+            if (hasCommerce && !hasOwner) return "COMMERCE";
+            if (hasOwner && !hasCommerce) return "OWNER";
+          }
+
           return "OWNER";
         };
 
         for (const income of sortedIncomes) {
-          if (income.isConfirmed !== true) {
+          if (income.isActive === false) {
+            continue;
+          }
+          if (
+            income.isConfirmed === false &&
+            (income.externalSource !== null || income.legacyId !== null)
+          ) {
             continue;
           }
           if (

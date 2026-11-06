@@ -22,9 +22,23 @@ function toVisibleChargeLines(
 ): { visible: PrivateAreaActionPageData["charges"]; fallback: boolean } {
   const targetResponsibility = opc === "2" ? "OWNER" : "COMMERCE";
 
+  const activeTargetCharges = charges.filter(
+    (charge) => charge.responsibility === targetResponsibility && charge.status !== "CANCELED",
+  );
+
+  // If there are no active charges for the requested responsibility,
+  // but the area has active charges for the other responsibility, fallback to all charges
+  if (activeTargetCharges.length === 0 && charges.some((c) => c.status !== "CANCELED")) {
+    return { visible: charges, fallback: true };
+  }
+
   const filtered = charges.filter(
     (charge) => charge.responsibility === targetResponsibility,
   );
+
+  if (filtered.length === 0 && charges.length > 0) {
+    return { visible: charges, fallback: true };
+  }
 
   return { visible: filtered, fallback: false };
 }
@@ -32,9 +46,19 @@ function toVisibleChargeLines(
 function toVisiblePaymentMovements(
   payments: PrivateAreaActionPageData["payments"],
   opc: "1" | "2",
+  didFallback: boolean,
 ): PrivateAreaActionPageData["payments"] {
+  if (didFallback) {
+    return payments;
+  }
   const targetResponsibility = opc === "2" ? "OWNER" : "COMMERCE";
-  return payments.filter((payment) => !payment.responsibility || payment.responsibility === targetResponsibility);
+  const filtered = payments.filter(
+    (payment) => !payment.responsibility || payment.responsibility === targetResponsibility,
+  );
+  if (filtered.length === 0 && payments.length > 0) {
+    return payments;
+  }
+  return filtered;
 }
 
 export class GetPrivateAreaActionPageDataUseCase
@@ -60,6 +84,7 @@ export class GetPrivateAreaActionPageDataUseCase
     const paymentMovements = toVisiblePaymentMovements(
       area.payments,
       input.opc,
+      chargeLinesResult.fallback,
     );
 
     return {
