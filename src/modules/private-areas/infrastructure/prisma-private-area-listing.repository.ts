@@ -152,7 +152,12 @@ type PrivateAreaSnapshot = {
     date: Date;
     amount: Prisma.Decimal | number;
     legacyId?: number | null;
+    isActive?: boolean | null;
     isConfirmed?: boolean | null;
+    externalSource?: string | null;
+    concept?: string | null;
+    reference?: string | null;
+    notes?: string | null;
     chargeGroupId?: string | null;
     chargeGroup?: {
       name: string;
@@ -425,72 +430,72 @@ function emptyFinancialSplit(): PrivateAreaFinancialSplit {
   };
 }
 
-function splitMonthlyCharges(
-  charges: PrivateAreaSnapshot["charges"],
-  year: number,
-  month: number,
-  inMemoryAllocationsByChargeId: Map<string, number>,
-  _currentOrdinaryYear: number,
-  _isCommerceArea?: boolean,
-): PrivateAreaFinancialSplit {
-  const split: PrivateAreaFinancialSplit = {
-    owner: 0,
-    commerce: 0,
-    isPaid: false,
-    isOwnerPaid: false,
-    isCommercePaid: false,
-  };
+function getIncomeResponsibility(
+  inc: any,
+  charges?: PrivateAreaSnapshot["charges"],
+): "COMMERCE" | "OWNER" {
+  const cgName = (inc.chargeGroup?.name || "").toLowerCase();
+  const cgType = (inc.chargeGroup?.chargeType || "").toLowerCase();
+  const mcName = ((inc as any).miscCatalog?.name || "").toLowerCase();
+  const concept = (inc.concept || "").toLowerCase();
+  const notes = (inc.notes || "").toLowerCase();
 
-  const matchingCharges = charges.filter(
-    (charge) =>
-      charge.isCollectible &&
-      isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY) &&
-      charge.periodYear === year &&
-      charge.periodMonth === month,
-  );
-
-  if (matchingCharges.length === 0) {
-    return split;
+  if (
+    cgName.includes("comercio") ||
+    cgType.includes("comercio") ||
+    cgType === "EXTRA_COMMERCE" ||
+    mcName.includes("comercio") ||
+    concept.includes("comercio") ||
+    notes.includes("comercio")
+  ) {
+    return "COMMERCE";
   }
 
-  let ownerPaidSum = 0;
-  let ownerTotalCharge = 0;
-  let commercePaidSum = 0;
-  let commerceTotalCharge = 0;
+  if (
+    cgName.includes("propietario") ||
+    cgName.includes("condómino") ||
+    cgName.includes("condomino") ||
+    cgType.includes("condo") ||
+    cgType === "EXTRA_CONDO" ||
+    mcName.includes("propietario") ||
+    concept.includes("propietario") ||
+    notes.includes("propietario")
+  ) {
+    return "OWNER";
+  }
 
-  for (const charge of matchingCharges) {
-    const amount = decimalToNumber(charge.amount);
-    const dbPaid = (charge.allocations ?? []).reduce((sum: number, alloc: any) => {
-      if (alloc.payment?.isVisibleInFinancialSummary === false) return sum;
-      if (alloc.payment?.legacyStatusCode === 2) return sum;
-      if (alloc.payment?.isLegacyActive === false) return sum;
-      return sum + decimalToNumber(alloc.amount);
-    }, 0);
-    const inMem = inMemoryAllocationsByChargeId.get(charge.id) ?? 0;
-    const paid = dbPaid + inMem;
+  if (charges && charges.length > 0) {
+    const incKind = resolveChargeGroupKind(inc.chargeGroup);
+    const matchingCharges = charges.filter(
+      (c: any) => resolveChargeGroupKind(c.chargeGroup) === incKind,
+    );
+    const candidateCharges = matchingCharges.length > 0 ? matchingCharges : charges;
+    const hasCommerce = candidateCharges.some((c: any) => c.responsibility === "COMMERCE");
+    const hasOwner = candidateCharges.some((c: any) => c.responsibility === "OWNER");
 
-    if (charge.responsibility === "COMMERCE") {
-      commercePaidSum += paid;
-      commerceTotalCharge += amount;
-    } else {
-      ownerPaidSum += paid;
-      ownerTotalCharge += amount;
+    if (hasCommerce && !hasOwner) return "COMMERCE";
+    if (hasOwner && !hasCommerce) return "OWNER";
+  }
+
+  return "OWNER";
+}
+
+function buildAllocatedLegacyIds(charges: PrivateAreaSnapshot["charges"]): Set<string> {
+  const allocatedLegacyIds = new Set<string>();
+  for (const charge of charges) {
+    for (const alloc of charge.allocations ?? []) {
+      if (
+        alloc.payment?.isVisibleInFinancialSummary !== false &&
+        alloc.payment?.legacyStatusCode !== 2 &&
+        alloc.payment?.isLegacyActive !== false &&
+        alloc.payment?.legacyId !== null &&
+        alloc.payment?.legacyId !== undefined
+      ) {
+        allocatedLegacyIds.add(String(alloc.payment.legacyId));
+      }
     }
   }
-
-  split.owner = ownerPaidSum;
-  split.commerce = commercePaidSum;
-
-  const isOwnerPaid =
-    ownerTotalCharge > 0 && ownerPaidSum >= ownerTotalCharge - 0.005 && ownerPaidSum > 0;
-  const isCommercePaid =
-    commerceTotalCharge > 0 && commercePaidSum >= commerceTotalCharge - 0.005 && commercePaidSum > 0;
-
-  split.isOwnerPaid = isOwnerPaid;
-  split.isCommercePaid = isCommercePaid;
-  split.isPaid = isOwnerPaid || isCommercePaid;
-
-  return split;
+  return allocatedLegacyIds;
 }
 
 function toPendingAmount(
@@ -520,8 +525,9 @@ function addToFinancialSplit(
   split: PrivateAreaFinancialSplit,
   responsibility: "OWNER" | "COMMERCE",
   value: number,
-  _isCommerceArea?: boolean,
+  isCommerceArea?: boolean,
 ): void {
+  void isCommerceArea;
   if (responsibility === "COMMERCE") {
     split.commerce += value;
     return;
@@ -566,6 +572,8 @@ function buildFinancialCells(
   ordinaryCatalog: { quotaPeriodStart: Date | null; quotaPeriodEnd: Date | null } | null,
   inMemoryAllocationsByChargeId: Map<string, number>,
   isCommerceArea?: boolean,
+  incomes?: PrivateAreaSnapshot["incomes"],
+  allocatedLegacyIds?: Set<string>,
 ): Partial<Record<PrivateAreaFinancialCellKey, PrivateAreaFinancialSplit>> {
   const nextOrdinaryYear = currentOrdinaryYear + 1;
   const previousOrdinaryYear = currentOrdinaryYear - 1;
@@ -753,6 +761,84 @@ function buildFinancialCells(
     total_outstanding: totalOutstanding,
   };
 
+  const monthlyReceivedPayments = new Map<string, { owner: number; commerce: number }>();
+
+  // 1. Accumulate payments from database allocations on ordinary charges by their effective payment date (paidAt)
+  for (const charge of charges) {
+    if (!charge.isCollectible) continue;
+    if (!isChargeGroup(charge, CHARGE_GROUP_KIND.ORDINARY)) continue;
+
+    for (const alloc of charge.allocations ?? []) {
+      if (alloc.payment?.isVisibleInFinancialSummary === false) continue;
+      if (alloc.payment?.legacyStatusCode === 2) continue;
+      if (alloc.payment?.isLegacyActive === false) continue;
+
+      const paidAt = alloc.payment?.paidAt ? new Date(alloc.payment.paidAt) : null;
+      if (!paidAt || isNaN(paidAt.getTime())) continue;
+
+      const pYear = paidAt.getUTCFullYear();
+      const pMonth = paidAt.getUTCMonth() + 1;
+      const mKey = withMonthlyKey(pYear, pMonth);
+
+      if (!monthlyReceivedPayments.has(mKey)) {
+        monthlyReceivedPayments.set(mKey, { owner: 0, commerce: 0 });
+      }
+      const entry = monthlyReceivedPayments.get(mKey)!;
+      const amt = decimalToNumber(alloc.amount);
+      if (charge.responsibility === "COMMERCE") {
+        entry.commerce = Math.round((entry.commerce + amt) * 100) / 100;
+      } else {
+        entry.owner = Math.round((entry.owner + amt) * 100) / 100;
+      }
+    }
+  }
+
+  // 2. Accumulate payments from active ordinary incomes by their effective date
+  if (incomes && incomes.length > 0) {
+    for (const income of incomes) {
+      if (income.isActive === false) continue;
+      if (
+        income.isConfirmed === false &&
+        (income.externalSource !== null || income.legacyId !== null)
+      ) {
+        continue;
+      }
+      if (
+        income.legacyId !== null &&
+        income.legacyId !== undefined &&
+        allocatedLegacyIds?.has(String(income.legacyId))
+      ) {
+        // Skip already allocated legacy payment to prevent double counting
+        continue;
+      }
+
+      const incKind = resolveChargeGroupKind(income.chargeGroup);
+      const concept = (income.concept || "").toLowerCase();
+      const isOrdinary =
+        incKind === CHARGE_GROUP_KIND.ORDINARY || concept.includes("ordinari");
+      if (!isOrdinary) continue;
+
+      const paidAt = income.date ? new Date(income.date) : null;
+      if (!paidAt || isNaN(paidAt.getTime())) continue;
+
+      const pYear = paidAt.getUTCFullYear();
+      const pMonth = paidAt.getUTCMonth() + 1;
+      const mKey = withMonthlyKey(pYear, pMonth);
+
+      if (!monthlyReceivedPayments.has(mKey)) {
+        monthlyReceivedPayments.set(mKey, { owner: 0, commerce: 0 });
+      }
+      const entry = monthlyReceivedPayments.get(mKey)!;
+      const amt = decimalToNumber(income.amount);
+      const resp = getIncomeResponsibility(income, charges);
+      if (resp === "COMMERCE") {
+        entry.commerce = Math.round((entry.commerce + amt) * 100) / 100;
+      } else {
+        entry.owner = Math.round((entry.owner + amt) * 100) / 100;
+      }
+    }
+  }
+
   const yearsToCompute = new Set<number>([currentOrdinaryYear, nextOrdinaryYear]);
   if (ordinaryCatalog?.quotaPeriodStart && ordinaryCatalog?.quotaPeriodEnd) {
     const startY = ordinaryCatalog.quotaPeriodStart.getUTCFullYear();
@@ -764,14 +850,27 @@ function buildFinancialCells(
 
   for (const year of yearsToCompute) {
     for (let month = 1; month <= 12; month += 1) {
-      cells[withMonthlyKey(year, month)] = splitMonthlyCharges(
-        charges,
-        year,
-        month,
-        inMemoryAllocationsByChargeId,
-        currentOrdinaryYear,
-        isCommerceArea,
-      );
+      const mKey = withMonthlyKey(year, month);
+      const split = monthlyReceivedPayments.get(mKey) ?? { owner: 0, commerce: 0 };
+      cells[mKey] = {
+        owner: split.owner,
+        commerce: split.commerce,
+        isPaid: split.owner > 0 || split.commerce > 0,
+        isOwnerPaid: split.owner > 0,
+        isCommercePaid: split.commerce > 0,
+      };
+    }
+  }
+
+  for (const [key, split] of monthlyReceivedPayments.entries()) {
+    if (!cells[key as PrivateAreaFinancialCellKey]) {
+      cells[key as PrivateAreaFinancialCellKey] = {
+        owner: split.owner,
+        commerce: split.commerce,
+        isPaid: split.owner > 0 || split.commerce > 0,
+        isOwnerPaid: split.owner > 0,
+        isCommercePaid: split.commerce > 0,
+      };
     }
   }
 
@@ -1244,69 +1343,6 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
 
         const sortedIncomes = [...incomes].sort((a, b) => a.date.getTime() - b.date.getTime());
 
-        // Build a set of legacyIds of payments that already have allocations in the database
-        const allocatedLegacyIds = new Set<string>();
-        for (const charge of charges) {
-          for (const alloc of charge.allocations ?? []) {
-            if (
-              alloc.payment?.isVisibleInFinancialSummary !== false &&
-              alloc.payment?.legacyStatusCode !== 2 &&
-              alloc.payment?.isLegacyActive !== false &&
-              alloc.payment?.legacyId !== null &&
-              alloc.payment?.legacyId !== undefined
-            ) {
-              allocatedLegacyIds.add(String(alloc.payment.legacyId));
-            }
-          }
-        }
-
-        const getIncomeResponsibility = (inc: any): "COMMERCE" | "OWNER" => {
-          const cgName = (inc.chargeGroup?.name || "").toLowerCase();
-          const cgType = (inc.chargeGroup?.chargeType || "").toLowerCase();
-          const mcName = ((inc as any).miscCatalog?.name || "").toLowerCase();
-          const concept = (inc.concept || "").toLowerCase();
-          const notes = (inc.notes || "").toLowerCase();
-
-          if (
-            cgName.includes("comercio") ||
-            cgType.includes("comercio") ||
-            cgType === "EXTRA_COMMERCE" ||
-            mcName.includes("comercio") ||
-            concept.includes("comercio") ||
-            notes.includes("comercio")
-          ) {
-            return "COMMERCE";
-          }
-
-          if (
-            cgName.includes("propietario") ||
-            cgName.includes("condómino") ||
-            cgName.includes("condomino") ||
-            cgType.includes("condo") ||
-            cgType === "EXTRA_CONDO" ||
-            mcName.includes("propietario") ||
-            concept.includes("propietario") ||
-            notes.includes("propietario")
-          ) {
-            return "OWNER";
-          }
-
-          if (charges && charges.length > 0) {
-            const incKind = resolveChargeGroupKind(inc.chargeGroup);
-            const matchingCharges = charges.filter(
-              (c: any) => resolveChargeGroupKind(c.chargeGroup) === incKind
-            );
-            const candidateCharges = matchingCharges.length > 0 ? matchingCharges : charges;
-            const hasCommerce = candidateCharges.some((c: any) => c.responsibility === "COMMERCE");
-            const hasOwner = candidateCharges.some((c: any) => c.responsibility === "OWNER");
-
-            if (hasCommerce && !hasOwner) return "COMMERCE";
-            if (hasOwner && !hasCommerce) return "OWNER";
-          }
-
-          return "OWNER";
-        };
-
         for (const income of sortedIncomes) {
           if (income.isActive === false) {
             continue;
@@ -1327,7 +1363,7 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
             continue;
           }
 
-          const incResp = getIncomeResponsibility(income);
+          const incResp = getIncomeResponsibility(income, charges);
           const incKind = resolveChargeGroupKind(income.chargeGroup);
           let remainingIncome = decimalToNumber(income.amount);
 
@@ -1363,6 +1399,8 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         }
       };
 
+      const allocatedLegacyIds = buildAllocatedLegacyIds(area.charges);
+
       calculateAllocationsForArea(area.charges, area.incomes);
 
       const isCommerceArea =
@@ -1376,6 +1414,8 @@ export class PrismaPrivateAreaListingRepository implements PrivateAreaListingRep
         ordinaryCatalog as { quotaPeriodStart: Date | null; quotaPeriodEnd: Date | null } | null,
         inMemoryAllocationsByChargeId,
         isCommerceArea,
+        area.incomes,
+        allocatedLegacyIds,
       );
 
       if (condominium.slug === "valquirico") {
