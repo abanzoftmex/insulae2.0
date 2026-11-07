@@ -2,14 +2,16 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { Printer, ArrowLeft } from "lucide-react";
+import { Printer, ArrowLeft, Download } from "lucide-react";
 
 interface PrintBarProps {
   returnUrl: string;
   propertyName: string;
+  privateAreaId?: string;
+  opc?: string;
 }
 
-export function PrintBar({ returnUrl, propertyName }: PrintBarProps) {
+export function PrintBar({ returnUrl, propertyName, privateAreaId, opc = "2" }: PrintBarProps) {
   useEffect(() => {
     // Wait for fonts, styles, and layout to be completely ready
     const timer = setTimeout(() => {
@@ -30,10 +32,23 @@ export function PrintBar({ returnUrl, propertyName }: PrintBarProps) {
         <ArrowLeft className="w-4 h-4" />
         <span>Volver a detalle de pagos ({propertyName})</span>
       </Link>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <span className="text-xs text-slate-400 hidden sm:inline">
           Vista previa del Estado de cuenta
         </span>
+
+        {privateAreaId && (
+          <a
+            href={`/api/private-areas/statement-pdf?id=${encodeURIComponent(privateAreaId)}&opc=${encodeURIComponent(opc)}`}
+            download
+            className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors border border-white/20 shadow-sm"
+            title="Descargar archivo PDF directo"
+          >
+            <Download className="w-4 h-4 text-[#dfb76c]" />
+            <span>Descargar PDF</span>
+          </a>
+        )}
+
         <button
           type="button"
           onClick={() => window.print()}

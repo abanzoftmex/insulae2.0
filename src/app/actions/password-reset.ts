@@ -114,7 +114,7 @@ export async function resetPasswordWithTokenAction(
 
 async function sendResetEmail(input: { to: string; name: string; condominiumName: string; resetLink: string }) {
   const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.ADMIN_MAIL_FROM || `Condominio ${input.condominiumName} <finanzas@valquirico.com>`;
+  const from = process.env.ADMIN_MAIL_FROM || `Condominio ${input.condominiumName} <finanzas@info.valquirico.com>`;
   const html = `
     <!DOCTYPE html><html><head><meta charset="utf-8">
     <style>

@@ -140,12 +140,21 @@ export async function generateTemporaryPasswordAction(id: string) {
     const { Resend } = await import("resend");
     const resend = new Resend(resendApiKey);
 
-    await resend.emails.send({
-      from: `Condominio ${condominiumName} <finanzas@valquirico.com>`,
+    const fromSender =
+      process.env.ADMIN_MAIL_FROM ||
+      `Condominio ${condominiumName} <finanzas@info.valquirico.com>`;
+
+    const { error } = await resend.emails.send({
+      from: fromSender,
       to: emailRecipient,
       subject,
       html: emailBody,
     });
+
+    if (error) {
+      console.error("[generateTemporaryPasswordAction] Resend error:", error);
+      return { ok: false, message: `Error al enviar correo: ${error.message}` };
+    }
 
     return {
       ok: true,

@@ -5,12 +5,17 @@ import { MODULES } from "@/shared/application/auth/modules";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { randomUUID } from "crypto";
+import fs from "fs";
+import path from "path";
 
 import { toPrivateAreaStatus, toPrivateAreaStatusFromLegacy, type PrivateAreaStatus } from "@/shared/domain/private-area-status";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { getCurrentUser } from "@/app/actions/auth";
 import { PROJECT_SCOPE } from "@/config/project-scope";
-import { generateAccountStatementPdf } from "./_lib/statement-pdf";
+import { generateAccountStatementPdf, type StatementPdfResult } from "./_lib/statement-pdf";
+import { buildStatementEmailHtml } from "./_lib/statement-email-template";
+import { appOrigin } from "@/shared/infrastructure/app-origin";
+import { formatDate } from "./_lib/private-area-action-routing";
 
 function toNumber(value: FormDataEntryValue | null): number | null {
   if (typeof value !== "string") {
@@ -829,7 +834,7 @@ function getEffectiveSenderEmail(condominiumName?: string | null): string {
       ? condominiumName.trim()
       : PROJECT_SCOPE.condominiumName;
 
-  return `Condominio ${name} <finanzas@valquirico.com>`;
+  return `Condominio ${name} <finanzas@info.valquirico.com>`;
 }
 
 export type SendStatementEmailResult = {
@@ -959,10 +964,10 @@ export async function sendPrivateAreaStatementEmailAction(
     };
   }
 
-  // 1. Generar el PDF real del estado de cuenta con datos y movimientos
-  let pdfAttachment: { buffer: Buffer; filename: string };
+  // 1. Generar el PDF real del estado de cuenta con el nuevo diseño ejecutivo
+  let pdfAttachment: StatementPdfResult;
+  const normalizedOpc: "1" | "2" = opc === "1" ? "1" : "2";
   try {
-    const normalizedOpc: "1" | "2" = opc === "2" ? "2" : "1";
     pdfAttachment = await generateAccountStatementPdf(privateAreaId, normalizedOpc);
     if (!pdfAttachment.buffer || pdfAttachment.buffer.length === 0) {
       throw new Error("El archivo PDF generado está vacío.");
@@ -982,19 +987,84 @@ export async function sendPrivateAreaStatementEmailAction(
     const condoName = area.condominium?.name || PROJECT_SCOPE.condominiumName;
     const subject = `Estado de cuenta - ${area.name} (${condoName})`;
 
-    await resend.emails.send({
+    const origin = await appOrigin().catch(() => "");
+    const responsibilityLabel = normalizedOpc === "1" ? "Comercio (C)" : "Propietario (P)";
+    const cutDateStr = formatDate(new Date());
+
+    // Preparar logotipo institucional para incrustación directa CID en el correo
+    const possibleLogoPaths = [
+      path.join(process.cwd(), "public", "brand", "valquirico-logo-light.png"),
+      path.resolve("./public/brand/valquirico-logo-light.png"),
+    ];
+    let logoBuffer: Buffer | null = null;
+    for (const p of possibleLogoPaths) {
+      if (fs.existsSync(p)) {
+        try {
+          logoBuffer = fs.readFileSync(p);
+          if (logoBuffer.length > 0) break;
+        } catch {
+          logoBuffer = null;
+        }
+      }
+    }
+
+    const attachments: Array<{
+      filename?: string | false;
+      content?: Buffer | string;
+      contentType?: string;
+      contentId?: string;
+    }> = [
+      {
+        filename: pdfAttachment.filename,
+        content: pdfAttachment.buffer,
+        contentType: "application/pdf",
+      },
+    ];
+
+    let emailLogoSrc = "cid:valquirico-logo";
+    if (logoBuffer && logoBuffer.length > 0) {
+      attachments.push({
+        filename: "valquirico-logo.png",
+        content: logoBuffer,
+        contentType: "image/png",
+        contentId: "valquirico-logo",
+        ...({ content_id: "valquirico-logo" } as any),
+      });
+    } else if (origin && origin.startsWith("https://")) {
+      emailLogoSrc = `${origin.replace(/\/$/, "")}/brand/valquirico-logo-light.png`;
+    } else {
+      emailLogoSrc = "";
+    }
+
+    const htmlBody = buildStatementEmailHtml({
+      condominiumName: condoName,
+      areaName: area.name,
+      displayM2: pdfAttachment.summary.displayM2,
+      recipientName,
+      totalBalance: pdfAttachment.summary.totalBalance,
+      totalInterests: pdfAttachment.summary.totalInterests,
+      responsibilityLabel,
+      formattedCutDate: cutDateStr,
+      pdfFilename: pdfAttachment.filename,
+      appBaseUrl: origin,
+      logoSrc: emailLogoSrc,
+    });
+
+    const { error } = await resend.emails.send({
       from: senderEmail,
       to: recipientEmail,
       subject,
-      html: `<p>Estimado(a) <strong>${recipientName}</strong>,</p><p>Adjuntamos la notificación de su estado de cuenta correspondiente al área privativa <strong>${area.name}</strong>.</p><p>Atentamente,<br/>Administración del Condominio ${condoName}</p>`,
-      attachments: [
-        {
-          filename: pdfAttachment.filename,
-          content: pdfAttachment.buffer,
-          contentType: "application/pdf",
-        },
-      ],
+      html: htmlBody,
+      attachments,
     });
+
+    if (error) {
+      console.error("[sendPrivateAreaStatementEmailAction] Error devuelto por Resend:", error);
+      return {
+        success: false,
+        message: `El proveedor de correo no pudo procesar el envío: ${error.message}`,
+      };
+    }
 
     return {
       success: true,

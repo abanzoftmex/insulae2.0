@@ -308,7 +308,12 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
       />
 
       {/* Screen-only top floating action bar */}
-      <PrintBar returnUrl={returnUrl} propertyName={area.name} />
+      <PrintBar
+        returnUrl={returnUrl}
+        propertyName={area.name}
+        privateAreaId={area.privateAreaId}
+        opc={opc}
+      />
 
       {/* Main printable container (styled as luxury executive statement) */}
       <div className="max-w-[850px] mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-[#e6decb] print-sheet print:shadow-none print:border-none print:rounded-none">
