@@ -214,5 +214,42 @@
   }
 }
 
+/* Custom thin gold scrollbar for dark brand sidebar */
+.sidebar-scrollbar {
+  --scrollbar-thumb: #d0b685;
+  --scrollbar-track: #263b45;
+
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+@media (prefers-contrast: more) {
+  .sidebar-scrollbar {
+    --scrollbar-thumb: #ffffff;
+    --scrollbar-track: #000000;
+  }
+}
+
+@supports not (scrollbar-color: auto) {
+  .sidebar-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: 9999px;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+  }
+
+  .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #be9f6b;
+  }
+}
+
 /* La apertura del detalle de KPI la resuelve Framer Motion con una transición
    de layout compartido (la tarjeta se expande hasta el panel), no CSS. */

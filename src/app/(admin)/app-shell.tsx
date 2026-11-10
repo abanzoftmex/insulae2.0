@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Menu, Search } from "lucide-react";
@@ -107,7 +109,10 @@ export function AppShell({
     // `--sidebar-w` es la única fuente de verdad del ancho: el rail y el padding
     // del contenido lo consumen con la misma curva, así nunca se desincronizan.
     <div
-      className="flex min-h-screen bg-canvas font-sans"
+      className={cn(
+        "flex min-h-screen font-sans",
+        currentPath === "/" ? "bg-[#f4f6f8]" : "bg-canvas"
+      )}
       style={
         {
           "--sidebar-w": `${isCollapsed ? SIDEBAR_WIDTH_COLLAPSED : SIDEBAR_WIDTH_EXPANDED}px`,
@@ -118,27 +123,40 @@ export function AppShell({
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col transition-[padding] duration-[260ms] ease-smooth lg:pl-[var(--sidebar-w)]">
         {/* Mobile-only top bar */}
-        <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-nav-line bg-nav px-4 lg:hidden">
-          <button
-            onClick={openMobile}
-            className="-ml-1.5 rounded-lg p-1.5 text-nav-ink-soft transition-colors duration-150 hover:bg-nav-hover hover:text-brand-deep active:scale-90"
-            aria-label="Abrir menú"
-          >
-            <Menu style={{ width: 19, height: 19 }} strokeWidth={2} />
-          </button>
-          <span className="truncate text-[13px] font-bold tracking-[0.02em] text-brand-deep">
-            VAL&apos;QUIRICO
-          </span>
-          <span className="shrink-0 rounded-full bg-card px-1.5 py-[2px] text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-brand ring-1 ring-nav-line">
-            Insulae 2.0
-          </span>
+        <div className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-white/10 bg-[#304854] px-4 text-white lg:hidden">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={openMobile}
+              className="-ml-1.5 rounded-lg p-1.5 text-white transition-colors duration-150 hover:bg-white/10 active:scale-90"
+              aria-label="Abrir menú"
+            >
+              <Menu style={{ width: 19, height: 19 }} strokeWidth={2} />
+            </button>
+            <Link href="/" className="flex min-w-0 items-center gap-2">
+              <Image
+                src="/brand/valquirico-emblem-gold.png"
+                alt={navbarLogoAlt}
+                width={266}
+                height={266}
+                unoptimized
+                className="h-7 w-7 shrink-0 object-contain"
+              />
+              <span className="truncate text-sm font-bold tracking-tight text-white">
+                VAL&apos;QUIRICO
+              </span>
+              <span className="inline-flex shrink-0 items-center rounded-full bg-[#fbf6ea] px-2 py-0.5 text-[8.5px] font-extrabold uppercase leading-none tracking-[0.12em] text-[#1f2f37]">
+                Insulae 2.0
+              </span>
+            </Link>
+          </div>
           <button
             type="button"
             onClick={() => setIsSearchOpen(true)}
-            className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-nav-ink-soft transition-colors duration-150 hover:bg-nav-hover hover:text-brand-deep active:scale-90"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-[#243741] text-white/80 transition-colors duration-150 hover:text-white active:scale-90"
             aria-label="Buscar"
           >
-            <Search style={{ width: 17, height: 17 }} strokeWidth={2} />
+            <Search style={{ width: 16, height: 16 }} strokeWidth={2} />
           </button>
         </div>
 

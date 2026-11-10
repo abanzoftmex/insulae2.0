@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -13,13 +14,15 @@ import {
   type ElementType,
   type ReactNode,
 } from "react";
-import { AnimatePresence, motion, useReducedMotion, type Transition } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import {
   BookUser,
   Building2,
   ChartColumn,
   ChartPie,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Coins,
   HandCoins,
   Headset,
@@ -30,8 +33,6 @@ import {
   LogOut,
   MapPinHouse,
   Megaphone,
-  PanelLeftClose,
-  PanelLeftOpen,
   ReceiptText,
   RefreshCw,
   ScrollText,
@@ -171,12 +172,11 @@ export const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
-export const SIDEBAR_WIDTH_EXPANDED = 268;
-export const SIDEBAR_WIDTH_COLLAPSED = 68;
+export const SIDEBAR_WIDTH_EXPANDED = 264;
+export const SIDEBAR_WIDTH_COLLAPSED = 72;
 
-/** Altura del bloque de marca. Colapsado usa monograma, que necesita mucho
- *  menos aire que el lockup horizontal. */
-const BRAND_HEIGHT = { expanded: 100, collapsed: 64 } as const;
+/** Altura del bloque de marca. Colapsado usa el emblema dorado compacto. */
+const BRAND_HEIGHT = { expanded: 142, collapsed: 68 } as const;
 
 export function normalizePath(path: string): string {
   return path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
@@ -188,26 +188,6 @@ export function normalizePath(path: string): string {
 
 const EASE_SMOOTH = [0.32, 0.72, 0, 1] as const;
 
-/** Muelle del indicador activo: rápido, con un asentamiento casi crítico. */
-const INDICATOR_SPRING: Transition = { type: "spring", stiffness: 480, damping: 38, mass: 0.7 };
-
-/**
- * Desplazamiento horizontal del indicador respecto a su fila. Derivado de los
- * paddings reales, no a ojo: `item` lo deja a ras de la pared interna del
- * módulo (p-1.5 = 6px); `sub` lo deja justo sobre la guía vertical del submenú
- * (ml-18 + border-1 + pl-10 = 29 desde el módulo, guía en 18 → -11).
- */
-const INDICATOR_INSET = { item: -6, itemCollapsed: -4, sub: -11 } as const;
-
-/** Proporción del ancho del rail que ocupan los módulos, por estado.
- *  La canaleta se reparte a partes iguales a los dos lados. */
-const WELL_RATIO = { expanded: 0.9, collapsed: 0.85 } as const;
-
-const gutterFor = (collapsed: boolean) =>
-  collapsed
-    ? (SIDEBAR_WIDTH_COLLAPSED * (1 - WELL_RATIO.collapsed)) / 2
-    : (SIDEBAR_WIDTH_EXPANDED * (1 - WELL_RATIO.expanded)) / 2;
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Contexto interno (evita perforar props por 4 niveles)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -216,7 +196,6 @@ type SidebarCtxValue = {
   /** Ancho visual efectivo: colapsado y SIN peek de hover. */
   collapsed: boolean;
   currentPath: string;
-  indicatorId: string;
   openMenus: string[];
   toggleMenu: (label: string) => void;
   reduce: boolean;
@@ -227,39 +206,13 @@ const SidebarCtx = createContext<SidebarCtxValue | null>(null);
 
 function useSidebarCtx() {
   const ctx = useContext(SidebarCtx);
-  if (!ctx) throw new Error("Sidebar subcomponents must render inside <SidebarBody>");
+  if (!ctx) throw new Error("Sidebar subcomponents must render inside <SidebarProvider>");
   return ctx;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Piezas atómicas
 // ─────────────────────────────────────────────────────────────────────────────
-
-/**
- * Indicador dorado del ítem activo. Un único elemento compartido vía `layoutId`:
- * al navegar se DESLIZA de un ítem a otro en lugar de aparecer/desaparecer.
- * Vive en `left-[-10px]`, que con el `px-2.5` del <nav> lo deja a ras del borde
- * del rail — así el recorrido es puramente vertical.
- */
-function ActiveIndicator({ variant = "item" }: { variant?: "item" | "sub" }) {
-  const { indicatorId, reduce, collapsed } = useSidebarCtx();
-  // Colapsado el módulo aprieta su padding de 6 a 4px; el marcador lo sigue
-  // para no despegarse de la pared interna.
-  const inset =
-    variant === "sub"
-      ? INDICATOR_INSET.sub
-      : collapsed
-        ? INDICATOR_INSET.itemCollapsed
-        : INDICATOR_INSET.item;
-  return (
-    <motion.span
-      layoutId={indicatorId}
-      style={{ left: inset }}
-      className="absolute top-1/2 -mt-2 h-4 w-[3px] rounded-r-full bg-brand-accent"
-      transition={reduce ? { duration: 0 } : INDICATOR_SPRING}
-    />
-  );
-}
 
 /** Etiqueta que se desvanece al colapsar y entra con un leve retardo al expandir. */
 function ItemLabel({ children, className }: { children: ReactNode; className?: string }) {
@@ -269,38 +222,11 @@ function ItemLabel({ children, className }: { children: ReactNode; className?: s
       initial={reduce ? false : { opacity: 0, x: -6 }}
       animate={{ opacity: 1, x: 0 }}
       exit={reduce ? undefined : { opacity: 0, x: -6 }}
-      transition={reduce ? { duration: 0 } : { duration: 0.18, ease: EASE_SMOOTH, delay: 0.06 }}
+      transition={reduce ? { duration: 0 } : { duration: 0.18, ease: EASE_SMOOTH, delay: 0.04 }}
       className={cn("min-w-0 flex-1 truncate text-left", className)}
     >
       {children}
     </motion.span>
-  );
-}
-
-const ICON_SIZE = 17;
-const ICON_SIZE_COLLAPSED = 19;
-
-function NavIcon({
-  icon: Icon,
-  emphasis,
-}: {
-  icon: LucideIcon | ElementType;
-  emphasis: "idle" | "active" | "branch";
-}) {
-  // Colapsado el icono carga con todo el significado de la fila: merece peso.
-  const { collapsed } = useSidebarCtx();
-  const size = collapsed ? ICON_SIZE_COLLAPSED : ICON_SIZE;
-  return (
-    <Icon
-      className={cn(
-        "shrink-0 transition-colors duration-150",
-        emphasis === "active" && "text-brand-accent",
-        emphasis === "branch" && "text-brand",
-        emphasis === "idle" && "text-nav-ink-soft group-hover:text-brand"
-      )}
-      style={{ width: size, height: size }}
-      strokeWidth={emphasis === "active" ? 2 : 1.75}
-    />
   );
 }
 
@@ -318,20 +244,12 @@ function SubItemRow({ sub }: { sub: NavSubItem }) {
       onClick={onNavigate}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "group relative flex h-8 items-center gap-2 rounded-md pl-2 pr-2.5",
-        "text-[12.5px] transition-colors duration-150",
+        "flex min-h-[32px] items-center rounded-lg px-2.5 py-1 text-[12px] transition-standard",
         isActive
-          ? "bg-card font-semibold text-brand-deep shadow-nav-item"
-          : "text-nav-ink-soft hover:bg-nav-hover hover:text-brand-deep"
+          ? "bg-[#e5c58d] font-bold text-[#1f2f37] shadow-xs"
+          : "font-medium text-white/80 hover:bg-white/10 hover:text-white"
       )}
     >
-      {isActive && <ActiveIndicator variant="sub" />}
-      <span
-        className={cn(
-          "h-1 w-1 shrink-0 rounded-full transition-colors duration-150",
-          isActive ? "bg-brand-accent" : "bg-nav-ink-faint group-hover:bg-brand"
-        )}
-      />
       <span className="truncate">{sub.label}</span>
     </Link>
   );
@@ -342,9 +260,8 @@ function BranchRow({ item, visibleSubs }: { item: NavItem; visibleSubs: NavSubIt
 
   const isOpen = openMenus.includes(item.label);
   const hasActiveChild = visibleSubs.some((s) => normalizePath(s.href) === currentPath);
+  const IconCmp = item.icon;
 
-  // Colapsado sin peek solo se ve el ícono; el clic sigue alternando el submenú
-  // para que ya esté abierto en cuanto el rail se despliega por hover.
   if (collapsed) {
     return (
       <button
@@ -352,14 +269,15 @@ function BranchRow({ item, visibleSubs }: { item: NavItem; visibleSubs: NavSubIt
         onClick={() => toggleMenu(item.label)}
         aria-label={item.label}
         aria-expanded={isOpen}
+        title={item.label}
         className={cn(
-          "group relative flex h-9 w-full items-center justify-center rounded-lg",
-          "transition-colors duration-150",
-          hasActiveChild ? "bg-card shadow-nav-item" : "hover:bg-nav-hover"
+          "mx-auto flex h-10 w-10 items-center justify-center rounded-xl transition-standard",
+          hasActiveChild
+            ? "bg-[#e5c58d] text-[#1f2f37] shadow-xs"
+            : "bg-white/10 text-white hover:bg-white/20"
         )}
       >
-        {hasActiveChild && <ActiveIndicator />}
-        <NavIcon icon={item.icon} emphasis={hasActiveChild ? "active" : "idle"} />
+        <IconCmp style={{ width: 17, height: 17 }} strokeWidth={1.65} />
       </button>
     );
   }
@@ -371,16 +289,27 @@ function BranchRow({ item, visibleSubs }: { item: NavItem; visibleSubs: NavSubIt
         onClick={() => toggleMenu(item.label)}
         aria-expanded={isOpen}
         className={cn(
-          "group flex h-9 w-full items-center gap-2.5 rounded-lg px-2.5",
-          "text-[13px] font-medium transition-colors duration-150",
-          "hover:bg-nav-hover hover:text-brand-deep",
-          hasActiveChild || isOpen ? "text-brand-deep" : "text-nav-ink"
+          "group flex min-h-[40px] w-full items-center gap-2.5 rounded-xl px-2 py-1.5",
+          "text-[12.5px] font-semibold shadow-xs transition-standard",
+          isOpen || hasActiveChild
+            ? "bg-[#fbf6ea] text-[#1f2f37] ring-1 ring-[#d0b685]/80"
+            : "bg-white text-[#1f2f37] hover:bg-[#f6f8fa]"
         )}
       >
-        <NavIcon icon={item.icon} emphasis={hasActiveChild ? "branch" : "idle"} />
+        <span
+          className={cn(
+            "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#304854] transition-standard",
+            isOpen || hasActiveChild ? "text-[#eed5a4]" : "text-white"
+          )}
+        >
+          <IconCmp style={{ width: 14, height: 14 }} strokeWidth={1.75} />
+        </span>
         <ItemLabel>{item.label}</ItemLabel>
         <motion.span
-          className="shrink-0 text-nav-ink-soft transition-colors duration-150 group-hover:text-brand-deep"
+          className={cn(
+            "mr-0.5 shrink-0 transition-colors",
+            isOpen ? "text-[#304854]" : "text-[#304854]/60"
+          )}
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={reduce ? { duration: 0 } : { duration: 0.22, ease: EASE_SMOOTH }}
         >
@@ -398,19 +327,18 @@ function BranchRow({ item, visibleSubs }: { item: NavItem; visibleSubs: NavSubIt
             transition={
               reduce
                 ? { duration: 0 }
-                : { height: { duration: 0.26, ease: EASE_SMOOTH }, opacity: { duration: 0.16 } }
+                : { height: { duration: 0.24, ease: EASE_SMOOTH }, opacity: { duration: 0.16 } }
             }
             className="overflow-hidden"
           >
-            {/* La guía vertical ancla visualmente los hijos al padre */}
-            <div className="ml-[18px] mt-0.5 mb-1 space-y-0.5 border-l border-nav-line pl-2.5">
+            <div className="mb-2 ml-3.5 mt-1.5 space-y-1 border-l border-[#d0b685]/45 pl-3">
               {visibleSubs.map((sub, i) => (
                 <motion.div
                   key={sub.href}
                   initial={reduce ? false : { opacity: 0, x: -6 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={
-                    reduce ? { duration: 0 } : { duration: 0.22, ease: EASE_SMOOTH, delay: 0.03 + i * 0.025 }
+                    reduce ? { duration: 0 } : { duration: 0.2, ease: EASE_SMOOTH, delay: 0.02 + i * 0.02 }
                   }
                 >
                   <SubItemRow sub={sub} />
@@ -429,36 +357,60 @@ function LeafRow({ item }: { item: NavItem }) {
 
   const isActive = item.href ? currentPath === normalizePath(item.href) : false;
   const isLogout = item.href === "/logout";
+  const IconCmp = item.icon;
 
   const rowClass = cn(
-    "group relative flex h-9 items-center rounded-lg transition-colors duration-150",
-    collapsed ? "w-full justify-center" : "gap-2.5 px-2.5",
-    isActive
-      ? "bg-card text-brand-deep font-semibold shadow-nav-item"
-      : isLogout
-        ? "text-nav-ink hover:bg-danger/6 hover:text-danger"
-        : "text-nav-ink hover:bg-nav-hover hover:text-brand-deep"
+    "transition-standard",
+    collapsed
+      ? cn(
+          "mx-auto flex h-10 w-10 items-center justify-center rounded-xl",
+          isActive
+            ? "bg-[#e5c58d] font-bold text-[#1f2f37] shadow-xs"
+            : "bg-white/10 text-white hover:bg-white/20"
+        )
+      : cn(
+          "flex min-h-[40px] w-full items-center gap-2.5 rounded-xl px-2 py-1.5 text-[12.5px]",
+          isActive
+            ? "border border-[#eed7ad]/70 bg-gradient-to-r from-[#dfbe84] to-[#ecd2a2] font-bold text-[#1f2f37] shadow-sm"
+            : "bg-white font-semibold text-[#1f2f37] shadow-xs hover:bg-[#f6f8fa]"
+        )
   );
 
   const inner = (
     <>
-      {isActive && <ActiveIndicator />}
-      <Icon item={item} isActive={isActive} isLogout={isLogout} />
+      <span
+        className={cn(
+          collapsed
+            ? "flex items-center justify-center"
+            : cn(
+                "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#304854]",
+                isActive ? "text-[#eed5a4]" : "text-white"
+              )
+        )}
+      >
+        <IconCmp
+          className="shrink-0 transition-standard"
+          style={{ width: collapsed ? 17 : 14, height: collapsed ? 17 : 14 }}
+          strokeWidth={1.75}
+        />
+      </span>
       <AnimatePresence initial={false}>
-        {!collapsed && <ItemLabel className="text-[13px]">{item.label}</ItemLabel>}
+        {!collapsed && <ItemLabel>{item.label}</ItemLabel>}
       </AnimatePresence>
     </>
   );
 
   return (
-    <div className="relative">
+    <div>
       {isLogout ? (
         <button
           type="button"
           onClick={() => {
+            onNavigate();
             window.location.href = "/logout";
           }}
           aria-label={collapsed ? item.label : undefined}
+          title={collapsed ? item.label : undefined}
           className={rowClass}
         >
           {inner}
@@ -469,6 +421,7 @@ function LeafRow({ item }: { item: NavItem }) {
           onClick={onNavigate}
           aria-current={isActive ? "page" : undefined}
           aria-label={collapsed ? item.label : undefined}
+          title={collapsed ? item.label : undefined}
           className={rowClass}
         >
           {inner}
@@ -478,25 +431,11 @@ function LeafRow({ item }: { item: NavItem }) {
   );
 }
 
-function Icon({ item, isActive, isLogout }: { item: NavItem; isActive: boolean; isLogout: boolean }) {
-  if (isLogout) {
-    const Cmp = item.icon;
-    return (
-      <Cmp
-        className="shrink-0 text-nav-ink-soft transition-colors duration-150 group-hover:text-danger"
-        style={{ width: ICON_SIZE, height: ICON_SIZE }}
-        strokeWidth={1.75}
-      />
-    );
-  }
-  return <NavIcon icon={item.icon} emphasis={isActive ? "active" : "idle"} />;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Cuerpo del sidebar
 // ─────────────────────────────────────────────────────────────────────────────
 
-function SidebarSections({ onOpenSearch }: { onOpenSearch: () => void }) {
+function SidebarSections() {
   const { collapsed } = useSidebarCtx();
   const permissions = usePermissions();
 
@@ -510,122 +449,69 @@ function SidebarSections({ onOpenSearch }: { onOpenSearch: () => void }) {
         if (item.items?.length && subs.length === 0) return [];
         return [{ item, subs }];
       });
-      return { title: section.title, glyph: section.glyph, items };
+      return { title: section.title, items };
     }).filter((s) => s.items.length > 0);
   }, [permissions]);
 
-  // Se calcula en px desde la constante de ancho, no con porcentajes CSS: un
-  // `margin` en porcentaje dentro del bloque pegajoso resolvería contra la caja
-  // de contenido del nav (ya descontada la canaleta) y no contra el rail, y el
-  // buscador quedaría desalineado de los módulos justo en el estado más
-  // estrecho, que es donde más se nota.
-  const gutter = gutterFor(collapsed);
-
   return (
-    // El buscador vive DENTRO del scroll a propósito. Fuera de él conservaba
-    // los 268px del rail mientras los módulos perdían el ancho del scrollbar,
-    // y quedaban desalineados. Compensar con padding no sirve: en macOS con
-    // barras superpuestas el scrollbar mide 0 y el desfase se invertiría.
-    // Compartiendo caja de contenido, coinciden en cualquier sistema.
     <nav
       className={cn(
-        "scrollbar-hidden flex-1 overflow-y-auto overflow-x-hidden pb-3",
-        "transition-[padding] duration-[260ms] ease-smooth"
+        "sidebar-scrollbar flex-1 overflow-y-auto overflow-x-hidden",
+        collapsed ? "space-y-3 px-2 py-3" : "space-y-4 px-3 py-3.5"
       )}
-      style={{ paddingLeft: gutter, paddingRight: gutter }}
     >
-      <div
-        className="sticky top-0 z-10 bg-nav pb-2 pt-3"
-        style={{ marginLeft: -gutter, marginRight: -gutter, paddingLeft: gutter, paddingRight: gutter }}
-      >
-        <SidebarSearch onOpenSearch={onOpenSearch} />
-      </div>
-
-      <div className={collapsed ? "space-y-1.5" : "space-y-2"}>
-      {sections.map((section) => {
-        const Glyph = section.glyph;
-        return (
-          // Módulo incrustado. El fondo hundido tiene un efecto colateral a
-          // favor: el ítem activo (blanco + sombra) contrasta MÁS aquí que
-          // sobre el pergamino plano — la señal principal del rail se refuerza.
-          <section
-            key={section.title}
-            className={cn(
-              "relative bg-nav-sunken shadow-nav-well",
-              collapsed ? "rounded-lg p-1" : "rounded-xl p-1.5"
+      {sections.map((section) => (
+        <div key={section.title}>
+          {!collapsed ? (
+            <p className="mb-2 flex items-center gap-1.5 px-1.5 text-[10px] font-bold uppercase tracking-[0.14em] text-[#b9c7ce]/80">
+              <span className="font-extrabold text-[#d0b685]/85">+</span>
+              <span>{section.title}</span>
+            </p>
+          ) : (
+            <div className="mx-auto mb-2 w-5 border-t border-white/15" />
+          )}
+          <div className={collapsed ? "space-y-2" : "space-y-1.5"}>
+            {section.items.map(({ item, subs }) =>
+              subs.length > 0 ? (
+                <BranchRow key={item.label} item={item} visibleSubs={subs} />
+              ) : (
+                <LeafRow key={item.label} item={item} />
+              )
             )}
-          >
-            {/* Marca de agua de dominio. Capa propia con overflow para que el
-                glifo se recorte contra la esquina redondeada del módulo sin
-                clipear el indicador dorado, que vive fuera de esta capa. */}
-            {!collapsed && (
-            <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
-              <Glyph
-                className="watermark-glyph absolute top-1/2 text-brand-deep/[0.06]"
-                style={{
-                  // Proporcional al módulo, no un tamaño fijo: un glifo de 76px
-                  // se perdía en "Gestión" (6 ítems) y desbordaba "Gobernanza"
-                  // (1 ítem). El tope evita que domine los módulos altos.
-                  height: "min(118%, 132px)",
-                  width: "auto",
-                  right: -10,
-                  transform: "translateY(-50%)",
-                }}
-                strokeWidth={1.5}
-              />
-            </span>
-            )}
-
-            {!collapsed && (
-              <p className="relative mb-1 px-2 pt-0.5 text-[10px] font-bold uppercase tracking-[0.1em] text-nav-label">
-                {section.title}
-              </p>
-            )}
-            <div className="relative space-y-px">
-              {section.items.map(({ item, subs }) =>
-                subs.length > 0 ? (
-                  <BranchRow key={item.label} item={item} visibleSubs={subs} />
-                ) : (
-                  <LeafRow key={item.label} item={item} />
-                )
-              )}
-            </div>
-          </section>
-        );
-      })}
-      </div>
+          </div>
+        </div>
+      ))}
     </nav>
   );
 }
 
-function SidebarSearch({ onOpenSearch }: { onOpenSearch: () => void }) {
+function SidebarSearch({ onOpenSearch, showShortcut = true }: { onOpenSearch: () => void; showShortcut?: boolean }) {
   const { collapsed } = useSidebarCtx();
 
   return (
-    <button
-      type="button"
-      onClick={onOpenSearch}
-      aria-label="Buscar"
-      className={cn(
-        // Superficie hundida: el inset shadow la mete "dentro" del rail,
-        // en oposición al ítem activo que sube a blanco.
-        "flex w-full items-center rounded-lg bg-nav-sunken text-nav-ink-soft",
-        "shadow-nav-well",
-        "transition-colors duration-150 hover:bg-nav-hover hover:text-brand-deep",
-        "active:scale-[0.99] motion-reduce:active:scale-100",
-        collapsed ? "h-9 justify-center" : "h-9 gap-2.5 px-2.5"
-      )}
-    >
-      <Search style={{ width: 15, height: 15 }} strokeWidth={2} className="shrink-0" />
-      <AnimatePresence initial={false}>
-        {!collapsed && <ItemLabel className="text-[13px] font-normal">Buscar…</ItemLabel>}
-      </AnimatePresence>
-      {!collapsed && (
-        <kbd className="shrink-0 rounded border border-nav-line bg-card px-1.5 py-px font-sans text-[10px] font-semibold text-nav-ink-faint">
-          ⌘K
-        </kbd>
-      )}
-    </button>
+    <div className={cn("shrink-0 pt-1", collapsed ? "px-2 pb-2" : "px-3 pb-2.5")}>
+      <button
+        type="button"
+        onClick={onOpenSearch}
+        aria-label="Buscar"
+        title={collapsed ? "Buscar (⌘K)" : undefined}
+        className={cn(
+          "flex w-full items-center rounded-xl border border-white/15 bg-[#243741]",
+          "text-white/70 transition-standard hover:bg-[#2a404c] hover:text-white",
+          collapsed ? "h-10 justify-center" : "h-9 gap-2.5 px-3"
+        )}
+      >
+        <Search style={{ width: 14, height: 14 }} strokeWidth={1.75} className="shrink-0 text-white/55" />
+        <AnimatePresence initial={false}>
+          {!collapsed && <ItemLabel className="text-[12.5px] font-normal text-white/65">Buscar...</ItemLabel>}
+        </AnimatePresence>
+        {!collapsed && showShortcut && (
+          <kbd className="hidden items-center gap-px rounded border border-white/15 bg-[#304854] px-1.5 py-0.5 font-sans text-[10px] font-semibold text-white/65 sm:inline-flex">
+            ⌘K
+          </kbd>
+        )}
+      </button>
+    </div>
   );
 }
 
@@ -637,48 +523,56 @@ function SidebarBrand({
   navbarLogoAlt: string;
 }) {
   const { collapsed, onNavigate, reduce } = useSidebarCtx();
-  const monogram = (navbarLogoAlt.trim()[0] || "V").toUpperCase();
-  const [currentLogo, setCurrentLogo] = useState<string | null>(
-    navbarLogoUrl || "/valquirico-logo.png"
+  const lowerLogoUrl = navbarLogoUrl?.toLowerCase() ?? "";
+  const hasCustomLogo = Boolean(
+    navbarLogoUrl &&
+      !lowerLogoUrl.includes("valquirico") &&
+      !lowerLogoUrl.includes("insulae") &&
+      !lowerLogoUrl.includes("insuale")
+  );
+  const [expandedSrc, setExpandedSrc] = useState<string>(
+    hasCustomLogo && navbarLogoUrl ? navbarLogoUrl : "/brand/valquirico-stacked-gold.png"
+  );
+  const [collapsedSrc, setCollapsedSrc] = useState<string>(
+    hasCustomLogo && navbarLogoUrl ? navbarLogoUrl : "/brand/valquirico-emblem-gold.png"
   );
 
   useEffect(() => {
-    setCurrentLogo(navbarLogoUrl || "/valquirico-logo.png");
-  }, [navbarLogoUrl]);
-
-  const handleImgError = () => {
-    if (currentLogo !== "/valquirico-logo.png" && currentLogo !== "/brand/valquirico-logo-light.png") {
-      setCurrentLogo("/valquirico-logo.png");
-    } else if (currentLogo === "/valquirico-logo.png") {
-      setCurrentLogo("/brand/valquirico-logo-light.png");
-    } else {
-      setCurrentLogo(null);
-    }
-  };
+    setExpandedSrc(hasCustomLogo && navbarLogoUrl ? navbarLogoUrl : "/brand/valquirico-stacked-gold.png");
+    setCollapsedSrc(hasCustomLogo && navbarLogoUrl ? navbarLogoUrl : "/brand/valquirico-emblem-gold.png");
+  }, [hasCustomLogo, navbarLogoUrl]);
 
   return (
     <motion.div
-      className="flex shrink-0 items-center justify-center overflow-hidden border-b border-nav-line-soft px-3"
+      className="flex shrink-0 items-center justify-center overflow-hidden border-b border-white/10 px-3"
       animate={{ height: collapsed ? BRAND_HEIGHT.collapsed : BRAND_HEIGHT.expanded }}
-      transition={reduce ? { duration: 0 } : { duration: 0.26, ease: EASE_SMOOTH }}
+      transition={reduce ? { duration: 0 } : { duration: 0.24, ease: EASE_SMOOTH }}
     >
       <Link
         href="/"
         onClick={onNavigate}
         aria-label={navbarLogoAlt}
-        className="flex min-w-0 flex-col items-center gap-2 rounded-lg transition-opacity duration-150 hover:opacity-80"
+        className="flex w-full min-w-0 flex-col items-center justify-center transition-opacity duration-150 hover:opacity-90"
       >
         <AnimatePresence mode="wait" initial={false}>
           {collapsed ? (
             <motion.span
-              key="monogram"
+              key="emblem"
               initial={reduce ? false : { opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={reduce ? undefined : { opacity: 0, scale: 0.8 }}
               transition={reduce ? { duration: 0 } : { duration: 0.16, ease: EASE_SMOOTH }}
-              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand text-[15px] font-bold text-white shadow-nav-item"
+              className="flex items-center justify-center"
             >
-              {monogram}
+              <Image
+                src={collapsedSrc}
+                alt={navbarLogoAlt}
+                width={266}
+                height={266}
+                unoptimized
+                onError={() => setCollapsedSrc("/brand/valquirico-emblem-gold.png")}
+                className="h-9 w-9 object-contain"
+              />
             </motion.span>
           ) : (
             <motion.span
@@ -686,28 +580,19 @@ function SidebarBrand({
               initial={reduce ? false : { opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={reduce ? undefined : { opacity: 0, scale: 0.96 }}
-              transition={reduce ? { duration: 0 } : { duration: 0.2, ease: EASE_SMOOTH }}
-              className="flex flex-col items-center gap-2"
+              transition={reduce ? { duration: 0 } : { duration: 0.18, ease: EASE_SMOOTH }}
+              className="flex w-full flex-col items-center gap-3"
             >
-              {currentLogo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={currentLogo}
-                  alt={navbarLogoAlt}
-                  onError={handleImgError}
-                  className="h-[52px] w-auto max-w-[188px] shrink-0 object-contain"
-                />
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand text-[18px] font-black text-white shadow-xs">
-                    {monogram}
-                  </span>
-                  <span className="font-extrabold text-brand-deep text-base tracking-tight">
-                    {navbarLogoAlt}
-                  </span>
-                </div>
-              )}
-              <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-card px-2.5 py-[3px] text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-brand ring-1 ring-nav-line">
+              <Image
+                src={expandedSrc}
+                alt={navbarLogoAlt}
+                width={787}
+                height={423}
+                unoptimized
+                onError={() => setExpandedSrc("/brand/valquirico-stacked-gold.png")}
+                className="h-[74px] w-auto max-w-[180px] shrink-0 object-contain"
+              />
+              <span className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full bg-[#fbf6ea] px-3 py-1 text-[9.5px] font-extrabold uppercase leading-none tracking-[0.14em] text-[#1f2f37] shadow-xs ring-1 ring-[#d0b685]/40">
                 Insulae 2.0
               </span>
             </motion.span>
@@ -721,86 +606,78 @@ function SidebarBrand({
 function SidebarUser({
   userName,
   initials,
-  isPinnedCollapsed,
-  onToggleCollapsed,
 }: {
   userName: string;
   initials: string;
-  /** Preferencia FIJADA, no el estado visual: el icono no debe cambiar durante el peek. */
-  isPinnedCollapsed?: boolean;
-  onToggleCollapsed?: () => void;
 }) {
-  const { collapsed, reduce } = useSidebarCtx();
+  const { collapsed } = useSidebarCtx();
 
   return (
     <div
       className={cn(
-        "shrink-0 overflow-hidden border-t border-nav-line-soft bg-nav-sunken/60",
-        collapsed
-          ? "flex flex-col items-center gap-1.5 px-2 py-2.5"
-          : "flex items-center gap-2.5 px-3 py-3"
+        "shrink-0 overflow-hidden border-t border-white/10 bg-[#283d48]",
+        collapsed ? "flex justify-center p-2" : "px-3 py-3"
       )}
     >
-      <span
-        title={collapsed ? userName : undefined}
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-[11px] font-bold tracking-wide text-white shadow-nav-item"
-      >
-        {initials}
-      </span>
-      <AnimatePresence initial={false}>
-        {!collapsed && (
-          <motion.div
-            initial={{ opacity: 0, x: -6 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -6 }}
-            transition={{ duration: 0.18, ease: EASE_SMOOTH, delay: 0.06 }}
-            className="min-w-0 flex-1"
-          >
-            <p className="truncate text-[12.5px] font-semibold leading-tight text-brand-deep">{userName}</p>
-            <p className="mt-0.5 flex items-center gap-1.5 text-[10px] font-medium leading-tight text-nav-ink-faint">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Sesión activa
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {onToggleCollapsed && (
-        <button
-          type="button"
-          onClick={onToggleCollapsed}
-          aria-label={isPinnedCollapsed ? "Fijar menú abierto" : "Colapsar menú"}
-          aria-expanded={!isPinnedCollapsed}
-          title={isPinnedCollapsed ? "Fijar menú abierto" : "Colapsar menú"}
-          className={cn(
-            "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg",
-            "text-nav-ink-soft transition-colors duration-150",
-            "hover:bg-nav-hover hover:text-brand-deep",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent",
-            "active:scale-90 motion-reduce:active:scale-100"
-          )}
+      <div className="flex items-center gap-2.5">
+        <span
+          title={collapsed ? userName : undefined}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#d0b685] text-[11px] font-extrabold text-[#1f2f37] shadow-xs"
         >
-          {/* Iconos de panel en vez de un chevron suelto: fuera del borde del
-              rail, un chevron ya no tiene contra qué apuntar. Estos dibujan
-              literalmente el estado destino. */}
-          <AnimatePresence mode="wait" initial={false}>
-            <motion.span
-              key={isPinnedCollapsed ? "open" : "close"}
-              initial={reduce ? false : { opacity: 0, scale: 0.7 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={reduce ? undefined : { opacity: 0, scale: 0.7 }}
-              transition={reduce ? { duration: 0 } : { duration: 0.14, ease: EASE_SMOOTH }}
-              className="flex"
+          {initials}
+        </span>
+        <AnimatePresence initial={false}>
+          {!collapsed && (
+            <motion.div
+              initial={{ opacity: 0, x: -6 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -6 }}
+              transition={{ duration: 0.18, ease: EASE_SMOOTH, delay: 0.04 }}
+              className="min-w-0 flex-1"
             >
-              {isPinnedCollapsed ? (
-                <PanelLeftOpen style={{ width: 16, height: 16 }} strokeWidth={1.75} />
-              ) : (
-                <PanelLeftClose style={{ width: 16, height: 16 }} strokeWidth={1.75} />
-              )}
-            </motion.span>
-          </AnimatePresence>
-        </button>
+              <p className="truncate text-[12px] font-bold leading-tight text-white">{userName}</p>
+              <p className="mt-0.5 flex items-center gap-1.5 text-[9.5px] font-semibold uppercase leading-tight tracking-wider text-white/65">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+                <span>Sesión activa</span>
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+function SidebarCollapseFooter({
+  collapsed,
+  isPinnedCollapsed,
+  onToggleCollapsed,
+}: {
+  collapsed: boolean;
+  isPinnedCollapsed: boolean;
+  onToggleCollapsed: () => void;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex shrink-0 items-center border-t border-white/10 bg-[#253943] px-3 py-2",
+        collapsed ? "justify-center" : "justify-end"
       )}
+    >
+      <button
+        type="button"
+        onClick={onToggleCollapsed}
+        aria-label={isPinnedCollapsed ? "Expandir menú" : "Colapsar menú"}
+        aria-expanded={!isPinnedCollapsed}
+        title={isPinnedCollapsed ? "Expandir menú" : "Colapsar menú"}
+        className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/15 bg-[#304854]/80 text-white/65 transition-standard hover:bg-white/15 hover:text-white active-scale"
+      >
+        {isPinnedCollapsed ? (
+          <ChevronRight style={{ width: 14, height: 14 }} />
+        ) : (
+          <ChevronLeft style={{ width: 14, height: 14 }} />
+        )}
+      </button>
     </div>
   );
 }
@@ -838,12 +715,10 @@ function useOpenMenus(currentPath: string) {
 
 function SidebarProvider({
   collapsed,
-  indicatorId,
   onNavigate,
   children,
 }: {
   collapsed: boolean;
-  indicatorId: string;
   onNavigate: () => void;
   children: ReactNode;
 }) {
@@ -853,8 +728,8 @@ function SidebarProvider({
   const { openMenus, toggleMenu } = useOpenMenus(currentPath);
 
   const value = useMemo<SidebarCtxValue>(
-    () => ({ collapsed, currentPath, indicatorId, openMenus, toggleMenu, reduce, onNavigate }),
-    [collapsed, currentPath, indicatorId, openMenus, toggleMenu, reduce, onNavigate]
+    () => ({ collapsed, currentPath, openMenus, toggleMenu, reduce, onNavigate }),
+    [collapsed, currentPath, openMenus, toggleMenu, reduce, onNavigate]
   );
 
   return <SidebarCtx.Provider value={value}>{children}</SidebarCtx.Provider>;
@@ -862,12 +737,7 @@ function SidebarProvider({
 
 /**
  * Hover-to-peek: con el rail fijado en colapsado, pasar el cursor lo despliega
- * temporalmente SOBRE el contenido (nunca empujándolo — reflowear la página
- * entera en cada roce accidental del cursor es inaceptable).
- *
- * Los retardos son asimétricos a propósito: entrar cuesta 110ms para no
- * dispararse al cruzar la pantalla de lado a lado; salir cuesta 220ms para
- * perdonar el temblor al bajar por la lista.
+ * temporalmente SOBRE el contenido (nunca empujándolo).
  */
 function usePeek(isCollapsed: boolean) {
   const [isPeeked, setPeeked] = useState(false);
@@ -901,8 +771,6 @@ function usePeek(isCollapsed: boolean) {
     setPeeked(false);
   }, [clear]);
 
-  // Enfocar con teclado también despliega: en un rail colapsado, tabular a
-  // ciegas entre iconos sin etiqueta no es navegable.
   const openNow = useCallback(() => {
     if (!isCollapsed) return;
     clear();
@@ -937,17 +805,11 @@ export function DesktopSidebar({
 }: SidebarChromeProps & { isCollapsed: boolean; onToggleCollapsed: () => void }) {
   const { isPeeked, open, close, closeNow, openNow } = usePeek(isCollapsed);
 
-  // Ancho visual del rail. Ojo: NO es `--sidebar-w` (que gobierna el padding del
-  // contenido y se queda en 68px durante el peek, para que la página no se mueva).
   const expanded = !isCollapsed || isPeeked;
   const railWidth = expanded ? SIDEBAR_WIDTH_EXPANDED : SIDEBAR_WIDTH_COLLAPSED;
 
   return (
-    <SidebarProvider
-      collapsed={!expanded}
-      indicatorId="nav-indicator-desktop"
-      onNavigate={closeNow}
-    >
+    <SidebarProvider collapsed={!expanded} onNavigate={closeNow}>
       <aside
         style={{ width: railWidth }}
         onMouseEnter={open}
@@ -955,18 +817,17 @@ export function DesktopSidebar({
         onFocusCapture={openNow}
         onBlurCapture={close}
         className={cn(
-          "fixed inset-y-0 left-0 z-40 hidden flex-col bg-nav lg:flex",
+          "fixed inset-y-0 left-0 z-40 hidden flex-col border-r border-black/15 bg-[#304854] lg:flex",
           "transition-[width,box-shadow] duration-[260ms] ease-smooth",
-          // Durante el peek el rail flota por encima del contenido: la sombra
-          // profunda es lo que comunica que está encima y no empujando.
-          isPeeked ? "shadow-nav-flyout" : "shadow-nav-rail"
+          isPeeked && "shadow-nav-flyout"
         )}
       >
         <SidebarBrand navbarLogoUrl={chrome.navbarLogoUrl} navbarLogoAlt={chrome.navbarLogoAlt} />
-        <SidebarSections onOpenSearch={chrome.onOpenSearch} />
-        <SidebarUser
-          userName={chrome.userName}
-          initials={chrome.userInitials}
+        <SidebarSections />
+        <SidebarSearch onOpenSearch={chrome.onOpenSearch} />
+        <SidebarUser userName={chrome.userName} initials={chrome.userInitials} />
+        <SidebarCollapseFooter
+          collapsed={!expanded}
           isPinnedCollapsed={isCollapsed}
           onToggleCollapsed={onToggleCollapsed}
         />
@@ -1005,7 +866,7 @@ export function MobileSidebar({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={onClose}
-            className="absolute inset-0 bg-brand-deep/35 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-[#1f2f37]/50 backdrop-blur-sm"
           />
           <motion.aside
             initial={reduce ? { opacity: 0 } : { x: "-100%" }}
@@ -1014,9 +875,9 @@ export function MobileSidebar({
             transition={
               reduce ? { duration: 0 } : { type: "spring", stiffness: 420, damping: 42, mass: 0.9 }
             }
-            className="absolute inset-y-0 left-0 flex w-[276px] flex-col bg-nav shadow-nav-flyout"
+            className="absolute inset-y-0 left-0 flex w-[264px] flex-col overflow-hidden border-r border-black/15 bg-[#304854] shadow-nav-flyout"
           >
-            <SidebarProvider collapsed={false} indicatorId="nav-indicator-mobile" onNavigate={onClose}>
+            <SidebarProvider collapsed={false} onNavigate={onClose}>
               <div className="relative">
                 <SidebarBrand
                   navbarLogoUrl={chrome.navbarLogoUrl}
@@ -1026,12 +887,19 @@ export function MobileSidebar({
                   type="button"
                   onClick={onClose}
                   aria-label="Cerrar menú"
-                  className="absolute right-2.5 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-nav-ink-soft transition-colors duration-150 hover:bg-nav-hover hover:text-brand-deep active:scale-90"
+                  className="absolute right-2.5 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-white/75 transition-standard hover:bg-white/10 hover:text-white active:scale-90"
                 >
-                  <X style={{ width: 17, height: 17 }} strokeWidth={2} />
+                  <X style={{ width: 16, height: 16 }} strokeWidth={2} />
                 </button>
               </div>
-              <SidebarSections onOpenSearch={chrome.onOpenSearch} />
+              <SidebarSections />
+              <SidebarSearch
+                showShortcut={false}
+                onOpenSearch={() => {
+                  onClose();
+                  chrome.onOpenSearch();
+                }}
+              />
               <SidebarUser userName={chrome.userName} initials={chrome.userInitials} />
             </SidebarProvider>
           </motion.aside>
