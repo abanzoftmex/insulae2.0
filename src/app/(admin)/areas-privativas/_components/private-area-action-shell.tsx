@@ -65,7 +65,7 @@ export function PrivateAreaActionShell({
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
+            <h1 className="text-2xl sm:text-3xl font-bold text-brand tracking-tighter uppercase">
               {title}
             </h1>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">

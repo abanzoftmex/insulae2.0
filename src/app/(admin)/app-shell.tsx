@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
-import { Menu } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { useHydratedSidebar } from "@/stores/ui-sidebar.store";
 import { cn } from "@/shared/utils/cn";
 import { SearchModal } from "@/components/ui/search-modal";
@@ -129,9 +129,17 @@ export function AppShell({
           <span className="truncate text-[13px] font-bold tracking-[0.02em] text-brand-deep">
             VAL&apos;QUIRICO
           </span>
-          <span className="rounded-full bg-card px-1.5 py-[2px] text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-brand ring-1 ring-nav-line">
+          <span className="shrink-0 rounded-full bg-card px-1.5 py-[2px] text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-brand ring-1 ring-nav-line">
             Insulae 2.0
           </span>
+          <button
+            type="button"
+            onClick={() => setIsSearchOpen(true)}
+            className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-nav-ink-soft transition-colors duration-150 hover:bg-nav-hover hover:text-brand-deep active:scale-90"
+            aria-label="Buscar"
+          >
+            <Search style={{ width: 17, height: 17 }} strokeWidth={2} />
+          </button>
         </div>
 
         <main

@@ -139,8 +139,8 @@ export default async function DirectorioPage(props: PageProps) {
         <div className="md:col-span-3">
           <Card className="p-3 shadow-layered border-transparent">
             <div className="flex flex-col sm:flex-row gap-3">
-              <form method="get" className="flex-1 flex gap-3">
-                <div className="flex-1">
+              <form method="get" className="flex-1 flex flex-wrap sm:flex-nowrap gap-2 sm:gap-3">
+                <div className="flex-1 min-w-[180px] sm:min-w-0">
                   <Input label="Buscador Universal" name="q" defaultValue={query} placeholder="Nombre, correo, teléfono, rol o unidad..." className="h-9" />
                 </div>
                 <Button type="submit" variant="outline" className="h-9 px-6 text-[10px] font-bold uppercase gap-2 border-line">
@@ -161,7 +161,7 @@ export default async function DirectorioPage(props: PageProps) {
 
       {/* Main Table */}
       {vm.pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between px-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
           <p className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70">
             {vm.totalUsers} personas · página {vm.pagination.page} de {vm.pagination.totalPages}
           </p>
@@ -332,7 +332,7 @@ export default async function DirectorioPage(props: PageProps) {
         </div>
       </Card>
 
-      <div className="flex justify-between items-center py-2 px-1">
+      <div className="flex flex-wrap justify-between items-center gap-2 py-2 px-1">
          <p className="text-[11px] font-bold text-ink-soft/70 uppercase tracking-widest">
            Base de datos consolidada · {vm.totalUsers} Personas en sistema
          </p>

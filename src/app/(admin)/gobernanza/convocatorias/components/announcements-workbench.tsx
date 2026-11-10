@@ -456,7 +456,7 @@ export function AnnouncementsWorkbench({
           <PageBackBadge className="mt-1 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="text-3xl font-extrabold text-[#304854] tracking-tight uppercase leading-none">
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#304854] tracking-tight uppercase leading-none">
                 Convocatorias
               </h1>
             </div>
@@ -495,14 +495,14 @@ export function AnnouncementsWorkbench({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             {/* Search Input */}
-            <div className="relative flex items-center">
+            <div className="relative flex items-center w-full sm:w-auto">
               <Search className="absolute left-3.5 w-3.5 h-3.5 text-[#64748b] pointer-events-none" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar convocatoria o lugar..."
-                className="h-9 w-60 sm:w-64 md:w-72 rounded-full border border-[#cbd5e1] bg-white pl-9 pr-8 text-xs text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#304854] focus:ring-1 focus:ring-[#304854] outline-none shadow-xs transition-all"
+                className="h-9 w-full sm:w-64 md:w-72 rounded-full border border-[#cbd5e1] bg-white pl-9 pr-8 text-xs text-[#0f172a] placeholder:text-[#94a3b8] focus:border-[#304854] focus:ring-1 focus:ring-[#304854] outline-none shadow-xs transition-all"
               />
               {searchTerm && (
                 <button

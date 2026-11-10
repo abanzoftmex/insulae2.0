@@ -166,7 +166,7 @@ export function ConceptosModal({
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-canvas">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider md:sticky md:left-0 bg-gray-50 z-10">
                       Categoría
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider">
@@ -191,7 +191,7 @@ export function ConceptosModal({
                       key={concepto.id}
                       className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                     >
-                      <td className="px-4 py-3 text-sm text-gray-600 font-medium sticky left-0 bg-inherit z-10">
+                      <td className="px-4 py-3 text-sm text-gray-600 font-medium md:sticky md:left-0 bg-inherit z-10">
                         {concepto.categoria}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900">

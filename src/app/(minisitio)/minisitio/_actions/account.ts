@@ -11,6 +11,8 @@ import { getPrivacyNotice } from "@/modules/minisitio/infrastructure/queries/pro
 import { getActiveProject } from "@/modules/minisitio/infrastructure/condominium";
 import { MINISITIO_STATEMENT_MAIL_FROM, sendMinisitioEmail } from "@/modules/minisitio/infrastructure/mailer";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
+import { buildInstitutionalEmailFooterRowHtml } from "@/shared/infrastructure/email/email-footer";
+import { resolveFooterLogoAsset } from "@/shared/infrastructure/email/email-footer-asset";
 import { getObject } from "@/shared/infrastructure/storage/r2";
 import { absoluteFileUrl, isUsableFileUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import type { ActionResult } from "@/modules/minisitio/domain/types";
@@ -129,7 +131,9 @@ export async function sendAccountStatementEmailAction(input: SendStatementEmailI
   }
 
   const pdfBase64 = pdfData.startsWith("data:application/pdf;base64,") ? pdfData.split(",")[1] : pdfData;
+  const origin = await appOrigin();
   const emailLogoUrl = await statementEmailLogoUrl(session.condominiumId);
+  const footerLogo = resolveFooterLogoAsset(origin);
 
   let avisoPrivacidad = "";
   try {
@@ -139,18 +143,28 @@ export async function sendAccountStatementEmailAction(input: SendStatementEmailI
     console.error("[minisitio] Error al obtener aviso de privacidad:", error);
   }
 
+  const attachments: Array<{
+    filename: string;
+    contentBase64: string;
+    contentType?: string;
+    contentId?: string;
+  }> = [
+    {
+      filename: `estado-cuenta-${propertyName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
+      contentBase64: pdfBase64,
+    },
+  ];
+  if (footerLogo.minisitioAttachment) {
+    attachments.push(footerLogo.minisitioAttachment);
+  }
+
   try {
     const { id } = await sendMinisitioEmail({
       from: MINISITIO_STATEMENT_MAIL_FROM,
       to: [email],
       subject: `Estado de Cuenta - ${propertyName}`,
-      html: statementEmailHtml(emailLogoUrl, avisoPrivacidad),
-      attachments: [
-        {
-          filename: `estado-cuenta-${propertyName.replace(/[^a-z0-9]/gi, "_").toLowerCase()}.pdf`,
-          contentBase64: pdfBase64,
-        },
-      ],
+      html: statementEmailHtml(emailLogoUrl, avisoPrivacidad, footerLogo.footerLogoSrc, origin),
+      attachments,
     });
     return { success: true, message: "Email enviado exitosamente", emailId: id };
   } catch (error) {
@@ -159,7 +173,16 @@ export async function sendAccountStatementEmailAction(input: SendStatementEmailI
   }
 }
 
-function statementEmailHtml(emailLogoUrl: string, avisoPrivacidad: string): string {
+function statementEmailHtml(
+  emailLogoUrl: string,
+  avisoPrivacidad: string,
+  footerLogoSrc?: string,
+  appBaseUrl?: string,
+): string {
+  const privacyBlockHtml = avisoPrivacidad
+    ? `<div style="color: #cbd5e1; font-size: 9px; line-height: 1.4; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, 0.14); text-align: justify;">${avisoPrivacidad}</div>`
+    : "";
+
   return `
         <!DOCTYPE html>
         <html>
@@ -191,22 +214,13 @@ function statementEmailHtml(emailLogoUrl: string, avisoPrivacidad: string): stri
                       </div>
                     </td>
                   </tr>
-                  <tr>
-                    <td style="background-color: #304854; padding: 25px 30px; text-align: center;">
-                      <p style="color: #ffffff; font-size: 12px; line-height: 1.6; margin: 0 0 15px 0;">
-                        Has recibido este correo porque se encuentra como contacto en nuestro sistema condominial, de haber un error favor de hacer caso omiso a este correo.
-                      </p>
-                      ${
-                        avisoPrivacidad
-                          ? `
-                      <div style="color: #d1d5db; font-size: 9px; line-height: 1.4; margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.1); text-align: justify;">
-                        ${avisoPrivacidad}
-                      </div>
-                      `
-                          : ""
-                      }
-                    </td>
-                  </tr>
+                  ${buildInstitutionalEmailFooterRowHtml({
+                    footerLogoSrc,
+                    appBaseUrl,
+                    noticeText:
+                      "Has recibido este correo porque se encuentra como contacto en nuestro sistema condominial, de haber un error favor de hacer caso omiso a este correo.",
+                    extraHtml: privacyBlockHtml,
+                  })}
                 </table>
               </td>
             </tr>

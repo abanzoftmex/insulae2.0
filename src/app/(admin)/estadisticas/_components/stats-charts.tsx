@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
@@ -129,20 +130,36 @@ export function HorizontalBars({
   useRamp?: boolean;
   fill?: boolean;
 }) {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const effectiveLabelWidth = isMobile ? Math.min(labelWidth, 98) : labelWidth;
   const chartHeight = height ?? Math.max(110, data.length * 32 + 16);
   const max = Math.max(...data.map((d) => d.value), 0);
   return (
     <ResponsiveContainer width="100%" height={fill ? "100%" : chartHeight} minHeight={fill ? chartHeight : undefined}>
-      <BarChart data={data} layout="vertical" margin={{ top: 0, right: 48, bottom: 0, left: 4 }} barCategoryGap="26%">
+      <BarChart data={data} layout="vertical" margin={{ top: 0, right: isMobile ? 42 : 48, bottom: 0, left: 4 }} barCategoryGap="26%">
         <CartesianGrid horizontal={false} stroke={GRID} strokeWidth={1} />
         <XAxis type="number" hide />
         <YAxis
           type="category"
           dataKey="name"
-          width={labelWidth}
+          width={effectiveLabelWidth}
           tickLine={false}
           axisLine={false}
-          tick={{ fill: INK_SOFT, fontSize: 11 }}
+          tick={{ fill: INK_SOFT, fontSize: isMobile ? 10 : 11 }}
+          tickFormatter={
+            isMobile
+              ? (val: string) => (typeof val === "string" && val.length > 14 ? `${val.slice(0, 13)}…` : val)
+              : undefined
+          }
         />
         <Tooltip
           cursor={{ fill: "rgba(0,0,0,0.03)" }}
@@ -247,7 +264,7 @@ export function BusinessLineDonut({
 export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; totalLabel: string }) {
   const total = data.reduce((sum, row) => sum + row.value, 0);
   return (
-    <div className="flex items-center gap-5">
+    <div className="flex flex-col sm:flex-row items-center gap-5">
       <div className="relative w-[236px] h-[236px] shrink-0">
         <PieChart width={236} height={236}>
           <Pie
@@ -280,7 +297,7 @@ export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; tota
           <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70 mt-1">{totalLabel}</span>
         </div>
       </div>
-      <ul className="flex-1 space-y-3.5">
+      <ul className="w-full sm:w-auto sm:flex-1 space-y-3.5">
         {data.map((entry, index) => (
           <li key={entry.name} className="flex items-baseline gap-2 text-[12px]">
             <span
@@ -436,7 +453,7 @@ export function ZoneCategoryHeatmap({
           ))}
         </tbody>
       </table>
-      <div className="flex items-center gap-2 mt-3 pl-[120px]">
+      <div className="flex items-center gap-2 mt-3 pl-0 sm:pl-[120px]">
         <span className="text-[10px] text-ink-soft/70 font-medium">Menos</span>
         <div className="flex gap-0.5">
           {SEQUENTIAL.map((step) => (
@@ -471,10 +488,10 @@ export function OccupancyStackedBars({
         </span>
       </div>
       {rows.map((row) => (
-        <div key={row.zone} className="flex items-center gap-3 group">
-          <span className="text-[11px] text-ink-soft w-[104px] shrink-0 truncate text-right">{row.zone}</span>
+        <div key={row.zone} className="flex items-center gap-2 sm:gap-3 group">
+          <span className="text-[11px] text-ink-soft w-[76px] sm:w-[104px] shrink-0 truncate text-right">{row.zone}</span>
           <div
-            className="flex-1 flex gap-[2px] h-5 items-center"
+            className="flex-1 flex gap-[2px] h-5 items-center min-w-[40px]"
             title={`${row.zone}: ${numberFormat.format(row.occupied)} ocupados de ${numberFormat.format(row.total)} (${decimalFormat.format(row.rate)}%)`}
           >
             <div
@@ -493,10 +510,10 @@ export function OccupancyStackedBars({
               />
             )}
           </div>
-          <span className="text-[11px] font-semibold text-ink tabular-nums w-[46px] text-right">
+          <span className="text-[11px] font-semibold text-ink tabular-nums w-[40px] sm:w-[46px] text-right shrink-0">
             {decimalFormat.format(row.rate)}%
           </span>
-          <span className="text-[10.5px] text-ink-soft/70 tabular-nums w-[68px] text-right">
+          <span className="text-[10px] sm:text-[10.5px] text-ink-soft/70 tabular-nums min-w-[54px] sm:min-w-0 sm:w-[68px] text-right shrink-0">
             {numberFormat.format(row.occupied)}/{numberFormat.format(row.total)}
           </span>
         </div>

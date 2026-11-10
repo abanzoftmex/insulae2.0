@@ -178,7 +178,7 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-extrabold text-[#4c4a24] tracking-tighter uppercase">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4c4a24] tracking-tighter uppercase">
               Estado de Cartera Ordinaria
             </h1>
             <p className="text-[#7a5e44] text-[11px] font-bold uppercase tracking-tight">
@@ -248,7 +248,7 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
           <p className="text-[10px] font-bold uppercase tracking-widest text-white">Filtros de búsqueda</p>
         </div>
         <form className="p-4 flex flex-wrap items-end gap-3" method="get">
-          <div className="flex-1 min-w-[200px]">
+          <div className="w-full sm:flex-1 sm:min-w-[200px]">
             <label className="text-[10px] font-bold uppercase tracking-widest text-[#7a5e44] leading-none mb-1.5 block">
               Buscar
             </label>
@@ -261,7 +261,7 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
             />
           </div>
 
-          <div className="w-32">
+          <div className="w-full min-[380px]:w-32">
             <label className="text-[10px] font-bold uppercase tracking-widest text-[#7a5e44] leading-none mb-1.5 block">
               Registros
             </label>
@@ -319,13 +319,13 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
             {/* THEAD - Replicación fiel de clases Legacy: colColum1, colColum4 y meses */}
             <thead className="sticky top-0 z-30 shadow-xs">
               <tr className="text-left text-[10px] font-bold uppercase tracking-widest">
-                <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[100px]">
+                <th className="lg:sticky lg:left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[100px]">
                   ACCIONES
                 </th>
-                <th className="sticky left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[110px]">
+                <th className="lg:sticky lg:left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[110px]">
                   UBICACIÓN
                 </th>
-                <th className="sticky left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[290px]">
+                <th className="lg:sticky lg:left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold min-w-[200px] sm:min-w-[290px]">
                   ÁREA PRIVATIVA/ FRACCIÓN DE ÁREA PRIVATIVA
                 </th>
 
@@ -410,17 +410,17 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
                     )}
                   >
                     {/* Sticky Column 1: Acciones */}
-                    <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#cbd5e1] shadow-xs transition-colors", actionsBg)}>
+                    <td className={cn("lg:sticky lg:left-0 z-20 px-2 py-1.5 border-r border-[#cbd5e1] shadow-xs transition-colors", actionsBg)}>
                       {renderRowActionButtons(row.id, isChild)}
                     </td>
 
                     {/* Sticky Column 2: Ubicación */}
-                    <td className={cn("sticky left-[100px] z-20 px-3 text-xs font-bold text-slate-700 uppercase border-r border-[#cbd5e1] transition-colors", stickyInfoBg)}>
+                    <td className={cn("lg:sticky lg:left-[100px] z-20 px-3 text-xs font-bold text-slate-700 uppercase border-r border-[#cbd5e1] transition-colors", stickyInfoBg)}>
                       {row.zone}
                     </td>
 
                     {/* Sticky Column 3: Área Privativa / Fracción */}
-                    <td className={cn("sticky left-[210px] z-20 px-3 border-r-2 border-[#cbd5e1] shadow-xs transition-colors", stickyInfoBg)}>
+                    <td className={cn("lg:sticky lg:left-[210px] z-20 px-3 border-r-2 border-[#cbd5e1] shadow-xs transition-colors", stickyInfoBg)}>
                       <p className="font-bold text-slate-900 leading-tight truncate">{row.areaLabel}</p>
                       <StatusBadge label={row.statusLabel} css={row.statusCss} />
                     </td>
@@ -466,13 +466,13 @@ export default async function ReporteCuotasPage(props: { searchParams: Promise<{
             {/* TFOOT — Totales */}
             <tfoot>
               <tr className="border-t-2 border-[#cbd5e1] bg-[#dfdfdf] font-bold text-slate-800">
-                <td className="sticky left-0 z-20 border-r border-[#cbd5e1] bg-[#dfdfdf] px-2 py-2 text-center text-xs">
+                <td className="lg:sticky lg:left-0 z-20 border-r border-[#cbd5e1] bg-[#dfdfdf] px-2 py-2 text-center text-xs">
                   —
                 </td>
-                <td className="sticky left-[100px] z-20 border-r border-[#cbd5e1] bg-[#dfdfdf] px-3 py-2 text-xs uppercase font-bold text-slate-700">
+                <td className="lg:sticky lg:left-[100px] z-20 border-r border-[#cbd5e1] bg-[#dfdfdf] px-3 py-2 text-xs uppercase font-bold text-slate-700">
                   —
                 </td>
-                <td className="sticky left-[210px] z-20 border-r-2 border-[#cbd5e1] bg-[#dfdfdf] px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-900">
+                <td className="lg:sticky lg:left-[210px] z-20 border-r-2 border-[#cbd5e1] bg-[#dfdfdf] px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-900">
                   TOTALES
                 </td>
 

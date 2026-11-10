@@ -198,7 +198,7 @@ export default async function Home() {
               </span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
               {greetingFor(now)}
               {userName ? `, ${firstName(userName)}` : ""}!
             </h1>
@@ -207,7 +207,7 @@ export default async function Home() {
               Te damos la bienvenida a {condominiumName}. Tu centro de control y convivencia comunitaria. Aquí podrás gestionar accesos, comunicarte con residentes y consultar la documentación oficial de manera sencilla y transparente.
             </p>
 
-            <div className="pt-1 text-[11px] font-bold text-brand-mint/90 uppercase tracking-wider flex items-center gap-2">
+            <div className="pt-1 text-[11px] font-bold text-brand-mint/90 uppercase tracking-wider flex flex-wrap items-center gap-2">
               <span>{condominiumName}</span>
               <span>·</span>
               <LiveClock initialDate={initialDate} initialTime={initialTime} />
@@ -242,7 +242,7 @@ export default async function Home() {
       {/* ─── Accesos Principales Operativos (solo módulos con permiso de lectura) ─── */}
       {categoryCards.length > 0 && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between px-1">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between px-1">
             <h2 className="text-base font-bold uppercase tracking-wider text-brand">
               Módulos de Gestión Diario
             </h2>

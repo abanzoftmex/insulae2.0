@@ -15,6 +15,7 @@ import { PROJECT_SCOPE } from "@/config/project-scope";
 import { generateAccountStatementPdf, type StatementPdfResult } from "./_lib/statement-pdf";
 import { buildStatementEmailHtml } from "./_lib/statement-email-template";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
+import { resolveFooterLogoAsset } from "@/shared/infrastructure/email/email-footer-asset";
 import { formatDate } from "./_lib/private-area-action-routing";
 
 function toNumber(value: FormDataEntryValue | null): number | null {
@@ -1036,6 +1037,11 @@ export async function sendPrivateAreaStatementEmailAction(
       emailLogoSrc = "";
     }
 
+    const footerLogo = resolveFooterLogoAsset(origin);
+    if (footerLogo.sdkAttachment) {
+      attachments.push(footerLogo.sdkAttachment);
+    }
+
     const htmlBody = buildStatementEmailHtml({
       condominiumName: condoName,
       areaName: area.name,
@@ -1048,6 +1054,7 @@ export async function sendPrivateAreaStatementEmailAction(
       pdfFilename: pdfAttachment.filename,
       appBaseUrl: origin,
       logoSrc: emailLogoSrc,
+      footerLogoSrc: footerLogo.footerLogoSrc,
     });
 
     const { error } = await resend.emails.send({

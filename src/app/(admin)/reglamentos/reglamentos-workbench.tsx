@@ -212,8 +212,8 @@ export function ReglamentosWorkbench({
         <StatCard accent="cyan" label="Documentos Internos" value={directory.totalInternalDocuments} icon={<Info className="h-3.5 w-3.5" />} />
       </div>
 
-      <div className="flex items-center justify-between gap-4 mt-2">
-         <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mt-2">
+         <div className="flex flex-wrap items-center gap-2">
             <Button 
               variant={typeFilter === "all" ? "primary" : "outline"} 
               size="sm" 
@@ -291,8 +291,8 @@ export function ReglamentosWorkbench({
           <div className="pt-2 border-t border-line/50">
              <p className="text-[10px] font-bold uppercase text-ink-soft/40 tracking-widest mb-3">Archivo Digital (PDF o Imagen)</p>
              {formFileUrl ? (
-               <div className="flex items-center justify-between p-3 bg-canvas/40 rounded-lg border border-line/50">
-                  <div className="flex items-center gap-3">
+               <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-canvas/40 rounded-lg border border-line/50">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     {isImageFile(formFileUrl, formMimeType) ? (
                       <div className="h-10 w-10 rounded-md overflow-hidden bg-brand-deep/5 border border-line shrink-0 flex items-center justify-center">
                         <img src={formFileUrl} alt={formName || "Vista previa"} className="h-full w-full object-cover" />
@@ -300,7 +300,7 @@ export function ReglamentosWorkbench({
                     ) : (
                       <FileText className="h-5 w-5 text-brand shrink-0" />
                     )}
-                    <span className="text-[12px] font-bold text-ink truncate max-w-48">{formName || "Archivo cargado"}</span>
+                    <span className="text-[12px] font-bold text-ink truncate max-w-full sm:max-w-48">{formName || "Archivo cargado"}</span>
                   </div>
                   <div className="flex items-center gap-2">
                      <a href={formFileUrl} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded hover:bg-canvas text-brand transition-colors"><ExternalLink className="h-3.5 w-3.5" /></a>

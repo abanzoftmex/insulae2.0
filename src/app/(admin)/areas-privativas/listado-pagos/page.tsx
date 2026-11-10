@@ -279,7 +279,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
     >
       {/* Context switcher */}
       <Card className="border-transparent shadow-layered">
-        <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex-row items-center justify-between gap-3">
+        <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex-row flex-wrap items-center justify-between gap-3">
           <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
             Contexto de cargos
           </CardTitle>
@@ -354,8 +354,8 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           {/* DEBE AL DÍA / SALDO A FAVOR */}
           <div>
-            <div className="flex bg-white border border-[#d6c7b3] rounded-t-md">
-              <div className="flex-1 text-center py-4 border-r border-[#d6c7b3]">
+            <div className="flex flex-col sm:flex-row bg-white border border-[#d6c7b3] rounded-t-md">
+              <div className="flex-1 text-center py-4 border-b sm:border-b-0 sm:border-r border-[#d6c7b3]">
                 <div className="flex items-center justify-center gap-2 mb-1 text-[#d0b685]">
                   <AlertCircle className="h-5 w-5" />
                   <span className="text-[12px] font-bold uppercase">Debe al día</span>
@@ -370,8 +370,8 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                 <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(saldoAFavorValue)}</p>
               </div>
             </div>
-            <div className="bg-[#fbf9f4] border-x border-b border-[#d6c7b3] rounded-b-md p-0">
-              <table className="w-full text-[11px] text-[#3a2a18]">
+            <div className="bg-[#fbf9f4] border-x border-b border-[#d6c7b3] rounded-b-md p-0 overflow-x-auto">
+              <table className="w-full min-w-[440px] text-[11px] text-[#3a2a18]">
                 <tbody>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Saldo inicial:</td>
@@ -421,8 +421,8 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                 <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(totalCargosCard)}</p>
               </div>
             </div>
-            <div className="bg-[#fbf9f4] border-x border-b border-[#d6c7b3] rounded-b-md p-0">
-              <table className="w-full text-[11px] text-[#3a2a18]">
+            <div className="bg-[#fbf9f4] border-x border-b border-[#d6c7b3] rounded-b-md p-0 overflow-x-auto">
+              <table className="w-full min-w-[440px] text-[11px] text-[#3a2a18]">
                 <tbody>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Saldo inicial:</td>
@@ -471,32 +471,34 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           <div className="bg-white text-center py-3 border-b border-[#e1ebf6] text-[#3a2a18] text-[12px] uppercase flex items-center justify-center gap-2">
             <AlertCircle className="h-4 w-4 text-[#3a2a18]" /> Últimos pagos realizados
           </div>
-          <table className="w-full text-[12px]">
-            <thead>
-              <tr className="bg-[#e8eef1] text-[#304854] font-bold">
-                <th className="py-2 px-3 text-left">Folio</th>
-                <th className="py-2 px-3 text-left">Forma de pago</th>
-                <th className="py-2 px-3 text-left">Pagado el</th>
-                <th className="py-2 px-3 text-right">Abono realizado</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visiblePaymentMovements.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-4 px-3 text-center text-gray-500 italic">No hay pagos registrados</td>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[440px] text-[12px]">
+              <thead>
+                <tr className="bg-[#e8eef1] text-[#304854] font-bold">
+                  <th className="py-2 px-3 text-left">Folio</th>
+                  <th className="py-2 px-3 text-left">Forma de pago</th>
+                  <th className="py-2 px-3 text-left">Pagado el</th>
+                  <th className="py-2 px-3 text-right">Abono realizado</th>
                 </tr>
-              ) : (
-                visiblePaymentMovements.slice(0, 5).map(payment => (
-                  <tr key={payment.paymentId} className="border-b border-[#e1ebf6] last:border-0">
-                    <td className="py-2 px-3 font-bold">{payment.reference || payment.paymentId.substring(0, 8)}</td>
-                    <td className="py-2 px-3">{getPaymentMethodLabel(payment.method)}</td>
-                    <td className="py-2 px-3">{formatDate(payment.paidAt)}</td>
-                    <td className="py-2 px-3 text-right font-bold text-[#3a2a18]">{formatCurrency(payment.paymentTotalAmount)}</td>
+              </thead>
+              <tbody>
+                {visiblePaymentMovements.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="py-4 px-3 text-center text-gray-500 italic">No hay pagos registrados</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  visiblePaymentMovements.slice(0, 5).map(payment => (
+                    <tr key={payment.paymentId} className="border-b border-[#e1ebf6] last:border-0">
+                      <td className="py-2 px-3 font-bold">{payment.reference || payment.paymentId.substring(0, 8)}</td>
+                      <td className="py-2 px-3">{getPaymentMethodLabel(payment.method)}</td>
+                      <td className="py-2 px-3">{formatDate(payment.paidAt)}</td>
+                      <td className="py-2 px-3 text-right font-bold text-[#3a2a18]">{formatCurrency(payment.paymentTotalAmount)}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Action Bar (Brand Blue) */}

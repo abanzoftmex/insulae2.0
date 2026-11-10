@@ -31,7 +31,7 @@ export function ReportHeader({
       <div className="flex items-start gap-3">
         {backSlot}
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <h1 className="text-3xl font-extrabold text-[#4c4a24] tracking-tighter uppercase">{title}</h1>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-[#4c4a24] tracking-tighter uppercase">{title}</h1>
           {subtitle && (
             <p className="text-[#7a5e44] text-[11px] font-bold uppercase tracking-tight">{subtitle}</p>
           )}
@@ -168,7 +168,7 @@ export function WideTableSection({ children, className }: { children?: ReactNode
   return (
     <section
       className={cn(
-        "overflow-hidden border-t border-b border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm -mx-4 md:-mx-6 lg:-mx-10 -mb-4 md:-mb-6 lg:-mb-8 rounded-none",
+        "overflow-hidden border-t border-b border-[#c8b59d]/50 bg-white/88 shadow-[0_14px_36px_rgba(30,18,8,0.10)] backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 -mb-4 sm:-mb-6 lg:-mb-8 rounded-none",
         className
       )}
     >

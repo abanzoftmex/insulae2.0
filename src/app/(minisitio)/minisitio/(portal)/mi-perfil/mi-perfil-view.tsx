@@ -221,12 +221,12 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
   return (
     <div className="space-y-6">
       {/* Header Completo con Toda la Información Personal */}
-      <div className="bg-primary-dark rounded-xl p-6 text-white">
+      <div className="bg-primary-dark rounded-xl p-4 sm:p-6 text-white">
         <div className="space-y-4">
           {/* Fila 1: Información principal */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
             <div className="flex items-center space-x-4">
-              <div className="w-16 h-16 bg-primary-light rounded-xl flex items-center justify-center">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-primary-light rounded-xl flex items-center justify-center shrink-0">
                 <TipoIcon className="w-8 h-8 text-primary-dark" />
               </div>
               <div>
@@ -345,9 +345,9 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
 
           {/* Fila 2: Información de contacto y detalles */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-primary-light border-opacity-20">
-            <div className="flex items-center space-x-2">
-              <Mail className="w-4 h-4 text-gray-300" />
-              <div>
+            <div className="flex items-center space-x-2 min-w-0">
+              <Mail className="w-4 h-4 text-gray-300 shrink-0" />
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-gray-300">Email</p>
                 <p className="text-sm text-white truncate">
                   {datosGenerales?.email || "No registrado"}
@@ -355,9 +355,9 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Phone className="w-4 h-4 text-gray-300" />
-              <div>
+            <div className="flex items-center space-x-2 min-w-0">
+              <Phone className="w-4 h-4 text-gray-300 shrink-0" />
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-gray-300">Teléfono</p>
                 <p className="text-sm text-white">
                   {formatTelefono(datosGenerales?.telefono)}
@@ -365,9 +365,9 @@ export function MiPerfilView({ initialPerfil }: { initialPerfil: Profile | null 
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <MapPin className="w-4 h-4 text-gray-300" />
-              <div>
+            <div className="flex items-center space-x-2 min-w-0">
+              <MapPin className="w-4 h-4 text-gray-300 shrink-0" />
+              <div className="min-w-0 flex-1">
                 <p className="text-xs text-gray-300">Dirección</p>
                 <p className="text-sm text-white truncate">
                   {datosGenerales?.direccion || "No registrado"}

@@ -7,6 +7,7 @@ import type { DirectoryContactParticipation } from "@/modules/directory/domain/d
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { buildProvisionalPasswordEmailHtml } from "@/shared/infrastructure/email/auth-email-templates";
+import { resolveFooterLogoAsset } from "@/shared/infrastructure/email/email-footer-asset";
 import crypto from "crypto";
 
 function cleanUserId(id: string): string {
@@ -96,12 +97,15 @@ export async function generateTemporaryPasswordAction(id: string) {
     
     const origin = await appOrigin();
     const recipientName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+    const footerLogo = resolveFooterLogoAsset(origin);
     const emailBody = buildProvisionalPasswordEmailHtml({
       recipientName,
       tempPassword,
       condominiumName,
       loginUrl: `${origin}/login`,
       logoUrl: `${origin}/brand/valquirico-logo-light.png`,
+      appBaseUrl: origin,
+      footerLogoSrc: footerLogo.footerLogoSrc,
     });
 
     const resendApiKey = process.env.RESEND_API_KEY;
@@ -126,6 +130,7 @@ export async function generateTemporaryPasswordAction(id: string) {
       to: emailRecipient,
       subject,
       html: emailBody,
+      ...(footerLogo.sdkAttachment ? { attachments: [footerLogo.sdkAttachment] } : {}),
     });
 
     if (error) {

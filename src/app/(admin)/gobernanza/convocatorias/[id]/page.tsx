@@ -224,7 +224,7 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
             <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#d0b685]">
               {activeDate?.callType || "1RA CONVOCATORIA"}
             </span>
-            <h2 className="text-lg sm:text-xl font-extrabold text-white capitalize truncate leading-tight">
+            <h2 className="text-base sm:text-xl font-extrabold text-white capitalize sm:truncate leading-tight">
               {primaryDateFormatted}
             </h2>
             <div className="flex items-center gap-3 text-xs text-slate-300 font-medium flex-wrap pt-0.5">
@@ -250,7 +250,7 @@ export default async function AnnouncementDetailPage({ params }: PageProps) {
         </div>
 
         {/* Right Side: 5 Stats Tiles */}
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 border-t lg:border-t-0 lg:border-l border-white/15 pt-4 lg:pt-0 lg:pl-6 text-center">
+        <div className="grid grid-cols-2 min-[400px]:grid-cols-3 sm:grid-cols-5 gap-3 border-t lg:border-t-0 lg:border-l border-white/15 pt-4 lg:pt-0 lg:pl-6 text-center">
           <div className="px-2">
             <span className="block text-2xl font-extrabold text-white leading-tight">
               {announcement.topics.length}

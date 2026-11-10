@@ -71,37 +71,39 @@ export function DataTable<T extends { id: string | number }>({
   return (
     <Card className="overflow-hidden border-transparent shadow-layered">
       {/* Toolbar */}
-      <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex items-center justify-between">
-        <div className="flex items-center gap-2">
+      <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-2 min-w-0">
           <h2 className="text-[10px] font-bold uppercase tracking-widest text-white">{title}</h2>
           {count !== undefined && (
-            <span className="px-2.5 py-1 rounded-full bg-white text-[9px] font-bold text-brand">
+            <span className="px-2.5 py-1 rounded-full bg-white text-[9px] font-bold text-brand shrink-0">
               {count}
             </span>
           )}
         </div>
         
-        <div className="flex items-center gap-3">
-          {onSearch && (
-            <form onSubmit={handleSearch} className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-soft/50" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Buscar..."
-                className="h-8 w-48 lg:w-64 pl-8 pr-3 bg-white border-none rounded-full text-[12px] font-medium text-ink placeholder:text-ink-soft/50 focus:ring-2 focus:ring-white/30 transition-all"
-              />
-            </form>
-          )}
-          
-          {onAdd && (
-            <Button onClick={onAdd} size="sm" className="h-8 px-4 gap-1.5 text-[10px] font-bold uppercase tracking-tight rounded-full bg-white text-brand hover:bg-brand-mint border-0 shadow-none">
-              <Plus className="h-3.5 w-3.5" />
-              {addLabel}
-            </Button>
-          )}
-        </div>
+        {(onSearch || onAdd) && (
+          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+            {onSearch && (
+              <form onSubmit={handleSearch} className="relative flex-1 sm:flex-initial min-w-[150px] sm:min-w-0">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-ink-soft/50" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar..."
+                  className="h-8 w-full sm:w-48 lg:w-64 pl-8 pr-3 bg-white border-none rounded-full text-[12px] font-medium text-ink placeholder:text-ink-soft/50 focus:ring-2 focus:ring-white/30 transition-all"
+                />
+              </form>
+            )}
+            
+            {onAdd && (
+              <Button onClick={onAdd} size="sm" className="h-8 px-4 gap-1.5 text-[10px] font-bold uppercase tracking-tight rounded-full bg-white text-brand hover:bg-brand-mint border-0 shadow-none shrink-0">
+                <Plus className="h-3.5 w-3.5" />
+                {addLabel}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Table */}
@@ -184,7 +186,7 @@ export function DataTable<T extends { id: string | number }>({
 
       {/* Pagination */}
       {pagination && (
-        <div className="h-12 px-4 border-t border-line flex items-center justify-between bg-card text-[11px] font-bold text-ink-soft/60 uppercase">
+        <div className="min-h-12 px-4 py-2 border-t border-line flex flex-wrap items-center justify-between gap-2 bg-card text-[11px] font-bold text-ink-soft/60 uppercase">
           <div>
             Mostrando {(pagination.page - 1) * pagination.pageSize + 1} - {Math.min(pagination.page * pagination.pageSize, pagination.totalRows)} de {pagination.totalRows}
           </div>

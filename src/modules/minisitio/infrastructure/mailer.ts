@@ -14,7 +14,12 @@ export interface MinisitioEmail {
   to: string[];
   subject: string;
   html: string;
-  attachments?: { filename: string; contentBase64: string }[];
+  attachments?: {
+    filename: string;
+    contentBase64: string;
+    contentType?: string;
+    contentId?: string;
+  }[];
 }
 
 export async function sendMinisitioEmail(email: MinisitioEmail): Promise<{ id: string | null }> {
@@ -38,7 +43,12 @@ export async function sendMinisitioEmail(email: MinisitioEmail): Promise<{ id: s
       to: email.to,
       subject: email.subject,
       html: email.html,
-      attachments: email.attachments?.map((a) => ({ filename: a.filename, content: a.contentBase64 })),
+      attachments: email.attachments?.map((a) => ({
+        filename: a.filename,
+        content: a.contentBase64,
+        ...(a.contentType ? { content_type: a.contentType } : {}),
+        ...(a.contentId ? { content_id: a.contentId } : {}),
+      })),
     }),
   });
   if (!response.ok) {

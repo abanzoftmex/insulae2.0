@@ -179,7 +179,7 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
                               ? 'Dirigido a: Comercios'
                               : 'Dirigido a: Propietarios y Comercios'}
                         </span>
-                        <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-gray-500">
                           <span className="flex items-center space-x-1">
                             <Calendar className="w-4 h-4" />
                             <span>Publicado: <strong className="font-bold">{formatFecha(comunicado.fechaPublicar)}</strong></span>
@@ -201,7 +201,7 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
                     </div>
 
                     {/* Actions */}
-                    <div className="flex space-x-2">
+                    <div className="flex flex-wrap gap-2">
                       {comunicado.pdf && (
                         <a
                           href={comunicadoFileUrl(comunicado.pdf)}

@@ -60,24 +60,24 @@ export function Modal({
         sizeClasses[size]
       )}>
         {/* Header */}
-        <div className="h-14 px-5 border-b border-line flex items-center justify-between">
-          <h2 className="text-sm font-bold uppercase tracking-tight text-brand">{title}</h2>
+        <div className="min-h-14 py-3 px-4 sm:px-5 border-b border-line flex items-center justify-between gap-3">
+          <h2 className="text-sm font-bold uppercase tracking-tight text-brand min-w-0 break-words">{title}</h2>
           <button 
             onClick={onClose}
-            className="p-1.5 rounded-full hover:bg-canvas text-ink-soft/40 hover:text-ink transition-standard"
+            className="p-1.5 rounded-full hover:bg-canvas text-ink-soft/40 hover:text-ink transition-standard shrink-0"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
           {children}
         </div>
 
         {/* Footer */}
         {footer !== undefined && (
-          <div className="px-5 py-4 border-t border-line bg-canvas/30 flex items-center justify-end gap-3 rounded-b-card">
+          <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-t border-line bg-canvas/30 flex flex-wrap items-center justify-end gap-2 sm:gap-3 rounded-b-card">
             {footer || (
               <>
                 <Button variant="ghost" onClick={onClose} className="h-9 px-4 text-[11px] font-bold uppercase">Cancelar</Button>

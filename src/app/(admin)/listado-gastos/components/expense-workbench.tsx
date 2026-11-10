@@ -289,7 +289,7 @@ export function ExpenseWorkbench({
         <StatCard accent="cyan" label="Conceptos" value={budgetConcepts.length} icon={<Briefcase className="h-3.5 w-3.5" />} />
       </div>
 
-      <div className="flex items-center justify-between gap-4 mt-2">
+      <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 mt-2">
         <div className="flex items-center gap-2">
           <Badge variant="danger">Flujo de Salida</Badge>
           <Badge variant="brand">{initialExpenses.length} Total</Badge>
@@ -342,7 +342,7 @@ export function ExpenseWorkbench({
         }
       >
         <div className="space-y-4 pt-2">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Concepto Presupuestal</label>
               <select
@@ -357,7 +357,7 @@ export function ExpenseWorkbench({
             <Input label="Proyecto / Centro de Costo" value={formProjectName} onChange={(e) => setFormProjectName(e.target.value)} placeholder="Opcional" />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Input label="Fecha" type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} />
             <Input label="Monto (MXN)" type="number" step="0.01" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
           </div>
@@ -384,7 +384,7 @@ export function ExpenseWorkbench({
               onChange={(e) => setFormReference(e.target.value)}
             />
             {receiptUrl ? (
-              <div className="flex items-center justify-between gap-3 p-2.5 bg-canvas border border-line rounded-md">
+              <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 bg-canvas border border-line rounded-md">
                 <div className="flex items-center gap-2 min-w-0">
                   <FileText className="h-4 w-4 text-brand-accent shrink-0" />
                   <span className="text-[12px] font-medium text-ink truncate" title={extractFileName(receiptUrl)}>

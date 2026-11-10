@@ -680,28 +680,29 @@ export function MinisitioShell({
         {showHeader && (
           <header className="bg-card border-b border-line sticky top-0 z-30 shadow-sm">
             <div className="px-4 sm:px-6 lg:px-8">
-              <div className="flex justify-between items-center h-16">
+              <div className="flex justify-between items-center gap-3 min-h-16 py-2">
                 {/* Mobile menu button */}
                 <button
                   onClick={() => setMobileMenuOpen(true)}
-                  className="lg:hidden flex items-center justify-center w-10 h-10 text-ink-soft hover:text-ink hover:bg-canvas rounded-xl transition-colors duration-200"
+                  aria-label="Abrir menú"
+                  className="lg:hidden shrink-0 flex items-center justify-center w-10 h-10 text-ink-soft hover:text-ink hover:bg-canvas rounded-xl transition-colors duration-200"
                 >
                   <Menu className="w-5 h-5" />
                 </button>
 
                 {/* Page title and breadcrumbs */}
-                <div className="flex flex-col">
+                <div className="flex flex-col min-w-0 flex-1">
                   {breadcrumbs.length > 0 &&
                     breadcrumbs.some(
                       (crumb) => crumb.label && crumb.label.trim()
                     ) && (
-                      <nav className="flex items-center space-x-2 text-sm text-ink-soft mb-1">
+                      <nav className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm text-ink-soft mb-0.5">
                         {breadcrumbs
                           .filter((crumb) => crumb.label && crumb.label.trim())
                           .map((crumb, index) => (
-                            <div key={index} className="flex items-center">
+                            <div key={index} className="flex items-center min-w-0">
                               {index > 0 && (
-                                <span className="mx-2 text-ink-soft/40">/</span>
+                                <span className="mr-2 text-ink-soft/40">/</span>
                               )}
                               {crumb.href ? (
                                 <Link
@@ -719,7 +720,7 @@ export function MinisitioShell({
                           ))}
                       </nav>
                     )}
-                  <h2 className="text-2xl font-bold text-primary-dark">{pageTitle}</h2>
+                  <h2 className="text-base sm:text-xl lg:text-2xl font-bold text-primary-dark leading-tight">{pageTitle}</h2>
                 </div>
               </div>
             </div>

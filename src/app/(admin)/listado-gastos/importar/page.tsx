@@ -109,8 +109,8 @@ export default async function ImportExpensesPage() {
                 <Table className="h-4 w-4 text-brand" /> Catálogo de Conceptos
               </h3>
             </div>
-            <div className="max-h-[600px] overflow-y-auto scrollbar-thin">
-              <table className="w-full text-left">
+            <div className="max-h-[600px] overflow-auto scrollbar-thin">
+              <table className="w-full min-w-[420px] text-left">
                 <thead className="sticky top-0 bg-white shadow-sm">
                   <tr className="border-b border-line">
                     <th className="px-4 py-3 text-[10px] font-black text-ink-soft uppercase tracking-tighter">ID</th>
@@ -139,7 +139,7 @@ export default async function ImportExpensesPage() {
 
           <div className="bg-white rounded-[2rem] border border-line p-6 shadow-sm">
             <h3 className="text-[10px] font-black text-ink-soft uppercase tracking-widest mb-4">Formas de Pago (ID)</h3>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-2">
               {[
                 { id: "1", label: "N/A" },
                 { id: "2", label: "Efectivo" },

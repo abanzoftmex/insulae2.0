@@ -24,6 +24,7 @@ import { findUserIdsByEmail, storedEmailMatching } from "@/shared/infrastructure
 import { getMinisitioCondominium } from "../infrastructure/condominium";
 import { MINISITIO_MAIL_FROM, sendMinisitioEmail } from "../infrastructure/mailer";
 import { buildPasswordResetEmailHtml } from "@/shared/infrastructure/email/auth-email-templates";
+import { resolveFooterLogoAsset } from "@/shared/infrastructure/email/email-footer-asset";
 import type { MinisitioSessionInfo, MinisitioUserType, UserIndicators } from "../domain/types";
 
 function hashSHA256(t: string) {
@@ -247,11 +248,14 @@ export async function requestPasswordReset(emailInput: string, origin: string): 
   const resetLink = `${origin}/minisitio/reset-password?token=${encodeURIComponent(token)}`;
 
   const recipientName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Condómino";
+  const footerLogo = resolveFooterLogoAsset(origin);
   const emailHtml = buildPasswordResetEmailHtml({
     recipientName,
     resetLink,
     condominiumName: condominium.name || "Val'Quirico",
     logoUrl: `${origin}/brand/valquirico-logo-light.png`,
+    appBaseUrl: origin,
+    footerLogoSrc: footerLogo.footerLogoSrc,
     expiresInMinutes: 60,
   });
 
@@ -261,6 +265,7 @@ export async function requestPasswordReset(emailInput: string, origin: string): 
       to: [to],
       subject: "Restablecer tu contraseña - Val'Quirico",
       html: emailHtml,
+      ...(footerLogo.minisitioAttachment ? { attachments: [footerLogo.minisitioAttachment] } : {}),
     });
   } catch (error) {
     // No revelar detalles al usuario; igual se responde con el mensaje genérico.

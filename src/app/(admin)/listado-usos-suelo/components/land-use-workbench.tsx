@@ -169,8 +169,8 @@ export function LandUseWorkbench({
             <table className="w-full text-left border-separate border-spacing-0 min-w-480">
               <thead>
                 <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/80">
-                  <th className="sticky left-0 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-16">Orden</th>
-                  <th className="sticky left-16 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] min-w-[200px]">Nombre</th>
+                  <th className="md:sticky md:left-0 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] w-16">Orden</th>
+                  <th className="md:sticky md:left-16 z-30 px-4 border-r border-black/10 bg-canvas/95 backdrop-blur-sm shadow-[2px_0_5px_rgba(0,0,0,0.02)] min-w-[200px]">Nombre</th>
                   <th className="px-4 w-24">Iniciales</th>
                   <th className="px-4 text-right w-24">Apoles</th>
                   <th className="px-4 text-right w-28">M2 Totales</th>
@@ -183,8 +183,8 @@ export function LandUseWorkbench({
               <tbody className="divide-y divide-black/5">
                 {filteredRows.map((row, index) => (
                   <tr key={row.id} className={cn("hover:bg-brand-mint/20 transition-colors group", index % 2 === 0 ? "bg-white" : "bg-canvas/60")}>
-                    <td className="sticky left-0 px-4 text-xs font-bold text-ink-soft border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)]">{row.order}</td>
-                    <td className="sticky left-16 px-4 text-base font-bold text-brand border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)] py-3">{row.name}</td>
+                    <td className="md:sticky md:left-0 px-4 text-xs font-bold text-ink-soft border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)]">{row.order}</td>
+                    <td className="md:sticky md:left-16 px-4 text-base font-bold text-brand border-r border-black/10 bg-inherit shadow-[2px_0_5px_rgba(0,0,0,0.02)] py-3">{row.name}</td>
                     <td className="px-4 py-3"><Badge variant="outline" className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest">{row.initials}</Badge></td>
                     <td className="px-4 py-3 text-right text-sm font-bold">{row.totalAreas}</td>
                     <td className="px-4 py-3 text-right text-xs font-mono text-ink-soft">{row.totalM2}</td>
@@ -245,7 +245,7 @@ export function LandUseWorkbench({
               <Input label="Iniciales" value={formInitials} onChange={(e) => setFormInitials(e.target.value)} maxLength={5} />
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Input label="Orden" type="number" value={formOrder} onChange={(e) => setFormOrder(e.target.value)} />
               <Input label="Peso (Weight)" type="number" step="0.001" value={formWeight} onChange={(e) => setFormWeight(e.target.value)} />
               <Input label="Porcentaje" type="number" step="0.01" value={formPercentage} onChange={(e) => setFormPercentage(e.target.value)} />

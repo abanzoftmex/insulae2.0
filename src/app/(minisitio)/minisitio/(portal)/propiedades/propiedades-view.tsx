@@ -158,7 +158,7 @@ export function PropiedadesView({
     <div className="space-y-6">
       {/* Header con estadísticas */}
       <div className="bg-primary-dark rounded-xl p-6 text-white">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
             <h1 className="text-2xl font-bold">Mis Propiedades</h1>
             <p className="text-gray-300 mt-1">Gestiona y monitorea tus propiedades</p>

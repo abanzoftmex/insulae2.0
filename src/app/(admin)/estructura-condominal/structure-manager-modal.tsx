@@ -126,8 +126,8 @@ export function StructureManagerModal({ isOpen, onClose, initialData }: Structur
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="col-span-3 space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div className="sm:col-span-3 space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Nombre del Grupo</label>
               <Input 
                 placeholder="Ej. Consejo de Administración" 
@@ -136,7 +136,7 @@ export function StructureManagerModal({ isOpen, onClose, initialData }: Structur
                 className="font-medium"
               />
             </div>
-            <div className="col-span-1 space-y-2">
+            <div className="sm:col-span-1 space-y-2">
               <label className="text-[11px] font-bold uppercase tracking-widest text-ink-soft">Orden</label>
               <Input 
                 type="number" 
@@ -172,7 +172,7 @@ export function StructureManagerModal({ isOpen, onClose, initialData }: Structur
                       className="h-8 text-xs font-medium"
                     />
                     
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-3 sm:gap-4">
                       <div className="flex items-center gap-2">
                         <label className="text-[10px] font-medium text-ink-soft">Max. Asignaciones</label>
                         <Input 
@@ -220,7 +220,7 @@ export function StructureManagerModal({ isOpen, onClose, initialData }: Structur
           )}
         </div>
 
-        <div className="p-4 border-t border-line bg-canvas/50 flex justify-end gap-3">
+        <div className="p-4 border-t border-line bg-canvas/50 flex flex-wrap justify-end gap-3">
           <Button variant="outline" onClick={onClose} className="h-9 px-6 text-[11px] font-bold uppercase">
             Cancelar
           </Button>

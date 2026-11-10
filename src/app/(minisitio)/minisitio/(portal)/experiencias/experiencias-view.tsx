@@ -148,10 +148,10 @@ export function ExperienciasView({
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-        <div className="bg-[#304854] border-b-2 border-[#d0b685] px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+        <div className="bg-[#304854] border-b-2 border-[#d0b685] px-4 sm:px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center space-x-3 min-w-0">
+              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center shrink-0">
                 <Bell className="w-6 h-6 text-[#d0b685]" />
               </div>
               <div>
@@ -161,7 +161,7 @@ export function ExperienciasView({
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               {expiredCount > 0 && (
                 <button
                   onClick={() => setShowPastEvents(!showPastEvents)}

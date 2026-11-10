@@ -433,7 +433,7 @@ export function TicketsWorkbench({
         ) : formData && (
           <div className="space-y-5">
             {/* Info Section */}
-            <div className="bg-canvas/50 rounded-lg p-3 border border-line/50 grid grid-cols-2 gap-y-3 gap-x-6">
+            <div className="bg-canvas/50 rounded-lg p-3 border border-line/50 grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6">
               <div>
                 <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest">Residente</p>
                 <p className="text-sm font-bold text-ink leading-tight">{formData.snapshot.residentName}</p>
@@ -443,7 +443,7 @@ export function TicketsWorkbench({
                 <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest">Departamento</p>
                 <p className="text-sm font-bold text-brand leading-tight">{formData.snapshot.departmentName}</p>
               </div>
-              <div className="col-span-2 pt-2 border-t border-line/30">
+              <div className="sm:col-span-2 pt-2 border-t border-line/30">
                 <p className="text-xs font-bold uppercase text-ink-soft/70 tracking-widest mb-1">Descripción del Problema</p>
                 <p className="text-sm font-medium text-ink bg-card p-2.5 rounded border border-line/30 italic">
                   &quot;{formData.snapshot.description}&quot;
@@ -704,7 +704,7 @@ export function TicketsWorkbench({
 
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                           {pdfData.giros.map((giro, idx) => (
-                            <div key={idx} className="flex gap-2 items-end border-b border-line/40 pb-2 last:border-0 last:pb-0">
+                            <div key={idx} className="flex flex-wrap sm:flex-nowrap gap-2 items-end border-b border-line/40 pb-2 last:border-0 last:pb-0">
                               <div className="w-20 shrink-0">
                                 <Input 
                                   label={`Clave ${idx + 1}`}
@@ -782,7 +782,7 @@ export function TicketsWorkbench({
             placeholder="Detalles adicionales del problema..."
             className="min-h-24"
           />
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft">Departamento</label>
               <select

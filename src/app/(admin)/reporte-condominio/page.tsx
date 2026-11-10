@@ -147,7 +147,7 @@ export default async function ReporteCondominioPage() {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estadística del Condominio</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-brand tracking-tighter uppercase">Estadística del Condominio</h1>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Dashboard Operativo</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {vm.projectName} · {vm.condominiumName} · Última edición {vm.updatedAtLabel}
@@ -165,12 +165,12 @@ export default async function ReporteCondominioPage() {
       {/* Soles / Sombras Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2 overflow-hidden border-transparent shadow-layered">
-          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-row items-center justify-between">
+          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-row flex-wrap items-center justify-between gap-2">
             <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Distribución Soles / Sombras</CardTitle>
             <span className="text-[10px] font-bold text-white/70">Base: {vm.classificationBaseLabel}</span>
           </CardHeader>
           <CardContent className="p-4 space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="p-4 rounded-xl bg-[linear-gradient(135deg,#fff8e1_0%,#fff1b8_100%)] border border-yellow-200/50 flex flex-col justify-between min-h-25">
                 <div className="flex justify-between items-start">
                   <span className="text-[9px] font-bold uppercase text-yellow-700 tracking-widest">Soles</span>
@@ -179,7 +179,7 @@ export default async function ReporteCondominioPage() {
                   </span>
                 </div>
                 <div>
-                  <p className="text-4xl font-bold text-yellow-900 leading-none">{vm.availableAreas}</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-yellow-900 leading-none">{vm.availableAreas}</p>
                   <p className="text-[10px] font-bold text-yellow-800/60 uppercase mt-1.5">{vm.availableRatio} del total</p>
                 </div>
                 <div className="mt-3 pt-2.5 border-t border-yellow-800/10 flex justify-between items-center text-[10px]">
@@ -196,7 +196,7 @@ export default async function ReporteCondominioPage() {
                   </span>
                 </div>
                 <div>
-                  <p className="text-4xl font-bold text-blue-900 leading-none">{vm.builtAreas}</p>
+                  <p className="text-3xl sm:text-4xl font-bold text-blue-900 leading-none">{vm.builtAreas}</p>
                   <p className="text-[10px] font-bold text-blue-800/60 uppercase mt-1.5">{vm.builtRatio} del total</p>
                 </div>
                 <div className="mt-3 pt-2.5 border-t border-blue-800/10 flex justify-between items-center text-[10px]">

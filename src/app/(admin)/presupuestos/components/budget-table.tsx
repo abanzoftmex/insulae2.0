@@ -211,7 +211,7 @@ export default function BudgetTable({
                 </div>
               )}
               <Card className="overflow-hidden border-transparent shadow-layered">
-                <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand-deep/5 flex flex-row items-center justify-between">
+                <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand-deep/5 flex flex-row flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-col gap-0.5">
                     <CardTitle className="text-[13px] font-bold uppercase text-brand">
                       {groupName}
@@ -238,17 +238,17 @@ export default function BudgetTable({
                       <thead>
                         <tr className="bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
                           {/* Sticky: Concepto */}
-                          <th className={cn("sticky", stickyHeaderBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Concepto</th>
+                          <th className={cn("lg:sticky", stickyHeaderBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Concepto</th>
                           {/* Sticky: Costo Unitario */}
-                          <th className={cn("sticky text-right", stickyHeaderBase, "px-2 text-brand")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>Costo Unitario</th>
+                          <th className={cn("lg:sticky text-right", stickyHeaderBase, "px-2 text-brand")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>Costo Unitario</th>
                           {/* Sticky: Anual Presupuesto */}
-                          <th className={cn("sticky text-right", stickyHeaderBase, "text-brand")} style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>Anual Presupuesto</th>
+                          <th className={cn("lg:sticky text-right", stickyHeaderBase, "text-brand")} style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>Anual Presupuesto</th>
                           {/* Sticky: Anual Ejercido */}
-                          <th className={cn("sticky text-right", stickyHeaderBase, "text-brand")} style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>Anual Ejercido</th>
+                          <th className={cn("lg:sticky text-right", stickyHeaderBase, "text-brand")} style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>Anual Ejercido</th>
                           {/* Sticky: Anual Saldo */}
-                          <th className={cn("sticky text-right", stickyHeaderBase, "text-brand")} style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>Anual Saldo</th>
+                          <th className={cn("lg:sticky text-right", stickyHeaderBase, "text-brand")} style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>Anual Saldo</th>
                           {/* Sticky: Proveedor */}
-                          <th className={cn("sticky text-center", stickyHeaderBase, "text-brand")} style={{ left: LEFT_PROVEEDOR, width: COL_PROVEEDOR, minWidth: COL_PROVEEDOR, maxWidth: COL_PROVEEDOR }}>Proveedor</th>
+                          <th className={cn("lg:sticky text-center", stickyHeaderBase, "text-brand")} style={{ left: LEFT_PROVEEDOR, width: COL_PROVEEDOR, minWidth: COL_PROVEEDOR, maxWidth: COL_PROVEEDOR }}>Proveedor</th>
                           {/* Monthly columns: Presupuesto, Unidades, Ejercido */}
                           {monthNames.map((m) => (
                             <Fragment key={m}>
@@ -264,11 +264,11 @@ export default function BudgetTable({
                         {group.concepts.map((concept) => (
                           <tr key={concept.conceptId} className="hover:bg-canvas/10 transition-colors group">
                             {/* Sticky: Concepto */}
-                            <td className={cn("sticky text-[12px] font-bold text-ink-soft", stickyCellBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>
+                            <td className={cn("lg:sticky text-[12px] font-bold text-ink-soft", stickyCellBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>
                               {concept.conceptName}
                             </td>
                             {/* Sticky: Costo Unitario (editable) */}
-                            <td className={cn("sticky", stickyCellBase, "px-2")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>
+                            <td className={cn("lg:sticky", stickyCellBase, "px-2")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}>
                               {!isEditable ? (
                                 <div className="px-2 py-1 text-right text-[11px] font-mono text-ink-soft/40 italic">
                                   {concept.unitCost != null ? formatMXN(concept.unitCost) : "—"}
@@ -293,17 +293,17 @@ export default function BudgetTable({
                               )}
                             </td>
                             {/* Sticky: Anual Presupuesto */}
-                            <td className={cn("sticky text-right font-bold text-[12px] text-ink", stickyCellBase)} style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(concept.budgeted)}</td>
+                            <td className={cn("lg:sticky text-right font-bold text-[12px] text-ink", stickyCellBase)} style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(concept.budgeted)}</td>
                             {/* Sticky: Anual Ejercido */}
-                            <td className={cn("sticky text-right font-medium text-[12px] text-ink-soft", stickyCellBase)} style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(concept.generated)}</td>
+                            <td className={cn("lg:sticky text-right font-medium text-[12px] text-ink-soft", stickyCellBase)} style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(concept.generated)}</td>
                             {/* Sticky: Anual Saldo */}
-                            <td className={cn("sticky text-right font-bold text-[12px]", stickyCellBase, concept.balance >= 0 ? "text-brand" : "text-danger")} style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>
+                            <td className={cn("lg:sticky text-right font-bold text-[12px]", stickyCellBase, concept.balance >= 0 ? "text-brand" : "text-danger")} style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>
                               {formatMXN(concept.balance)}
                             </td>
                             {/* Sticky: Proveedor */}
                             <td 
                               className={cn(
-                                "sticky text-center", 
+                                "lg:sticky text-center", 
                                 stickyCellBase,
                                 activePopover === concept.conceptId && "z-40"
                               )} 
@@ -484,21 +484,21 @@ export default function BudgetTable({
                       <tfoot>
                         <tr className="bg-brand-deep/3 border-t border-line">
                           {/* Sticky: Total Concepto */}
-                          <td className={cn("sticky font-bold text-[12px] uppercase text-brand", stickyFootBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>
+                          <td className={cn("lg:sticky font-bold text-[12px] uppercase text-brand", stickyFootBase)} style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>
                             Total {groupName}
                           </td>
                           {/* Sticky: Costo Unitario (empty for total) */}
-                          <td className={cn("sticky", stickyFootBase, "px-2")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
+                          <td className={cn("lg:sticky", stickyFootBase, "px-2")} style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
                           {/* Sticky: Anual Presupuesto */}
-                          <td className={cn("sticky text-right font-bold text-[13px] text-brand", stickyFootBase)} style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(group.budgeted)}</td>
+                          <td className={cn("lg:sticky text-right font-bold text-[13px] text-brand", stickyFootBase)} style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(group.budgeted)}</td>
                           {/* Sticky: Anual Ejercido */}
-                          <td className={cn("sticky text-right font-bold text-[13px] text-brand", stickyFootBase)} style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(group.generated)}</td>
+                          <td className={cn("lg:sticky text-right font-bold text-[13px] text-brand", stickyFootBase)} style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXN(group.generated)}</td>
                           {/* Sticky: Anual Saldo */}
-                          <td className={cn("sticky text-right font-bold text-[13px]", stickyFootBase, group.balance >= 0 ? "text-brand" : "text-danger")} style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>
+                          <td className={cn("lg:sticky text-right font-bold text-[13px]", stickyFootBase, group.balance >= 0 ? "text-brand" : "text-danger")} style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>
                             {formatMXN(group.balance)}
                           </td>
                           {/* Sticky: Proveedor */}
-                          <td className={cn("sticky", stickyFootBase)} style={{ left: LEFT_PROVEEDOR, width: COL_PROVEEDOR, minWidth: COL_PROVEEDOR, maxWidth: COL_PROVEEDOR }}></td>
+                          <td className={cn("lg:sticky", stickyFootBase)} style={{ left: LEFT_PROVEEDOR, width: COL_PROVEEDOR, minWidth: COL_PROVEEDOR, maxWidth: COL_PROVEEDOR }}></td>
                           
                           {monthNames.map((m, index) => {
                             const monthNumber = index + 1;
@@ -546,12 +546,12 @@ export default function BudgetTable({
           <table className="w-full text-left border-collapse min-w-480">
             <tfoot>
               <tr className="bg-brand-deep text-white">
-                <td className="sticky px-4 py-3.5 font-bold uppercase text-[13px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Total General</td>
-                <td className="sticky px-2 py-3.5 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
-                <td className="sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBudgeted)}</td>
-                <td className="sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalGenerated)}</td>
-                <td className="sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBalance)}</td>
-                <td className="sticky px-4 py-3.5 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PROVEEDOR, width: COL_PROVEEDOR, minWidth: COL_PROVEEDOR, maxWidth: COL_PROVEEDOR }}></td>
+                <td className="lg:sticky px-4 py-3.5 font-bold uppercase text-[13px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_CONCEPTO, width: COL_CONCEPTO, minWidth: COL_CONCEPTO, maxWidth: COL_CONCEPTO }}>Total General</td>
+                <td className="lg:sticky px-2 py-3.5 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_COSTO, width: COL_COSTO_UNIT, minWidth: COL_COSTO_UNIT, maxWidth: COL_COSTO_UNIT }}></td>
+                <td className="lg:sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PPTO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBudgeted)}</td>
+                <td className="lg:sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_EJERC, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalGenerated)}</td>
+                <td className="lg:sticky px-1.5 py-3.5 text-right font-bold text-[12px] border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_SALDO, width: COL_ANNUAL, minWidth: COL_ANNUAL, maxWidth: COL_ANNUAL }}>{formatMXNFull(vm.totalBalance)}</td>
+                <td className="lg:sticky px-4 py-3.5 text-right border-r border-white/10 bg-brand-deep shadow-[2px_0_5px_rgba(0,0,0,0.1)]" style={{ left: LEFT_PROVEEDOR, width: COL_PROVEEDOR, minWidth: COL_PROVEEDOR, maxWidth: COL_PROVEEDOR }}></td>
                 
                 {monthNames.map((m, index) => {
                   const monthNumber = index + 1;

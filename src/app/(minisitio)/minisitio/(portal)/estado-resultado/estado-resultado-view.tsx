@@ -575,7 +575,7 @@ export function EstadoResultadoView({
             <table className="min-w-full divide-y divide-line">
               <thead className="bg-canvas">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider md:sticky md:left-0 bg-gray-50 z-10">
                     Concepto
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider">
@@ -598,7 +598,7 @@ export function EstadoResultadoView({
                   key={ingreso.id}
                   className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                 >
-                  <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit z-10">
+                  <td className="px-4 py-3 text-sm text-gray-900 font-medium md:sticky md:left-0 bg-inherit z-10">
                     {ingreso.nombre}
                   </td>
                   <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900">
@@ -617,7 +617,7 @@ export function EstadoResultadoView({
 
               {/* Subtotal Principales */}
               <tr className="bg-green-100 font-semibold">
-                <td className="px-4 py-3 text-sm text-green-900 sticky left-0 bg-green-100 z-10">
+                <td className="px-4 py-3 text-sm text-green-900 md:sticky md:left-0 bg-green-100 z-10">
                   Subtotal Ingresos Principales
                 </td>
                 <td className="px-4 py-3 text-sm text-right font-mono font-bold text-green-900">
@@ -640,7 +640,7 @@ export function EstadoResultadoView({
                     key={ingreso.id}
                     className={idx % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
-                    <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit z-10">
+                    <td className="px-4 py-3 text-sm text-gray-900 font-medium md:sticky md:left-0 bg-inherit z-10">
                       {ingreso.nombre}
                     </td>
                     <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900">
@@ -660,7 +660,7 @@ export function EstadoResultadoView({
               {/* Subtotal Otros */}
               {ingresos.otros.length > 0 && (
                 <tr className="bg-green-100 font-semibold">
-                  <td className="px-4 py-3 text-sm text-green-900 sticky left-0 bg-green-100 z-10">
+                  <td className="px-4 py-3 text-sm text-green-900 md:sticky md:left-0 bg-green-100 z-10">
                     Subtotal Otros Ingresos
                   </td>
                   <td className="px-4 py-3 text-sm text-right font-mono font-bold text-green-900">
@@ -679,7 +679,7 @@ export function EstadoResultadoView({
 
               {/* Total Ingresos */}
               <tr className="bg-green-200 font-bold border-t-2 border-green-400">
-                <td className="px-4 py-4 text-sm text-green-900 uppercase sticky left-0 bg-green-200 z-10">
+                <td className="px-4 py-4 text-sm text-green-900 uppercase md:sticky md:left-0 bg-green-200 z-10">
                   Total Ingresos
                 </td>
                 <td className="px-4 py-4 text-base text-right font-mono font-bold text-green-900">
@@ -745,7 +745,7 @@ export function EstadoResultadoView({
             <table className="min-w-full divide-y divide-line">
               <thead className="bg-canvas">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider md:sticky md:left-0 bg-gray-50 z-10">
                     Concepto
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider">
@@ -766,7 +766,7 @@ export function EstadoResultadoView({
                 <React.Fragment key={grupo.id}>
                   {/* Grupo Principal */}
                   <tr className="bg-gray-100 hover:bg-gray-150">
-                    <td className="px-4 py-3 text-sm text-gray-900 font-bold sticky left-0 bg-gray-100 z-10">
+                    <td className="px-4 py-3 text-sm text-gray-900 font-bold md:sticky md:left-0 bg-gray-100 z-10">
                       <div className="flex items-center">
                         <button
                           className="flex items-center cursor-pointer hover:text-gray-700 transition-colors"
@@ -806,7 +806,7 @@ export function EstadoResultadoView({
                         onClick={() => openConceptosModal(opcion.id, `${grupo.nombre} - ${opcion.nombre}`)}
                         title="Click para ver conceptos detallados"
                       >
-                        <td className="px-4 py-3 text-sm text-gray-800 font-semibold sticky left-0 bg-gray-50 z-10">
+                        <td className="px-4 py-3 text-sm text-gray-800 font-semibold md:sticky md:left-0 bg-gray-50 z-10">
                           <div className="flex items-center justify-between pl-6">
                             <div className="flex items-center">
                               <span className="w-6 text-gray-400 mr-2">
@@ -840,7 +840,7 @@ export function EstadoResultadoView({
 
               {/* Total Egresos */}
               <tr className="bg-red-200 font-bold border-t-2 border-red-400">
-                <td className="px-4 py-4 text-sm text-red-900 uppercase sticky left-0 bg-red-200 z-10">
+                <td className="px-4 py-4 text-sm text-red-900 uppercase md:sticky md:left-0 bg-red-200 z-10">
                   Total Egresos
                 </td>
                 <td className="px-4 py-4 text-base text-right font-mono font-bold text-red-900">
@@ -888,7 +888,7 @@ export function EstadoResultadoView({
           <table className="min-w-full divide-y divide-line">
             <thead className="bg-canvas">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase sticky left-0 bg-gray-50 z-10">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase md:sticky md:left-0 bg-gray-50 z-10">
                   Balance
                 </th>
                 <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase">
@@ -909,7 +909,7 @@ export function EstadoResultadoView({
                 className={(balance?.anual || 0) >= 0 ? "bg-blue-100" : "bg-orange-100"}
               >
                 <td
-                  className={`px-4 py-4 text-sm font-bold uppercase sticky left-0 z-10 ${
+                  className={`px-4 py-4 text-sm font-bold uppercase md:sticky md:left-0 z-10 ${
                     (balance?.anual || 0) >= 0
                       ? "bg-blue-100 text-blue-900"
                       : "bg-orange-100 text-orange-900"

@@ -288,16 +288,16 @@ export function TicketsView({
   };
 
   return (
-    <div className="min-h-screen bg-canvas p-6">
+    <div className="min-h-screen bg-canvas p-4 sm:p-6">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-[#304854] rounded-xl flex items-center justify-center shadow-lg">
               <TicketIcon className="w-6 h-6 text-[#d0b685]" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 Solicitudes y reportes
               </h1>
               <p className="text-gray-600">
@@ -332,10 +332,10 @@ export function TicketsView({
 
       {/* Tabs */}
       <div className="mb-6">
-        <div className="bg-white rounded-lg p-1 shadow-sm border border-gray-200 inline-flex">
+        <div className="bg-white rounded-lg p-1 shadow-sm border border-gray-200 flex sm:inline-flex flex-wrap gap-1 w-full sm:w-auto">
           <button
             onClick={() => handleTabChange("open")}
-            className={`px-6 py-3 rounded-md font-medium transition-all duration-200 ${
+            className={`flex-1 sm:flex-initial text-center px-3 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-md font-medium transition-all duration-200 ${
               activeTab === "open"
                 ? "bg-[#304854] text-white shadow-md"
                 : "text-gray-600 hover:text-gray-900"
@@ -346,7 +346,7 @@ export function TicketsView({
           </button>
           <button
             onClick={() => handleTabChange("closed")}
-            className={`px-6 py-3 rounded-md font-medium transition-all duration-200 ${
+            className={`flex-1 sm:flex-initial text-center px-3 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base rounded-md font-medium transition-all duration-200 ${
               activeTab === "closed"
                 ? "bg-[#304854] text-white shadow-md"
                 : "text-gray-600 hover:text-gray-900"

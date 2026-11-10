@@ -185,7 +185,7 @@ export function KpiDetailModal({
               >
                 {kpi.label}
               </motion.p>
-              <div className="flex items-baseline gap-2.5 mt-0.5">
+              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5 mt-0.5">
                 <motion.span
                   className="text-[26px] font-bold leading-none tracking-tight"
                   style={{ color: tone.value }}
@@ -298,7 +298,7 @@ export function KpiDetailModal({
                       registros
                     </p>
                   </div>
-                  <div className="relative">
+                  <div className="relative w-full sm:w-auto">
                     <Search className="w-3.5 h-3.5 text-ink-soft/60 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="search"
@@ -308,7 +308,7 @@ export function KpiDetailModal({
                         setPage(1);
                       }}
                       placeholder="Buscar en la tabla…"
-                      className="h-9 w-[220px] max-w-full rounded-lg border border-line bg-card pl-8 pr-3 text-[12px] text-ink placeholder:text-ink-soft/50 focus:outline-none focus:ring-2 focus:ring-brand/30"
+                      className="h-9 w-full sm:w-[220px] max-w-full rounded-lg border border-line bg-card pl-8 pr-3 text-[12px] text-ink placeholder:text-ink-soft/50 focus:outline-none focus:ring-2 focus:ring-brand/30"
                     />
                   </div>
                 </div>

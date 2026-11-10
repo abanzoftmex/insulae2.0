@@ -107,7 +107,7 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
       activePage="listado-arrendamientos"
     >
       {/* KPI strip */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatCard accent="brand" label="Total" value={area.rentals.length} icon={<KeyRound className="h-3.5 w-3.5" />} />
         <StatCard accent="lime" label="Activos" value={activeRentals.length} icon={<KeyRound className="h-3.5 w-3.5" />} />
         <StatCard accent={finishedCount > 0 ? "gold" : "cyan"} label="Finalizados" value={finishedCount} icon={<KeyRound className="h-3.5 w-3.5" />} />

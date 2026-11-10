@@ -147,7 +147,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const showHint  = mode === "data" && query.trim().length < 2;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[14vh]">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[8vh] sm:pt-[14vh]">
       {/* Scrim */}
       <div
         className="absolute inset-0 bg-brand-deep/40 backdrop-blur-sm"
@@ -179,7 +179,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
             placeholder={mode === "nav" ? "Buscar módulos..." : "Buscar en todos los datos..."}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 text-[14px] text-ink placeholder:text-ink-soft/40 bg-transparent outline-none"
+            className="flex-1 min-w-0 text-[14px] text-ink placeholder:text-ink-soft/40 bg-transparent outline-none"
           />
           {query && (
             <button
@@ -345,7 +345,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-line px-4 py-2 flex items-center gap-4">
+        <div className="border-t border-line px-4 py-2 flex flex-wrap items-center gap-x-4 gap-y-1">
           {[
             { keys: "↑↓", label: "navegar" },
             { keys: "↵",  label: "abrir" },

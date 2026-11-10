@@ -94,7 +94,7 @@ export function PropiedadDetalleView({ id, detail }: { id: string; detail: Prope
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-5 sm:space-y-6">
       {/* Información clave de la propiedad */}
       <div className="bg-white border border-gray-200 rounded-md p-4">
         {/* Métricas de superficie */}
@@ -118,8 +118,8 @@ export function PropiedadDetalleView({ id, detail }: { id: string; detail: Prope
         </div>
 
         {/* Información del propietario y ubicación */}
-        <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-          <div className="flex items-center space-x-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-100">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <div>
               <div className="text-xs text-gray-500 mb-1">Propietario</div>
               <div className="text-sm font-medium text-gray-900">
@@ -127,7 +127,7 @@ export function PropiedadDetalleView({ id, detail }: { id: string; detail: Prope
               </div>
               <div className="text-xs text-gray-600">{user?.email}</div>
             </div>
-            <div className="border-l border-gray-200 pl-6">
+            <div className="border-l border-gray-200 pl-4 sm:pl-6">
               <div className="text-xs text-gray-500 mb-1">Contacto</div>
               <div className="text-sm text-gray-900">{user?.telefono || "No disponible"}</div>
             </div>
@@ -147,7 +147,7 @@ export function PropiedadDetalleView({ id, detail }: { id: string; detail: Prope
 
       {/* Resumen financiero simplificado */}
       <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-        <div className="bg-gray-50 px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+        <div className="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200 flex flex-wrap justify-between items-center gap-2">
           <h2 className="text-lg font-semibold text-gray-900">Resumen de Cuenta</h2>
           <Link
             href={msPath(`/propiedades/${id}/estado-cuenta`)}

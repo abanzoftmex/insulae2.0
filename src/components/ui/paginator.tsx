@@ -53,7 +53,7 @@ export function Paginator({ page, totalPages, totalRows, hasPrev, hasNext, prevH
         {isPending && <Loader2 className="h-3.5 w-3.5 animate-spin text-brand" />}
       </div>
 
-      <div className="flex items-center flex-wrap gap-1.5">
+      <div className="flex items-center justify-center sm:justify-end flex-wrap gap-1.5">
         <button
           onClick={() => navigate(createPageUrl(Math.max(1, page - 1)))}
           disabled={!hasPrev || isPending}

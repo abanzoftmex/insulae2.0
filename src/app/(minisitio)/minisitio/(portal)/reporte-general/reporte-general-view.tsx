@@ -248,7 +248,7 @@ export function ReporteGeneralView({
             <table className="min-w-full divide-y divide-line">
               <thead className="bg-canvas">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50 z-10">
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider md:sticky md:left-0 bg-gray-50 z-10">
                     Área Privativa
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider">
@@ -273,7 +273,7 @@ export function ReporteGeneralView({
                     key={area.id}
                     className={index % 2 === 0 ? "bg-white" : "bg-gray-50"}
                   >
-                    <td className="px-4 py-3 whitespace-nowrap sticky left-0 bg-inherit z-10">
+                    <td className="px-4 py-3 whitespace-nowrap md:sticky md:left-0 bg-inherit z-10">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-8 w-8 flex items-center justify-center bg-gray-100 rounded-full">
                           {area.tipo === "Propiedad" ? (

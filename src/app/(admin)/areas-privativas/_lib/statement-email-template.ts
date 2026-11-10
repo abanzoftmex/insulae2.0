@@ -1,3 +1,4 @@
+import { buildInstitutionalEmailFooterRowHtml } from "@/shared/infrastructure/email/email-footer";
 import { formatCurrency } from "./private-area-action-routing";
 
 export interface StatementEmailTemplateProps {
@@ -12,6 +13,7 @@ export interface StatementEmailTemplateProps {
   pdfFilename: string;
   appBaseUrl?: string;
   logoSrc?: string;
+  footerLogoSrc?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function buildStatementEmailHtml({
   pdfFilename,
   appBaseUrl = "",
   logoSrc,
+  footerLogoSrc,
 }: StatementEmailTemplateProps): string {
   const isDebtPositive = totalBalance > 0.005;
   const resolvedLogoSrc =
@@ -228,20 +231,12 @@ export function buildStatementEmailHtml({
             </td>
           </tr>
 
-          <!-- Footer Information Banner -->
-          <tr>
-            <td align="center" style="background-color: #304854; padding: 22px 24px; border-top: 1px solid #3d5b6a;">
-              <p style="margin: 0 0 6px 0; font-size: 10.5px; font-weight: 800; letter-spacing: 2px; color: #d0b685; text-transform: uppercase;">
-                INSULAE &middot; SERVICIOS CONDOMINALES
-              </p>
-              <p style="margin: 0 0 4px 0; font-size: 11px; color: #94a3b8; line-height: 1.4;">
-                Este es un correo institucional generado por la administración del condominio.
-              </p>
-              <p style="margin: 0; font-size: 10px; color: #64748b; line-height: 1.4;">
-                Por favor no comparta este mensaje: contiene información confidencial de su área privativa.
-              </p>
-            </td>
-          </tr>
+          ${buildInstitutionalEmailFooterRowHtml({
+            footerLogoSrc,
+            appBaseUrl,
+            noticeText:
+              "Este es un correo institucional generado por la administración del condominio. Por favor no comparta este mensaje: contiene información confidencial de su área privativa.",
+          })}
 
         </table>
         <!-- End Main Card -->

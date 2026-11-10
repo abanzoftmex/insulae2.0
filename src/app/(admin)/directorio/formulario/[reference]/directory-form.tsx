@@ -967,7 +967,7 @@ export function DirectoryForm({
                 Participación
               </p>
             </div>
-            <div className={`${sectionBodyCls} grid grid-cols-2 gap-3`}>
+            <div className={`${sectionBodyCls} grid grid-cols-1 sm:grid-cols-2 gap-3`}>
               <div className="p-3 rounded-lg bg-canvas border border-line space-y-1 flex flex-col justify-between">
                 <p className="text-[9px] font-bold uppercase tracking-widest text-ink-soft/70">Áreas</p>
                 <p className="text-2xl font-black text-[#3a2f25]">{legalTotalAreas}</p>
@@ -987,7 +987,7 @@ export function DirectoryForm({
 
       {/* Comercios con los que cuenta */}
       <div className="space-y-4 pt-4">
-        <div className="pb-3 border-b border-line flex items-center justify-between">
+        <div className="pb-3 border-b border-line flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Store className="w-4 h-4 text-brand" />
             <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">
@@ -1012,7 +1012,7 @@ export function DirectoryForm({
         {/* Formulario para agregar comercio */}
         {isAddCommerceOpen && (
           <div className="p-5 rounded-xl border border-[#c59b27]/60 bg-white shadow-sm space-y-4 animate-in fade-in duration-300">
-            <div className="flex items-center justify-between pb-2 border-b border-line/60">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-line/60">
               <h3 className="text-xs font-bold uppercase tracking-wider text-brand">Nuevo comercio para vincular</h3>
               <span className="text-[10px] text-ink-soft">Complete los datos del comercio</span>
             </div>
@@ -1460,7 +1460,7 @@ export function DirectoryForm({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-line bg-canvas flex items-center justify-between">
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-line bg-canvas flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-extrabold uppercase tracking-widest text-brand-deep">Gestionar Tipos de Registro</h3>
               <button
                 onClick={() => setIsManagerOpen(false)}
@@ -1614,7 +1614,7 @@ export function DirectoryForm({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-2xl bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-line bg-canvas flex items-center justify-between">
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-line bg-canvas flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-extrabold uppercase tracking-widest text-brand-deep">Agregar Usuario Anidado</h3>
               <button
                 type="button"
@@ -1838,7 +1838,7 @@ export function DirectoryForm({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
           <div className="w-full max-w-2xl bg-white rounded-card border border-line shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-line bg-canvas flex items-center justify-between">
+            <div className="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-line bg-canvas flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-sm font-extrabold uppercase tracking-widest text-brand-deep">Detalles de Usuario Anidado</h3>
               <button
                 type="button"

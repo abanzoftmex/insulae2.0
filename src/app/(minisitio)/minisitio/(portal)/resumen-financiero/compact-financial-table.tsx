@@ -107,9 +107,8 @@ export function CompactFinancialTable({
             <thead>
               <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
                 <th
-                  style={{ minWidth: "260px", width: "260px" }}
                   className={cn(
-                    "sticky left-0 z-30 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
+                    "md:sticky md:left-0 z-30 w-[170px] min-w-[170px] sm:w-[260px] sm:min-w-[260px] px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
                     tone.headerBg,
                     tone.textTone
                   )}
@@ -140,9 +139,8 @@ export function CompactFinancialTable({
                   className={cn("h-10 hover:bg-canvas/10 transition-colors", row.isTotal && tone.totalRowBg)}
                 >
                   <td
-                    style={{ minWidth: "260px", width: "260px" }}
                     className={cn(
-                      "sticky left-0 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
+                      "md:sticky md:left-0 w-[170px] min-w-[170px] sm:w-[260px] sm:min-w-[260px] px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
                       row.isTotal ? tone.textTone : tone.firstColBg
                     )}
                   >

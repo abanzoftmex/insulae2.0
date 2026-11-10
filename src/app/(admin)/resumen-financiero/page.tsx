@@ -132,8 +132,7 @@ function CompactFinancialTable({
             <thead>
               <tr className="h-9 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-ink-soft/70">
                 <th 
-                  style={{ minWidth: "260px", width: "260px" }}
-                  className={cn("sticky left-0 z-30 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", tone.headerBg, tone.textTone)}
+                  className={cn("md:sticky md:left-0 z-30 w-[170px] min-w-[170px] sm:w-[260px] sm:min-w-[260px] px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", tone.headerBg, tone.textTone)}
                 >
                   {firstColumnLabel}
                 </th>
@@ -155,9 +154,8 @@ function CompactFinancialTable({
               {table.rows.map((row) => (
                 <tr key={row.id} className={cn("h-10 hover:bg-canvas/10 transition-colors", row.isTotal && tone.totalRowBg)}>
                   <td 
-                    style={{ minWidth: "260px", width: "260px" }}
                     className={cn(
-                      "sticky left-0 px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
+                      "md:sticky md:left-0 w-[170px] min-w-[170px] sm:w-[260px] sm:min-w-[260px] px-4 border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]",
                       row.isTotal ? tone.textTone : tone.firstColBg
                     )}
                   >
@@ -330,7 +328,7 @@ export default async function ResumenFinancieroPage({
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Resumen Financiero</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-brand tracking-tighter uppercase">Resumen Financiero</h1>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Fase 1 · BETA</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {vm.condominiumName} · Corte {vm.selectedYear} · {vm.generatedAtLabel}
@@ -341,7 +339,7 @@ export default async function ResumenFinancieroPage({
         <div className="flex flex-wrap items-center gap-3">
           {/* Year Selector */}
           {vm.availableYears.length > 1 && (
-            <div className="flex items-center gap-1 p-1 bg-canvas-2 rounded-lg border border-line/50">
+            <div className="flex flex-wrap items-center gap-1 p-1 bg-canvas-2 rounded-lg border border-line/50">
               {vm.availableYears.map((y) => (
                 <Link
                   key={y}
@@ -358,11 +356,11 @@ export default async function ResumenFinancieroPage({
           )}
 
           {/* Mode Selector */}
-          <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50 w-full sm:w-auto">
             <Link
               href={`?mode=ordinary&year=${vm.selectedYear}`}
               className={cn(
-                "h-8 px-4 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
+                "h-8 px-3 sm:px-4 flex-1 sm:flex-initial justify-center flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
                 showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
               )}
             >
@@ -371,7 +369,7 @@ export default async function ResumenFinancieroPage({
             <Link
               href={`?mode=extraordinary&year=${vm.selectedYear}`}
               className={cn(
-                "h-8 px-4 flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
+                "h-8 px-3 sm:px-4 flex-1 sm:flex-initial justify-center flex items-center rounded-md text-[10px] font-bold uppercase tracking-tighter transition-all",
                 !showOrdinary ? "bg-card text-brand shadow-sm border border-line" : "text-ink-soft hover:text-ink"
               )}
             >
@@ -502,7 +500,7 @@ export default async function ResumenFinancieroPage({
                   <table className="w-full text-left border-collapse min-w-440">
                     <thead>
                       <tr className="h-9 bg-danger/10 border-b border-line text-[10px] font-bold uppercase tracking-tighter text-danger">
-                        <th className="sticky left-0 z-30 px-4 border-r border-line bg-danger/10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Tipo de Egreso</th>
+                        <th className="md:sticky md:left-0 z-30 px-4 border-r border-line bg-danger/10 shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Tipo de Egreso</th>
                         <th className="px-4 text-right border-r border-line">Egreso {vm.ordinaryExpensesLegacyTable.years[0]}</th>
                         {vm.ordinaryMonthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m} {vm.ordinaryExpensesLegacyTable.years[0]}</th>)}
                         <th className="px-4 text-right border-r border-line">Egreso {vm.ordinaryExpensesLegacyTable.years[1]}</th>
@@ -514,7 +512,7 @@ export default async function ResumenFinancieroPage({
                         const s2 = row.yearly[1];
                         return (
                           <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-danger/10 text-danger font-bold")}>
-                            <td className={cn("sticky left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-danger/10" : "bg-danger/2")}>{row.label}</td>
+                            <td className={cn("md:sticky md:left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-danger/10" : "bg-danger/2")}>{row.label}</td>
                             <td className="px-4 text-right font-bold border-r border-line">{s1?.annualTotal}</td>
                             {s1?.months.map((v, i) => <td key={i} className="px-3 text-right text-ink-soft border-r border-line/30">{v}</td>)}
                             <td className="px-4 text-right font-bold border-r border-line">{s2?.annualTotal}</td>
@@ -542,7 +540,7 @@ export default async function ResumenFinancieroPage({
                       <table className="w-full text-left border-collapse min-w-240">
                         <thead>
                           <tr className="h-9 bg-gold-soft border-b border-line text-[10px] font-bold uppercase tracking-tighter text-gold">
-                            <th className="sticky left-0 z-30 px-4 border-r border-line bg-gold-soft shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Saldo</th>
+                            <th className="md:sticky md:left-0 z-30 px-4 border-r border-line bg-gold-soft shadow-[2px_0_5px_rgba(0,0,0,0.02)]">Saldo</th>
                             {vm.ordinaryMonthLabels.map(m => <th key={m} className="px-3 text-right border-r border-line/50 font-bold opacity-60 text-ink-soft">{m.slice(0, 3)}</th>)}
                             <th className="px-4 text-right border-r border-line">Total Anual</th>
                           </tr>
@@ -550,7 +548,7 @@ export default async function ResumenFinancieroPage({
                         <tbody className="divide-y divide-line/30 text-[12px]">
                           {table.rows.map(row => (
                             <tr key={row.id} className={cn("h-10 hover:bg-canvas/10", row.isTotal && "bg-gold-soft text-gold font-bold")}>
-                              <td className={cn("sticky left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-gold-soft" : "bg-gold-soft/20")}>{row.label}</td>
+                              <td className={cn("md:sticky md:left-0 px-4 font-bold border-r border-line shadow-[2px_0_5px_rgba(0,0,0,0.02)]", row.isTotal ? "bg-gold-soft" : "bg-gold-soft/20")}>{row.label}</td>
                               {row.months.map((v, i) => <td key={i} className="px-3 text-right text-ink-soft border-r border-line/30">{v}</td>)}
                               <td className={cn("px-4 text-right font-bold", row.annualTotalValue >= 0 ? "text-brand" : "text-danger")}>{row.annualTotal}</td>
                             </tr>

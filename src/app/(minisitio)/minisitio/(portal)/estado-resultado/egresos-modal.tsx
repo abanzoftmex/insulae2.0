@@ -173,7 +173,7 @@ export function EgresosModal({
               <table className="min-w-full divide-y divide-line">
                 <thead className="bg-canvas sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider sticky left-0 bg-gray-50">
+                    <th className="px-4 py-3 text-left text-xs font-semibold text-brand uppercase tracking-wider md:sticky md:left-0 bg-gray-50">
                       Concepto
                     </th>
                     <th className="px-4 py-3 text-right text-xs font-semibold text-brand uppercase tracking-wider">
@@ -195,7 +195,7 @@ export function EgresosModal({
                       key={concepto.id}
                       className={idx % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-50 hover:bg-gray-100"}
                     >
-                      <td className="px-4 py-3 text-sm text-gray-900 font-medium sticky left-0 bg-inherit">
+                      <td className="px-4 py-3 text-sm text-gray-900 font-medium md:sticky md:left-0 bg-inherit">
                         {concepto.nombre}
                       </td>
                       <td className="px-4 py-3 text-sm text-right font-mono font-semibold text-gray-900">
@@ -213,7 +213,7 @@ export function EgresosModal({
                   ))}
 
                   <tr className="bg-red-100 font-semibold border-t-2 border-red-300">
-                    <td className="px-4 py-4 text-sm text-red-900 uppercase sticky left-0 bg-red-100">
+                    <td className="px-4 py-4 text-sm text-red-900 uppercase md:sticky md:left-0 bg-red-100">
                       Total General
                     </td>
                     <td className="px-4 py-4 text-base text-right font-mono font-bold text-red-900">

@@ -11,6 +11,7 @@ import {
   buildAnnouncementInvitationEmailHtml,
   AnnouncementDateEmailItem,
 } from "@/shared/infrastructure/email/announcement-email-template";
+import { resolveFooterLogoAsset } from "@/shared/infrastructure/email/email-footer-asset";
 import {
   serializeTopicConclusions,
   TopicConclusionsData
@@ -479,6 +480,8 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
     let failedCount = 0;
     const sendErrors: { recipient: string; error: string }[] = [];
 
+    const footerLogo = resolveFooterLogoAsset(origin);
+
     // Enviar correos individuales con captura rigurosa de errores de proveedor
     for (const { email, name } of recipients) {
       const emailHtml = buildAnnouncementInvitationEmailHtml({
@@ -490,6 +493,8 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
         dates: dateItems,
         portalUrl,
         pdfUrl: announcement.pdfUrl ? absoluteFileUrl(announcement.pdfUrl, origin) : null,
+        appBaseUrl: origin,
+        footerLogoSrc: footerLogo.footerLogoSrc,
         topics: topicsList,
       });
 
@@ -499,6 +504,7 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
           to: email,
           subject: emailSubject,
           html: emailHtml,
+          ...(footerLogo.sdkAttachment ? { attachments: [footerLogo.sdkAttachment] } : {}),
         });
 
         if (error) {

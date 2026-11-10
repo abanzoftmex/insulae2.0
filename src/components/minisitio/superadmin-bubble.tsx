@@ -227,7 +227,7 @@ export function SuperAdminBubble({
       {/* Burbuja flotante */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 z-[9999] w-14 h-14 bg-slate-900 hover:bg-slate-800 rounded-full shadow-lg ring-1 ring-white/10 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] w-14 h-14 bg-slate-900 hover:bg-slate-800 rounded-full shadow-lg ring-1 ring-white/10 flex items-center justify-center hover:scale-105 active:scale-95 transition-all duration-200"
         title="Modo Superadmin"
       >
         <svg
@@ -267,7 +267,7 @@ export function SuperAdminBubble({
       {isOpen && (
         <div
           ref={panelRef}
-          className="fixed bottom-24 right-6 z-[9999] w-96 max-h-[70vh] bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col"
+          className="fixed bottom-20 left-3 right-3 sm:bottom-24 sm:left-auto sm:right-6 z-[9999] w-auto sm:w-96 max-h-[70vh] bg-white rounded-2xl shadow-2xl ring-1 ring-slate-200 overflow-hidden flex flex-col"
         >
           {/* Header */}
           <div className="bg-slate-900 p-4 text-white">

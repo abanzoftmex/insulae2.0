@@ -90,8 +90,8 @@ export default async function PresupuestosPage(props: { searchParams: Promise<{ 
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Presupuesto {year}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-brand tracking-tighter uppercase">Presupuesto {year}</h1>
               <YearSelector currentYear={currentYear} selectedYear={year} />
               {!canUpdate && (
                 <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">

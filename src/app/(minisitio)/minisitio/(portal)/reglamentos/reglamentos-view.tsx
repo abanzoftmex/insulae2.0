@@ -53,7 +53,7 @@ export function ReglamentosView({ documentos, error }: { documentos: Documento[]
               {documentos.map((documento) => (
                 <div
                   key={documento.id_proyectos_documentos}
-                  className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
+                  className="flex flex-wrap items-center justify-between gap-3 p-3.5 sm:p-4 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors"
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">

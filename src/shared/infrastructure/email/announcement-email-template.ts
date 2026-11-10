@@ -11,6 +11,8 @@
  * con Gmail, Outlook (MSO), Apple Mail y dispositivos móviles.
  */
 
+import { buildInstitutionalEmailFooterRowHtml } from "./email-footer";
+
 export interface AnnouncementDateEmailItem {
   callType: string;
   formattedDate: string;
@@ -28,6 +30,8 @@ export interface AnnouncementEmailOptions {
   portalUrl: string;
   pdfUrl?: string | null;
   logoUrl?: string;
+  appBaseUrl?: string;
+  footerLogoSrc?: string;
   topics?: string[];
 }
 
@@ -49,6 +53,8 @@ export function buildAnnouncementInvitationEmailHtml({
   portalUrl,
   pdfUrl,
   logoUrl,
+  appBaseUrl,
+  footerLogoSrc,
   topics = [],
 }: AnnouncementEmailOptions): string {
   const safeCondo = escapeHtml(condominiumName);
@@ -252,37 +258,11 @@ export function buildAnnouncementInvitationEmailHtml({
             </td>
           </tr>
 
-          <!-- Pie de Correo Institucional -->
-          <tr>
-            <td align="center" style="background-color: #304854; padding: 24px 28px 22px 28px; border-top: 2px solid #d0b685; color: #ffffff;">
-              <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
-                <tr>
-                  <td align="center" style="padding-bottom: 12px;">
-                    <p style="margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 2.8px; color: #ffffff; text-transform: uppercase;">
-                      &#10018; INSULAE
-                    </p>
-                    <p style="margin: 2px 0 0 0; font-size: 9px; font-weight: 700; letter-spacing: 2px; color: #d0b685; text-transform: uppercase;">
-                      SERVICIOS CONDOMINALES
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center" style="padding-bottom: 10px;">
-                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #cbd5e1;">
-                      Recibió este correo porque está registrado en el sistema condominal de ${safeCondo}. Si hay un error en esta información, por favor póngase en contacto con la administración.
-                    </p>
-                  </td>
-                </tr>
-                <tr>
-                  <td align="center">
-                    <p style="margin: 0; font-size: 9.5px; font-weight: 700; letter-spacing: 1.5px; color: #d0b685; text-transform: uppercase;">
-                      ADMINISTRADORA VALQUIRICO A.C. &middot; RFC AVA1706221G3
-                    </p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+          ${buildInstitutionalEmailFooterRowHtml({
+            footerLogoSrc,
+            appBaseUrl,
+            noticeText: `Recibió este correo porque está registrado en el sistema condominal de ${condominiumName}. Si hay un error en esta información, por favor póngase en contacto con la administración.`,
+          })}
 
         </table>
       </td>

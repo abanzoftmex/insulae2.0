@@ -223,9 +223,9 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
       <div className="space-y-7">
         {/* ── Encabezado ─────────────────────────────────────────────── */}
         <header className="flex flex-wrap items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
+          <div className="flex items-start gap-3 min-w-0">
             <PageBackBadge className="mt-2 shrink-0 print:hidden" />
-            <div>
+            <div className="min-w-0">
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-accent mb-1">
                 {vm.condominiumName}
               </p>
@@ -282,7 +282,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               bodyClassName="justify-between gap-4"
             >
               <CompositionDonut data={vm.areasByCategory} totalLabel="Áreas" />
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2.5">
                 <MiniStat label="Predios" value={formatInt(vm.parentPrivateAreas)} />
                 <MiniStat label="Unidades" value={formatInt(vm.childPrivateAreas)} />
                 <MiniStat label="Construidos" value={formatInt(vm.builtAreas)} />
@@ -313,7 +313,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               bodyClassName="justify-between gap-4"
             >
               <HorizontalBars data={vm.builtM2ByZone} suffix=" m²" labelWidth={118} />
-              <div className="grid grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2.5">
                 <MiniStat
                   label="Promedio construido"
                   value={`${formatInt(vm.builtAreas ? vm.totalBuiltM2 / vm.builtAreas : 0)} m²`}
@@ -400,7 +400,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               {vm.businessesByLine && vm.businessesByLine.length > 0 ? (
                 <>
                   <BusinessLineDonut data={vm.businessesByLine} total={vm.classifiedBusinesses ?? 0} />
-                  <div className="grid grid-cols-3 gap-2.5 mt-4">
+                  <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2.5 mt-4">
                     <MiniStat label="Giros" value={formatInt(vm.businessLinesCount ?? 0)} hint="En el catálogo" />
                     <MiniStat
                       label="Clasificados"

@@ -18,6 +18,7 @@ import { canAccessAdminPanel, getPermissionsForUser } from "@/shared/application
 import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { findUserIdsByEmail, storedEmailMatching } from "@/shared/infrastructure/db/user-email-lookup";
 import { buildPasswordResetEmailHtml } from "@/shared/infrastructure/email/auth-email-templates";
+import { resolveFooterLogoAsset } from "@/shared/infrastructure/email/email-footer-asset";
 
 const GENERIC_OK =
   "Si el correo está registrado y tiene acceso al panel, recibirás un enlace para restablecer tu contraseña.";
@@ -117,11 +118,14 @@ async function sendResetEmail(input: { to: string; name: string; condominiumName
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.ADMIN_MAIL_FROM || `Condominio ${input.condominiumName} <finanzas@info.valquirico.com>`;
   const origin = await appOrigin();
+  const footerLogo = resolveFooterLogoAsset(origin);
   const html = buildPasswordResetEmailHtml({
     recipientName: input.name,
     resetLink: input.resetLink,
     condominiumName: input.condominiumName,
     logoUrl: `${origin}/brand/valquirico-logo-light.png`,
+    appBaseUrl: origin,
+    footerLogoSrc: footerLogo.footerLogoSrc,
     expiresInMinutes: 60,
   });
 
@@ -138,6 +142,7 @@ async function sendResetEmail(input: { to: string; name: string; condominiumName
       to: [input.to],
       subject: `Restablecer contraseña - ${input.condominiumName}`,
       html,
+      ...(footerLogo.restAttachment ? { attachments: [footerLogo.restAttachment] } : {}),
     }),
   });
   if (!response.ok) {

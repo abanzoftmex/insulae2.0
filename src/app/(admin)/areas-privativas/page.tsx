@@ -347,7 +347,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Inventario de Áreas Privativas</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-brand tracking-tighter uppercase">Inventario de Áreas Privativas</h1>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               Gestión maestra de superficies, usos de suelo y estado de cartera operativa.
             </p>
@@ -395,23 +395,23 @@ export default async function AreasPrivativasPage(props: PageProps) {
                   <span className="h-2 w-2 rounded-full bg-brand" /> Total de m2 legales del condominio
                 </h4>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Áreas privativas / lotes totales</span>
                     <span className="font-bold text-ink">{reportVm.projectTotalApoles}</span>
                   </div>
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Superficie total
                       <span className="ml-1 text-[9px] text-brand/50 font-normal">(configurado en /condominio)</span>
                     </span>
                     <span className="font-bold text-ink">{reportVm.projectTotalM2} m²</span>
                   </div>
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">M2 de áreas privativas totales
                       <span className="ml-1 text-[9px] text-brand/50 font-normal">(configurado en /condominio)</span>
                     </span>
                     <span className="font-bold text-ink">{reportVm.projectPrivateAreasM2} m²</span>
                   </div>
-                  <div className="flex justify-between py-0.5">
+                  <div className="flex justify-between gap-2 py-0.5">
                     <span className="text-ink-soft font-medium">M2 de áreas comunes
                       <span className="ml-1 text-[9px] text-brand/50 font-normal">(configurado en /condominio)</span>
                     </span>
@@ -426,21 +426,21 @@ export default async function AreasPrivativasPage(props: PageProps) {
                   <span className="h-2 w-2 rounded-full bg-cyan-500" /> Total de m2 reales
                 </h4>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Áreas privativas / lotes</span>
                     <span className="font-bold text-ink">{reportVm.parentAreasCount}</span>
                   </div>
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Superficie total
                       <span className="ml-1 text-[9px] text-cyan-600/50 font-normal">(calculado con áreas)</span>
                     </span>
                     <span className="font-bold text-ink">{reportVm.parentTotalM2} m²</span>
                   </div>
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">M2 de áreas privativas / lotes</span>
                     <span className="font-bold text-ink">{reportVm.parentAreasM2} m²</span>
                   </div>
-                  <div className="flex justify-between py-0.5">
+                  <div className="flex justify-between gap-2 py-0.5">
                     <span className="text-ink-soft font-medium">M2 de áreas comunes subcondominio (lotes)</span>
                     <span className="font-bold text-ink">{reportVm.parentAreasCommonM2} m²</span>
                   </div>
@@ -453,15 +453,15 @@ export default async function AreasPrivativasPage(props: PageProps) {
                   <span className="h-2 w-2 rounded-full bg-yellow-500" /> Clasificación Operativa
                 </h4>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Lotes disponibles (Soles)</span>
                     <span className="font-bold text-yellow-700">{reportVm.availableAreas}</span>
                   </div>
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Lotes construidos (Sombras)</span>
                     <span className="font-bold text-blue-700">{reportVm.builtAreas}</span>
                   </div>
-                  <div className="flex justify-between py-0.5">
+                  <div className="flex justify-between gap-2 py-0.5">
                     <span className="text-ink-soft font-medium">Porcentajes del condominio</span>
                     <span className="font-extrabold text-[10px] text-ink-soft">{reportVm.availableRatio} soles / {reportVm.builtRatio} sombras</span>
                   </div>
@@ -474,15 +474,15 @@ export default async function AreasPrivativasPage(props: PageProps) {
                   <span className="h-2 w-2 rounded-full bg-lime-500" /> Estructura y Fusiones
                 </h4>
                 <div className="space-y-1.5 text-xs">
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">FAPAs</span>
                     <span className="font-bold text-ink">{reportVm.areasWithUseType}</span>
                   </div>
-                  <div className="flex justify-between py-0.5 border-b border-line/30">
+                  <div className="flex justify-between gap-2 py-0.5 border-b border-line/30">
                     <span className="text-ink-soft font-medium">Fusiones de Áreas / lotes</span>
                     <span className="font-bold text-ink">{reportVm.activeFusionsCount}</span>
                   </div>
-                  <div className="flex justify-between py-0.5">
+                  <div className="flex justify-between gap-2 py-0.5">
                     <span className="text-ink-soft font-medium">Fracción indiviso total</span>
                     <span className="font-bold text-ink">{reportVm.totalIndiviso}%</span>
                   </div>
@@ -499,7 +499,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
           <Filter className="h-3 w-3 text-white/70" />
           <p className="text-[10px] font-bold uppercase tracking-widest text-white">Filtros de búsqueda</p>
         </div>
-        <form className="p-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end" method="get">
+        <form className="p-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 items-end" method="get">
           <Input label="Buscar" name="q" defaultValue={vm.filters.query} placeholder="Código, nombre..." className="h-8 text-xs" />
           <div className="flex flex-col gap-1.5">
             <label className="text-[10px] font-bold uppercase tracking-widest text-ink-soft/70 leading-none">Uso Suelo</label>
@@ -571,9 +571,9 @@ export default async function AreasPrivativasPage(props: PageProps) {
             <thead className="sticky top-0 z-30 shadow-xs">
               <tr className="text-left text-[10px] font-bold uppercase tracking-widest">
                 {/* Sticky 1-3: Cabecera Neutral Slate */}
-                <th className="sticky left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Acciones</th>
-                <th className="sticky left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Ubicación</th>
-                <th className="sticky left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Área privativa/ Fracción de área privativa</th>
+                <th className="lg:sticky lg:left-0 top-0 z-50 px-2 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Acciones</th>
+                <th className="lg:sticky lg:left-[100px] top-0 z-50 px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Ubicación</th>
+                <th className="lg:sticky lg:left-[210px] top-0 z-50 px-3 py-3 border-b border-r-2 border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Área privativa/ Fracción de área privativa</th>
 
                 {/* Superficies e Indivisos (Legacy colColum2: #dfdfdf) */}
                 <th className="px-3 py-3 border-b border-r border-[#cbd5e1] bg-[#dfdfdf] text-slate-800 font-bold">Tipo de Apol</th>
@@ -676,7 +676,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
                   <tr key={`${row.id}-${rowIdx}`} className={cn("h-12 border-t border-[#e2e8f0] transition-colors group", rowBg, blockRowClass)}>
                     
                     {/* Sticky Column 1: Acciones */}
-                    <td className={cn("sticky left-0 z-20 px-2 py-1.5 border-r border-[#cbd5e1] shadow-xs transition-colors", actionsBg)}>
+                    <td className={cn("lg:sticky lg:left-0 z-20 px-2 py-1.5 border-r border-[#cbd5e1] shadow-xs transition-colors", actionsBg)}>
                       <div className="flex flex-wrap gap-1 w-[80px]">
                         {actions.map((act) => {
                           let isEnabled = act.isEnabled;
@@ -693,12 +693,12 @@ export default async function AreasPrivativasPage(props: PageProps) {
                     </td>
 
                     {/* Sticky Column 2: Ubicación */}
-                    <td className={cn("sticky left-[100px] z-20 px-3 text-xs font-bold text-slate-700 uppercase border-r border-[#cbd5e1] transition-colors", stickyInfoBg)}>
+                    <td className={cn("lg:sticky lg:left-[100px] z-20 px-3 text-xs font-bold text-slate-700 uppercase border-r border-[#cbd5e1] transition-colors", stickyInfoBg)}>
                       {row.zone}
                     </td>
 
                     {/* Sticky Column 3: Área / Fracción */}
-                    <td className={cn("sticky left-[210px] z-20 px-3 border-r-2 border-[#cbd5e1] shadow-xs transition-colors", stickyInfoBg)}>
+                    <td className={cn("lg:sticky lg:left-[210px] z-20 px-3 border-r-2 border-[#cbd5e1] shadow-xs transition-colors", stickyInfoBg)}>
                       <p className="font-bold text-slate-900 leading-tight truncate">{row.name}</p>
                       <div className="flex gap-1.5 mt-0.5">
                         <span className="px-1.5 py-px rounded-xs bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 uppercase">{row.code}</span>

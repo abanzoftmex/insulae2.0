@@ -74,8 +74,8 @@ export default async function EstructuraCondominalPage({ searchParams }: Estruct
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Estructura Condominal</h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-2xl sm:text-3xl font-bold text-brand tracking-tighter uppercase">Estructura Condominal</h1>
               {!canUpdate && (
                 <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
                   Modo Solo Lectura
@@ -134,8 +134,8 @@ export default async function EstructuraCondominalPage({ searchParams }: Estruct
                         Orden #{group.groupPosition}
                       </span>
                     </CardHeader>
-                    <CardContent className="p-0">
-                      <table className="w-full text-left border-collapse">
+                    <CardContent className="p-0 overflow-x-auto">
+                      <table className="w-full min-w-[560px] text-left border-collapse">
                         <thead>
                           <tr className="h-8 bg-canvas/10 text-[9px] font-bold uppercase tracking-widest text-ink-soft/70 border-b border-line/30">
                             <th className="px-4 py-2">Cargo / Responsabilidad</th>

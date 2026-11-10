@@ -352,7 +352,7 @@ export function DashboardView({
 
                   {/* Métricas adicionales */}
                   {Number(dashboardData.totalM2 || 0) > 0 && (
-                    <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
+                    <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                       <div className="text-center bg-blue-50 rounded-lg p-3">
                         <p className="text-sm md:text-base lg:text-lg font-bold text-blue-600">
                           {Number(dashboardData.totalM2 || 0).toLocaleString(numberLocale)}{" "}
@@ -436,7 +436,7 @@ export function DashboardView({
                   </div>
 
                   {/* Métricas adicionales - M2 e Indiviso */}
-                  <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200">
+                  <div className="grid grid-cols-1 min-[360px]:grid-cols-2 gap-3 pt-3 border-t border-gray-200">
                     <div className="text-center bg-blue-50 rounded-lg p-3">
                       <p className="text-sm md:text-base lg:text-lg font-bold text-blue-600">
                         {Number(comerciosData.totalM2 || 0).toLocaleString(numberLocale)}{" "}

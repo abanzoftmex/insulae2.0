@@ -431,7 +431,7 @@ export function ResumenFinancieroView({
         <div className="flex items-start gap-3">
           <PageBackBadge className="mt-1.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">Resumen Financiero</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-brand tracking-tighter uppercase">Resumen Financiero</h1>
             <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">Fase 1 · BETA</Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
               {CONDOMINIO} · Corte {anio} · {ultimaActualizacionTexto}
@@ -457,7 +457,7 @@ export function ResumenFinancieroView({
           )}
 
           {/* Mode Selector */}
-          <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50">
+          <div className="flex flex-wrap items-center gap-1.5 p-1 bg-canvas-2 rounded-lg border border-line/50 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setModo('ordinary')}

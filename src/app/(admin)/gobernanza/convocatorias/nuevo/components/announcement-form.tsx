@@ -665,7 +665,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
             id="section-2"
             className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-xs space-y-5"
           >
-            <div className="flex items-start justify-between gap-4 pb-3 border-b border-slate-100">
+            <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4 pb-3 border-b border-slate-100">
               <div className="flex items-start gap-3">
                 <span className="w-7 h-7 rounded-full bg-[#304854] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   2
@@ -773,7 +773,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
             id="section-3"
             className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-xs space-y-5"
           >
-            <div className="flex items-start justify-between gap-4 pb-3 border-b border-slate-100">
+            <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4 pb-3 border-b border-slate-100">
               <div className="flex items-start gap-3">
                 <span className="w-7 h-7 rounded-full bg-[#304854] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   3
@@ -793,7 +793,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
 
             {/* Filter toolbar matching Image 1 */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-2 rounded-xl bg-[#faf8f5] border border-[#e2e8f0]">
-              <div className="flex items-center gap-1.5 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={handleSelectAllPositions}
@@ -854,7 +854,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
                     key={dept.id}
                     className="rounded-xl border border-[#e2e8f0] bg-[#faf8f5]/40 p-4 space-y-3"
                   >
-                    <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-200/80">
                       <div className="flex items-center gap-2">
                         <span className="text-[11px] font-extrabold uppercase tracking-wide text-[#304854]">
                           {dept.name}
@@ -916,7 +916,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
             id="section-4"
             className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-xs space-y-5"
           >
-            <div className="flex items-start justify-between gap-4 pb-3 border-b border-slate-100">
+            <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4 pb-3 border-b border-slate-100">
               <div className="flex items-start gap-3">
                 <span className="w-7 h-7 rounded-full bg-[#304854] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   4
@@ -1005,7 +1005,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
             id="section-5"
             className="rounded-2xl border border-[#e2e8f0] bg-white p-6 shadow-xs space-y-5"
           >
-            <div className="flex items-start justify-between gap-4 pb-3 border-b border-slate-100">
+            <div className="flex flex-wrap items-start justify-between gap-3 sm:gap-4 pb-3 border-b border-slate-100">
               <div className="flex items-start gap-3">
                 <span className="w-7 h-7 rounded-full bg-[#304854] text-white flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
                   5
@@ -1138,7 +1138,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
                       <label className="text-[10px] font-bold uppercase tracking-wider text-[#64748b]">
                         Tipo de acción
                       </label>
-                      <div className="flex items-center gap-1.5 h-9">
+                      <div className="flex flex-wrap items-center gap-1.5 min-h-9">
                         {[
                           { key: "VOTE", label: "Votación" },
                           { key: "CONFIRMATION", label: "Confirmación" },
@@ -1150,7 +1150,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
                               key={act.key}
                               type="button"
                               onClick={() => handleTopicChange(idx, "actionType", act.key)}
-                              className={`flex-1 h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+                              className={`flex-1 min-w-[82px] sm:min-w-0 h-8 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
                                 isActActive
                                   ? "bg-[#304854] text-white shadow-2xs"
                                   : "bg-white border border-[#cbd5e1] text-[#64748b] hover:bg-slate-50"
@@ -1196,17 +1196,17 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
       </div>
 
       {/* Sticky Bottom Action Bar matching Image 1 */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#cbd5e1] px-6 py-3.5 shadow-2xl flex items-center justify-between">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-[#cbd5e1] px-3 sm:px-6 py-2.5 sm:py-3.5 shadow-2xl flex flex-wrap items-center justify-between gap-2">
         <div className="text-[11px] text-[#64748b] font-medium hidden sm:flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
           Cambios guardados automáticamente en el formulario
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end">
           <button
             type="button"
             onClick={() => router.back()}
-            className="rounded-full border border-[#cbd5e1] bg-white px-5 py-2 text-xs font-bold uppercase tracking-wider text-[#64748b] hover:bg-slate-50 transition-colors"
+            className="rounded-full border border-[#cbd5e1] bg-white px-3 sm:px-5 py-2 text-xs font-bold uppercase tracking-wider text-[#64748b] hover:bg-slate-50 transition-colors"
           >
             Cancelar
           </button>
@@ -1214,7 +1214,7 @@ export function AnnouncementForm({ initialData, announcement }: AnnouncementForm
           <button
             type="submit"
             disabled={isSubmitting || uploadingFile}
-            className="flex items-center gap-2 rounded-full bg-[#304854] px-6 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-[#23353e] transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 rounded-full bg-[#304854] px-4 sm:px-6 py-2 text-xs font-bold uppercase tracking-widest text-white hover:bg-[#23353e] transition-colors shadow-sm disabled:opacity-50"
           >
             {isSubmitting ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />

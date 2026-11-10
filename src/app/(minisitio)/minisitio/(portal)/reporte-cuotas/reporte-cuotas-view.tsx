@@ -381,7 +381,7 @@ export function ReporteCuotasView({
           {/* THEAD */}
           <thead className="sticky top-0 z-30 shadow-sm">
             <tr className="bg-[#e0d5c8] text-left text-[10px] font-bold uppercase tracking-widest text-[#5a4838]">
-              <th className="sticky left-0 top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8] min-w-[290px]">
+              <th className="md:sticky md:left-0 top-0 z-50 px-3 py-3 border-b border-r-2 border-[#c8b49a] bg-[#e0d5c8] min-w-[180px] sm:min-w-[290px]">
                 ÁREA PRIVATIVA/ FRACCIÓN DE ÁREA PRIVATIVA
               </th>
               <th className="px-3 py-3 border-b border-[#c8b8a0] bg-[#e8ddd0] text-center min-w-[160px]">
@@ -496,7 +496,7 @@ export function ReporteCuotasView({
                   {/* Sticky: Área Privativa / Fracción */}
                   <td
                     className={cn(
-                      "sticky left-0 z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors",
+                      "md:sticky md:left-0 z-20 px-3 border-r-2 border-[#ddd0be] shadow-[2px_0_5px_rgba(30,18,8,0.02)] transition-colors",
                       rowBg
                     )}
                   >
@@ -599,7 +599,7 @@ export function ReporteCuotasView({
           {/* TFOOT — Totales de la página actual */}
           <tfoot>
             <tr className="border-t-2 border-[#c8b49a] bg-[#e0d5c8] font-bold text-[#2b1e12]">
-              <td className="sticky left-0 z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2b1e12]">
+              <td className="md:sticky md:left-0 z-20 border-r-2 border-[#c8b49a] bg-[#e0d5c8] px-3 py-2 text-xs font-bold uppercase tracking-wider text-[#2b1e12]">
                 TOTALES
               </td>
 

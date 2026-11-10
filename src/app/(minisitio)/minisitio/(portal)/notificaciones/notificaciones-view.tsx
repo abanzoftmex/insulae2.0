@@ -101,7 +101,7 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
     <div >
       {/* Header con botón de actualizar */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-primary-light bg-opacity-20 rounded-lg flex items-center justify-center">
               <Bell className="w-5 h-5 text-primary-dark" />
@@ -165,7 +165,7 @@ export function NotificacionesView({ initialData }: { initialData: Notificacione
                     </p>
 
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
+                      <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
                         <p
                           className={`text-sm flex items-center ${styles.date}`}
                           suppressHydrationWarning

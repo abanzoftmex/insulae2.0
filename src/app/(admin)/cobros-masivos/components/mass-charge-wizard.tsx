@@ -188,7 +188,7 @@ export function MassChargeWizard({
     : 0;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10 space-y-8">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-10 space-y-6 sm:space-y-8">
       {/* Header */}
       <div className="flex items-center gap-4">
         <Link
@@ -198,7 +198,7 @@ export function MassChargeWizard({
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         </Link>
         <div>
-          <h1 className="font-[ui-serif] text-3xl text-[#2f221a]">Cobros Masivos (Futuros)</h1>
+          <h1 className="font-[ui-serif] text-2xl sm:text-3xl text-[#2f221a]">Cobros Masivos (Futuros)</h1>
           <p className="text-[#9a6a4a] text-sm mt-1 uppercase tracking-widest font-medium">
             Generación por lote de cargos
           </p>
@@ -214,14 +214,14 @@ export function MassChargeWizard({
       {/* Step 1: Config */}
       {!previewData && (
         <div className="bg-white rounded-3xl border border-[#ccb49c]/30 shadow-sm overflow-hidden">
-          <div className="bg-[#fcf9f5] px-8 py-5 border-b border-[#ccb49c]/20">
+          <div className="bg-[#fcf9f5] px-4 sm:px-8 py-4 sm:py-5 border-b border-[#ccb49c]/20">
             <h2 className="font-[ui-serif] text-xl text-[#2f221a] flex items-center gap-2">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a7b56" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
               Paso 1: Configuración
             </h2>
           </div>
           
-          <div className="p-8 space-y-8">
+          <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="space-y-2">
                 <label className="text-sm font-semibold text-[#6d422a]">Barrio</label>
@@ -315,7 +315,7 @@ export function MassChargeWizard({
                   {selectedMonths.length === 12 ? "Deseleccionar todos" : "Seleccionar todos"}
                 </button>
               </div>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
                 {MESES.map((m) => {
                   const isSelected = selectedMonths.includes(m.val);
                   return (
@@ -363,7 +363,7 @@ export function MassChargeWizard({
       {previewData && (
         <div className="space-y-6">
           <div className="bg-white rounded-3xl border border-[#ccb49c]/30 shadow-sm overflow-hidden">
-            <div className="bg-[#2f221a] px-8 py-5 flex items-center justify-between">
+            <div className="bg-[#2f221a] px-4 sm:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <h2 className="font-[ui-serif] text-xl text-white flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5a7b56" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
                 Paso 2: Vista Previa y Confirmación
@@ -376,9 +376,9 @@ export function MassChargeWizard({
               </button>
             </div>
             
-            <div className="p-8 space-y-8">
+            <div className="p-4 sm:p-8 space-y-6 sm:space-y-8">
               {/* Resumen Numeros */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 min-[380px]:grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="bg-[#fcf9f5] border border-[#ccb49c]/30 rounded-2xl p-4 text-center">
                   <p className="text-2xl font-bold text-[#2f221a]">{previewData.summary.totalProperties}</p>
                   <p className="text-xs text-[#9a6a4a] mt-1 uppercase tracking-wider font-semibold">Total propiedades</p>
@@ -392,7 +392,7 @@ export function MassChargeWizard({
                   <p className="text-xs text-amber-600 mt-1 uppercase tracking-wider font-semibold">Omitidas</p>
                 </div>
                 <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-center">
-                  <p className="text-2xl font-bold text-blue-700">${selectedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
+                  <p className="text-lg sm:text-2xl font-bold text-blue-700">${selectedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}</p>
                   <p className="text-xs text-blue-600 mt-1 uppercase tracking-wider font-semibold">Total Seleccionado</p>
                 </div>
               </div>
@@ -408,7 +408,7 @@ export function MassChargeWizard({
 
               {/* Table */}
               <div className="border border-[#ccb49c]/30 rounded-2xl overflow-hidden">
-                <div className="bg-[#fcf9f5] px-4 py-3 border-b border-[#ccb49c]/30 flex justify-between items-center">
+                <div className="bg-[#fcf9f5] px-4 py-3 border-b border-[#ccb49c]/30 flex flex-wrap justify-between items-center gap-2">
                   <h3 className="font-semibold text-[#2f221a] text-sm">Detalle por Propiedad</h3>
                   <button
                     onClick={toggleAllProperties}
@@ -417,7 +417,7 @@ export function MassChargeWizard({
                     Seleccionar/Deseleccionar aplicables
                   </button>
                 </div>
-                <div className="max-h-[500px] overflow-y-auto">
+                <div className="max-h-[500px] overflow-y-auto overflow-x-auto">
                   <table className="w-full text-left text-sm">
                     <thead className="bg-[#ebe0d3] text-[#6d422a] sticky top-0 z-10 shadow-sm">
                       <tr>
@@ -477,7 +477,7 @@ export function MassChargeWizard({
                     </tbody>
                   </table>
                 </div>
-                <div className="bg-[#fcf9f5] px-4 py-4 border-t border-[#ccb49c]/30 flex justify-between items-center">
+                <div className="bg-[#fcf9f5] px-4 py-4 border-t border-[#ccb49c]/30 flex flex-wrap justify-between items-center gap-2">
                   <span className="font-semibold text-[#6d422a]">TOTAL A CARGAR:</span>
                   <span className="text-xl font-bold text-[#2f221a]">
                     ${selectedTotalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -488,11 +488,11 @@ export function MassChargeWizard({
             </div>
 
             {/* Sticky Footer Confirm */}
-            <div className="bg-gray-50 border-t border-[#ccb49c]/20 p-6 flex items-center justify-between">
+            <div className="bg-gray-50 border-t border-[#ccb49c]/20 p-4 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <p className="text-sm text-[#6d422a]">Se aplicarán los cargos a las propiedades marcadas con <strong className="text-[#5a7b56]">palomita verde</strong>.</p>
               </div>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-3 sm:gap-4 w-full sm:w-auto justify-end">
                 <button
                   type="button"
                   onClick={() => setPreviewData(null)}

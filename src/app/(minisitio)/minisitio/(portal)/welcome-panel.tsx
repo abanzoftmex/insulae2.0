@@ -245,7 +245,7 @@ export function WelcomePanel({
               </span>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-white leading-tight">
               ¡Hola, {getUserName()}! Te damos la bienvenida a Val'Quirico
             </h1>
 
@@ -259,7 +259,7 @@ export function WelcomePanel({
                     : "Tu centro de consulta y servicios en Val'Quirico. Revisa avisos oficiales, genera solicitudes de atención y consulta la normativa comunitaria."}
             </p>
 
-            <div className="pt-1 text-[11px] font-bold text-brand-mint/90 uppercase tracking-wider flex items-center gap-2">
+            <div className="pt-1 text-[11px] font-bold text-brand-mint/90 uppercase tracking-wider flex flex-wrap items-center gap-x-2 gap-y-1">
               <span>Val'Quirico</span>
               <span>·</span>
               <span suppressHydrationWarning>{getCurrentDate()}</span>
@@ -300,7 +300,7 @@ export function WelcomePanel({
 
       {/* ─── Accesos Principales de Condómino (Sin números) ───────────────────── */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between px-1">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
           <h2 className="text-base font-bold uppercase tracking-wider text-[#304854]">
             Módulos del Condómino
           </h2>
@@ -767,7 +767,7 @@ export function WelcomePanel({
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
                     <div className="flex items-center space-x-2 mb-1">
                       <Calendar className="w-4 h-4 text-brand" />
@@ -794,7 +794,7 @@ export function WelcomePanel({
                 </div>
 
                 {selectedNotification.pdf && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center space-x-3">
                       <FileText className="w-6 h-6 text-blue-600" />
                       <div>

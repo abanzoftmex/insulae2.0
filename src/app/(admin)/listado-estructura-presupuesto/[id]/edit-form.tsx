@@ -145,7 +145,7 @@ export function EditBudgetGroupForm({ initialData, allGroups, chargeGroups }: Ed
 
       {/* Conceptos */}
       <section className="bg-white rounded-3xl border border-[#ccb49c]/30 shadow-sm overflow-hidden">
-        <div className="bg-[#f8efe3]/50 px-8 py-4 border-b border-[#ccb49c]/30 flex items-center justify-between">
+        <div className="bg-[#f8efe3]/50 px-4 sm:px-8 py-4 border-b border-[#ccb49c]/30 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-bold uppercase tracking-widest text-[#6d422a]">Conceptos</h2>
           <button
             type="button"
@@ -157,8 +157,8 @@ export function EditBudgetGroupForm({ initialData, allGroups, chargeGroups }: Ed
           </button>
         </div>
         
-        <div className="p-0">
-          <table className="w-full text-left">
+        <div className="p-0 overflow-x-auto">
+          <table className="w-full min-w-[680px] text-left">
             <thead>
               <tr className="border-b border-[#ccb49c]/20">
                 <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold">Nombre</th>
