@@ -27,9 +27,9 @@ export interface StatementPdfResult {
 }
 
 /**
- * Genera el archivo PDF real del estado de cuenta de un área privativa con el nuevo diseño
- * ejecutivo institucional de Val'Quirico (azul marino #111e38, dorado #dfb76c, tipografía
- * cuidada, tarjetas de composición de saldo, proporción de pagos y formas de pago bancarias).
+ * Genera el archivo PDF real del estado de cuenta de un área privativa con el diseño
+ * ejecutivo institucional (azul principal #304854, dorado beige #d0b685, negro y blanco,
+ * tarjetas de composición de saldo, proporción de pagos y formas de pago bancarias).
  * Idéntico a la vista descargable de /imprimir.
  */
 export async function generateAccountStatementPdf(
@@ -282,9 +282,9 @@ export async function generateAccountStatementPdf(
   // PAGE 1: RESUMEN EJECUTIVO (Idéntico a imprimir/page.tsx)
   // ========================================================
 
-  // --- Top Navy Header Banner ---
+  // --- Top Navy Header Banner (#304854) ---
   const headerHeight = 36;
-  doc.setFillColor(17, 30, 56); // #111e38
+  doc.setFillColor(48, 72, 84); // #304854
   doc.roundedRect(marginX, 10, contentWidth, headerHeight, 3, 3, "F");
 
   // Logo (1077 x 290 px -> ratio 3.7138 : 1)
@@ -294,36 +294,40 @@ export async function generateAccountStatementPdf(
     } catch {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(11);
-      doc.setTextColor(223, 183, 108);
+      doc.setTextColor(208, 182, 133); // #d0b685
       doc.text("VAL'QUIRICO", marginX + 4, 19);
     }
   } else {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.setTextColor(223, 183, 108);
+    doc.setTextColor(208, 182, 133); // #d0b685
     doc.text("VAL'QUIRICO", marginX + 4, 19);
   }
 
   // Right Header Info
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6.5);
-  doc.setTextColor(230, 235, 245);
+  doc.setTextColor(255, 255, 255);
   doc.text("ADMINISTRADORA VALQUIRICO A.C.", marginX + contentWidth - 4, 15, { align: "right" });
 
   doc.setFontSize(6.5);
-  doc.setTextColor(223, 183, 108); // Gold #dfb76c
+  doc.setTextColor(208, 182, 133); // Gold #d0b685
   doc.text(`CORTE AL ${formattedCutDateUpper}`, marginX + contentWidth - 4, 19, { align: "right" });
 
   // Subtitle & Main Title
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6);
-  doc.setTextColor(223, 183, 108);
+  doc.setTextColor(208, 182, 133); // #d0b685
   doc.text("SISTEMA CONDOMINAL · REPORTE EJECUTIVO", marginX + 4, 28);
 
-  doc.setFont("times", "bold");
+  doc.setFont("times", "normal");
   doc.setFontSize(17);
   doc.setTextColor(255, 255, 255);
-  doc.text("Estado de cuenta", marginX + 4, 37);
+  doc.text("Estado de ", marginX + 4, 37);
+  const wEstadoDe = doc.getTextWidth("Estado de ");
+  doc.setFont("times", "italic");
+  doc.setTextColor(208, 182, 133); // #d0b685
+  doc.text("cuenta", marginX + 4 + wEstadoDe, 37);
 
   // Área Privativa Top Badge (Right side of header)
   const badgeCardWidth = 52;
@@ -331,20 +335,25 @@ export async function generateAccountStatementPdf(
   const badgeCardX = marginX + contentWidth - badgeCardWidth - 4;
   const badgeCardY = 24;
 
-  doc.setFillColor(24, 43, 82); // #182b52
-  doc.setDrawColor(223, 183, 108); // Gold border
+  doc.setFillColor(38, 58, 68); // #304854 tint
+  doc.setDrawColor(208, 182, 133); // Gold #d0b685 border
   doc.setLineWidth(0.35);
   doc.roundedRect(badgeCardX, badgeCardY, badgeCardWidth, badgeCardHeight, 2, 2, "FD");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(5.5);
-  doc.setTextColor(223, 183, 108);
+  doc.setTextColor(208, 182, 133); // #d0b685
   doc.text("ÁREA PRIVATIVA", badgeCardX + badgeCardWidth - 4, badgeCardY + 4.5, { align: "right" });
 
   doc.setFont("courier", "bold");
   doc.setFontSize(11.5);
   doc.setTextColor(255, 255, 255);
   doc.text(area.name, badgeCardX + badgeCardWidth - 4, badgeCardY + 10.5, { align: "right" });
+
+  // Gold divider line in badge
+  doc.setDrawColor(208, 182, 133);
+  doc.setLineWidth(0.3);
+  doc.line(badgeCardX + 12, badgeCardY + 12, badgeCardX + badgeCardWidth - 4, badgeCardY + 12);
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6);
@@ -432,12 +441,12 @@ export async function generateAccountStatementPdf(
   const drawSectionHeader = (y: number, num: string, title: string) => {
     doc.setFont("times", "bold");
     doc.setFontSize(8.5);
-    doc.setTextColor(184, 134, 11); // Gold #b8860b
+    doc.setTextColor(208, 182, 133); // Gold #d0b685
     doc.text(num, marginX, y);
 
     doc.setFont("times", "bold");
     doc.setFontSize(8.5);
-    doc.setTextColor(15, 23, 42); // Dark slate
+    doc.setTextColor(0, 0, 0); // Black #000000
     doc.text(title, marginX + 6, y);
 
     const titleWidth = doc.getTextWidth(title);
@@ -469,7 +478,7 @@ export async function generateAccountStatementPdf(
   doc.setFontSize(7.5);
   doc.setTextColor(15, 23, 42);
   doc.text(area.name, marginX + 4, row1Y + 4.5);
-  doc.setDrawColor(184, 134, 11); // Gold underline
+  doc.setDrawColor(208, 182, 133); // Gold #d0b685 underline
   doc.setLineWidth(0.3);
   doc.line(marginX + 4, row1Y + 5.5, marginX + 4 + doc.getTextWidth(area.name), row1Y + 5.5);
 
@@ -687,7 +696,7 @@ export async function generateAccountStatementPdf(
   currentY += 3.5;
   const paymentsHeaderH = 5.2;
 
-  doc.setFillColor(21, 40, 79); // #15284f (Dark Navy)
+  doc.setFillColor(48, 72, 84); // #304854
   doc.rect(marginX, currentY, contentWidth, paymentsHeaderH, "F");
 
   doc.setFont("helvetica", "bold");
@@ -741,7 +750,7 @@ export async function generateAccountStatementPdf(
       doc.roundedRect(barX, barY, barTrackW, barTrackH, 0.8, 0.8, "F");
 
       const pct = Math.min(1, Math.max(0.06, p.paymentTotalAmount / maxPaymentAmount));
-      doc.setFillColor(196, 165, 106); // Gold #c4a56a
+      doc.setFillColor(208, 182, 133); // Gold #d0b685
       doc.roundedRect(barX, barY, barTrackW * pct, barTrackH, 0.8, 0.8, "F");
 
       // Abono
@@ -783,7 +792,7 @@ export async function generateAccountStatementPdf(
 
   // --- Slim Navy Header Page 2 ---
   const p2HeaderH = 12;
-  doc.setFillColor(17, 30, 56);
+  doc.setFillColor(48, 72, 84); // #304854
   doc.roundedRect(marginX, 10, contentWidth, p2HeaderH, 2, 2, "F");
 
   if (logoBase64) {
@@ -792,19 +801,19 @@ export async function generateAccountStatementPdf(
     } catch {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
-      doc.setTextColor(223, 183, 108);
+      doc.setTextColor(208, 182, 133); // #d0b685
       doc.text("VAL'QUIRICO", marginX + 4, 17.5);
     }
   } else {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.setTextColor(223, 183, 108);
+    doc.setTextColor(208, 182, 133); // #d0b685
     doc.text("VAL'QUIRICO", marginX + 4, 17.5);
   }
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6);
-  doc.setTextColor(223, 183, 108);
+  doc.setTextColor(208, 182, 133); // #d0b685
   doc.text(`CORTE ${formattedCutDateUpper}`, marginX + contentWidth - 4, 14, { align: "right" });
 
   doc.setFont("times", "normal");
@@ -820,7 +829,7 @@ export async function generateAccountStatementPdf(
   const cuotasHeaderH = 5.2;
 
   const drawCuotasTableHeader = (y: number) => {
-    doc.setFillColor(21, 40, 79);
+    doc.setFillColor(48, 72, 84); // #304854
     doc.rect(marginX, y, contentWidth, cuotasHeaderH, "F");
 
     doc.setFont("helvetica", "bold");
@@ -942,7 +951,7 @@ export async function generateAccountStatementPdf(
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6.5);
-  doc.setTextColor(184, 134, 11); // Gold #b8860b
+  doc.setTextColor(208, 182, 133); // Gold #d0b685
   doc.text("CONDICIONES", marginX + 4, currentY + 4.5);
 
   doc.setFont("helvetica", "normal");
@@ -978,18 +987,18 @@ export async function generateAccountStatementPdf(
   doc.setTextColor(15, 23, 42);
   doc.text("Razón social: ADMINISTRADORA VALQUIRICO A.C.    RFC: AVA1706221G3", marginX + 4, currentY + 37.5);
 
-  // Card Right: DATOS BANCARIOS (Navy dark card)
+  // Card Right: DATOS BANCARIOS (Navy dark card #304854)
   const bankX = marginX + cardCondW + 4;
-  doc.setFillColor(17, 30, 56); // Navy #111e38
+  doc.setFillColor(48, 72, 84); // Navy #304854
   doc.roundedRect(bankX, currentY, cardBankW, formasH, 2, 2, "F");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(6.5);
-  doc.setTextColor(223, 183, 108); // Gold #dfb76c
+  doc.setTextColor(208, 182, 133); // Gold #d0b685
   doc.text("DATOS BANCARIOS", bankX + 4, currentY + 4.5);
 
   // Bank 1: Inbursa
-  doc.setFillColor(25, 42, 75);
+  doc.setFillColor(38, 58, 68); // #304854 tint
   doc.roundedRect(bankX + 4, currentY + 7, cardBankW - 8, 11, 1.2, 1.2, "F");
 
   doc.setFont("helvetica", "bold");
@@ -998,7 +1007,7 @@ export async function generateAccountStatementPdf(
   doc.text("BANCO: INBURSA", bankX + 6, currentY + 10.5);
 
   doc.setFontSize(4.8);
-  doc.setTextColor(223, 183, 108);
+  doc.setTextColor(208, 182, 133); // #d0b685
   doc.text("CLABE INTERBANCARIA", bankX + 6, currentY + 13.5);
 
   doc.setFont("courier", "bold");
@@ -1007,7 +1016,7 @@ export async function generateAccountStatementPdf(
   doc.text("036650500395989048", bankX + 6, currentY + 16.8);
 
   // Bank 2: Banco del Bajío
-  doc.setFillColor(25, 42, 75);
+  doc.setFillColor(38, 58, 68); // #304854 tint
   doc.roundedRect(bankX + 4, currentY + 19.5, cardBankW - 8, 11, 1.2, 1.2, "F");
 
   doc.setFont("helvetica", "bold");
@@ -1016,7 +1025,7 @@ export async function generateAccountStatementPdf(
   doc.text("BANCO: BANCO DEL BAJÍO", bankX + 6, currentY + 23);
 
   doc.setFontSize(4.8);
-  doc.setTextColor(223, 183, 108);
+  doc.setTextColor(208, 182, 133); // #d0b685
   doc.text("CLABE INTERBANCARIA", bankX + 6, currentY + 26);
 
   doc.setFont("courier", "bold");
@@ -1027,7 +1036,7 @@ export async function generateAccountStatementPdf(
   // Reference footer inside bank card
   doc.setFont("helvetica", "bold");
   doc.setFontSize(5);
-  doc.setTextColor(223, 183, 108);
+  doc.setTextColor(208, 182, 133); // #d0b685
   doc.text(`Referencia obligatoria: ${area.name}`, bankX + cardBankW / 2, currentY + 36, { align: "center" });
 
   // Footer Página 2

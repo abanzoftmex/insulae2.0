@@ -8,9 +8,10 @@ import { importIncomesAction } from "../import-actions";
 import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 import { read, utils } from "xlsx";
 import type { IncomeRecord } from "@/modules/income";
+import { PropertyCombobox, type PropertyItem } from "./property-combobox";
 
 type CatalogItem = { id: string; name: string };
-type AreaItem = { id: string; name: string };
+type AreaItem = PropertyItem;
 type ChargeGroupItem = { id: string; name: string; kind: string };
 
 interface IncomeListProps {
@@ -74,8 +75,6 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
   const [formCatalogId, setFormCatalogId] = useState("");
   const [formChargeGroupId, setFormChargeGroupId] = useState("");
   const [formAreaId, setFormAreaId] = useState("");
-  const [areaSearch, setAreaSearch] = useState("");
-  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [formReceiptFile, setFormReceiptFile] = useState<File | null>(null);
   const [formReceiptUrl, setFormReceiptUrl] = useState("");
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
@@ -130,12 +129,6 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
     [filteredIncomes],
   );
 
-  const filteredAreas = useMemo(() => {
-    if (!areaSearch.trim()) return areas.slice(0, 20);
-    const term = areaSearch.toLowerCase();
-    return areas.filter((a) => a.name.toLowerCase().includes(term)).slice(0, 20);
-  }, [areas, areaSearch]);
-
   function resetForm() {
     setFormDate("");
     setFormConcept("");
@@ -145,7 +138,6 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
     setFormCatalogId("");
     setFormChargeGroupId("");
     setFormAreaId("");
-    setAreaSearch("");
     setFormReceiptFile(null);
     setFormReceiptUrl("");
   }
@@ -228,16 +220,6 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
     e.preventDefault();
     setSaving(true);
 
-    let areaIdToUse = formAreaId;
-    if (!areaIdToUse && areaSearch.trim()) {
-      const match = areas.find(
-        (a) => a.name.trim().toLowerCase() === areaSearch.trim().toLowerCase(),
-      );
-      if (match) {
-        areaIdToUse = match.id;
-      }
-    }
-
     const input = {
       date: formDate,
       concept: formConcept,
@@ -246,7 +228,7 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
       notes: formNotes || undefined,
       miscCatalogId: formCatalogId || undefined,
       chargeGroupId: formChargeGroupId || undefined,
-      privateAreaId: areaIdToUse || undefined,
+      privateAreaId: formAreaId.trim() || undefined,
     };
 
     try {
@@ -602,49 +584,15 @@ export function IncomeList({ initialIncomes, catalogs, chargeGroups, areas, cond
               </div>
 
               {/* Propiedad (autocomplete) */}
-              <div className="relative">
+              <div>
                 <label className="block text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold mb-1.5">Propiedad (opcional)</label>
-                <input
-                  type="text"
-                  value={areaSearch}
-                  onChange={(e) => {
-                    setAreaSearch(e.target.value);
-                    setShowAreaDropdown(true);
-                    if (!e.target.value.trim()) setFormAreaId("");
-                  }}
-                  onFocus={() => setShowAreaDropdown(true)}
-                  placeholder="Buscar propiedad por nombre o clave..."
-                  className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-2.5 text-sm text-[#2f221a] focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/30"
+                <PropertyCombobox
+                  properties={areas}
+                  selectedId={formAreaId}
+                  onSelect={(id) => setFormAreaId(id)}
+                  label=""
+                  placeholder="Buscar propiedad por clave o nombre..."
                 />
-                {formAreaId && (
-                  <button
-                    type="button"
-                    onClick={() => { setFormAreaId(""); setAreaSearch(""); }}
-                    className="absolute right-3 top-[calc(50%+4px)] text-[#ccb49c] hover:text-red-400 transition-colors"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                  </button>
-                )}
-                {showAreaDropdown && filteredAreas.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#ccb49c]/40 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                    {filteredAreas.map((area) => (
-                      <button
-                        key={area.id}
-                        type="button"
-                        onClick={() => {
-                          setFormAreaId(area.id);
-                          setAreaSearch(area.name);
-                          setShowAreaDropdown(false);
-                        }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#f8efe3]/50 transition-colors ${
-                          formAreaId === area.id ? "bg-[#f8efe3] font-semibold text-[#2f221a]" : "text-[#5f4b3f]"
-                        }`}
-                      >
-                        {area.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
               </div>
 
               {/* Concepto */}

@@ -69,7 +69,7 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
             <h1 className="text-4xl font-bold text-gray-800 mb-3 tracking-wide">
               INSULAE
             </h1>
-            <div className="w-24 h-1 bg-gradient-to-r from-[#cba258] to-[#cba258] mx-auto mb-4 rounded-full"></div>
+            <div className="w-24 h-1 bg-gradient-to-r from-[#d0b685] to-[#d0b685] mx-auto mb-4 rounded-full"></div>
           </div>
 
           {/* Title */}
@@ -91,7 +91,7 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <svg className="h-5 w-5 text-[#1E3932]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-[#304854]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                     </svg>
                   </div>
@@ -100,7 +100,7 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
                     name="email"
                     type="email"
                     required
-                    className="w-full pl-10 pr-3 py-4 border border-gray-200 rounded-xl placeholder-gray-400 text-gray-900 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full pl-10 pr-3 py-4 border border-gray-200 rounded-xl placeholder-gray-400 text-gray-900 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                     placeholder="ejemplo@empresa.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -129,11 +129,11 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                className="w-full bg-gradient-to-r from-[#d0b685] via-[#dfca9f] to-[#d0b685] hover:brightness-110 text-black font-bold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
                     <span>Enviando...</span>
                   </div>
                 ) : (
@@ -149,7 +149,7 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
 
             {/* Back to Login */}
             <div className="mt-6 text-center">
-              <Link href={msPath("/login")} className="text-sm text-[#cba258] hover:text-[#bca065] font-medium transition-colors duration-200">
+              <Link href={msPath("/login")} className="text-sm text-[#d0b685] hover:text-[#be9f6b] font-medium transition-colors duration-200">
                 ← Volver al inicio de sesión
               </Link>
             </div>
@@ -158,11 +158,11 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
       </div>
 
       {/* Right Panel - Info */}
-      <div className="flex-1 bg-gradient-to-br from-[#122420] via-brand-deep to-[#2d5249] flex flex-col justify-center items-center px-8 lg:px-16 py-12 lg:py-0 text-white relative overflow-hidden min-h-[50vh] lg:min-h-screen">
+      <div className="flex-1 bg-gradient-to-br from-[#0f171b] via-[#1b2b33] to-[#304854] flex flex-col justify-center items-center px-8 lg:px-16 py-12 lg:py-0 text-white relative overflow-hidden min-h-[50vh] lg:min-h-screen">
         <div className="max-w-md w-full text-center z-10">
           <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#cba258] to-[#cba258] rounded-2xl mb-6 shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#d0b685] rounded-2xl mb-6 shadow-lg">
+              <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8V9z" />
               </svg>
             </div>
@@ -177,8 +177,8 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             <div className="group bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-xl">
               <div className="flex items-start space-x-3">
-                <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] rounded-xl p-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-[#d0b685] rounded-xl p-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
@@ -191,8 +191,8 @@ export function ForgotPasswordView({ proyecto }: { proyecto: ProjectInfo | null 
 
             <div className="group bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-xl">
               <div className="flex items-start space-x-3">
-                <div className="bg-gradient-to-r from-[#bca065] to-[#cba258] rounded-xl p-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-[#d0b685] rounded-xl p-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>

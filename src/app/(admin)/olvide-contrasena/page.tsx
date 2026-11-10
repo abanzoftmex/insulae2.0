@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function OlvideContrasenaPage() {
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#0e0e0a] via-[#242416] to-[#32321e] font-sans flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#0f171b] via-[#1b2b33] to-[#304854] font-sans flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-[420px] space-y-8">
         <Image
           src="/brand/valquirico-logo-light.png"

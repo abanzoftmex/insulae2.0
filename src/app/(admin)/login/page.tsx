@@ -34,16 +34,16 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#0e0e0a] font-sans overflow-hidden">
+    <div className="min-h-screen w-full bg-[#0f171b] font-sans overflow-hidden">
       <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[minmax(460px,40%)_1fr]">
         {/* Left: Login */}
-        <div className="relative flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 bg-gradient-to-br from-[#0e0e0a] via-[#242416] to-[#32321e]">
+        <div className="relative flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 bg-gradient-to-br from-[#0f171b] via-[#1b2b33] to-[#304854]">
           {/* subtle glow spots */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -top-32 -left-32 h-[350px] w-[350px] rounded-full bg-brand/10 blur-[100px]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-[#b58c42]/5 blur-[120px]" />
-            <div className="absolute -bottom-32 -right-32 h-[350px] w-[350px] rounded-full bg-[#5d5b35]/10 blur-[100px]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(181,140,66,0.03),transparent_60%)]" />
+            <div className="absolute -top-32 -left-32 h-[350px] w-[350px] rounded-full bg-brand/20 blur-[100px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-[#d0b685]/10 blur-[120px]" />
+            <div className="absolute -bottom-32 -right-32 h-[350px] w-[350px] rounded-full bg-[#304854]/30 blur-[100px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(208,182,133,0.05),transparent_60%)]" />
           </div>
 
           <div className="relative mx-auto w-full max-w-[420px] flex flex-col justify-between min-h-[80vh]">
@@ -108,7 +108,7 @@ export default function LoginPage() {
                     disabled={isPending}
                     autoComplete="email"
                     placeholder="correo@ejemplo.com"
-                    className="w-full bg-white/[0.04] border border-white/10 focus:border-[#b58c42]/50 focus:ring-4 focus:ring-[#b58c42]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60"
+                    className="w-full bg-white/[0.04] border border-white/10 focus:border-[#d0b685]/50 focus:ring-4 focus:ring-[#d0b685]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60"
                   />
                 </div>
 
@@ -128,7 +128,7 @@ export default function LoginPage() {
                       disabled={isPending}
                       autoComplete="current-password"
                       placeholder="••••••••"
-                      className="w-full bg-white/[0.04] border border-white/10 focus:border-[#b58c42]/50 focus:ring-4 focus:ring-[#b58c42]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 pl-4 pr-11 rounded-xl disabled:opacity-60"
+                      className="w-full bg-white/[0.04] border border-white/10 focus:border-[#d0b685]/50 focus:ring-4 focus:ring-[#d0b685]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 pl-4 pr-11 rounded-xl disabled:opacity-60"
                     />
                     <button
                       type="button"
@@ -150,12 +150,12 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isPending}
-                  className="w-full mt-6 bg-[#b58c42] hover:bg-[#a07c39] text-[#0e0e0a] font-black text-xs tracking-widest h-11 rounded-full transition-standard shadow-lg shadow-[#b58c42]/10 active-scale disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2"
+                  className="w-full mt-6 bg-[#d0b685] hover:bg-[#be9f6b] text-black font-black text-xs tracking-widest h-11 rounded-full transition-standard shadow-lg shadow-[#d0b685]/10 active-scale disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {isPending ? (
                     <>
                       <svg
-                        className="animate-spin h-4 w-4 text-[#0e0e0a]"
+                        className="animate-spin h-4 w-4 text-black"
                         fill="none"
                         viewBox="0 0 24 24"
                       >
@@ -184,7 +184,7 @@ export default function LoginPage() {
               <div className="mt-5 text-center">
                 <Link
                   href="/olvide-contrasena"
-                  className="text-[11px] font-semibold text-white/50 hover:text-[#b58c42] transition-standard"
+                  className="text-[11px] font-semibold text-white/50 hover:text-[#d0b685] transition-standard"
                 >
                   ¿Olvidaste tu contraseña?
                 </Link>
@@ -218,7 +218,7 @@ export default function LoginPage() {
             className="object-cover transition-transform duration-10000 scale-105 hover:scale-100"
           />
           {/* overlay layers */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0e0e0a]/95 via-[#0e0e0a]/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0f171b]/95 via-[#0f171b]/30 to-transparent" />
           <div className="absolute inset-0 bg-black/30" />
         </div>
       </div>

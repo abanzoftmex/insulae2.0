@@ -23,6 +23,7 @@ import {
 import { findUserIdsByEmail, storedEmailMatching } from "@/shared/infrastructure/db/user-email-lookup";
 import { getMinisitioCondominium } from "../infrastructure/condominium";
 import { MINISITIO_MAIL_FROM, sendMinisitioEmail } from "../infrastructure/mailer";
+import { buildPasswordResetEmailHtml } from "@/shared/infrastructure/email/auth-email-templates";
 import type { MinisitioSessionInfo, MinisitioUserType, UserIndicators } from "../domain/types";
 
 function hashSHA256(t: string) {
@@ -236,7 +237,7 @@ export async function requestPasswordReset(emailInput: string, origin: string): 
       isActive: true,
       userRoles: { some: { role: minisitioRoleWhere(condominium.id) } },
     },
-    select: { id: true, email: true, personalEmail: true, businessEmail: true, passwordHash: true },
+    select: { id: true, firstName: true, lastName: true, email: true, personalEmail: true, businessEmail: true, passwordHash: true },
   });
   const to = user && storedEmailMatching(user, email);
   if (!user || !to) return;
@@ -245,12 +246,21 @@ export async function requestPasswordReset(emailInput: string, origin: string): 
   const token = await signResetToken({ userId: user.id, email: loginEmail, passwordHash: user.passwordHash });
   const resetLink = `${origin}/minisitio/reset-password?token=${encodeURIComponent(token)}`;
 
+  const recipientName = [user.firstName, user.lastName].filter(Boolean).join(" ") || "Condómino";
+  const emailHtml = buildPasswordResetEmailHtml({
+    recipientName,
+    resetLink,
+    condominiumName: condominium.name || "Val'Quirico",
+    logoUrl: `${origin}/brand/valquirico-logo-light.png`,
+    expiresInMinutes: 60,
+  });
+
   try {
     await sendMinisitioEmail({
       from: MINISITIO_MAIL_FROM,
       to: [to],
       subject: "Restablecer tu contraseña - Val'Quirico",
-      html: resetEmailHtml(resetLink),
+      html: emailHtml,
     });
   } catch (error) {
     // No revelar detalles al usuario; igual se responde con el mensaje genérico.
@@ -287,32 +297,4 @@ export async function resetPassword(token: string, newPasswordInput: string): Pr
   });
   if (count === 0) return { ok: false, message: INVALID_RESET_LINK };
   return { ok: true, message: "Contraseña actualizada exitosamente" };
-}
-
-function resetEmailHtml(resetLink: string): string {
-  return `
-        <!DOCTYPE html><html><head><meta charset="utf-8"><title>Restablecer Contraseña</title>
-        <style>
-          body{font-family:Arial,sans-serif;line-height:1.6;color:#333}
-          .container{max-width:600px;margin:0 auto;padding:20px}
-          .header{background:linear-gradient(135deg,#cba258,#cba258);color:#fff;padding:30px;text-align:center;border-radius:10px 10px 0 0}
-          .content{background:#f9f9f9;padding:30px;border-radius:0 0 10px 10px}
-          .button{display:inline-block;background:linear-gradient(135deg,#cba258,#cba258);color:#fff;padding:15px 30px;text-decoration:none;border-radius:5px;margin:20px 0;font-weight:bold}
-          .footer{text-align:center;margin-top:30px;color:#666;font-size:12px}
-        </style></head><body>
-          <div class="container">
-            <div class="header"><h1>VAL'QUIRICO</h1><p>Portal del Condómino</p></div>
-            <div class="content">
-              <h2>Restablecer tu contraseña</h2>
-              <p>Hola,</p>
-              <p>Recibimos una solicitud para restablecer tu contraseña. Si no fuiste tú, ignora este correo.</p>
-              <a href="${resetLink}" class="button">Restablecer Contraseña</a>
-              <p>O copia y pega este enlace en tu navegador:</p>
-              <p><a href="${resetLink}">${resetLink}</a></p>
-              <p><strong>Este enlace expira en 1 hora.</strong></p>
-              <p>Saludos,<br>El equipo de Val'Quirico</p>
-            </div>
-            <div class="footer"><p>© ${new Date().getFullYear()} Val'Quirico. Correo automático, no respondas a este mensaje.</p></div>
-          </div>
-        </body></html>`;
 }

@@ -27,9 +27,10 @@ import { Modal } from "@/components/modal/modal";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { StatCard } from "@/components/ui/stat-card";
+import { PropertyCombobox, type PropertyItem } from "./property-combobox";
 
 type CatalogItem = { id: string; name: string };
-type AreaItem = { id: string; name: string };
+type AreaItem = PropertyItem;
 type ChargeGroupItem = { id: string; name: string; kind: string };
 
 interface IncomeWorkbenchProps {
@@ -130,8 +131,6 @@ export function IncomeWorkbench({
   const [formCatalogId, setFormCatalogId] = useState("");
   const [formChargeGroupId, setFormChargeGroupId] = useState("");
   const [formAreaId, setFormAreaId] = useState("");
-  const [areaSearch, setAreaSearch] = useState("");
-  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -188,11 +187,6 @@ export function IncomeWorkbench({
 
   const totalAmount = useMemo(() => filteredIncomes.reduce((sum, i) => sum + i.amount, 0), [filteredIncomes]);
 
-  const filteredAreas = useMemo(() => {
-    if (!areaSearch.trim()) return areas.slice(0, 10);
-    return areas.filter(a => a.name.toLowerCase().includes(areaSearch.toLowerCase())).slice(0, 10);
-  }, [areas, areaSearch]);
-
   const openAddModal = () => {
     setEditingId(null);
     setFormDate(new Date().toISOString().split("T")[0]);
@@ -204,7 +198,6 @@ export function IncomeWorkbench({
     setFormCatalogId("");
     setFormChargeGroupId("");
     setFormAreaId("");
-    setAreaSearch("");
     setReceiptUrl(null);
     setIsModalOpen(true);
   };
@@ -220,7 +213,6 @@ export function IncomeWorkbench({
     setFormCatalogId(income.miscCatalogId || "");
     setFormChargeGroupId(income.chargeGroupId || "");
     setFormAreaId(income.privateAreaId || "");
-    setAreaSearch(income.privateAreaName || "");
     setReceiptUrl(income.receiptUrl || null);
     setIsModalOpen(true);
   };
@@ -228,15 +220,7 @@ export function IncomeWorkbench({
   const handleSave = () => {
     if (editingId ? !canUpdate : !canCreate) return;
     startTransition(async () => {
-      let areaIdToUse = formAreaId;
-      if (!areaIdToUse && areaSearch.trim()) {
-        const match = areas.find(
-          (a) => a.name.trim().toLowerCase() === areaSearch.trim().toLowerCase(),
-        );
-        if (match) {
-          areaIdToUse = match.id;
-        }
-      }
+      const areaIdToUse = formAreaId.trim() || undefined;
 
       const payload = {
         date: formDate,
@@ -593,28 +577,12 @@ export function IncomeWorkbench({
             <Input label="Monto (MXN)" type="number" step="0.01" value={formAmount} onChange={(e) => setFormAmount(e.target.value)} />
           </div>
 
-          <div className="relative">
-            <input
-              type="text"
-              value={areaSearch}
-              onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); if (!e.target.value) setFormAreaId(""); }}
-              onFocus={() => setShowAreaDropdown(true)}
-              onBlur={() => setTimeout(() => setShowAreaDropdown(false), 200)}
-              placeholder="Buscar propiedad..."
-              className="peer h-9 w-full rounded-md border border-line bg-card px-3 text-[13px] font-medium focus:ring-2 focus:ring-brand-accent/30 outline-none"
-            />
-            <label className="absolute left-2.5 -top-1.5 px-1 bg-card text-[10px] font-bold uppercase tracking-widest text-brand-accent/60">Propiedad Vinculada</label>
-            {showAreaDropdown && filteredAreas.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-card border border-line rounded-md shadow-2xl max-h-40 overflow-y-auto">
-                {filteredAreas.map(a => (
-                  <button key={a.id} type="button" onClick={() => { setFormAreaId(a.id); setAreaSearch(a.name); setShowAreaDropdown(false); }}
-                    className="w-full text-left px-3 py-2 text-[12px] font-bold text-ink-soft hover:bg-canvas transition-colors border-b last:border-0 border-line/30">
-                    {a.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          <PropertyCombobox
+            properties={areas}
+            selectedId={formAreaId}
+            onSelect={(id) => setFormAreaId(id)}
+            fallbackName={editingId ? initialIncomes.find((i) => i.id === editingId)?.privateAreaName : null}
+          />
 
           <div className="relative">
             <select

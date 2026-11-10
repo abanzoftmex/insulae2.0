@@ -9,35 +9,32 @@
   --color-canvas: #ffffff;
   --color-canvas-2: #f3f4f6;
   --color-card: #ffffff;
-  --color-brand: #5d5b35;
-  --color-brand-accent: #b58c42;
-  --color-brand-deep: #3d3c22;
-  --color-brand-uplift: #757242;
-  --color-brand-mint: #f1eac1;
-  --color-gold: #b58c42;
-  --color-gold-soft: #fbf8f0;
-  --color-ink: rgb(0 0 0 / 0.87);
-  --color-ink-soft: rgb(0 0 0 / 0.58);
-  --color-line: rgb(0 0 0 / 0.06);
+  --color-brand: #304854;
+  --color-brand-accent: #d0b685;
+  --color-brand-deep: #1f2f37;
+  --color-brand-uplift: #3d5b6a;
+  --color-brand-mint: #e8eef1;
+  --color-gold: #d0b685;
+  --color-gold-soft: #faf8f3;
+  --color-gold-hover: #be9f6b;
+  --color-ink: #000000;
+  --color-ink-soft: rgb(0 0 0 / 0.65);
+  --color-line: rgb(0 0 0 / 0.08);
   --color-danger: #c82014;
   --color-terracotta: #922f12;
 
   /* ── Plano de contenido: rampa neutra de Fluent 2 (Microsoft Teams) ───────
-     El rail vive en la rampa "pergamino" (olivo desaturado, más abajo); el
-     CONTENIDO vive en la rampa neutra de Fluent, que es acromática por
-     definición: grey[N] donde N es el % de luminancia. Mezclarlas es
-     deliberado y es exactamente lo que hace Teams: rail de marca + lienzo de
-     trabajo neutro. El olivo entra en el contenido sólo como acento (acción
+     El rail vive en la rampa institucional azul (#304854); el CONTENIDO vive
+     en la rampa neutra de Fluent, acromática por definición: grey[N] donde N es
+     el % de luminancia. El azul entra en el contenido sólo como acento (acción
      primaria, estado seleccionado), nunca como superficie.
 
-     Valores verbatim de @fluentui/tokens (grey ramp + alias del tema claro).
-     No inventar escalones intermedios: si falta un valor, es que el sistema
-     resuelve ese caso con otro token. */
+     Valores verbatim de @fluentui/tokens (grey ramp + alias del tema claro). */
   --color-surface: #ffffff;    /* colorNeutralBackground1 — tarjetas y paneles */
   --color-surface-2: #fafafa;  /* colorNeutralBackground2 — cabeceras, zebra   */
   --color-surface-3: #f5f5f5;  /* colorNeutralBackground3 — hover de fila      */
   --color-surface-4: #f0f0f0;  /* colorNeutralBackground4 — chips neutros      */
-  --color-fg: #242424;         /* colorNeutralForeground1 — texto primario     */
+  --color-fg: #000000;         /* colorNeutralForeground1 — texto primario negro */
   --color-fg-2: #424242;       /* colorNeutralForeground2 — secundario, iconos */
   --color-fg-3: #616161;       /* colorNeutralForeground3 — metadatos, labels  */
   --color-fg-4: #707070;       /* colorNeutralForeground4 — deshabilitado      */
@@ -51,65 +48,49 @@
   --color-critical: #d13438;
 
   /* ── Chrome / navegación ────────────────────────────────────────────────
-     Rampa "pergamino": mismo hue que --color-brand (olivo, ~57°) pero
-     desaturado y elevado en luminancia. El rail queda un escalón POR DEBAJO
-     del plano blanco del contenido, de modo que la app se lee en capas
-     (rail → ítem activo blanco → contenido) en vez de como una sola hoja.
-     Todos los estados son escalones de esta misma rampa: nunca hexes sueltos. */
-  --color-nav: #f6f4ec;             /* superficie del rail                    */
-  --color-nav-sunken: #e7e4d5;      /* módulos hundidos, buscador, footer     */
-  --color-nav-hover: #dcd8c6;       /* hover de ítem DENTRO del módulo        */
-  --color-nav-pressed: #d1ccb7;     /* siguiente escalón, sin uso hoy         */
-  --color-nav-line: #d9d4be;        /* hairline legible DENTRO del módulo     */
-  --color-nav-line-soft: #e4e0cf;   /* hairline de separación suave           */
+     Rampa institucional calibrada a partir de --color-brand (#304854).
+     El rail queda un escalón POR DEBAJO del plano blanco del contenido, de modo
+     que la app se lee en capas (rail → ítem activo blanco → contenido). */
+  --color-nav: #f2f5f7;             /* superficie del rail                    */
+  --color-nav-sunken: #e2eaf0;      /* módulos hundidos, buscador, footer     */
+  --color-nav-hover: #d5e1e8;       /* hover de ítem DENTRO del módulo        */
+  --color-nav-pressed: #c7d6df;     /* siguiente escalón                      */
+  --color-nav-line: #d1dde4;        /* hairline legible DENTRO del módulo     */
+  --color-nav-line-soft: #dce7ed;   /* hairline de separación suave           */
 
-  /* Tinta del rail: negro-olivo, no negro puro — iguala la temperatura.
-     Escalera recalibrada contra el fondo de módulo (#e7e4d5), no contra el
-     pergamino: sobre la superficie hundida los valores viejos caían por debajo
-     de AA (los subítems iban a 2.81:1 y los chevrons a 1.88:1). */
-  --color-nav-ink: rgb(61 60 34 / 0.92);       /* 7.17:1 — AAA, etiquetas de ítem */
-  --color-nav-ink-soft: rgb(61 60 34 / 0.74);  /* 4.45:1 — AA, iconos/subítems/chevrons */
-  --color-nav-ink-faint: rgb(61 60 34 / 0.55); /* 2.81:1 — solo decorativo (puntos, kbd) */
-  --color-nav-label: rgb(61 60 34 / 0.78);     /* 4.95:1 — títulos de módulo, 10px */
+  /* Tinta del rail: calibrada con --color-brand (#304854) */
+  --color-nav-ink: rgb(48 72 84 / 0.95);       /* AAA, etiquetas de ítem */
+  --color-nav-ink-soft: rgb(48 72 84 / 0.72);  /* AA, iconos/subítems/chevrons */
+  --color-nav-ink-faint: rgb(48 72 84 / 0.50); /* solo decorativo (puntos, kbd) */
+  --color-nav-label: rgb(48 72 84 / 0.80);     /* títulos de módulo, 10px */
 
-  /* Pulgar del scroll: mismo olivo translúcido, no el gris del sistema */
-  --color-nav-scroll: rgb(61 60 34 / 0.16);
-  --color-nav-scroll-strong: rgb(61 60 34 / 0.32);
+  /* Pulgar del scroll: azul institucional translúcido */
+  --color-nav-scroll: rgb(48 72 84 / 0.16);
+  --color-nav-scroll-strong: rgb(48 72 84 / 0.32);
 
   --radius-card: 12px;
   --radius-pill: 9999px;
 
-  /* Radios Fluent: 2 / 4 / 6 / 8 y nada más. El sistema no tiene radios
-     grandes ni pastillas fuera del badge circular de conteo — es una de las
-     razones por las que se lee como herramienta y no como app de consumo. */
+  /* Radios Fluent */
   --radius-ctrl: 4px;      /* borderRadiusMedium — botones, inputs, badges     */
   --radius-surface: 6px;   /* borderRadiusLarge                                */
   --radius-panel: 8px;     /* borderRadiusXLarge — tarjetas y paneles          */
 
   --shadow-card: 0 0 0.5px rgb(0 0 0 / 0.14), 0 1px 1px rgb(0 0 0 / 0.24);
 
-  /* Elevación Fluent: halo ambiental FIJO de 2px + capa "key" que crece con el
-     nivel. Regla de Teams que cambia todo el aspecto: la tarjeta en reposo NO
-     lleva sombra — la define el hairline (--color-stroke-2). La sombra sólo
-     aparece al elevar de verdad (hover con acción, flyout, diálogo). Poner
-     sombra en todo es lo que hace que un panel se vea "pegado" y decorativo. */
   --shadow-2: 0 0 2px rgb(0 0 0 / 0.12), 0 1px 2px rgb(0 0 0 / 0.14);
   --shadow-4: 0 0 2px rgb(0 0 0 / 0.12), 0 2px 4px rgb(0 0 0 / 0.14);
   --shadow-8: 0 0 2px rgb(0 0 0 / 0.12), 0 4px 8px rgb(0 0 0 / 0.14);
   --shadow-16: 0 0 2px rgb(0 0 0 / 0.12), 0 8px 16px rgb(0 0 0 / 0.14);
 
-  /* Sombras teñidas de olivo (nunca negro puro) y siempre en dos capas:
-     un contacto de 1px + un halo ambiental. Es lo que da volumen físico. */
-  --shadow-nav-item: 0 1px 2px rgb(93 91 53 / 0.10), 0 0 0 1px rgb(93 91 53 / 0.06);
-  --shadow-nav-flyout: 0 16px 40px -12px rgb(61 60 34 / 0.28), 0 3px 8px rgb(61 60 34 / 0.08), 0 0 0 1px rgb(61 60 34 / 0.07);
-  --shadow-nav-rail: inset -1px 0 0 rgb(61 60 34 / 0.07);
+  /* Sombras teñidas del azul institucional */
+  --shadow-nav-item: 0 1px 2px rgb(48 72 84 / 0.10), 0 0 0 1px rgb(48 72 84 / 0.06);
+  --shadow-nav-flyout: 0 16px 40px -12px rgb(48 72 84 / 0.28), 0 3px 8px rgb(48 72 84 / 0.08), 0 0 0 1px rgb(48 72 84 / 0.07);
+  --shadow-nav-rail: inset -1px 0 0 rgb(48 72 84 / 0.07);
 
-  /* Canal tallado: sombra interior ARRIBA + reflejo exterior ABAJO. Esa segunda
-     capa es la que simula el labio del canal atrapando la luz cenital — sin
-     ella un fondo más oscuro solo se ve como una caja, no como algo incrustado. */
   --shadow-nav-well:
-    inset 0 1px 3px rgb(61 60 34 / 0.13),
-    inset 0 0 0 1px rgb(61 60 34 / 0.07),
+    inset 0 1px 3px rgb(48 72 84 / 0.13),
+    inset 0 0 0 1px rgb(48 72 84 / 0.07),
     0 1px 0 rgb(255 255 255 / 0.9);
 
   /* Curvas: `smooth` para geometría (ancho, alto), `out-quint` para opacidad */

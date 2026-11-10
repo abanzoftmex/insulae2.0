@@ -3,11 +3,17 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
 import {
   toggleAttendanceAction,
   registerVoteAction
 } from "../../../actions";
+import {
+  isAsamblea,
+  getMeetingNoun,
+  isTopicVote,
+  isTopicConfirmation,
+  getTopicsActionSummary
+} from "@/app/(admin)/gobernanza/convocatorias/_lib/governance-terms";
 import {
   UserCheck,
   CheckCircle,
@@ -50,6 +56,19 @@ export function ParticiparClient({
       : []
   );
 
+  // Terminología dinámica basada en configuración persistida
+  const isAsambleaType = isAsamblea(announcement);
+  const meetingNoun = getMeetingNoun(isAsambleaType, { capitalized: true });
+  const meetingNounLower = getMeetingNoun(isAsambleaType, { capitalized: false });
+  const topicsSummary = getTopicsActionSummary(topics);
+  const isOnlyConfirmation = topicsSummary.isOnlyConfirmation;
+
+  const tab2Title = isOnlyConfirmation
+    ? "2. Confirmación de Temas"
+    : topicsSummary.hasVotes && topicsSummary.hasConfirmations
+    ? "2. Votación y Confirmación"
+    : "2. Votación de Temas";
+
   // Local state for votes (stores { [topicId]: { [key]: "FAVOR" | "AGAINST" | "ABSTAIN" } })
   const [votesMap, setVotesMap] = useState<Record<string, Record<string, string>>>(
     topics.reduce((acc, t) => {
@@ -57,7 +76,7 @@ export function ParticiparClient({
       if (t.votesJson) {
         try {
           v = JSON.parse(t.votesJson);
-        } catch (e) {
+        } catch {
           v = {};
         }
       }
@@ -119,7 +138,9 @@ export function ParticiparClient({
       {/* Overview Card */}
       <div className="p-5 bg-white border border-line rounded-card shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
         <div>
-          <span className="text-[9px] font-bold uppercase tracking-widest text-brand block">Asamblea en Curso</span>
+          <span className="text-[9px] font-bold uppercase tracking-widest text-brand block">
+            {meetingNoun} en Curso
+          </span>
           <h2 className="text-base font-bold text-ink uppercase tracking-tight truncate">{announcement.name}</h2>
           <Badge variant="brand" className="mt-1">{dateSession.callType}</Badge>
         </div>
@@ -163,8 +184,12 @@ export function ParticiparClient({
               : "border-transparent text-ink-soft hover:text-brand"
           }`}
         >
-          <Vote className="h-4 w-4" />
-          2. Votación de Temas
+          {isOnlyConfirmation ? (
+            <CheckCircle className="h-4 w-4" />
+          ) : (
+            <Vote className="h-4 w-4" />
+          )}
+          {tab2Title}
         </button>
       </div>
 
@@ -179,7 +204,7 @@ export function ParticiparClient({
             </div>
             <div className={`${sectionBodyCls} space-y-4`}>
               <p className="text-xs text-ink-soft leading-relaxed">
-                Por favor, marque la casilla de las propiedades o representaciones de las cuales desea registrar su asistencia en esta sesión. Debe estar registrado como presente para poder emitir votos.
+                Por favor, marque la casilla de las propiedades o representaciones de las cuales desea registrar su asistencia en esta sesión. Debe estar registrado como presente para poder {isOnlyConfirmation ? "confirmar temas" : "emitir votos"}.
               </p>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
@@ -229,13 +254,15 @@ export function ParticiparClient({
               <CheckCircle className="h-5 w-5 shrink-0" />
               <div className="flex-1 text-xs">
                 <p className="font-bold uppercase tracking-wider">Asistencia registrada correctamente</p>
-                <p className="opacity-90 mt-0.5">Ya puede proceder a la pestaña de "Votación de Temas" para emitir su opinión.</p>
+                <p className="opacity-90 mt-0.5">
+                  Ya puede proceder a la pestaña de "{tab2Title}" para registrar su {isOnlyConfirmation ? "confirmación" : "opinión o voto"}.
+                </p>
               </div>
               <button
                 onClick={() => setActiveTab("voting")}
                 className="h-8 px-4 rounded-full bg-success text-white text-[9px] font-bold uppercase tracking-widest hover:bg-success/90 transition-colors"
               >
-                Ir a Votación
+                Ir a {isOnlyConfirmation ? "Confirmación" : "Votación"}
               </button>
             </div>
           ) : (
@@ -243,20 +270,22 @@ export function ParticiparClient({
               <HelpCircle className="h-5 w-5 shrink-0" />
               <div className="flex-1 text-xs">
                 <p className="font-bold uppercase tracking-wider">Esperando registro de asistencia</p>
-                <p className="opacity-90 mt-0.5">Registre su asistencia en al menos una propiedad para ser habilitado para votar.</p>
+                <p className="opacity-90 mt-0.5">
+                  Registre su asistencia en al menos una propiedad para ser habilitado para {isOnlyConfirmation ? "confirmar" : "votar"}.
+                </p>
               </div>
             </div>
           )}
         </div>
       ) : (
-        // Tab 2: Voting
+        // Tab 2: Voting or Confirmation
         <div className="space-y-6">
           {!isPresentAtAll ? (
             <div className="py-12 text-center border-2 border-dashed border-line/60 rounded-card bg-white flex flex-col items-center justify-center p-6 space-y-3">
               <ClipboardList className="h-8 w-8 text-ink-soft/60" />
               <h3 className="text-sm font-bold text-ink">Registro de asistencia requerido</h3>
               <p className="text-xs text-ink-soft max-w-sm">
-                Debe registrar su asistencia en la primera pestaña antes de poder participar en las votaciones del orden del día.
+                Debe registrar su asistencia en la primera pestaña antes de poder participar en {isOnlyConfirmation ? "las confirmaciones" : "las votaciones"} del orden del día.
               </p>
               <button
                 onClick={() => setActiveTab("attendance")}
@@ -268,6 +297,9 @@ export function ParticiparClient({
           ) : (
             topics.map((topic, topicIdx) => {
               const topicVotes = votesMap[topic.id] || {};
+              const isVote = isTopicVote(topic.actionType);
+              const isConfirmation = isTopicConfirmation(topic.actionType);
+
               return (
                 <div key={topic.id} className={sectionCls}>
                   <div className={sectionHeaderCls}>
@@ -277,6 +309,9 @@ export function ParticiparClient({
                     <h3 className="text-[11px] font-bold uppercase tracking-widest text-white truncate max-w-xl">
                       {topic.title}
                     </h3>
+                    <span className="ml-auto rounded-full bg-white/15 px-2.5 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-white">
+                      {isVote ? "VOTACIÓN" : isConfirmation ? "CONFIRMACIÓN" : "INFORMATIVO"}
+                    </span>
                   </div>
 
                   <div className={`${sectionBodyCls} space-y-4`}>
@@ -300,12 +335,17 @@ export function ParticiparClient({
                               <div className="flex flex-col">
                                 <span className="text-[11px] font-bold text-ink">{rep.name}</span>
                                 <span className="text-[9px] text-ink-soft mt-0.5">
-                                  Emitir voto como: {rep.type === "GUEST" ? "Invitado Especial" : "Representante"}
+                                  {isConfirmation
+                                    ? "Confirmar como: "
+                                    : isVote
+                                    ? "Emitir voto como: "
+                                    : "Representación: "}
+                                  {rep.type === "GUEST" ? "Invitado Especial" : "Representante"}
                                 </span>
                               </div>
 
                               <div className="flex gap-2">
-                                {topic.actionType === "VOTE" ? (
+                                {isVote ? (
                                   <>
                                     <button
                                       type="button"
@@ -346,7 +386,7 @@ export function ParticiparClient({
                                       En Contra
                                     </button>
                                   </>
-                                ) : topic.actionType === "CONFIRMATION" ? (
+                                ) : isConfirmation ? (
                                   <button
                                     type="button"
                                     onClick={() => handleCastVote(topic.id, rep.key, voteType === "FAVOR" ? "NONE" : "FAVOR")}

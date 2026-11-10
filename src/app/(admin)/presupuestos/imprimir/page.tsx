@@ -40,9 +40,9 @@ function MiniBar({ value, color }: { value: number; color: string }) {
 }
 
 const C = {
-  brand: "#1a5c3a",
-  brandLight: "#e8f5ee",
-  brandBorder: "rgba(26,92,58,0.18)",
+  brand: "#304854",
+  brandLight: "#e8eef1",
+  brandBorder: "rgba(48,72,84,0.18)",
   cyan: "#0891b2",
   cyanLight: "#ecfeff",
   cyanBorder: "rgba(8,145,178,0.18)",

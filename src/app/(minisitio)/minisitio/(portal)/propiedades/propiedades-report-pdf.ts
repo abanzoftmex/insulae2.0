@@ -150,7 +150,7 @@ export async function generatePropertiesReportPdf({
   doc.setFont("helvetica", "normal");
   doc.text("Indiviso Total:", colX, currentY + 16);
   doc.setFont("helvetica", "bold");
-  doc.setTextColor(34, 124, 194); // Azul
+  doc.setTextColor(48, 72, 84); // #304854
   doc.text(`${totalIndiviso.toFixed(4)}%`, colX, currentY + 22);
 
   currentY += summaryHeight + 5;
@@ -236,7 +236,7 @@ export async function generatePropertiesReportPdf({
     currentY = margin + 5;
   }
 
-  doc.setFillColor(31, 41, 55); // Azul oscuro
+  doc.setFillColor(48, 72, 84); // #304854
   doc.rect(margin, currentY, contentWidth, tableHeaderHeight, "F");
 
   doc.setFont("helvetica", "bold");
@@ -268,7 +268,7 @@ export async function generatePropertiesReportPdf({
       currentY = margin + 5;
 
       // Repetir header en nueva página
-      doc.setFillColor(31, 41, 55);
+      doc.setFillColor(48, 72, 84); // #304854
       doc.rect(margin, currentY, contentWidth, tableHeaderHeight, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);

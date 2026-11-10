@@ -205,9 +205,9 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
   ];
 
   const sections: SectionLink[] = [
-    { id: "panorama", label: "Panorama", accent: "#5d5b35" },
+    { id: "panorama", label: "Panorama", accent: "#304854" },
     { id: "patrimonio", label: "Patrimonio", accent: "#0891b2" },
-    { id: "ocupacion", label: "Ocupación", accent: "#b8860b" },
+    { id: "ocupacion", label: "Ocupación", accent: "#d0b685" },
     { id: "economia", label: "Actividad económica", accent: "#b5451f" },
     { id: "comunidad", label: "Comunidad", accent: "#b0509f" },
     { id: "operacion", label: "Operación", accent: "#2563eb" },
@@ -224,7 +224,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
         {/* ── Encabezado ─────────────────────────────────────────────── */}
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <PageBackBadge className="mt-2 shrink-0" />
+            <PageBackBadge className="mt-2 shrink-0 print:hidden" />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-accent mb-1">
                 {vm.condominiumName}
@@ -235,11 +235,13 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               </p>
             </div>
           </div>
-          <ExportButtons payload={exportPayload} />
+          <div className="print:hidden">
+            <ExportButtons payload={exportPayload} />
+          </div>
         </header>
 
-        {/* ── Navegación + filtros (siempre visibles) ────────────────── */}
-        <div className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-[#faf9f6]/92 backdrop-blur-sm">
+        {/* ── Navegación + filtros (siempre visibles en pantalla) ─────── */}
+        <div className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-[#faf9f6]/92 backdrop-blur-sm print:hidden">
           <div className="bg-card rounded-card border border-line/80 shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3 py-2 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3 min-w-0">
             <SectionNav sections={sections} />
             <div className="lg:ml-auto lg:border-l lg:border-line lg:pl-3 shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -259,7 +261,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             eyebrow="Panorama"
             title="Indicadores principales"
             description="Toca cualquier tarjeta para abrir su detalle completo con estadísticas y tabla."
-            accent="#5d5b35"
+            accent="#304854"
           />
           <KpiGrid kpis={kpiCards} filters={filters} />
         </section>
@@ -342,7 +344,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             eyebrow="Ocupación"
             title="Uso real de los inmuebles"
             description="Un inmueble cuenta como ocupado cuando tiene residente asignado o un negocio activo."
-            accent="#b8860b"
+            accent="#d0b685"
           />
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard title="Ocupación general" className="lg:col-span-2" bodyClassName="justify-between">
@@ -497,7 +499,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
                   <ShareBar
                     value={vm.contactCoverage.withPhone}
                     total={vm.contactCoverage.totalActiveUsers}
-                    color="#b8860b"
+                    color="#d0b685"
                   />
                   <p className="text-[10.5px] text-ink-soft/75 mt-1">
                     {formatInt(vm.contactCoverage.withPhone)} de {formatInt(vm.contactCoverage.totalActiveUsers)}{" "}

@@ -1,25 +1,76 @@
 "use server";
 import { assertPermission } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
-
+import { getCurrentSession } from "@/app/actions/auth";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { absoluteFileUrl } from "@/shared/infrastructure/storage/storage-paths";
+import {
+  buildAnnouncementInvitationEmailHtml,
+  AnnouncementDateEmailItem,
+} from "@/shared/infrastructure/email/announcement-email-template";
+import {
+  serializeTopicConclusions,
+  TopicConclusionsData
+} from "@/app/(admin)/gobernanza/convocatorias/_lib/governance-terms";
+
+function getEffectiveSenderEmail(condominiumName?: string | null): string {
+  const customSender = process.env.ADMIN_MAIL_FROM?.trim();
+  if (customSender && customSender.length > 0) {
+    return customSender;
+  }
+
+  const name =
+    condominiumName && condominiumName.trim().length > 0
+      ? condominiumName.trim()
+      : "Val'Quirico";
+
+  return `Condominio ${name} <finanzas@info.valquirico.com>`;
+}
+
+async function isCallerMasterUser(userId: string): Promise<boolean> {
+  const userRoles = await prisma.userRole.findMany({
+    where: { userId },
+    include: { role: true },
+  });
+  return userRoles.some(
+    (ur) => ur.role?.name?.trim().toLowerCase() === "master"
+  );
+}
 
 /**
- * Toggle attendance for a given position ID in the specific date called session.
- * Stores a comma-separated list of present position IDs.
+ * Toggle attendance for a given position or guest ID in the specific date called session.
+ * Stores a comma-separated list of present IDs.
  */
 export async function toggleAttendanceAction(dateId: string, positionId: string, isPresent: boolean) {
   try {
     await assertPermission([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO], "canRead");
+    const session = await getCurrentSession();
+    if (!session) throw new Error("No hay una sesión activa");
+
     const callDate = await prisma.announcementDate.findUnique({
-      where: { id: dateId }
+      where: { id: dateId },
+      include: {
+        announcement: {
+          include: { status: true }
+        }
+      }
     });
 
-    if (!callDate) throw new Error("Called date not found");
+    if (!callDate) throw new Error("Fecha de convocatoria no encontrada");
+
+    // Validar que la convocatoria se encuentre en proceso
+    const isStarted =
+      callDate.status === "En Proceso" ||
+      callDate.status === "Iniciada" ||
+      callDate.announcement?.status?.name === "En Proceso" ||
+      callDate.announcement?.status?.name === "Iniciada";
+
+    if (!isStarted) {
+      throw new Error("No se puede registrar asistencia en una convocatoria que no ha sido iniciada.");
+    }
 
     let current = callDate.checkedPositions
       ? callDate.checkedPositions.split(",").map(id => id.trim()).filter(Boolean)
@@ -41,6 +92,8 @@ export async function toggleAttendanceAction(dateId: string, positionId: string,
     });
 
     revalidatePath(`/gobernanza/convocatorias/${callDate.announcementId}`, "layout");
+    revalidatePath(`/gobernanza/convocatorias/${callDate.announcementId}/asamblea/${dateId}`);
+    revalidatePath(`/gobernanza/convocatorias/${callDate.announcementId}/asamblea/${dateId}/participar`);
     return { success: true, checkedPositions: updated.checkedPositions };
   } catch (error: any) {
     console.error("Error toggling attendance:", error);
@@ -49,17 +102,36 @@ export async function toggleAttendanceAction(dateId: string, positionId: string,
 }
 
 /**
- * Cast or update a vote on a specific agenda topic for a given position.
+ * Cast or update a vote on a specific agenda topic for a given position or guest.
  * Stores the vote mappings as a serialized JSON string in the database.
  */
 export async function registerVoteAction(topicId: string, positionId: string, voteType: string) {
   try {
     await assertPermission([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO], "canRead");
+    const session = await getCurrentSession();
+    if (!session) throw new Error("No hay una sesión activa");
+
     const topic = await prisma.announcementTopic.findUnique({
-      where: { id: topicId }
+      where: { id: topicId },
+      include: {
+        announcement: {
+          include: { status: true, dates: true }
+        }
+      }
     });
 
-    if (!topic) throw new Error("Topic not found");
+    if (!topic) throw new Error("Tema de orden del día no encontrado");
+
+    // Validar que la sesión esté en curso
+    const announcementStatus = topic.announcement?.status?.name;
+    const isStarted =
+      announcementStatus === "En Proceso" ||
+      announcementStatus === "Iniciada" ||
+      topic.announcement?.dates.some(d => d.status === "En Proceso" || d.status === "Iniciada");
+
+    if (!isStarted) {
+      throw new Error("No se puede votar en una convocatoria que no ha iniciado o que ya ha concluido.");
+    }
 
     let currentVotes: Record<string, string> = {};
     if (topic.votesJson) {
@@ -92,14 +164,26 @@ export async function registerVoteAction(topicId: string, positionId: string, vo
 }
 
 /**
- * Save topic text conclusions/comments.
+ * Save topic conclusions, formal agreement, attachments, and responsible person.
+ * Accepts either a raw string or structured TopicConclusionsData.
  */
-export async function saveTopicConclusionsAction(topicId: string, conclusions: string) {
+export async function saveTopicConclusionsAction(
+  topicId: string,
+  payload: string | Partial<TopicConclusionsData>
+) {
   try {
     await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
+    const session = await getCurrentSession();
+    if (session?.userId && await isCallerMasterUser(session.userId)) {
+      return { success: false, error: "El usuario con rol Master no puede modificar temas de convocatoria." };
+    }
+
+    const rawConclusions =
+      typeof payload === "string" ? payload : serializeTopicConclusions(payload);
+
     const updated = await prisma.announcementTopic.update({
       where: { id: topicId },
-      data: { conclusions }
+      data: { conclusions: rawConclusions }
     });
 
     revalidatePath(`/gobernanza/convocatorias/${updated.announcementId}`, "layout");
@@ -116,14 +200,19 @@ export async function saveTopicConclusionsAction(topicId: string, conclusions: s
 export async function closeAsambleaAction(dateId: string, isCompleted: boolean) {
   try {
     await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
+    const session = await getCurrentSession();
+    if (session?.userId && await isCallerMasterUser(session.userId)) {
+      return { success: false, error: "El usuario con rol Master no tiene autorización para cerrar convocatorias." };
+    }
+
     const status = isCompleted ? "Realizada" : "No Realizada";
     
-    const updatedDate = await prisma.announcementDate.update({
+    await prisma.announcementDate.update({
       where: { id: dateId },
       data: { status }
     });
 
-    // Also update overall parent Announcement status to "Realizada" / "Concluida"
+    // Also update overall parent Announcement status to "Terminada" / "Cancelada"
     const callDate = await prisma.announcementDate.findUnique({
       where: { id: dateId },
       include: { announcement: true }
@@ -131,7 +220,7 @@ export async function closeAsambleaAction(dateId: string, isCompleted: boolean) 
 
     if (callDate) {
       const closedStatus = await prisma.announcementStatus.findFirst({
-        where: { name: { contains: isCompleted ? "Terminada" : "Cancelada" } }
+        where: { name: { contains: isCompleted ? "Terminada" : "Cancelada", mode: "insensitive" } }
       });
       
       if (closedStatus) {
@@ -153,11 +242,115 @@ export async function closeAsambleaAction(dateId: string, isCompleted: boolean) 
 }
 
 /**
+ * Inicia formalmente una convocatoria / asamblea:
+ * 1. Verifica permisos (excluyendo rol Master).
+ * 2. Transiciona el estatus de la convocatoria a "En Proceso" en la base de datos.
+ * 3. Transiciona la fecha de la sesión indicada a "En Proceso".
+ * 4. Opcionalmente (o por defecto si sendEmails: true) envía los correos institucionales a convocados y especiales.
+ * 5. Revalida todas las rutas pertinentes.
+ */
+export async function startAnnouncementAction(
+  announcementId: string,
+  options?: { dateId?: string; sendEmails?: boolean }
+) {
+  try {
+    await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
+    const session = await getCurrentSession();
+    if (session?.userId && await isCallerMasterUser(session.userId)) {
+      return {
+        success: false,
+        error: "El usuario con rol Master no tiene autorización para iniciar o modificar convocatorias.",
+      };
+    }
+
+    const announcement = await prisma.announcement.findUnique({
+      where: { id: announcementId },
+      include: {
+        dates: { where: { isActive: true }, orderBy: { date: "asc" } },
+        status: true,
+      },
+    });
+
+    if (!announcement) {
+      return { success: false, error: "No se encontró la convocatoria." };
+    }
+
+    // Resolver estatus "En Proceso"
+    let inProcessStatus = await prisma.announcementStatus.findFirst({
+      where: {
+        OR: [
+          { name: { equals: "En Proceso", mode: "insensitive" } },
+          { name: { equals: "Iniciada", mode: "insensitive" } },
+        ],
+      },
+    });
+
+    if (!inProcessStatus) {
+      inProcessStatus = await prisma.announcementStatus.create({
+        data: {
+          name: "En Proceso",
+          color: "#304854",
+        },
+      });
+    }
+
+    // Actualizar estado general de la convocatoria
+    await prisma.announcement.update({
+      where: { id: announcementId },
+      data: { statusId: inProcessStatus.id },
+    });
+
+    // Actualizar el estado de la fecha/sesión
+    const targetDateId = options?.dateId || announcement.dates[0]?.id;
+    if (targetDateId) {
+      await prisma.announcementDate.update({
+        where: { id: targetDateId },
+        data: { status: "En Proceso" },
+      });
+    }
+
+    let emailResult = null;
+    if (options?.sendEmails) {
+      emailResult = await sendAnnouncementInvitationAction(announcementId);
+    }
+
+    revalidatePath("/gobernanza/convocatorias");
+    revalidatePath(`/gobernanza/convocatorias/${announcementId}`);
+    revalidatePath(`/gobernanza/convocatorias/${announcementId}/asamblea`);
+    if (targetDateId) {
+      revalidatePath(`/gobernanza/convocatorias/${announcementId}/asamblea/${targetDateId}`);
+      revalidatePath(`/gobernanza/convocatorias/${announcementId}/asamblea/${targetDateId}/participar`);
+    }
+
+    return {
+      success: true,
+      targetDateId,
+      status: "En Proceso",
+      emailResult,
+    };
+  } catch (error: any) {
+    console.error("Error starting announcement:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
  * Send an email invitation for the announcement to all convocados and special guests.
+ * Emplea el remitente institucional verificado finanzas@info.valquirico.com,
+ * la paleta institucional (#304854, #d0b685) y captura la respuesta real de Resend
+ * distinguiendo entre entregas exitosas y rechazos de proveedor.
  */
 export async function sendAnnouncementInvitationAction(announcementId: string) {
   try {
     await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
+    const session = await getCurrentSession();
+    if (session?.userId && await isCallerMasterUser(session.userId)) {
+      return {
+        success: false,
+        error: "El usuario con rol Master no tiene autorización para enviar invitaciones de convocatorias.",
+      };
+    }
+
     const resendApiKey = process.env.RESEND_API_KEY;
     if (!resendApiKey) {
       throw new Error("La variable de entorno RESEND_API_KEY no está configurada.");
@@ -165,7 +358,7 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
 
     const resend = new Resend(resendApiKey);
 
-    // Fetch the announcement details, invited positions, special guests and condominium
+    // Fetch announcement details, invited positions, special guests and condominium
     const announcement = await prisma.announcement.findUnique({
       where: { id: announcementId },
       include: {
@@ -173,7 +366,10 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
         subtype: true,
         dates: {
           where: { isActive: true },
-          orderBy: { date: "asc" }
+          orderBy: { date: "asc" },
+        },
+        topics: {
+          orderBy: { order: "asc" },
         },
         invitedPositions: {
           where: { isActive: true },
@@ -183,36 +379,48 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
                 assignments: {
                   where: { isActive: true },
                   include: {
-                    user: true
-                  }
-                }
-              }
-            }
-          }
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
         },
         specialGuests: {
-          where: { isActive: true }
+          where: { isActive: true },
         },
-        condominium: true
-      }
+        condominium: true,
+      },
     });
 
     if (!announcement) {
       throw new Error("No se encontró la convocatoria.");
     }
 
-    // Resolve all distinct valid emails
-    const emailSet = new Set<string>();
+    // Resolve all distinct valid recipient emails and names
+    const recipientMap = new Map<string, string>(); // email -> name
 
     for (const invitedPos of announcement.invitedPositions) {
       const position = invitedPos.position;
       if (position && position.assignments) {
         for (const assignment of position.assignments) {
           const user = assignment.user;
-          if (user) {
-            const email = user.email || user.personalEmail || user.businessEmail;
-            if (email && email.trim() !== "") {
-              emailSet.add(email.trim().toLowerCase());
+          if (user && user.isActive) {
+            const rawEmail = (
+              user.email?.trim() ||
+              user.personalEmail?.trim() ||
+              user.businessEmail?.trim() ||
+              ""
+            ).toLowerCase();
+
+            if (rawEmail && rawEmail.includes("@") && rawEmail.includes(".")) {
+              const userName =
+                [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+                user.businessName?.trim() ||
+                "Condómino";
+              if (!recipientMap.has(rawEmail)) {
+                recipientMap.set(rawEmail, userName);
+              }
             }
           }
         }
@@ -220,184 +428,133 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
     }
 
     for (const guest of announcement.specialGuests) {
-      if (guest.email && guest.email.trim() !== "") {
-        emailSet.add(guest.email.trim().toLowerCase());
+      const guestEmail = (guest.email?.trim() || "").toLowerCase();
+      if (guestEmail && guestEmail.includes("@") && guestEmail.includes(".")) {
+        if (!recipientMap.has(guestEmail)) {
+          recipientMap.set(guestEmail, guest.name?.trim() || "Invitado Especial");
+        }
       }
     }
 
-    const emails = Array.from(emailSet);
-    if (emails.length === 0) {
-      return { success: false, error: "No se encontraron destinatarios con correos válidos para esta convocatoria." };
+    const recipients = Array.from(recipientMap.entries()).map(([email, name]) => ({
+      email,
+      name,
+    }));
+
+    if (recipients.length === 0) {
+      return {
+        success: false,
+        error: "No se encontraron destinatarios con correos válidos para esta convocatoria.",
+      };
     }
 
-    const condominiumName = announcement.condominium.name;
-    const announcementName = announcement.name;
-    const typeName = announcement.type.name;
-    const subtypeName = announcement.subtype.name;
+    const condominiumName = announcement.condominium?.name || "Val'Quirico";
+    const origin = await appOrigin();
+    const portalUrl = `${origin}/gobernanza/convocatorias/${announcementId}`;
 
-    const cleanTypeName = typeName.replace(/reunion/gi, "Reunión");
-    const cleanSubtypeName = subtypeName.replace(/reunion/gi, "Reunión");
-
-    const isReunion = 
-      typeName.toLowerCase().includes("reunion") || 
-      subtypeName.toLowerCase().includes("reunion");
-
-    const documentLabel = isReunion ? "reunión" : "convocatoria";
-    const documentLabelCap = isReunion ? "Reunión" : "Convocatoria";
-
-    const introParagraph = isReunion
-      ? `Le hacemos llegar la invitación para la reunión <strong>${announcementName}</strong> (${cleanTypeName} - ${cleanSubtypeName}) que se llevará a cabo en el condominio.`
-      : `Le hacemos llegar la convocatoria para la <strong>${announcementName}</strong> (${cleanTypeName} - ${cleanSubtypeName}) que se llevará a cabo en el condominio.`;
-
-    // Generate calls list HTML
-    let callsHtml = "";
-    for (const dateVal of announcement.dates) {
-      const formattedDate = new Date(dateVal.date).toLocaleDateString("es-MX", {
+    const dateItems: AnnouncementDateEmailItem[] = announcement.dates.map((d) => ({
+      callType: d.callType,
+      formattedDate: new Date(d.date).toLocaleDateString("es-MX", {
         weekday: "long",
         year: "numeric",
         month: "long",
         day: "numeric",
-      });
-      callsHtml += `
-        <div style="margin-bottom: 15px; padding: 15px; background-color: #fcf9f5; border-radius: 8px; border: 1px solid #e8dbcc;">
-          <p style="margin: 0; font-size: 14px; font-weight: bold; color: #6d422a;">${dateVal.callType}</p>
-          <p style="margin: 5px 0 0; font-size: 14px; color: #2f221a;"><strong>Fecha:</strong> ${formattedDate} a las ${dateVal.time || ""} hrs</p>
-          <p style="margin: 5px 0 0; font-size: 14px; color: #2f221a;"><strong>Lugar:</strong> ${dateVal.location || "No especificado"}</p>
-        </div>
-      `;
-    }
+      }),
+      time: d.time,
+      location: d.location,
+    }));
 
-    const origin = await appOrigin();
-    const portalUrl = `${origin}/gobernanza/convocatorias/${announcementId}`;
+    const topicsList = announcement.topics.map((t) => t.title);
 
-    const emailSubject = `${condominiumName} - ${documentLabelCap}: ${announcementName}`;
+    const fromSender = getEffectiveSenderEmail(condominiumName);
+    const documentLabel =
+      announcement.type.name.toLowerCase().includes("reunion") ||
+      announcement.subtype.name.toLowerCase().includes("reunion")
+        ? "Reunión"
+        : "Convocatoria";
 
-    const emailBody = `
-      <!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Invitación ${documentLabelCap}</title>
-        </head>
-        <body style="background-color: #fcf9f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 30px; margin: 0;">
-          <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-collapse: collapse; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(109, 66, 42, 0.08); border: 1px solid #e8dbcc;">
-            <tbody>
-              <!-- Header -->
-              <tr>
-                <td style="background-color: #6d422a; padding: 30px; text-align: center;">
-                  <h1 style="color: #ffffff; font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; text-transform: uppercase;">
-                    ${condominiumName}
-                  </h1>
-                </td>
-              </tr>
-              <!-- Body -->
-              <tr>
-                <td style="padding: 40px 30px; color: #2f221a;">
-                  <p style="font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
-                    Apreciable condómino,
-                  </p>
-                  <p style="font-size: 16px; line-height: 1.6; margin: 0 0 25px 0;">
-                    ${introParagraph}
-                  </p>
+    const emailSubject = `${condominiumName} - ${documentLabel}: ${announcement.name}`;
 
-                  <h3 style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #6d422a; margin: 0 0 15px 0; border-bottom: 2px solid #e8dbcc; padding-bottom: 5px;">
-                    Detalles del llamado
-                  </h3>
-                  
-                  ${callsHtml}
-
-                  ${
-                    announcement.pdfUrl
-                      ? `
-                        <div style="margin-top: 20px; text-align: center;">
-                          <a href="${absoluteFileUrl(announcement.pdfUrl, origin)}" target="_blank" style="background-color: #ffffff; border: 1px solid #e8dbcc; color: #6d422a; text-decoration: none; padding: 10px 20px; font-size: 13px; font-weight: bold; border-radius: 9999px; display: inline-block; box-shadow: 0 2px 6px rgba(109, 66, 42, 0.04);">
-                            Ver PDF de la ${documentLabel}
-                          </a>
-                        </div>
-                      `
-                      : ""
-                  }
-
-                  <div style="margin-top: 30px; padding: 20px; background-color: #fcf9f5; border-radius: 12px; border: 1px solid #e8dbcc;">
-                    <h4 style="margin: 0 0 10px 0; font-size: 13px; font-weight: bold; color: #6d422a; text-transform: uppercase; letter-spacing: 0.5px;">
-                      Instrucciones para Participar y Votar:
-                    </h4>
-                    <ol style="margin: 0; padding-left: 20px; font-size: 13px; color: #2f221a; line-height: 1.6;">
-                      <li style="margin-bottom: 8px;">Haga clic en el botón de abajo para acceder a la ${documentLabel}.</li>
-                      <li style="margin-bottom: 8px;">Inicie sesión en el portal con su cuenta de condómino.</li>
-                      <li style="margin-bottom: 8px;">En la pantalla de la ${documentLabel}, presione el botón <strong>"${isReunion ? "Participar en reunión" : "Participar en asamblea"}"</strong>.</li>
-                      <li>Confirme su asistencia en las propiedades que representa y emita sus votos en el orden del día.</li>
-                    </ol>
-                    <div style="margin-top: 20px; text-align: center;">
-                      <a href="${portalUrl}" target="_blank" style="background-color: #6d422a; color: #ffffff; text-decoration: none; padding: 12px 25px; font-size: 14px; font-weight: bold; border-radius: 9999px; display: inline-block; box-shadow: 0 2px 10px rgba(109, 66, 42, 0.2); text-transform: uppercase; letter-spacing: 0.5px;">
-                        Acceder al Portal de ${isReunion ? "Reunión" : "Asamblea"}
-                      </a>
-                    </div>
-                  </div>
-                  
-                  <div style="margin-top: 35px; border-top: 1px solid #e8dbcc; padding-top: 20px;">
-                    <p style="font-size: 16px; line-height: 1.6; margin: 0; font-weight: bold;">
-                      Agradecemos de antemano su puntual asistencia y participación.
-                    </p>
-                    <p style="font-size: 14px; color: #958172; margin: 5px 0 0 0;">
-                      Saludos cordiales, <br/>
-                      Administración de ${condominiumName}
-                    </p>
-                  </div>
-                </td>
-              </tr>
-              <!-- Footer -->
-              <tr>
-                <td style="background-color: #f7f9fa; padding: 20px 30px; text-align: center; font-size: 11px; color: #958172; border-top: 1px solid #e8dbcc;">
-                  Recibió este correo porque está registrado en el sistema condominal de ${condominiumName}. 
-                  Si hay un error en esta información, por favor póngase en contacto con la administración.
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </body>
-      </html>
-    `;
-
-    // Send individual emails using Resend to avoid listing all recipients in CC/TO
     let sentCount = 0;
     let failedCount = 0;
+    const sendErrors: { recipient: string; error: string }[] = [];
 
-    for (const email of emails) {
+    // Enviar correos individuales con captura rigurosa de errores de proveedor
+    for (const { email, name } of recipients) {
+      const emailHtml = buildAnnouncementInvitationEmailHtml({
+        recipientName: name,
+        condominiumName,
+        announcementName: announcement.name,
+        typeName: announcement.type.name,
+        subtypeName: announcement.subtype.name,
+        dates: dateItems,
+        portalUrl,
+        pdfUrl: announcement.pdfUrl ? absoluteFileUrl(announcement.pdfUrl, origin) : null,
+        topics: topicsList,
+      });
+
       try {
-        await resend.emails.send({
-          from: `Condominio ${condominiumName} <gobernanza@insulae.sistemasabanza.com>`,
+        const { data, error } = await resend.emails.send({
+          from: fromSender,
           to: email,
           subject: emailSubject,
-          html: emailBody
+          html: emailHtml,
         });
-        sentCount++;
-      } catch (err) {
-        console.error(`Error sending email to ${email}:`, err);
+
+        if (error) {
+          console.error(`[Resend Error] Failed sending announcement email to ${email}:`, error);
+          failedCount++;
+          sendErrors.push({
+            recipient: email,
+            error: error.message || "Error devuelto por el servicio de correo",
+          });
+        } else {
+          sentCount++;
+        }
+      } catch (err: any) {
+        console.error(`[Exception] Failed sending announcement email to ${email}:`, err);
         failedCount++;
+        sendErrors.push({
+          recipient: email,
+          error: err?.message || "Excepción de conexión con el proveedor",
+        });
       }
     }
 
-    // Update parent Announcement status to "En Proceso"
+    // Actualizar estatus general a "En Proceso"
     const inProcessStatus = await prisma.announcementStatus.findFirst({
-      where: { name: { contains: "En Proceso", mode: "insensitive" } }
+      where: {
+        OR: [
+          { name: { equals: "En Proceso", mode: "insensitive" } },
+          { name: { equals: "Iniciada", mode: "insensitive" } },
+        ],
+      },
     });
 
     if (inProcessStatus) {
       await prisma.announcement.update({
         where: { id: announcementId },
-        data: { statusId: inProcessStatus.id }
+        data: { statusId: inProcessStatus.id },
       });
     }
 
     revalidatePath("/gobernanza/convocatorias");
     revalidatePath(`/gobernanza/convocatorias/${announcementId}`);
 
+    const isSuccess = sentCount > 0;
     return {
-      success: true,
+      success: isSuccess,
       sentCount,
       failedCount,
-      total: emails.length
+      total: recipients.length,
+      errors: sendErrors,
+      message:
+        failedCount === 0
+          ? `Se enviaron exitosamente ${sentCount} correos de convocatoria.`
+          : isSuccess
+          ? `Se enviaron ${sentCount} de ${recipients.length} correos. Hubo ${failedCount} envíos con error.`
+          : `No se pudo entregar ningún correo. Error del proveedor: ${sendErrors[0]?.error || "Desconocido"}`,
+      error: !isSuccess ? sendErrors[0]?.error || "Error al enviar correos" : undefined,
     };
   } catch (error: any) {
     console.error("Error in sendAnnouncementInvitationAction:", error);
@@ -407,11 +564,11 @@ export async function sendAnnouncementInvitationAction(announcementId: string) {
 
 /**
  * Build a WhatsApp-ready plain-text version of the announcement invitation.
- * Returns { text, phone } so the client can open wa.me/{phone}?text={text}
+ * Returns { text, recipients } so the client can trigger WhatsApp delivery.
  */
 export async function getAnnouncementWhatsAppTextAction(announcementId: string) {
   try {
-    await assertPermission(MODULES.CONVOCATORIAS, "canRead");
+    await assertPermission([MODULES.CONVOCATORIAS, MODULES.CONVOCATORIAS_CONDOMINO], "canRead");
     const announcement = await prisma.announcement.findUnique({
       where: { id: announcementId },
       include: {
@@ -419,7 +576,7 @@ export async function getAnnouncementWhatsAppTextAction(announcementId: string) 
         subtype: true,
         dates: {
           where: { isActive: true },
-          orderBy: { date: "asc" }
+          orderBy: { date: "asc" },
         },
         condominium: true,
         topics: { orderBy: { order: "asc" } },
@@ -430,19 +587,19 @@ export async function getAnnouncementWhatsAppTextAction(announcementId: string) 
                 assignments: {
                   where: { isActive: true },
                   include: {
-                    user: true
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+                    user: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!announcement) throw new Error("No se encontró la convocatoria.");
 
-    const condominiumName = announcement.condominium.name;
+    const condominiumName = announcement.condominium?.name || "Val'Quirico";
     const announcementName = announcement.name;
     const typeName = announcement.type.name;
     const subtypeName = announcement.subtype.name;
@@ -456,34 +613,36 @@ export async function getAnnouncementWhatsAppTextAction(announcementId: string) 
     const origin = await appOrigin();
     const portalUrl = `${origin}/gobernanza/convocatorias/${announcementId}`;
 
-    const emojiHouse = String.fromCodePoint(0x1F3E0);
-    const emojiCalendar = String.fromCodePoint(0x1F4C5);
-    const emojiSpiralCalendar = String.fromCodePoint(0x1F5D3);
-    const emojiClipboard = String.fromCodePoint(0x1F4CB);
-    const emojiPage = String.fromCodePoint(0x1F4C4);
+    const emojiHouse = String.fromCodePoint(0x1f3e0);
+    const emojiCalendar = String.fromCodePoint(0x1f4c5);
+    const emojiSpiralCalendar = String.fromCodePoint(0x1f5d3);
+    const emojiClipboard = String.fromCodePoint(0x1f4cb);
+    const emojiPage = String.fromCodePoint(0x1f4c4);
     const emojiCheck = String.fromCodePoint(0x2705);
 
-    const callsText = announcement.dates.map((d) => {
-      const formattedDate = new Date(d.date).toLocaleDateString("es-MX", {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-      return `${emojiSpiralCalendar} *${d.callType}*\nFecha: ${formattedDate} a las ${d.time || ""} hrs\nLugar: ${d.location || "No especificado"}`;
-    }).join("\n\n");
+    const callsText = announcement.dates
+      .map((d) => {
+        const formattedDate = new Date(d.date).toLocaleDateString("es-MX", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        return `${emojiSpiralCalendar} *${d.callType}*\nFecha: ${formattedDate}${d.time ? ` a las ${d.time} hrs` : ""}\nLugar: ${d.location || "No especificado"}`;
+      })
+      .join("\n\n");
 
-    const topicsText = announcement.topics.length > 0
-      ? `\n\n${emojiClipboard} *Orden del día:*\n` + announcement.topics.map((t, i) => `${i + 1}. ${t.title}`).join("\n")
-      : "";
+    const topicsText =
+      announcement.topics.length > 0
+        ? `\n\n${emojiClipboard} *Orden del día:*\n` +
+          announcement.topics.map((t, i) => `${i + 1}. ${t.title}`).join("\n")
+        : "";
 
-    // Los PDF de la app se guardan como /api/archivos/...: en WhatsApp hace falta la URL completa.
     const pdfText = announcement.pdfUrl
       ? `\n\n${emojiPage} PDF: ${absoluteFileUrl(announcement.pdfUrl, origin)}`
       : "";
 
-    const text =
-`${emojiHouse} *${condominiumName}*
+    const text = `${emojiHouse} *${condominiumName}*
 ${documentLabel}: *${announcementName}*
 (${typeName} - ${subtypeName})
 
@@ -514,17 +673,18 @@ Atentamente, Administración de ${condominiumName}.${pdfText}`;
           const userId = ass.user.id;
           const phone = ass.user.phone || ass.user.personalPhone || ass.user.businessPhone;
           const cleanPhone = phone ? phone.replace(/[^0-9]/g, "") : "";
-          
+
           if (cleanPhone && !seenUsers.has(userId + "_" + cleanPhone)) {
             seenUsers.add(userId + "_" + cleanPhone);
-            const displayName = [ass.user.firstName, ass.user.lastName].filter(Boolean).join(" ") 
-              || ass.user.businessName 
-              || "Condómino";
-            
+            const displayName =
+              [ass.user.firstName, ass.user.lastName].filter(Boolean).join(" ").trim() ||
+              ass.user.businessName?.trim() ||
+              "Condómino";
+
             recipients.push({
               name: displayName,
               position: positionName,
-              phone: cleanPhone
+              phone: cleanPhone,
             });
           }
         }

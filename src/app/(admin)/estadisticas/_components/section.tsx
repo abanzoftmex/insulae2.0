@@ -10,7 +10,7 @@ export function SectionHeader({
   eyebrow,
   title,
   description,
-  accent = "#5d5b35",
+  accent = "#304854",
   action,
 }: {
   eyebrow?: string;

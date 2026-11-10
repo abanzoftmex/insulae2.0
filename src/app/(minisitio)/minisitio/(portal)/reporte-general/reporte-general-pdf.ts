@@ -52,7 +52,7 @@ export async function buildReporteGeneralPdf(filteredAreas: AreaReporte[]) {
   const anioActual = new Date().getFullYear();
 
   // Encabezado con fondo de color
-  doc.setFillColor(31, 41, 55); // gray-800
+  doc.setFillColor(48, 72, 84); // #304854
   doc.rect(0, 0, doc.internal.pageSize.width, 35, "F");
 
   // Título del documento
@@ -105,7 +105,7 @@ export async function buildReporteGeneralPdf(filteredAreas: AreaReporte[]) {
       lineWidth: 0.1,
     },
     headStyles: {
-      fillColor: [31, 41, 55], // gray-800
+      fillColor: [48, 72, 84], // #304854
       textColor: [255, 255, 255],
       fontStyle: "bold",
       halign: "center",
@@ -143,7 +143,7 @@ export async function buildReporteGeneralPdf(filteredAreas: AreaReporte[]) {
     didDrawPage: function (data) {
       // Encabezado en páginas adicionales
       if (data.pageNumber > 1) {
-        doc.setFillColor(31, 41, 55);
+        doc.setFillColor(48, 72, 84); // #304854
         doc.rect(0, 0, doc.internal.pageSize.width, 15, "F");
 
         doc.setTextColor(255, 255, 255);

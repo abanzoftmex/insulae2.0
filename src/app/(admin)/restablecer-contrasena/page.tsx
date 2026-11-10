@@ -18,7 +18,7 @@ export default async function RestablecerContrasenaPage({ searchParams }: PagePr
   const token = Array.isArray(params.token) ? params.token[0] : params.token;
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-[#0e0e0a] via-[#242416] to-[#32321e] font-sans flex items-center justify-center px-6 py-12">
+    <div className="min-h-screen w-full bg-gradient-to-br from-[#0f171b] via-[#1b2b33] to-[#304854] font-sans flex items-center justify-center px-6 py-12">
       <div className="w-full max-w-[420px] space-y-8">
         <Image
           src="/brand/valquirico-logo-light.png"
@@ -42,7 +42,7 @@ export default async function RestablecerContrasenaPage({ searchParams }: PagePr
               <div className="rounded-xl px-3.5 py-3 text-[12px] font-semibold border border-red-500/20 bg-red-950/20 text-red-300">
                 El enlace no es válido. Solicita uno nuevo.
               </div>
-              <Link href="/olvide-contrasena" className="block text-center text-[11px] font-semibold text-white/50 hover:text-[#b58c42] transition-standard">
+              <Link href="/olvide-contrasena" className="block text-center text-[11px] font-semibold text-white/50 hover:text-[#d0b685] transition-standard">
                 Solicitar enlace nuevo
               </Link>
             </div>

@@ -281,7 +281,7 @@ export function WelcomePanel({
             {hasComerciosArrendamientos && (
               <Link
                 href={msPath("/arrendamientos")}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#b58c42] text-white font-bold text-xs hover:bg-white hover:text-brand-deep transition-standard shadow-sm"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#d0b685] text-black font-bold text-xs hover:bg-white hover:text-brand-deep transition-standard shadow-sm"
               >
                 <FileText className="h-4 w-4" />
                 Mis Comercios
@@ -301,7 +301,7 @@ export function WelcomePanel({
       {/* ─── Accesos Principales de Condómino (Sin números) ───────────────────── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-base font-bold uppercase tracking-wider text-[#5d5b35]">
+          <h2 className="text-base font-bold uppercase tracking-wider text-[#304854]">
             Módulos del Condómino
           </h2>
           <span className="text-[11px] font-semibold text-fg-3">
@@ -312,10 +312,10 @@ export function WelcomePanel({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {hasPropiedades && (
             <Link href={msPath("/propiedades")} className="block group">
-              <div className="p-5 h-full transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] shadow-sm hover:shadow-md hover:border-[#5d5b35]/40">
+              <div className="p-5 h-full transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] shadow-sm hover:shadow-md hover:border-[#304854]/40">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-[#5d5b35]/10 border border-[#5d5b35]/15 group-hover:bg-[#5d5b35] group-hover:text-white transition-colors text-[#5d5b35]">
+                    <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-[#304854]/10 border border-[#304854]/15 group-hover:bg-[#304854] group-hover:text-white transition-colors text-[#304854]">
                       <Home className="h-5 w-5" />
                     </span>
                     <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#f4f7f6] text-black/60 border border-black/5">
@@ -323,7 +323,7 @@ export function WelcomePanel({
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-black/85 group-hover:text-[#5d5b35] transition-colors">
+                    <h3 className="text-sm font-bold text-black/85 group-hover:text-[#304854] transition-colors">
                       Mis Propiedades
                     </h3>
                     <p className="text-xs text-black/60 leading-relaxed mt-1">
@@ -331,7 +331,7 @@ export function WelcomePanel({
                     </p>
                   </div>
                 </div>
-                <div className="pt-4 mt-2 border-t border-black/5 flex items-center text-xs font-bold text-[#5d5b35] group-hover:translate-x-0.5 transition-transform">
+                <div className="pt-4 mt-2 border-t border-black/5 flex items-center text-xs font-bold text-[#304854] group-hover:translate-x-0.5 transition-transform">
                   <span>Ver propiedades</span>
                   <ChevronRight className="h-3.5 w-3.5 ml-1.5" />
                 </div>
@@ -341,10 +341,10 @@ export function WelcomePanel({
 
           {hasComerciosArrendamientos && (
             <Link href={msPath("/arrendamientos")} className="block group">
-              <div className="p-5 h-full transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] shadow-sm hover:shadow-md hover:border-[#5d5b35]/40">
+              <div className="p-5 h-full transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] shadow-sm hover:shadow-md hover:border-[#304854]/40">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-[#5d5b35]/10 border border-[#5d5b35]/15 group-hover:bg-[#5d5b35] group-hover:text-white transition-colors text-[#5d5b35]">
+                    <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-[#304854]/10 border border-[#304854]/15 group-hover:bg-[#304854] group-hover:text-white transition-colors text-[#304854]">
                       <FileText className="h-5 w-5" />
                     </span>
                     <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#f4f7f6] text-black/60 border border-black/5">
@@ -352,7 +352,7 @@ export function WelcomePanel({
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-black/85 group-hover:text-[#5d5b35] transition-colors">
+                    <h3 className="text-sm font-bold text-black/85 group-hover:text-[#304854] transition-colors">
                       Mis Comercios
                     </h3>
                     <p className="text-xs text-black/60 leading-relaxed mt-1">
@@ -360,7 +360,7 @@ export function WelcomePanel({
                     </p>
                   </div>
                 </div>
-                <div className="pt-4 mt-2 border-t border-black/5 flex items-center text-xs font-bold text-[#5d5b35] group-hover:translate-x-0.5 transition-transform">
+                <div className="pt-4 mt-2 border-t border-black/5 flex items-center text-xs font-bold text-[#304854] group-hover:translate-x-0.5 transition-transform">
                   <span>Ver comercios</span>
                   <ChevronRight className="h-3.5 w-3.5 ml-1.5" />
                 </div>
@@ -369,18 +369,18 @@ export function WelcomePanel({
           )}
 
           <Link href={msPath("/comunicados")} className="block group">
-            <div className="p-5 h-full transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] shadow-sm hover:shadow-md hover:border-[#5d5b35]/40">
+            <div className="p-5 h-full transition-all duration-200 hover:-translate-y-1 cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] shadow-sm hover:shadow-md hover:border-[#304854]/40">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-[#5d5b35]/10 border border-[#5d5b35]/15 group-hover:bg-[#5d5b35] group-hover:text-white transition-colors text-[#5d5b35]">
+                  <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-[#304854]/10 border border-[#304854]/15 group-hover:bg-[#304854] group-hover:text-white transition-colors text-[#304854]">
                     <Bell className="h-5 w-5" />
                   </span>
-                  <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#b58c42]/15 text-[#8d6928] border border-[#b58c42]/30">
+                  <span className="text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full bg-[#d0b685]/15 text-[#8a6e3e] border border-[#d0b685]/30">
                     Oficial
                   </span>
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-black/85 group-hover:text-[#5d5b35] transition-colors">
+                  <h3 className="text-sm font-bold text-black/85 group-hover:text-[#304854] transition-colors">
                     Comunicados Oficiales
                   </h3>
                   <p className="text-xs text-black/60 leading-relaxed mt-1">
@@ -388,7 +388,7 @@ export function WelcomePanel({
                   </p>
                 </div>
               </div>
-              <div className="pt-4 mt-2 border-t border-black/5 flex items-center text-xs font-bold text-[#5d5b35] group-hover:translate-x-0.5 transition-transform">
+              <div className="pt-4 mt-2 border-t border-black/5 flex items-center text-xs font-bold text-[#304854] group-hover:translate-x-0.5 transition-transform">
                 <span>Consultar avisos</span>
                 <ChevronRight className="h-3.5 w-3.5 ml-1.5" />
               </div>
@@ -426,13 +426,13 @@ export function WelcomePanel({
         {/* Segunda fila de accesos rápidos */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 pt-1">
           <Link href={msPath("/reglamentos")} className="block group">
-            <div className="p-5 h-full transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] hover:border-[#5d5b35]/30">
+            <div className="p-5 h-full transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] hover:border-[#304854]/30">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-[#5d5b35] text-white shrink-0 group-hover:bg-[#3d3c22] transition-colors">
+                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-[#304854] text-white shrink-0 group-hover:bg-[#1f2f37] transition-colors">
                     <BookOpen className="h-4 w-4" />
                   </span>
-                  <h3 className="text-xs font-bold text-[#5d5b35] tracking-tight">
+                  <h3 className="text-xs font-bold text-[#304854] tracking-tight">
                     Reglamentos y Normas
                   </h3>
                 </div>
@@ -441,7 +441,7 @@ export function WelcomePanel({
                 </p>
               </div>
               <div className="pt-4 mt-3">
-                <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-[#5d5b35] text-white text-[10px] font-bold uppercase tracking-tight shadow-xs group-hover:bg-[#3d3c22] transition-colors">
+                <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-[#304854] text-white text-[10px] font-bold uppercase tracking-tight shadow-xs group-hover:bg-[#1f2f37] transition-colors">
                   <ChevronRight className="h-3 w-3" /> Ver reglamentos
                 </span>
               </div>
@@ -449,13 +449,13 @@ export function WelcomePanel({
           </Link>
 
           <Link href={msPath("/experiencias")} className="block group">
-            <div className="p-5 h-full transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] hover:border-[#b58c42]/30">
+            <div className="p-5 h-full transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] hover:border-[#d0b685]/30">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-[#b58c42] text-white shrink-0 group-hover:bg-[#8d6928] transition-colors">
+                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-[#d0b685] text-black shrink-0 group-hover:bg-[#be9f6b] transition-colors">
                     <Sparkles className="h-4 w-4" />
                   </span>
-                  <h3 className="text-xs font-bold text-[#8d6928] tracking-tight">
+                  <h3 className="text-xs font-bold text-[#8a6e3e] tracking-tight">
                     Experiencias Val'Quirico
                   </h3>
                 </div>
@@ -464,7 +464,7 @@ export function WelcomePanel({
                 </p>
               </div>
               <div className="pt-4 mt-3">
-                <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-[#b58c42] text-white text-[10px] font-bold uppercase tracking-tight shadow-xs group-hover:bg-[#8d6928] transition-colors">
+                <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-[#d0b685] text-black text-[10px] font-bold uppercase tracking-tight shadow-xs group-hover:bg-[#be9f6b] transition-colors">
                   <ChevronRight className="h-3 w-3" /> Ver experiencias
                 </span>
               </div>
@@ -495,13 +495,13 @@ export function WelcomePanel({
           </Link>
 
           <a href="https://www.mapavalquirico.com/" target="_blank" rel="noopener noreferrer" className="block group">
-            <div className="p-5 h-full transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] hover:border-[#5d5b35]/30">
+            <div className="p-5 h-full transition-all duration-200 hover:shadow-md cursor-pointer flex flex-col justify-between rounded-2xl bg-white border border-black/[0.08] hover:border-[#304854]/30">
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-[#5d5b35] text-white shrink-0 group-hover:bg-[#3d3c22] transition-colors">
+                  <span className="inline-flex items-center justify-center h-8 w-8 rounded-lg bg-[#304854] text-white shrink-0 group-hover:bg-[#1f2f37] transition-colors">
                     <MapPin className="h-4 w-4" />
                   </span>
-                  <h3 className="text-xs font-bold text-[#5d5b35] tracking-tight">
+                  <h3 className="text-xs font-bold text-[#304854] tracking-tight">
                     Mapa de Val'Quirico
                   </h3>
                 </div>
@@ -510,7 +510,7 @@ export function WelcomePanel({
                 </p>
               </div>
               <div className="pt-4 mt-3">
-                <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-[#5d5b35] text-white text-[10px] font-bold uppercase tracking-tight shadow-xs group-hover:bg-[#3d3c22] transition-colors">
+                <span className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full bg-[#304854] text-white text-[10px] font-bold uppercase tracking-tight shadow-xs group-hover:bg-[#1f2f37] transition-colors">
                   <ChevronRight className="h-3 w-3" /> Abrir mapa
                 </span>
               </div>

@@ -72,7 +72,7 @@ const CATEGORY_CARDS: CategoryCardDef[] = [
   {
     module: MODULES.DIRECTORIO,
     href: "/directorio",
-    icon: <Users className="h-5 w-5 text-[#5d5b35]" />,
+    icon: <Users className="h-5 w-5 text-brand" />,
     badge: "Comunidad",
     title: "Propietarios y Residentes",
     description: "Directorio unificado de residentes, arrendatarios, arrendadores y contactos de emergencia.",
@@ -81,7 +81,7 @@ const CATEGORY_CARDS: CategoryCardDef[] = [
   {
     module: MODULES.AREAS_PRIVATIVAS,
     href: "/areas-privativas",
-    icon: <MapPin className="h-5 w-5 text-[#5d5b35]" />,
+    icon: <MapPin className="h-5 w-5 text-brand" />,
     badge: "Inmuebles",
     title: "Áreas Privativas",
     description: "Catálogo de lotes, viviendas, locales comerciales y zonas del condominio.",
@@ -100,7 +100,7 @@ const CATEGORY_CARDS: CategoryCardDef[] = [
   {
     module: MODULES.REGLAMENTOS,
     href: "/reglamentos",
-    icon: <BookOpen className="h-5 w-5 text-[#5d5b35]" />,
+    icon: <BookOpen className="h-5 w-5 text-brand" />,
     badge: "Normativa",
     title: "Documentos y Reglamentos",
     description: "Estatutos condominales, acuerdos de asamblea y normas comunitarias de convivencia.",
@@ -116,7 +116,7 @@ const QUICK_ACTIONS: QuickActionDef[] = [
     title: "Generar Ficha de Condominio",
     description: "Descarga el estado actual y la ficha técnica del condominio en formato PDF.",
     cta: "Generar PDF",
-    iconBg: "bg-[#5d5b35]",
+    iconBg: "bg-brand",
   },
   {
     module: MODULES.COBROS_MASIVOS,
@@ -125,7 +125,7 @@ const QUICK_ACTIONS: QuickActionDef[] = [
     title: "Proceso de Cobros Masivos",
     description: "Emisión masiva de cuotas ordinarias y extraordinarias para las áreas privativas.",
     cta: "Iniciar cobros",
-    iconBg: "bg-[#3d3c22]",
+    iconBg: "bg-brand-deep",
   },
   {
     module: MODULES.NOTIFICACIONES,
@@ -188,7 +188,7 @@ export default async function Home() {
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="brand"
-                className="rounded-full px-3.5 py-1 text-[10px] tracking-widest bg-brand-mint text-brand-deep font-bold border border-[#5d5b35]/25 uppercase shadow-xs"
+                className="rounded-full px-3.5 py-1 text-[10px] tracking-widest bg-brand-mint text-brand-deep font-bold border border-brand/25 uppercase shadow-xs"
               >
                 Gestor de Condominio
               </Badge>
@@ -243,7 +243,7 @@ export default async function Home() {
       {categoryCards.length > 0 && (
         <div className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <h2 className="text-base font-bold uppercase tracking-wider text-[#5d5b35]">
+            <h2 className="text-base font-bold uppercase tracking-wider text-brand">
               Módulos de Gestión Diario
             </h2>
             <span className="text-[11px] font-semibold text-ink-soft/70">
@@ -262,7 +262,7 @@ export default async function Home() {
       {/* ─── Acciones Frecuentes de Administración ──────────────────────────── */}
       {quickActions.length > 0 && (
         <div className="space-y-3">
-          <h2 className="text-base font-bold uppercase tracking-wider px-1 text-[#5d5b35]">
+          <h2 className="text-base font-bold uppercase tracking-wider px-1 text-brand">
             Acciones Frecuentes
           </h2>
 
@@ -332,7 +332,7 @@ function CategoryCard({
 }: Omit<CategoryCardDef, "module">) {
   return (
     <Link href={href} className="block group">
-      <Card className="p-5 h-full transition-all duration-200 hover:-translate-y-1 hover:border-[#5d5b35]/40 hover:shadow-md cursor-pointer flex flex-col justify-between border">
+      <Card className="p-5 h-full transition-all duration-200 hover:-translate-y-1 hover:border-brand/40 hover:shadow-md cursor-pointer flex flex-col justify-between border">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-brand/10 border border-brand/15 group-hover:bg-brand group-hover:text-white transition-colors">
@@ -374,7 +374,7 @@ function QuickActionCard({
 }: Omit<QuickActionDef, "module">) {
   return (
     <Link href={href} className="block group">
-      <Card className="p-5 h-full transition-all duration-200 hover:shadow-md hover:border-[#5d5b35]/30 cursor-pointer flex flex-col justify-between border">
+      <Card className="p-5 h-full transition-all duration-200 hover:shadow-md hover:border-brand/30 cursor-pointer flex flex-col justify-between border">
         <div className="space-y-3">
           <div className="flex items-center gap-3">
             <span className={`inline-flex items-center justify-center h-8 w-8 rounded-lg text-white shrink-0 transition-colors ${

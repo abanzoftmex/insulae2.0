@@ -48,12 +48,12 @@ export default function PrivacyNoticeModal({
     return (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 overflow-y-auto">
             <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full my-8 relative overflow-hidden">
-                {/* Header con gradiente dorado */}
-                <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] p-6 text-white">
+                {/* Header institucional */}
+                <div className="bg-[#304854] border-b-2 border-[#d0b685] p-6 text-white">
                     <div className="flex items-center justify-center mb-4">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-2xl backdrop-blur-sm">
+                        <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-2xl backdrop-blur-sm">
                             <svg
-                                className="w-8 h-8 text-white"
+                                className="w-8 h-8 text-[#d0b685]"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -79,7 +79,7 @@ export default function PrivacyNoticeModal({
                 <div className="p-6 max-h-[60vh] overflow-y-auto">
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-12">
-                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cba258] mb-4"></div>
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d0b685] mb-4"></div>
                             <p className="text-gray-600">Cargando aviso de privacidad...</p>
                         </div>
                     ) : error && !privacyNotice ? (
@@ -158,7 +158,7 @@ export default function PrivacyNoticeModal({
                     <button
                         onClick={handleAccept}
                         disabled={accepting || loading}
-                        className="px-8 py-3 bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white rounded-xl transition-all duration-200 font-semibold disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                        className="px-8 py-3 bg-[#d0b685] hover:bg-[#be9f6b] text-black rounded-xl transition-all duration-200 font-bold disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
                     >
                         {accepting ? (
                             <div className="flex items-center justify-center space-x-2">

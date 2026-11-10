@@ -83,16 +83,16 @@ function buildPrintHtml(payload: StatisticsExportPayload): string {
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #1f1f1f; padding: 28px 32px; font-size: 11px; }
-  header { border-bottom: 2px solid #5d5b35; padding-bottom: 10px; margin-bottom: 14px; }
-  h1 { font-size: 18px; color: #3d3c22; }
+  header { border-bottom: 2px solid #304854; padding-bottom: 10px; margin-bottom: 14px; }
+  h1 { font-size: 18px; color: #1f2f37; }
   .meta { color: #666; margin-top: 3px; font-size: 10px; }
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
-  .kpi { border: 1px solid #ddd8c8; border-radius: 6px; padding: 8px 10px; }
-  .kpi-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.06em; color: #75724a; font-weight: 700; }
-  .kpi-value { font-size: 16px; font-weight: 700; color: #3d3c22; margin-top: 2px; }
+  .kpi { border: 1px solid #d5e1e8; border-radius: 6px; padding: 8px 10px; }
+  .kpi-label { font-size: 8px; text-transform: uppercase; letter-spacing: 0.06em; color: #304854; font-weight: 700; }
+  .kpi-value { font-size: 16px; font-weight: 700; color: #1f2f37; margin-top: 2px; }
   .kpi-hint { font-size: 8.5px; color: #888; margin-top: 1px; }
   section { margin-bottom: 14px; break-inside: avoid; }
-  h2 { font-size: 12px; color: #5d5b35; margin-bottom: 5px; }
+  h2 { font-size: 12px; color: #304854; margin-bottom: 5px; }
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; font-size: 9px; text-transform: uppercase; letter-spacing: 0.04em; color: #75724a; border-bottom: 1px solid #c9c4ae; padding: 3px 6px; }
   td { padding: 3px 6px; border-bottom: 1px solid #eeeae0; }
@@ -155,20 +155,12 @@ export function ExportButtons({ payload }: { payload: StatisticsExportPayload })
     }
   };
 
-  // PDF vía diálogo de impresión del navegador (guardar como PDF):
-  // evita depender de librerías de generación de PDF en el cliente.
+  // Exportación PDF con reproducción fiel del diseño en pantalla
   const exportPdf = () => {
     setBusy("pdf");
     try {
-      const printWindow = window.open("", "_blank", "width=1000,height=800");
-      if (!printWindow) return;
-      printWindow.document.write(buildPrintHtml(payload));
-      printWindow.document.close();
-      printWindow.focus();
-      // Espera breve a que el documento pinte antes de abrir el diálogo
-      printWindow.setTimeout(() => {
-        printWindow.print();
-      }, 250);
+      const search = typeof window !== "undefined" ? window.location.search : "";
+      window.open(`/estadisticas/imprimir${search}`, "_blank");
     } finally {
       setBusy(null);
     }

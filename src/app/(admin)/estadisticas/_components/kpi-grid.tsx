@@ -32,11 +32,11 @@ type Accent = "cyan" | "brand" | "lime" | "gold";
 
 /** Tonos por acento: los mismos que usa StatCard, aquí como valores para poder animarlos */
 export const ACCENT_STYLES: Record<Accent | "plain", { card: string; icon: string; label: string; value: string }> = {
-  brand: { card: "#f7f7f1", icon: "#3d3c22", label: "#52525b", value: "#09090b" },
-  cyan: { card: "#f0fbfd", icon: "#083344", label: "#52525b", value: "#09090b" },
-  gold: { card: "#fbf8f0", icon: "#78350f", label: "#52525b", value: "#09090b" },
-  lime: { card: "#f7fbec", icon: "#365314", label: "#52525b", value: "#09090b" },
-  plain: { card: "#ffffff", icon: "#6b7280", label: "#52525b", value: "#09090b" },
+  brand: { card: "#edf4f7", icon: "#304854", label: "#52525b", value: "#000000" },
+  cyan: { card: "#f0fbfd", icon: "#083344", label: "#52525b", value: "#000000" },
+  gold: { card: "#faf8f3", icon: "#8a6e3e", label: "#52525b", value: "#000000" },
+  lime: { card: "#f7fbec", icon: "#365314", label: "#52525b", value: "#000000" },
+  plain: { card: "#ffffff", icon: "#6b7280", label: "#52525b", value: "#000000" },
 };
 
 export interface KpiCardData {

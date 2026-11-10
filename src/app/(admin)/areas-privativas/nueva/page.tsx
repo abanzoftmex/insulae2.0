@@ -332,7 +332,7 @@ export default async function NuevaAreaPrivativaPage({ searchParams }: PageProps
             <Button variant="outline" size="md" asChild className="font-bold uppercase tracking-widest text-[11px]">
               <Link href="/areas-privativas">Cancelar</Link>
             </Button>
-            <Button type="submit" variant="dark" size="md" className="font-bold uppercase tracking-widest text-[11px] px-8 bg-gold hover:bg-[#bca065] text-white">
+            <Button type="submit" variant="dark" size="md" className="font-bold uppercase tracking-widest text-[11px] px-8 bg-gold hover:bg-gold-hover text-black font-black">
               Crear Área Privativa
             </Button>
           </CardContent>

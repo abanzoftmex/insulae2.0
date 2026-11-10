@@ -32,7 +32,7 @@ export function MinisitioErrorScreen({ statusCode }: { statusCode?: number }) {
         <div className="space-y-3">
           <button
             onClick={() => router.back()}
-            className="w-full bg-gradient-to-r from-[#cba258] to-[#cba258] text-white py-3 px-6 rounded-xl font-medium hover:from-[#bca065] hover:to-[#bca065] transition-all duration-200 shadow-lg"
+            className="w-full bg-[#d0b685] text-black py-3 px-6 rounded-xl font-bold hover:bg-[#be9f6b] transition-all duration-200 shadow-md"
           >
             Volver atrás
           </button>

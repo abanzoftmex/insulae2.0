@@ -67,9 +67,9 @@ export function GlobalLoader() {
 
   return (
     <div className="fixed inset-0 z-[99999] bg-white/40 backdrop-blur-sm flex items-center justify-center animate-in fade-in duration-200">
-      <div className="bg-white rounded-xl px-8 py-6 shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200 border border-[#b58b4f]/30">
-        <Loader2 className="h-10 w-10 text-[#2c3e50] animate-spin" />
-        <p className="text-[12px] font-bold uppercase tracking-widest text-[#2c3e50]">Cargando...</p>
+      <div className="bg-white rounded-xl px-8 py-6 shadow-2xl flex flex-col items-center gap-4 animate-in zoom-in-95 duration-200 border border-[#d0b685]/40">
+        <Loader2 className="h-10 w-10 text-[#304854] animate-spin" />
+        <p className="text-[12px] font-bold uppercase tracking-widest text-[#304854]">Cargando...</p>
       </div>
     </div>
   );

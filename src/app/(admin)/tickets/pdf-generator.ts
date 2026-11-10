@@ -140,7 +140,7 @@ export async function generateForm86Pdf(data: Form86Data, condo: "sassi" | "valq
 
   // --- Box 1: Forma 8-6/1.2 ---
   let currentY = 32;
-  doc.setFillColor(51, 122, 183); // Blue background
+  doc.setFillColor(48, 72, 84); // #304854
   doc.rect(12, currentY, 85, 7, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -161,7 +161,7 @@ export async function generateForm86Pdf(data: Form86Data, condo: "sassi" | "valq
   // --- Box 2: Datos generales & Otras especificaciones ---
   // Left Column (Datos generales)
   let yLeft = 60;
-  doc.setFillColor(0, 91, 127); // Teal/Blue
+  doc.setFillColor(48, 72, 84); // #304854
   doc.rect(12, yLeft, 95, 7, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -300,7 +300,7 @@ export async function generateForm86Pdf(data: Form86Data, condo: "sassi" | "valq
 
   // --- Box 4: Descripción de productos y/o servicios ---
   let yProd = yGiros + 4;
-  doc.setFillColor(27, 78, 135); // Dark blue banner
+  doc.setFillColor(48, 72, 84); // #304854
   doc.rect(12, yProd, 193, 7, "F");
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
@@ -356,13 +356,13 @@ export async function generateForm86Pdf(data: Form86Data, condo: "sassi" | "valq
   doc.text("Sello", 108.5, ySello, { align: "center" });
 
   ySello += 2.5;
-  doc.setFillColor(217, 237, 247); // Light blue
-  doc.setDrawColor(51, 122, 183);
+  doc.setFillColor(232, 238, 241); // Light brand tint
+  doc.setDrawColor(48, 72, 84);
   doc.rect(12, ySello, 193, 19, "FD");
 
   doc.setFont("helvetica", "bolditalic");
   doc.setFontSize(8.5);
-  doc.setTextColor(49, 112, 143); // Darker blue for text
+  doc.setTextColor(48, 72, 84); // #304854
   const sealACName = condo === "sassi" ? "Sassi del valle Condominio A.C." : "Administradora Valquirico A.C.";
   doc.text(sealACName, 108.5, ySello + 4.5, { align: "center" });
 

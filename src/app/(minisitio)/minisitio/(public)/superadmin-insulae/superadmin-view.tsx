@@ -35,16 +35,16 @@ export function SuperAdminInsulaeView() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0e0e0a] via-[#242416] to-[#32321e] px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f171b] via-[#1b2b33] to-[#304854] px-4">
       {/* Background decorative elements */}
-      <div className="absolute top-20 left-20 w-40 h-40 bg-[#b58c42]/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-20 w-60 h-60 bg-[#5d5b35]/15 rounded-full blur-3xl" />
+      <div className="absolute top-20 left-20 w-40 h-40 bg-[#d0b685]/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-20 w-60 h-60 bg-[#304854]/25 rounded-full blur-3xl" />
 
       <div className="max-w-md w-full mx-auto relative z-10">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-[#b58c42] to-[#8d6928] rounded-2xl mb-6 shadow-lg shadow-[#b58c42]/20">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#d0b685] rounded-2xl mb-6 shadow-lg shadow-[#d0b685]/20">
             <svg
-              className="w-8 h-8 text-[#0e0e0a]"
+              className="w-8 h-8 text-black"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -80,7 +80,7 @@ export function SuperAdminInsulaeView() {
                 type="text"
                 required
                 autoComplete="username"
-                className="w-full px-4 py-3.5 border border-white/10 rounded-xl placeholder-white/20 text-white bg-white/[0.04] focus:outline-none focus:border-[#b58c42]/60 focus:ring-4 focus:ring-[#b58c42]/5 transition-all text-sm font-semibold"
+                className="w-full px-4 py-3.5 border border-white/10 rounded-xl placeholder-white/20 text-white bg-white/[0.04] focus:outline-none focus:border-[#d0b685]/60 focus:ring-4 focus:ring-[#d0b685]/10 transition-all text-sm font-semibold"
                 placeholder="superadmin"
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
@@ -102,7 +102,7 @@ export function SuperAdminInsulaeView() {
                   type={showPassword ? "text" : "password"}
                   required
                   autoComplete="current-password"
-                  className="w-full pl-4 pr-12 py-3.5 border border-white/10 rounded-xl placeholder-white/20 text-white bg-white/[0.04] focus:outline-none focus:border-[#b58c42]/60 focus:ring-4 focus:ring-[#b58c42]/5 transition-all text-sm font-semibold"
+                  className="w-full pl-4 pr-12 py-3.5 border border-white/10 rounded-xl placeholder-white/20 text-white bg-white/[0.04] focus:outline-none focus:border-[#d0b685]/60 focus:ring-4 focus:ring-[#d0b685]/10 transition-all text-sm font-semibold"
                   placeholder="••••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -136,7 +136,7 @@ export function SuperAdminInsulaeView() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-[#b58c42] to-[#c99f52] hover:brightness-110 text-[#242416] font-black text-xs uppercase tracking-wider py-4 px-4 rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-[#d0b685] via-[#dfca9f] to-[#d0b685] hover:brightness-110 text-black font-black text-xs uppercase tracking-wider py-4 px-4 rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-50"
             >
               {loading ? "Verificando..." : "Activar modo superadmin"}
             </button>

@@ -321,9 +321,9 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
       <div className="space-y-6 mt-6">
         {/* Información de Cuenta Legacy */}
         <div className="bg-[#fcfaf6] border border-[#ddd0be] rounded-md p-4 text-[#3a2a18]">
-          <h2 className="text-xl font-bold text-[#2c3e50] mb-3 flex items-center gap-2">
+          <h2 className="text-xl font-bold text-[#304854] mb-3 flex items-center gap-2">
             <Link href="/areas-privativas" className="hover:opacity-80 transition-opacity">
-              <span className="inline-flex items-center justify-center rounded-full bg-[#2c3e50] text-white w-6 h-6 text-xs font-extrabold pb-0.5">←</span>
+              <span className="inline-flex items-center justify-center rounded-full bg-[#304854] text-white w-6 h-6 text-xs font-extrabold pb-0.5">←</span>
             </Link>
             Cuentas por cobrar
           </h2>
@@ -333,7 +333,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
             <p>M2: <span className="font-bold">{displayM2.toFixed(4)}</span></p>
             {contactUser ? (
               <div className="pt-2 mt-2 border-t border-[#ddd0be]/50">
-                <p className="font-bold text-[14px] text-[#2c3e50]">{contactUser.name}</p>
+                <p className="font-bold text-[14px] text-[#304854]">{contactUser.name}</p>
                 <p className="text-[12px] text-ink-soft mt-0.5">
                   Email: <span className="font-bold text-[#3a2a18]">{contactUser.email || "—"}</span>
                   {contactUser.phone && (
@@ -356,14 +356,14 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           <div>
             <div className="flex bg-white border border-[#d6c7b3] rounded-t-md">
               <div className="flex-1 text-center py-4 border-r border-[#d6c7b3]">
-                <div className="flex items-center justify-center gap-2 mb-1 text-[#b58b4f]">
+                <div className="flex items-center justify-center gap-2 mb-1 text-[#d0b685]">
                   <AlertCircle className="h-5 w-5" />
                   <span className="text-[12px] font-bold uppercase">Debe al día</span>
                 </div>
                 <p className="text-[15px] font-bold text-[#3a2a18]">{formatCurrency(finalBalanceDueToday)}</p>
               </div>
               <div className="flex-1 text-center py-4">
-                <div className="flex items-center justify-center gap-2 mb-1 text-[#b58b4f]">
+                <div className="flex items-center justify-center gap-2 mb-1 text-[#d0b685]">
                   <span className="text-[16px]">👍</span>
                   <span className="text-[12px] font-bold uppercase">Saldo a favor</span>
                 </div>
@@ -379,31 +379,31 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                   </tr>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Cuotas ordinarias:</td>
-                    <td className={`px-3 py-1.5 text-right font-bold ${ordinariasBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(ordinariasBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${ordinariasBalance > 0 ? "text-[#d0b685]" : ""}`}>{formatCurrency(ordinariasBalance)}</td>
                   </tr>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Cuotas extraordinarias - Condóminos:</td>
-                    <td className={`px-3 py-1.5 text-right font-bold ${extraordinariasCondominosBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(extraordinariasCondominosBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${extraordinariasCondominosBalance > 0 ? "text-[#d0b685]" : ""}`}>{formatCurrency(extraordinariasCondominosBalance)}</td>
                   </tr>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Cuotas STC:</td>
-                    <td className={`px-3 py-1.5 text-right font-bold ${stcBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(stcBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${stcBalance > 0 ? "text-[#d0b685]" : ""}`}>{formatCurrency(stcBalance)}</td>
                   </tr>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Sanción:</td>
-                    <td className={`px-3 py-1.5 text-right font-bold ${sancionBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(sancionBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${sancionBalance > 0 ? "text-[#d0b685]" : ""}`}>{formatCurrency(sancionBalance)}</td>
                   </tr>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Cuota extraordinaria - Comercios:</td>
-                    <td className={`px-3 py-1.5 text-right font-bold ${extraordinariaComerciosBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(extraordinariaComerciosBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${extraordinariaComerciosBalance > 0 ? "text-[#d0b685]" : ""}`}>{formatCurrency(extraordinariaComerciosBalance)}</td>
                   </tr>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Comodato:</td>
-                    <td className={`px-3 py-1.5 text-right font-bold ${comodatoBalance > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(comodatoBalance)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${comodatoBalance > 0 ? "text-[#d0b685]" : ""}`}>{formatCurrency(comodatoBalance)}</td>
                   </tr>
                   <tr className="border-b border-[#e5d5b5]">
                     <td className="px-3 py-1.5">Intereses moratorios:</td>
-                    <td className={`px-3 py-1.5 text-right font-bold ${totalInterestsDueToday > 0 ? "text-[#b58b4f]" : ""}`}>{formatCurrency(totalInterestsDueToday)}</td>
+                    <td className={`px-3 py-1.5 text-right font-bold ${totalInterestsDueToday > 0 ? "text-[#d0b685]" : ""}`}>{formatCurrency(totalInterestsDueToday)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -414,7 +414,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           <div>
             <div className="flex bg-white border border-[#d6c7b3] rounded-t-md">
               <div className="flex-1 text-center py-4">
-                <div className="flex items-center justify-center gap-2 mb-1 text-[#b58b4f]">
+                <div className="flex items-center justify-center gap-2 mb-1 text-[#d0b685]">
                   <AlertCircle className="h-5 w-5" />
                   <span className="text-[12px] font-bold uppercase">Cargos Totales</span>
                 </div>
@@ -473,7 +473,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           </div>
           <table className="w-full text-[12px]">
             <thead>
-              <tr className="bg-[#e9f0f9] text-[#2c3e50] font-bold">
+              <tr className="bg-[#e8eef1] text-[#304854] font-bold">
                 <th className="py-2 px-3 text-left">Folio</th>
                 <th className="py-2 px-3 text-left">Forma de pago</th>
                 <th className="py-2 px-3 text-left">Pagado el</th>
@@ -499,18 +499,18 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           </table>
         </div>
 
-        {/* Action Bar (Dark Blue) */}
+        {/* Action Bar (Brand Blue) */}
         <div className="bg-white border border-[#ddd0be] rounded-md p-3 flex flex-wrap items-center gap-2">
           {/* Capturar Cuota is actually a trigger, but for now we render its default appearance */}
           {canCreateCharges && (
-            <div className="[&>button]:bg-[#2c3e50] [&>button]:hover:bg-[#1a252f] [&>button]:text-white [&>button]:border-transparent [&>button]:shadow-sm">
+            <div className="[&>button]:bg-[#304854] [&>button]:hover:bg-[#1f2f37] [&>button]:text-white [&>button]:border-transparent [&>button]:shadow-sm">
               <CapturarCuotaDialog privateAreaId={area.privateAreaId} opc={opc} chargeGroups={chargeGroups} />
             </div>
           )}
 
           <Link
             href={buildActionHref("historico-pagos", area.privateAreaId, opc)}
-            className="bg-[#2c3e50] text-white text-[11px] font-bold px-4 py-2 rounded shadow-sm hover:bg-[#1a252f] transition-colors flex items-center gap-2"
+            className="bg-[#304854] text-white text-[11px] font-bold px-4 py-2 rounded shadow-sm hover:bg-[#1f2f37] transition-colors flex items-center gap-2"
           >
             <AlertCircle className="h-3.5 w-3.5" /> Histórico de pagos
           </Link>
@@ -531,7 +531,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-[11px] whitespace-nowrap">
               <thead>
-                <tr className="bg-[#e9f0f9] text-[#2c3e50] font-bold">
+                <tr className="bg-[#e8eef1] text-[#304854] font-bold">
                   <th className="py-2 px-3 text-center border-b border-[#e1ebf6]">Acciones</th>
                   <th className="py-2 px-3 text-left border-b border-[#e1ebf6]">Tipo de cuota</th>
                   <th className="py-2 px-3 text-left border-b border-[#e1ebf6]">Concepto</th>
@@ -575,7 +575,7 @@ export default async function ListadoPagosPage({ searchParams }: PageProps) {
                         <td className="py-2 px-3 text-right text-[#3a2a18]">{formatCurrency(charge.discountAmount)}</td>
                         <td className="py-2 px-3 text-right">
                           {hasDebt ? (
-                            <span className="inline-block font-bold text-[#b58b4f] bg-[#fff5ea] border border-[#f5d0b0] px-2 py-0.5 rounded text-[11px] tabular-nums">
+                            <span className="inline-block font-bold text-[#d0b685] bg-[#fff5ea] border border-[#f5d0b0] px-2 py-0.5 rounded text-[11px] tabular-nums">
                               {formatCurrency(charge.balanceAmount)}
                             </span>
                           ) : (

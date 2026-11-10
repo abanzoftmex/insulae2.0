@@ -23,7 +23,7 @@ export function PrintBar({ returnUrl, propertyName, privateAreaId, opc = "2" }: 
   return (
     <aside
       aria-label="Controles de impresión"
-      className="print:hidden sticky top-0 z-50 bg-[#111e38]/95 backdrop-blur-md text-white py-2.5 px-6 shadow-md border-b border-white/10 flex justify-between items-center mb-6"
+      className="print:hidden sticky top-0 z-50 bg-[#304854]/95 backdrop-blur-md text-white py-2.5 px-6 shadow-md border-b border-white/10 flex justify-between items-center mb-6"
     >
       <Link
         href={returnUrl}
@@ -44,7 +44,7 @@ export function PrintBar({ returnUrl, propertyName, privateAreaId, opc = "2" }: 
             className="inline-flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold px-3.5 py-2 rounded-lg transition-colors border border-white/20 shadow-sm"
             title="Descargar archivo PDF directo"
           >
-            <Download className="w-4 h-4 text-[#dfb76c]" />
+            <Download className="w-4 h-4 text-[#d0b685]" />
             <span>Descargar PDF</span>
           </a>
         )}
@@ -52,7 +52,7 @@ export function PrintBar({ returnUrl, propertyName, privateAreaId, opc = "2" }: 
         <button
           type="button"
           onClick={() => window.print()}
-          className="inline-flex items-center gap-2 bg-[#b8860b] hover:bg-[#a17a38] text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors shadow-sm cursor-pointer"
+          className="inline-flex items-center gap-2 bg-[#d0b685] hover:bg-[#be9f6b] text-black text-xs font-bold px-4 py-2 rounded-lg transition-colors shadow-sm cursor-pointer"
         >
           <Printer className="w-4 h-4" />
           <span>Imprimir / Guardar PDF</span>

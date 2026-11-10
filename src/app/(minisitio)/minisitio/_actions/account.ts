@@ -173,18 +173,18 @@ function statementEmailHtml(emailLogoUrl: string, avisoPrivacidad: string): stri
               <td style="padding: 20px 0;">
                 <table role="presentation" style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-collapse: collapse;">
                   <tr>
-                    <td style="background-color: #ffffff; padding: 30px 20px; text-align: center; border-bottom: 4px solid #1E3932;">
+                    <td style="background-color: #304854; padding: 30px 20px; text-align: center; border-bottom: 4px solid #d0b685;">
                       <img src="${emailLogoUrl.replace(/"/g, "&quot;")}" alt="Val'Quirico" style="max-width: 200px; height: auto;">
                     </td>
                   </tr>
                   <tr>
                     <td style="padding: 40px 30px; background-color: #ffffff;">
                       <div style="background-color: #ffffff; border: 2px solid #e5e7eb; border-radius: 8px; padding: 30px;">
-                        <p style="color: #1f2937; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
+                        <p style="color: #000000; font-size: 16px; line-height: 1.6; margin: 0 0 15px 0;">
                           Apreciable condómino, enviamos su estado de cuenta mensual, agradecemos los pagos realizados.
                         </p>
                         <div style="text-align: center; margin: 30px 0;">
-                          <div style="display: inline-block; background-color: #cba258; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 5px; font-weight: bold; font-size: 14px;">
+                          <div style="display: inline-block; background-color: #304854; color: #d0b685; text-decoration: none; padding: 12px 30px; border-radius: 5px; font-weight: bold; font-size: 14px; border: 1px solid #d0b685;">
                             Su documento se encuentra adjunto a este correo.
                           </div>
                         </div>
@@ -192,7 +192,7 @@ function statementEmailHtml(emailLogoUrl: string, avisoPrivacidad: string): stri
                     </td>
                   </tr>
                   <tr>
-                    <td style="background-color: #1E3932; padding: 25px 30px; text-align: center;">
+                    <td style="background-color: #304854; padding: 25px 30px; text-align: center;">
                       <p style="color: #ffffff; font-size: 12px; line-height: 1.6; margin: 0 0 15px 0;">
                         Has recibido este correo porque se encuentra como contacto en nuestro sistema condominial, de haber un error favor de hacer caso omiso a este correo.
                       </p>

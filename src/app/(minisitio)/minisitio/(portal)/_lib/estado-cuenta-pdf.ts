@@ -176,7 +176,7 @@ export function drawMovementsHeader(
   y: number,
   widths: number[],
 ): number {
-  doc.setFillColor(31, 41, 55);
+  doc.setFillColor(48, 72, 84);
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);

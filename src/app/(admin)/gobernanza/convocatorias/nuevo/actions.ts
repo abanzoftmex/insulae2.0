@@ -1,5 +1,6 @@
 "use server";
 import { assertPermission } from "@/shared/application/auth/guards";
+import { readAdminSession } from "@/shared/application/auth/permissions";
 import { MODULES } from "@/shared/application/auth/modules";
 
 import { prisma } from "@/shared/infrastructure/db/prisma";
@@ -103,6 +104,29 @@ export async function createAnnouncementAction(formData: any) {
 export async function updateAnnouncementAction(id: string, formData: any) {
   try {
     await assertPermission(MODULES.CONVOCATORIAS, "canUpdate");
+
+    // Restricción: El rol Master (no ADMIN) no tiene autorización para editar convocatorias
+    const session = await readAdminSession();
+    if (session) {
+      const user = await prisma.user.findUnique({
+        where: { id: session.userId },
+        select: {
+          userType: true,
+          initialRole: true,
+          userRoles: { select: { role: { select: { name: true } } } }
+        }
+      });
+      const isMaster =
+        user?.userType !== "ADMIN" &&
+        (user?.userRoles.some((ur) => ur.role.name?.trim().toLowerCase() === "master") ||
+          user?.initialRole?.trim().toLowerCase() === "master");
+      if (isMaster) {
+        return {
+          success: false,
+          error: "El usuario con rol Master no tiene autorización para editar convocatorias."
+        };
+      }
+    }
     await prisma.$transaction(async (tx) => {
       // 1. Delete existing relational dependencies
       await tx.announcementDate.deleteMany({ where: { announcementId: id } });

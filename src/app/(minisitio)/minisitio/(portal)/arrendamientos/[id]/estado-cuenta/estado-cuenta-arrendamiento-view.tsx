@@ -350,7 +350,7 @@ export function EstadoCuentaArrendamientoView({
               )}
             </button>
             <button
-              className="bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
+              className="bg-[#d0b685] hover:bg-[#be9f6b] text-black font-semibold px-4 py-2 rounded-md text-sm transition-all duration-200 shadow-md hover:shadow-lg flex items-center space-x-2"
               onClick={() => setShowCreateForm(true)}
             >
               <Plus className="w-4 h-4" />

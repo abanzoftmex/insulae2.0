@@ -40,10 +40,16 @@ export default async function EditIncomePage({ params }: PageProps) {
     }),
     prisma.privateArea.findMany({
       where: { condominiumId: condominium.id, isActive: true },
-      orderBy: { name: "asc" },
-      select: { id: true, name: true },
+      select: { id: true, name: true, code: true, zone: true },
     }),
   ]);
+
+  // Orden natural alfanumérico para el catálogo completo de propiedades
+  areas.sort((a, b) => {
+    const keyA = (a.code || a.name || "").trim();
+    const keyB = (b.code || b.name || "").trim();
+    return keyA.localeCompare(keyB, "es-MX", { numeric: true, sensitivity: "base" });
+  });
 
   return (
     <main className="min-h-screen bg-[#fcf9f5]">

@@ -357,7 +357,7 @@ export default async function AreasPrivativasPage(props: PageProps) {
         <div className="flex flex-wrap items-center gap-2">
           <CsvManager canUpdate={canUpdate} />
           {canCreate && (
-            <Button variant="primary" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full bg-gold hover:bg-[#bca065] text-white shadow-md shadow-brand-deep/15 transition-all active-scale">
+            <Button variant="primary" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full bg-gold hover:bg-gold-hover text-black shadow-md shadow-brand-deep/15 transition-all active-scale">
               <Link href="/areas-privativas/nueva">
                 <Plus className="h-3.5 w-3.5 shrink-0" aria-hidden /> Nueva AP
               </Link>

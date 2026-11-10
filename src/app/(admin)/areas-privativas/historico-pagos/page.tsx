@@ -216,9 +216,9 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
                   }`}
               >
                 {/* 1. Datos de pago */}
-                <div className="bg-[#e9f0f9] px-4 py-3 border-b border-[#e1ebf6] flex flex-wrap items-center justify-between gap-4">
+                <div className="bg-[#e8eef1] px-4 py-3 border-b border-[#d1dde4] flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <span className="text-[12px] font-bold text-[#2c3e50] uppercase tracking-wider">
+                    <span className="text-[12px] font-bold text-[#304854] uppercase tracking-wider">
                       Datos de pago
                     </span>
                     {isCancelled && (
@@ -274,7 +274,7 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
                   {/* Table 2: Detalle de aplicación por tipo de cuota */}
                   {payment.details.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-[11px] font-bold text-[#b58b4f] uppercase tracking-wider">
+                      <h4 className="text-[11px] font-bold text-[#d0b685] uppercase tracking-wider">
                         Detalle de aplicación por tipo de cuota
                       </h4>
                       <div className="overflow-x-auto max-w-xl">
@@ -311,7 +311,7 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
                   {/* Table 3: Concepto(s) cubierto(s) por el pago */}
                   {payment.allocations.length > 0 && (
                     <div className="space-y-2">
-                      <h4 className="text-[11px] font-bold text-[#b58b4f] uppercase tracking-wider">
+                      <h4 className="text-[11px] font-bold text-[#d0b685] uppercase tracking-wider">
                         Conceptos cubiertos por el pago
                       </h4>
                       <div className="overflow-x-auto">
@@ -371,7 +371,7 @@ export default async function HistoricoPagosPage({ searchParams }: PageProps) {
                                   <td className="px-3 py-2 border-r border-[#d6c7b3] text-right font-bold text-amber-700 bg-amber-50/20">
                                     {!isFullPayment ? formatCurrency(Number(alloc.amount)) : "—"}
                                   </td>
-                                  <td className="px-3 py-2 text-right font-bold text-[#b58b4f]">
+                                  <td className="px-3 py-2 text-right font-bold text-[#d0b685]">
                                     {formatCurrency(remainingBalance)}
                                   </td>
                                 </tr>

@@ -122,11 +122,11 @@ export function ExperienciasView({
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] px-6 py-4">
+          <div className="bg-[#304854] border-b-2 border-[#d0b685] px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Bell className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                  <Bell className="w-6 h-6 text-[#d0b685]" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-white">Experiencias Val'Quirico</h3>
@@ -148,11 +148,11 @@ export function ExperienciasView({
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-        <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] px-6 py-4">
+        <div className="bg-[#304854] border-b-2 border-[#d0b685] px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                <Bell className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center">
+                <Bell className="w-6 h-6 text-[#d0b685]" />
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Experiencias Val'Quirico</h3>
@@ -165,7 +165,7 @@ export function ExperienciasView({
               {expiredCount > 0 && (
                 <button
                   onClick={() => setShowPastEvents(!showPastEvents)}
-                  className="px-4 py-2 bg-white/90 hover:bg-white text-[#cba258] rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
+                  className="px-4 py-2 bg-white/90 hover:bg-white text-[#304854] rounded-lg font-medium transition-all duration-200 flex items-center gap-2 shadow-md hover:shadow-lg"
                 >
                   <Clock className="w-4 h-4" />
                   {showPastEvents ? 'Ocultar eventos pasados' : `Ver eventos pasados (${expiredCount})`}
@@ -176,7 +176,7 @@ export function ExperienciasView({
                   href={linkGaceta}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="px-4 py-2 bg-white text-[#cba258] rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center"
+                  className="px-4 py-2 bg-white text-[#304854] rounded-lg font-medium hover:bg-gray-100 transition-colors duration-200 flex items-center"
                 >
                   <FileText className="w-4 h-4 mr-2" />
                   Ver Gaceta

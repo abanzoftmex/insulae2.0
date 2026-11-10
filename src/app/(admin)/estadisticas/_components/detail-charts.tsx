@@ -15,8 +15,8 @@ const numberFormat = new Intl.NumberFormat("es-MX");
 const decimalFormat = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
 const CATEGORICAL = ["#8a8619", "#0891b2", "#b5451f", "#b8860b", "#2563eb", "#b0509f"];
 const SURFACE = "#ffffff";
-const BRAND_DEEP = "#5d5b35";
-const MUTED = "#e3e1d1";
+const BRAND_DEEP = "#304854";
+const MUTED = "#dce7ed";
 
 /**
  * Color de cada porción según el papel que juega:

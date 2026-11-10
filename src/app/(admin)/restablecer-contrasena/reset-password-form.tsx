@@ -31,7 +31,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
   };
 
   const inputClass =
-    "w-full bg-white/[0.04] border border-white/10 focus:border-[#b58c42]/50 focus:ring-4 focus:ring-[#b58c42]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60";
+    "w-full bg-white/[0.04] border border-white/10 focus:border-[#d0b685]/50 focus:ring-4 focus:ring-[#d0b685]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60";
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -64,7 +64,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
           <button
             type="submit"
             disabled={isPending}
-            className="w-full mt-2 bg-[#b58c42] hover:bg-[#a07c39] text-[#0e0e0a] font-black text-xs tracking-widest h-11 rounded-full transition-standard shadow-lg shadow-[#b58c42]/10 disabled:opacity-70 disabled:pointer-events-none"
+            className="w-full mt-2 bg-[#d0b685] hover:bg-[#be9f6b] text-black font-black text-xs tracking-widest h-11 rounded-full transition-standard shadow-lg shadow-[#d0b685]/10 disabled:opacity-70 disabled:pointer-events-none"
           >
             {isPending ? "GUARDANDO..." : "GUARDAR CONTRASEÑA"}
           </button>
@@ -72,7 +72,7 @@ export function ResetPasswordForm({ token }: { token: string }) {
       )}
 
       <div className="text-center pt-2">
-        <Link href="/login" className="text-[11px] font-semibold text-white/50 hover:text-[#b58c42] transition-standard">
+        <Link href="/login" className="text-[11px] font-semibold text-white/50 hover:text-[#d0b685] transition-standard">
           {done ? "Ir al inicio de sesión" : "Volver al inicio de sesión"}
         </Link>
       </div>

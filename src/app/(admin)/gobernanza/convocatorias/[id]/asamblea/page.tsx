@@ -1,6 +1,7 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
 import { getAnnouncementByIdUseCase } from "@/modules/announcement/application/announcement.use-cases";
+import { getTopicsActionSummary } from "@/app/(admin)/gobernanza/convocatorias/_lib/governance-terms";
 import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { notFound, redirect } from "next/navigation";
@@ -26,6 +27,8 @@ export default async function AsambleaLauncherPage({ params }: PageProps) {
     redirect(`/gobernanza/convocatorias/${id}/asamblea/${announcement.dates[0].id}`);
   }
 
+  const topicsSummary = getTopicsActionSummary(announcement.topics || []);
+
   return (
     <div className="space-y-6 max-w-4xl mx-auto pb-20 animate-in fade-in duration-500">
       {/* Header */}
@@ -39,7 +42,7 @@ export default async function AsambleaLauncherPage({ params }: PageProps) {
             {announcement.name}
           </Badge>
           <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
-            Seleccione cuál fecha de convocatoria desea iniciar para el pase de lista y votación
+            Seleccione cuál fecha de convocatoria desea iniciar para el pase de lista {topicsSummary.isOnlyConfirmation ? "y confirmación de temas" : "y votación"}
           </p>
         </div>
       </div>

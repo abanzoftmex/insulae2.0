@@ -126,3 +126,40 @@ export async function deleteIncomeAction(id: string) {
     return { success: false, error: err.message };
   }
 }
+
+export async function searchPrivateAreasAction(query?: string) {
+  try {
+    const condoId = await getCondominiumId();
+    const q = query?.trim();
+
+    const where: any = {
+      condominiumId: condoId,
+      isActive: true,
+    };
+
+    if (q) {
+      where.OR = [
+        { name: { contains: q, mode: "insensitive" } },
+        { code: { contains: q, mode: "insensitive" } },
+        { zone: { contains: q, mode: "insensitive" } },
+        { street: { contains: q, mode: "insensitive" } },
+      ];
+    }
+
+    const areas = await prisma.privateArea.findMany({
+      where,
+      orderBy: { name: "asc" },
+      select: { id: true, name: true, code: true, zone: true },
+    });
+
+    areas.sort((a, b) => {
+      const keyA = a.code || a.name;
+      const keyB = b.code || b.name;
+      return keyA.localeCompare(keyB, "es-MX", { numeric: true, sensitivity: "base" });
+    });
+
+    return { success: true, data: areas };
+  } catch (err: any) {
+    return { success: false, error: err.message, data: [] };
+  }
+}

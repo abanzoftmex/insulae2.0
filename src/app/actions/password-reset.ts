@@ -17,6 +17,7 @@ import { adminResetTokenIsCurrent, readAdminResetToken, signAdminResetToken } fr
 import { canAccessAdminPanel, getPermissionsForUser } from "@/shared/application/auth/permissions";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { findUserIdsByEmail, storedEmailMatching } from "@/shared/infrastructure/db/user-email-lookup";
+import { buildPasswordResetEmailHtml } from "@/shared/infrastructure/email/auth-email-templates";
 
 const GENERIC_OK =
   "Si el correo está registrado y tiene acceso al panel, recibirás un enlace para restablecer tu contraseña.";
@@ -115,27 +116,14 @@ export async function resetPasswordWithTokenAction(
 async function sendResetEmail(input: { to: string; name: string; condominiumName: string; resetLink: string }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.ADMIN_MAIL_FROM || `Condominio ${input.condominiumName} <finanzas@info.valquirico.com>`;
-  const html = `
-    <!DOCTYPE html><html><head><meta charset="utf-8">
-    <style>
-      body { font-family: sans-serif; line-height: 1.6; color: #333333; }
-      .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e8dbcc; border-radius: 8px; }
-      .header { background-color: #1a4d3e; color: #ffffff; padding: 15px; text-align: center; border-radius: 6px 6px 0 0; }
-      .content { padding: 20px; background-color: #faf8f5; }
-      .button { display: inline-block; background: #1a4d3e; color: #fff !important; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; margin: 16px 0; }
-      .footer { font-size: 11px; color: #958172; text-align: center; margin-top: 20px; border-top: 1px solid #e8dbcc; padding-top: 15px; }
-    </style></head>
-    <body><div class="container">
-      <div class="header"><h2>${input.condominiumName}</h2></div>
-      <div class="content">
-        <p>Hola <strong>${input.name}</strong>,</p>
-        <p>Recibimos una solicitud para restablecer la contraseña de tu acceso al panel administrativo.</p>
-        <p><a class="button" href="${input.resetLink}">Restablecer contraseña</a></p>
-        <p>O copia este enlace en tu navegador:<br><a href="${input.resetLink}">${input.resetLink}</a></p>
-        <p><strong>El enlace expira en 1 hora.</strong> Si no solicitaste este cambio, ignora este correo.</p>
-      </div>
-      <div class="footer">Correo automático del sistema condominal de ${input.condominiumName}.</div>
-    </div></body></html>`;
+  const origin = await appOrigin();
+  const html = buildPasswordResetEmailHtml({
+    recipientName: input.name,
+    resetLink: input.resetLink,
+    condominiumName: input.condominiumName,
+    logoUrl: `${origin}/brand/valquirico-logo-light.png`,
+    expiresInMinutes: 60,
+  });
 
   if (!apiKey) {
     console.warn(`[password-reset] RESEND_API_KEY no configurado. Enlace de restablecimiento para ${input.to}: ${input.resetLink}`);

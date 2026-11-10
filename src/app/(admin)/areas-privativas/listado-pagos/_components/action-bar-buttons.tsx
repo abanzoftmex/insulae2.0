@@ -122,7 +122,7 @@ export function ActionBarButtons({
         <button
           type="button"
           onClick={handleExportExcel}
-          className="bg-[#2c3e50] text-white px-3 py-2 rounded shadow-sm hover:bg-[#1a252f] transition-colors"
+          className="bg-[#304854] text-white px-3 py-2 rounded shadow-sm hover:bg-[#1f2f37] transition-colors"
           title="Exportar a Excel"
         >
           <FileOutput className="h-3.5 w-3.5" />
@@ -131,7 +131,7 @@ export function ActionBarButtons({
         <button
           type="button"
           onClick={handleOpenEmailDialog}
-          className="bg-[#2c3e50] hover:bg-[#1a252f] text-white px-3 py-2 rounded shadow-sm transition-colors"
+          className="bg-[#304854] hover:bg-[#1f2f37] text-white px-3 py-2 rounded shadow-sm transition-colors"
           title="Enviar estado de cuenta por correo"
         >
           <Send className="h-3.5 w-3.5" />
@@ -140,7 +140,7 @@ export function ActionBarButtons({
         <button
           type="button"
           onClick={handlePrint}
-          className="bg-[#2c3e50] text-white px-3 py-2 rounded shadow-sm hover:bg-[#1a252f] transition-colors"
+          className="bg-[#304854] text-white px-3 py-2 rounded shadow-sm hover:bg-[#1f2f37] transition-colors"
           title="Imprimir estado de cuenta"
         >
           <Printer className="h-3.5 w-3.5" />
@@ -163,7 +163,7 @@ export function ActionBarButtons({
               type="button"
               disabled={isPending}
               onClick={handleCloseDialog}
-              className="absolute right-4 top-4 rounded-full border border-[#ddd0be] bg-white/80 p-1.5 text-[#5a4838] hover:bg-[#e8ddd0] hover:text-[#2c3e50] transition-colors disabled:opacity-30"
+              className="absolute right-4 top-4 rounded-full border border-[#ddd0be] bg-white/80 p-1.5 text-[#5a4838] hover:bg-[#e8ddd0] hover:text-[#304854] transition-colors disabled:opacity-30"
               aria-label="Cerrar modal"
             >
               <X className="h-4 w-4" />
@@ -171,11 +171,11 @@ export function ActionBarButtons({
 
             {/* Header */}
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="rounded-full bg-[#2c3e50] p-2 text-white">
+              <div className="rounded-full bg-[#304854] p-2 text-white">
                 <Mail className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#2c3e50]">
+                <h3 className="text-base font-bold text-[#304854]">
                   Confirmar envío de estado de cuenta
                 </h3>
                 <p className="text-[11px] text-stone-600">
@@ -188,14 +188,14 @@ export function ActionBarButtons({
             <div className="mt-4 rounded-xl border border-[#ddd0be] bg-white p-4 text-[12px] space-y-3 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 pb-2 border-b border-stone-100">
                 <span className="font-semibold text-stone-500">Área privativa:</span>
-                <span className="font-bold text-[#2c3e50] text-right">{areaName}</span>
+                <span className="font-bold text-[#304854] text-right">{areaName}</span>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-1 pb-2 border-b border-stone-100">
                 <span className="font-semibold text-stone-500">Correo remitente:</span>
                 <div className="text-right">
                   {hasValidSender ? (
-                    <span className="font-medium text-[#2c3e50]">{cleanSenderEmail}</span>
+                    <span className="font-medium text-[#304854]">{cleanSenderEmail}</span>
                   ) : (
                     <span className="inline-block rounded bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-800 border border-amber-200">
                       No configurado
@@ -210,7 +210,7 @@ export function ActionBarButtons({
                     Correo destinatario:
                   </label>
                   {recipientName && (
-                    <span className="font-bold text-[#2c3e50] text-[12px] truncate max-w-[240px]" title={recipientName}>
+                    <span className="font-bold text-[#304854] text-[12px] truncate max-w-[240px]" title={recipientName}>
                       {recipientName}
                     </span>
                   )}
@@ -226,7 +226,7 @@ export function ActionBarButtons({
                   }}
                   placeholder="ejemplo@correo.com"
                   disabled={isPending}
-                  className="w-full rounded-md border border-[#ddd0be] bg-[#faf6f0]/60 px-3 py-1.5 text-[12px] font-mono text-stone-800 placeholder:text-stone-400 focus:border-[#2c3e50] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#2c3e50] transition-colors disabled:opacity-50"
+                  className="w-full rounded-md border border-[#ddd0be] bg-[#faf6f0]/60 px-3 py-1.5 text-[12px] font-mono text-stone-800 placeholder:text-stone-400 focus:border-[#304854] focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#304854] transition-colors disabled:opacity-50"
                 />
 
                 <div className="flex items-center justify-between text-[10.5px]">
@@ -296,7 +296,7 @@ export function ActionBarButtons({
                 type="button"
                 disabled={!canConfirmSend || isPending || feedback?.type === "success"}
                 onClick={handleConfirmSendEmail}
-                className="flex items-center gap-1.5 rounded-lg bg-[#2c3e50] px-4 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-[#1a252f] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 rounded-lg bg-[#304854] px-4 py-2 text-[12px] font-bold text-white shadow-sm hover:bg-[#1f2f37] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {isPending ? (
                   <>

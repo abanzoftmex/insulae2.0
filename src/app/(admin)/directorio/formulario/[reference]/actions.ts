@@ -5,6 +5,8 @@ import { MODULES } from "@/shared/application/auth/modules";
 import { updateDirectoryContactUseCase } from "@/modules/directory";
 import type { DirectoryContactParticipation } from "@/modules/directory/domain/directory";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import { appOrigin } from "@/shared/infrastructure/app-origin";
+import { buildProvisionalPasswordEmailHtml } from "@/shared/infrastructure/email/auth-email-templates";
 import crypto from "crypto";
 
 function cleanUserId(id: string): string {
@@ -89,43 +91,18 @@ export async function generateTemporaryPasswordAction(id: string) {
       data: { passwordHash },
     });
 
-    const condominiumName = user.condominium?.name || "Insulae";
+    const condominiumName = user.condominium?.name || "Val'Quirico";
     const subject = `Contraseña provisional - Condominio ${condominiumName}`;
     
-    const emailBody = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="utf-8">
-          <style>
-            body { font-family: sans-serif; line-height: 1.6; color: #333333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e8dbcc; border-radius: 8px; }
-            .header { background-color: #1a4d3e; color: #ffffff; padding: 15px; text-align: center; border-radius: 6px 6px 0 0; }
-            .content { padding: 20px; background-color: #faf8f5; }
-            .password-box { font-family: monospace; font-size: 20px; font-weight: bold; background-color: #e2ede8; color: #1a4d3e; padding: 12px; text-align: center; margin: 20px 0; border-radius: 4px; border: 1px dashed #1a4d3e; letter-spacing: 2px; }
-            .footer { font-size: 11px; color: #958172; text-align: center; margin-top: 20px; border-top: 1px solid #e8dbcc; padding-top: 15px; }
-          </style>
-        </head>
-        <body>
-          <div class="container">
-            <div class="header">
-              <h2>${condominiumName}</h2>
-            </div>
-            <div class="content">
-              <p>Hola <strong>${user.firstName || ""} ${user.lastName || ""}</strong>,</p>
-              <p>Se ha generado una contraseña provisional para tu acceso al sistema del condominio.</p>
-              <div class="password-box">${tempPassword}</div>
-              <p>Por motivos de seguridad, te recomendamos iniciar sesión con esta contraseña y cambiarla inmediatamente desde tu perfil de usuario.</p>
-              <p>Saludos cordiales,<br>Administración de ${condominiumName}</p>
-            </div>
-            <div class="footer">
-              Recibió este correo porque está registrado en el sistema condominal de ${condominiumName}. 
-              Si hay un error en esta información o no solicitó este cambio, por favor póngase en contacto con la administración.
-            </div>
-          </div>
-        </body>
-      </html>
-    `;
+    const origin = await appOrigin();
+    const recipientName = [user.firstName, user.lastName].filter(Boolean).join(" ");
+    const emailBody = buildProvisionalPasswordEmailHtml({
+      recipientName,
+      tempPassword,
+      condominiumName,
+      loginUrl: `${origin}/login`,
+      logoUrl: `${origin}/brand/valquirico-logo-light.png`,
+    });
 
     const resendApiKey = process.env.RESEND_API_KEY;
     if (!resendApiKey) {

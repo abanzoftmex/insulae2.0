@@ -7,9 +7,10 @@ import { updateIncomeAction } from "../actions";
 import { uploadCondominiumAsset, deleteCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
 import { fileNameFromStoredUrl, storageKeyFromUrl } from "@/shared/infrastructure/storage/storage-paths";
 import type { IncomeRecord } from "@/modules/income";
+import { PropertyCombobox, type PropertyItem } from "../components/property-combobox";
 
 type CatalogItem = { id: string; name: string };
-type AreaItem = { id: string; name: string };
+type AreaItem = PropertyItem;
 type ChargeGroupItem = { id: string; name: string; kind: string };
 
 interface Props {
@@ -49,20 +50,12 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
   const [formCatalogId, setFormCatalogId] = useState(income.miscCatalogId ?? "");
   const [formChargeGroupId, setFormChargeGroupId] = useState(income.chargeGroupId ?? "");
   const [formAreaId, setFormAreaId] = useState(income.privateAreaId ?? "");
-  const [areaSearch, setAreaSearch] = useState(income.privateAreaName ?? "");
-  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
 
   const [receiptUrl, setReceiptUrl] = useState(income.receiptUrl ?? "");
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
   // URL original, para borrar el archivo anterior cuando se reemplace o se quite
   const originalReceiptUrl = income.receiptUrl ?? "";
-
-  const filteredAreas = useMemo(() => {
-    if (!areaSearch.trim()) return areas.slice(0, 20);
-    const term = areaSearch.toLowerCase();
-    return areas.filter((a) => a.name.toLowerCase().includes(term)).slice(0, 20);
-  }, [areas, areaSearch]);
 
   function handleFileSelect(file: File) {
     setReceiptFile(file);
@@ -242,30 +235,16 @@ export function IncomeEditPage({ income, catalogs, chargeGroups, areas, condomin
               </div>
 
               {/* Propiedad */}
-              <div className="relative">
+              <div>
                 <label className="block text-[10px] uppercase tracking-widest text-[#9a6a4a] font-bold mb-1.5">Propiedad (opcional)</label>
-                <input type="text" value={areaSearch}
-                  onChange={(e) => { setAreaSearch(e.target.value); setShowAreaDropdown(true); if (!e.target.value.trim()) setFormAreaId(""); }}
-                  onFocus={() => setShowAreaDropdown(true)}
-                  placeholder="Buscar propiedad por nombre o clave..."
-                  className="w-full bg-[#fcf9f5] border border-[#ccb49c]/40 rounded-xl px-4 py-2.5 text-sm text-[#2f221a] focus:outline-none focus:ring-2 focus:ring-[#d2a35a]/30" />
-                {formAreaId && (
-                  <button type="button" onClick={() => { setFormAreaId(""); setAreaSearch(""); }}
-                    className="absolute right-3 top-[calc(50%+4px)] text-[#ccb49c] hover:text-red-400 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                  </button>
-                )}
-                {showAreaDropdown && filteredAreas.length > 0 && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-[#ccb49c]/40 rounded-xl shadow-lg max-h-48 overflow-y-auto">
-                    {filteredAreas.map((area) => (
-                      <button key={area.id} type="button"
-                        onClick={() => { setFormAreaId(area.id); setAreaSearch(area.name); setShowAreaDropdown(false); }}
-                        className={`w-full text-left px-4 py-2.5 text-sm hover:bg-[#f8efe3]/50 transition-colors ${formAreaId === area.id ? "bg-[#f8efe3] font-semibold text-[#2f221a]" : "text-[#5f4b3f]"}`}>
-                        {area.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
+                <PropertyCombobox
+                  properties={areas}
+                  selectedId={formAreaId}
+                  onSelect={(id) => setFormAreaId(id)}
+                  fallbackName={income.privateAreaName}
+                  label=""
+                  placeholder="Buscar propiedad por clave o nombre..."
+                />
               </div>
 
               {/* Concepto */}

@@ -8,7 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { Lock, AlertTriangle } from "lucide-react";
+import {
+  isAsamblea,
+  getMeetingNoun,
+  getTopicsActionSummary
+} from "@/app/(admin)/gobernanza/convocatorias/_lib/governance-terms";
+import { Lock, AlertTriangle, Clock, CheckCircle2 } from "lucide-react";
 
 interface PageProps {
   params: Promise<{ id: string; dateId: string }>;
@@ -24,20 +29,20 @@ export default async function ParticiparAsambleaPage({ params }: PageProps) {
   if (!session) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center p-4">
-        <Card className="max-w-md w-full p-6 text-center space-y-4 border border-line shadow-layered">
-          <div className="w-12 h-12 bg-brand/10 text-brand rounded-full flex items-center justify-center mx-auto">
+        <Card className="max-w-md w-full p-6 text-center space-y-4 border border-[#e2e8f0] shadow-sm rounded-2xl">
+          <div className="w-12 h-12 bg-[#304854]/10 text-[#304854] rounded-full flex items-center justify-center mx-auto">
             <Lock className="h-6 w-6" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-bold text-ink uppercase tracking-tight">Acceso Restringido</h2>
-            <p className="text-xs text-ink-soft leading-relaxed">
+            <h2 className="text-lg font-bold text-[#0f172a] uppercase tracking-tight">Acceso Restringido</h2>
+            <p className="text-xs text-[#64748b] leading-relaxed">
               Para poder registrar tu asistencia y votar en la asamblea, debes haber iniciado sesión en tu cuenta de condómino.
             </p>
           </div>
           <div className="pt-2">
             <Link
               href="/login"
-              className="flex items-center justify-center w-full h-10 rounded-full bg-brand text-white text-[10px] font-bold uppercase tracking-widest hover:bg-brand-accent transition-colors"
+              className="flex items-center justify-center w-full h-10 rounded-full bg-[#304854] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#23353e] transition-colors"
             >
               Iniciar Sesión
             </Link>
@@ -52,22 +57,109 @@ export default async function ParticiparAsambleaPage({ params }: PageProps) {
   if (!announcement) notFound();
 
   // Find date session
-  const dateSession = announcement.dates.find(d => d.id === dateId);
+  const dateSession = announcement.dates.find((d) => d.id === dateId);
   if (!dateSession) notFound();
 
-  // 3. Resolve user's invited positions & special guest mappings
+  const announcementStatus = announcement.status?.name || "";
+  const dateStatus = dateSession.status || "";
+
+  // 3. Validar si la convocatoria o sesión aún no ha iniciado
+  const isStarted =
+    announcementStatus === "En Proceso" ||
+    announcementStatus === "Iniciada" ||
+    dateStatus === "En Proceso" ||
+    dateStatus === "Iniciada";
+
+  const isClosed =
+    announcementStatus === "Terminada" ||
+    announcementStatus === "Cancelada" ||
+    announcementStatus === "Cerrada" ||
+    dateStatus === "Realizada" ||
+    dateStatus === "No Realizada";
+
+  // Terminología dinámica
+  const isAsambleaType = isAsamblea(announcement);
+  const meetingNoun = getMeetingNoun(isAsambleaType, { capitalized: true });
+  const meetingNounLower = getMeetingNoun(isAsambleaType, { capitalized: false });
+  const topicsSummary = getTopicsActionSummary(announcement.topics || []);
+
+  if (!isStarted && !isClosed) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
+        <Card className="max-w-md w-full p-6 text-center space-y-4 border border-[#d0b685]/50 shadow-md rounded-2xl bg-white">
+          <div className="w-12 h-12 bg-[#fcf8f0] border border-[#d0b685] text-[#947133] rounded-full flex items-center justify-center mx-auto shadow-xs">
+            <Clock className="h-6 w-6" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-[#fcf8f0] border border-[#d0b685]/60 text-[#947133]">
+              Sesión Pendiente
+            </span>
+            <h2 className="text-lg font-bold text-[#304854] uppercase tracking-tight">
+              Convocatoria no iniciada
+            </h2>
+            <p className="text-xs text-[#64748b] leading-relaxed">
+              La {meetingNounLower} <strong>«{announcement.name}»</strong> aún no ha comenzado. Los controles de participación y {topicsSummary.isOnlyConfirmation ? "confirmación" : "votación"} se habilitarán automáticamente en cuanto la administración o el moderador inicien formalmente la sesión.
+            </p>
+          </div>
+          <div className="pt-2 flex flex-col gap-2">
+            <Link
+              href={`/gobernanza/convocatorias/${id}`}
+              className="flex items-center justify-center w-full h-10 rounded-full bg-[#304854] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#23353e] transition-colors"
+            >
+              Ver detalles de la convocatoria
+            </Link>
+            <Link
+              href="/gobernanza/convocatorias"
+              className="flex items-center justify-center w-full h-9 rounded-full bg-white border border-[#e2e8f0] text-[#64748b] text-[10px] font-bold uppercase tracking-widest hover:bg-[#f8fafc] transition-colors"
+            >
+              Volver al listado
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (isClosed) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
+        <Card className="max-w-md w-full p-6 text-center space-y-4 border border-[#e2e8f0] shadow-sm rounded-2xl bg-white">
+          <div className="w-12 h-12 bg-[#f8fafc] border border-[#cbd5e1] text-[#64748b] rounded-full flex items-center justify-center mx-auto">
+            <CheckCircle2 className="h-6 w-6 text-[#304854]" />
+          </div>
+          <div className="space-y-1.5">
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-[#f1f5f9] border border-[#cbd5e1] text-[#475569]">
+              {dateStatus || announcementStatus}
+            </span>
+            <h2 className="text-lg font-bold text-[#0f172a] uppercase tracking-tight">
+              Convocatoria concluida
+            </h2>
+            <p className="text-xs text-[#64748b] leading-relaxed">
+              Esta asamblea o llamado ha finalizado. La toma de asistencia y las votaciones sobre los temas del orden del día se encuentran cerradas.
+            </p>
+          </div>
+          <div className="pt-2">
+            <Link
+              href={`/gobernanza/convocatorias/${id}`}
+              className="flex items-center justify-center w-full h-10 rounded-full bg-[#304854] text-white text-[10px] font-bold uppercase tracking-widest hover:bg-[#23353e] transition-colors"
+            >
+              Ver resumen de la convocatoria
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // 4. Resolve user's invited positions & special guest mappings
   const userAssignments = await prisma.condominiumStructurePositionAssignment.findMany({
     where: { userId: session.userId, isActive: true },
-    include: { position: true }
+    include: { position: true },
   });
 
-  const invitedPositionIds = (announcement.invitedPositions || []).map(ip => ip.positionId);
-  
-  const matchedAssignments = userAssignments.filter(ua => invitedPositionIds.includes(ua.positionId));
+  const invitedPositionIds = (announcement.invitedPositions || []).map((ip) => ip.positionId);
+  const matchedAssignments = userAssignments.filter((ua) => invitedPositionIds.includes(ua.positionId));
 
-  // Correo exacto salvo mayúsculas (`equals` con `mode: "insensitive"` es ILIKE: `_` y `%` serían
-  // comodines). Esto solo decide qué ofrece la pantalla: registerVoteAction y
-  // toggleAttendanceAction todavía aceptan cualquier clave (falta validarlo en el servidor).
   const sessionEmail = (session.email ?? "").trim().toLowerCase();
   const matchedGuests = sessionEmail
     ? (await prisma.specialGuest.findMany({ where: { announcementId: id, isActive: true } })).filter(
@@ -83,7 +175,7 @@ export default async function ParticiparAsambleaPage({ params }: PageProps) {
       representedKeys.push({
         key: assignment.positionId,
         name: assignment.position.name,
-        type: "POSITION"
+        type: "POSITION",
       });
     }
   }
@@ -92,30 +184,33 @@ export default async function ParticiparAsambleaPage({ params }: PageProps) {
     representedKeys.push({
       key: guest.id,
       name: guest.name,
-      type: "GUEST"
+      type: "GUEST",
     });
   }
 
-  // 4. Validate if the user is convocated at all
+  // 5. Validate if the user is convocated at all
   if (representedKeys.length === 0) {
     return (
-      <div className="min-h-[60vh] flex flex-col items-center justify-center p-4">
-        <Card className="max-w-md w-full p-6 text-center space-y-4 border border-line shadow-layered">
-          <div className="w-12 h-12 bg-amber-500/10 text-amber-600 rounded-full flex items-center justify-center mx-auto">
-            <AlertTriangle className="h-6 w-6" />
+      <div className="min-h-[60vh] flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
+        <Card className="max-w-md w-full p-6 text-center space-y-4 border border-[#e2dbce] shadow-sm rounded-2xl bg-white">
+          <div className="w-12 h-12 bg-[#faf8f5] border border-[#d0b685] text-[#d0b685] rounded-full flex items-center justify-center mx-auto shadow-xs">
+            <AlertTriangle className="h-6 w-6 text-[#947133]" />
           </div>
-          <div className="space-y-1">
-            <h2 className="text-lg font-bold text-ink uppercase tracking-tight">No Convocado</h2>
-            <p className="text-xs text-ink-soft leading-relaxed">
-              Tu cuenta de usuario (<strong>{session.email}</strong>) no se encuentra en la lista de puestos convocados ni de invitados especiales de esta asamblea.
+          <div className="space-y-1.5">
+            <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-[#faf8f5] border border-[#d0b685]/70 text-[#947133]">
+              Acceso Convocados
+            </span>
+            <h2 className="text-lg font-bold text-[#304854] uppercase tracking-tight">No Convocado</h2>
+            <p className="text-xs text-[#64748b] leading-relaxed">
+              Tu cuenta de usuario (<strong>{session.email}</strong>) no se encuentra registrada en la lista de puestos convocados ni de invitados especiales para esta {meetingNounLower}.
             </p>
           </div>
           <div className="pt-2">
             <Link
-              href="/condomino/mis-convocatorias"
-              className="flex items-center justify-center w-full h-10 rounded-full bg-white border border-line text-ink text-[10px] font-bold uppercase tracking-widest hover:bg-canvas transition-colors"
+              href="/gobernanza/convocatorias"
+              className="flex items-center justify-center w-full h-10 rounded-full bg-white border border-[#cbd5e1] text-[#304854] text-[10px] font-bold uppercase tracking-widest hover:bg-[#faf8f5] transition-colors"
             >
-              Volver a Mis Convocatorias
+              Volver a Convocatorias
             </Link>
           </div>
         </Card>
@@ -125,19 +220,18 @@ export default async function ParticiparAsambleaPage({ params }: PageProps) {
 
   return (
     <div className="space-y-6 pb-20 animate-in fade-in duration-500">
-      
       {/* Header section */}
-      <div className="flex items-start gap-3 pb-5 border-b border-brand">
+      <div className="flex items-start gap-3 pb-5 border-b border-[#304854]/20">
         <PageBackBadge className="mt-1.5 shrink-0" />
         <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase leading-none">
-            Portal de Asamblea
+          <h1 className="text-3xl font-bold text-[#304854] tracking-tighter uppercase leading-none">
+            Portal de {meetingNoun}
           </h1>
           <Badge variant="brand" className="w-fit rounded-full px-4 py-2 text-[10px] tracking-widest">
             Participación de Condómino
           </Badge>
-          <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
-            Confirme su asistencia en las propiedades representadas y emita sus opiniones y votos
+          <p className="text-[#64748b] text-[11px] font-bold uppercase tracking-tight">
+            Confirme su asistencia en las propiedades representadas y registre su {topicsSummary.isOnlyConfirmation ? "confirmación de temas" : "opinión y voto en los temas"}
           </p>
         </div>
       </div>
@@ -155,7 +249,7 @@ export default async function ParticiparAsambleaPage({ params }: PageProps) {
 // Simple wrapper card component inline to avoid extra dependencies
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-card bg-white border border-line ${className || ""}`}>
+    <div className={`bg-white border border-[#e2e8f0] ${className || ""}`}>
       {children}
     </div>
   );

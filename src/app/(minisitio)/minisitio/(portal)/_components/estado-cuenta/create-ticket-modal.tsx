@@ -88,17 +88,17 @@ export function CreateTicketModal({
       {open && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden">
-            <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] p-6 text-white text-center">
+            <div className="bg-[#304854] border-b-2 border-[#d0b685] p-6 text-white text-center">
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
+                className="absolute top-4 right-4 text-white hover:text-[#d0b685] transition-colors"
               >
                 <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-4">
-                <Plus className="w-6 h-6 text-white" />
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-4">
+                <Plus className="w-6 h-6 text-[#d0b685]" />
               </div>
               <h3 className="text-xl font-bold">Solicitar ayuda</h3>
               <p className="text-white/80 text-sm mt-1">Reporta una incidencia o solicita soporte técnico</p>
@@ -113,7 +113,7 @@ export function CreateTicketModal({
                     id="departamento"
                     value={formData.id_tickets_departamentos}
                     onChange={(e) => setFormData({ ...formData, id_tickets_departamentos: e.target.value })}
-                    className="w-full px-3 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-3 border border-line rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                     required
                   >
                     <option value="">Selecciona un departamento</option>
@@ -133,7 +133,7 @@ export function CreateTicketModal({
                     type="text"
                     value={formData.nombre}
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    className="w-full px-3 py-3 border border-line rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-3 border border-line rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                     placeholder="Breve descripción del problema"
                     required
                   />
@@ -147,7 +147,7 @@ export function CreateTicketModal({
                     value={formData.descripcion}
                     onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
                     rows={4}
-                    className="w-full px-3 py-3 border border-line rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md resize-none"
+                    className="w-full px-3 py-3 border border-line rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md resize-none"
                     placeholder="Describe detalladamente tu solicitud de soporte..."
                     required
                   />
@@ -155,7 +155,7 @@ export function CreateTicketModal({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                  className="w-full bg-[#d0b685] hover:bg-[#be9f6b] text-black font-bold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
                 >
                   {submitting ? (
                     <div className="flex items-center justify-center space-x-2">

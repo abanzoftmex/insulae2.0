@@ -293,8 +293,8 @@ export function TicketsView({
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-[#cba258] to-[#cba258] rounded-xl flex items-center justify-center shadow-lg">
-              <TicketIcon className="w-6 h-6 text-white" />
+            <div className="w-12 h-12 bg-[#304854] rounded-xl flex items-center justify-center shadow-lg">
+              <TicketIcon className="w-6 h-6 text-[#d0b685]" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">
@@ -307,7 +307,7 @@ export function TicketsView({
           </div>
           <button
             onClick={() => setShowCreateForm(true)}
-            className="bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white px-6 py-3 rounded-lg font-medium flex items-center space-x-2 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            className="bg-[#d0b685] hover:bg-[#be9f6b] text-black font-semibold px-6 py-3 rounded-lg flex items-center space-x-2 transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105"
           >
             <Plus className="w-5 h-5" />
             <span>Nueva Solicitud</span>
@@ -337,7 +337,7 @@ export function TicketsView({
             onClick={() => handleTabChange("open")}
             className={`px-6 py-3 rounded-md font-medium transition-all duration-200 ${
               activeTab === "open"
-                ? "bg-gradient-to-r from-[#cba258] to-[#cba258] text-white shadow-md"
+                ? "bg-[#304854] text-white shadow-md"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -348,7 +348,7 @@ export function TicketsView({
             onClick={() => handleTabChange("closed")}
             className={`px-6 py-3 rounded-md font-medium transition-all duration-200 ${
               activeTab === "closed"
-                ? "bg-gradient-to-r from-[#cba258] to-[#cba258] text-white shadow-md"
+                ? "bg-[#304854] text-white shadow-md"
                 : "text-gray-600 hover:text-gray-900"
             }`}
           >
@@ -375,7 +375,7 @@ export function TicketsView({
             {activeTab === "open" && (
               <button
                 onClick={() => setShowCreateForm(true)}
-                className="bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2"
+                className="bg-[#d0b685] hover:bg-[#be9f6b] text-black font-semibold px-6 py-3 rounded-lg inline-flex items-center space-x-2"
               >
                 <Plus className="w-5 h-5" />
                 <span>Crear Primera Solicitud</span>
@@ -400,8 +400,8 @@ export function TicketsView({
                     <div
                       className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
                         isSolicitud
-                          ? "bg-[#006241]/10 text-[#006241]"
-                          : "bg-[#cba258]/15 text-[#a8853f]"
+                          ? "bg-[#304854]/10 text-[#304854]"
+                          : "bg-[#d0b685]/20 text-[#8a6e3e]"
                       }`}
                     >
                       {isSolicitud ? (
@@ -619,10 +619,10 @@ export function TicketsView({
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden">
             {/* Header */}
-            <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] p-6 text-white text-center">
+            <div className="bg-[#304854] border-b-2 border-[#d0b685] p-6 text-white text-center">
               <button
                 onClick={() => setShowCreateForm(false)}
-                className="absolute top-4 right-4 text-white hover:text-gray-200 transition-colors"
+                className="absolute top-4 right-4 text-white hover:text-[#d0b685] transition-colors"
               >
                 <svg
                   className="h-6 w-6"
@@ -638,8 +638,8 @@ export function TicketsView({
                   />
                 </svg>
               </button>
-              <div className="inline-flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mb-4">
-                <Plus className="w-6 h-6 text-white" />
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-4">
+                <Plus className="w-6 h-6 text-[#d0b685]" />
               </div>
               <h3 className="text-xl font-bold">Crear Nueva Solicitud</h3>
               <p className="text-white/80 text-sm mt-1">
@@ -666,7 +666,7 @@ export function TicketsView({
                         id_tickets_departamentos: e.target.value,
                       })
                     }
-                    className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                     required
                   >
                     <option value="">Selecciona un departamento</option>
@@ -692,7 +692,7 @@ export function TicketsView({
                     onChange={(e) =>
                       setFormData({ ...formData, nombre: e.target.value })
                     }
-                    className="w-full px-3 py-3 border border-gray-200 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-3 border border-gray-200 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                     placeholder="Breve descripción del problema"
                     required
                   />
@@ -712,7 +712,7 @@ export function TicketsView({
                       setFormData({ ...formData, descripcion: e.target.value })
                     }
                     rows={4}
-                    className="w-full px-3 py-3 border border-gray-200 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md resize-none"
+                    className="w-full px-3 py-3 border border-gray-200 rounded-xl placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md resize-none"
                     placeholder="Describe detalladamente tu solicitud de soporte..."
                     required
                   />
@@ -721,7 +721,7 @@ export function TicketsView({
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                  className="w-full bg-[#d0b685] hover:bg-[#be9f6b] text-black font-bold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-md hover:shadow-lg"
                 >
                   {submitting ? (
                     <div className="flex items-center justify-center space-x-2">

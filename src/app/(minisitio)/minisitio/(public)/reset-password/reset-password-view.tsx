@@ -81,7 +81,7 @@ export function ResetPasswordView({
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-canvas via-white to-gold-soft">
         <div className="max-w-md w-full bg-white rounded-2xl p-8 shadow-xl border border-gray-200 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cba258] mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#d0b685] mx-auto mb-4"></div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Verificando enlace</h2>
           <p className="text-gray-600">Validando tu solicitud de cambio de contraseña...</p>
         </div>
@@ -100,7 +100,7 @@ export function ResetPasswordView({
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Enlace inválido</h2>
           <p className="text-gray-600 mb-6">Este enlace no es válido o ha expirado.</p>
-          <Link href={msPath("/forgot-password")} className="text-[#cba258] hover:text-[#bca065] font-medium">
+          <Link href={msPath("/forgot-password")} className="text-[#d0b685] hover:text-[#be9f6b] font-medium">
             Solicitar nuevo enlace →
           </Link>
         </div>
@@ -119,7 +119,7 @@ export function ResetPasswordView({
           </div>
           <h2 className="text-2xl font-bold text-gray-800 mb-4">Enlace no válido</h2>
           <p className="text-gray-600 mb-6">Este enlace expiró o ya se usó. Por seguridad, cada enlace sirve una sola vez.</p>
-          <Link href={msPath("/forgot-password")} className="text-[#cba258] hover:text-[#bca065] font-medium">
+          <Link href={msPath("/forgot-password")} className="text-[#d0b685] hover:text-[#be9f6b] font-medium">
             Solicitar nuevo enlace →
           </Link>
         </div>
@@ -152,7 +152,7 @@ export function ResetPasswordView({
             <h1 className="text-4xl font-bold text-gray-800 mb-3 tracking-wide">
               INSULAE
             </h1>
-            <div className="w-24 h-1 bg-gradient-to-r from-[#cba258] to-[#cba258] mx-auto mb-4 rounded-full"></div>
+            <div className="w-24 h-1 bg-gradient-to-r from-[#d0b685] to-[#d0b685] mx-auto mb-4 rounded-full"></div>
           </div>
 
           {/* Title */}
@@ -174,7 +174,7 @@ export function ResetPasswordView({
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <svg className="h-5 w-5 text-[#1E3932]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-[#304854]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                     </svg>
                   </div>
@@ -183,7 +183,7 @@ export function ResetPasswordView({
                     name="password"
                     type="password"
                     required
-                    className="w-full pl-10 pr-3 py-4 border border-gray-200 rounded-xl placeholder-gray-400 text-gray-900 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full pl-10 pr-3 py-4 border border-gray-200 rounded-xl placeholder-gray-400 text-gray-900 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -197,7 +197,7 @@ export function ResetPasswordView({
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <svg className="h-5 w-5 text-[#1E3932]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="h-5 w-5 text-[#304854]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
@@ -206,7 +206,7 @@ export function ResetPasswordView({
                     name="confirmPassword"
                     type="password"
                     required
-                    className="w-full pl-10 pr-3 py-4 border border-gray-200 rounded-xl placeholder-gray-400 text-gray-900 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#cba258] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
+                    className="w-full pl-10 pr-3 py-4 border border-gray-200 rounded-xl placeholder-gray-400 text-gray-900 bg-white/80 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#d0b685] focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                     placeholder="••••••••"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -235,11 +235,11 @@ export function ResetPasswordView({
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white font-semibold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
+                className="w-full bg-gradient-to-r from-[#d0b685] via-[#dfca9f] to-[#d0b685] hover:brightness-110 text-black font-bold py-4 px-4 rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
               >
                 {loading ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-black"></div>
                     <span>Actualizando...</span>
                   </div>
                 ) : (
@@ -255,7 +255,7 @@ export function ResetPasswordView({
 
             {/* Back to Login */}
             <div className="mt-6 text-center">
-              <Link href={msPath("/login")} className="text-sm text-[#cba258] hover:text-[#bca065] font-medium transition-colors duration-200">
+              <Link href={msPath("/login")} className="text-sm text-[#d0b685] hover:text-[#be9f6b] font-medium transition-colors duration-200">
                 ← Volver al inicio de sesión
               </Link>
             </div>
@@ -264,11 +264,11 @@ export function ResetPasswordView({
       </div>
 
       {/* Right Panel - Info */}
-      <div className="flex-1 bg-gradient-to-br from-[#122420] via-brand-deep to-[#2d5249] flex flex-col justify-center items-center px-8 lg:px-16 py-12 lg:py-0 text-white relative overflow-hidden min-h-[50vh] lg:min-h-screen">
+      <div className="flex-1 bg-gradient-to-br from-[#0f171b] via-[#1b2b33] to-[#304854] flex flex-col justify-center items-center px-8 lg:px-16 py-12 lg:py-0 text-white relative overflow-hidden min-h-[50vh] lg:min-h-screen">
         <div className="max-w-md w-full text-center z-10">
           <div className="mb-8">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#cba258] to-[#cba258] rounded-2xl mb-6 shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-[#d0b685] rounded-2xl mb-6 shadow-lg">
+              <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
@@ -283,8 +283,8 @@ export function ResetPasswordView({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             <div className="group bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-xl">
               <div className="flex items-start space-x-3">
-                <div className="bg-gradient-to-r from-[#cba258] to-[#cba258] rounded-xl p-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-[#d0b685] rounded-xl p-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
                 </div>
@@ -297,8 +297,8 @@ export function ResetPasswordView({
 
             <div className="group bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 hover:bg-white/10 transition-all duration-300 hover:scale-105 hover:shadow-xl">
               <div className="flex items-start space-x-3">
-                <div className="bg-gradient-to-r from-[#bca065] to-[#cba258] rounded-xl p-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-[#d0b685] rounded-xl p-3 flex-shrink-0 group-hover:scale-110 transition-transform duration-300">
+                  <svg className="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                   </svg>
                 </div>

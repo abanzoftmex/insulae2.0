@@ -29,22 +29,22 @@ export const GIRO_COLORS: Record<string, string> = {
   Servicios: "#2563eb",
   Tiendas: "#b0509f",
 };
-const CATEGORICAL_ORDER = ["#8a8619", "#0891b2", "#b5451f", "#b8860b", "#2563eb", "#b0509f"];
+const CATEGORICAL_ORDER = ["#304854", "#0891b2", "#b5451f", "#d0b685", "#2563eb", "#b0509f"];
 
-/** Rampa secuencial oliva: light→dark, contraste del extremo claro 2.27:1 */
-export const SEQUENTIAL = ["#a9af6b", "#949a52", "#7f853f", "#6a7031", "#555a24", "#3f4319"];
+/** Rampa secuencial de marca azul: light→dark */
+export const SEQUENTIAL = ["#96b2be", "#7b9caa", "#618797", "#4c7282", "#3a5d6c", "#304854"];
 
 /** Clasificación de inmueble: identidad estable, no ranking */
 export const CATEGORY_COLORS: Record<string, string> = {
-  Habitacional: "#8a8619",
+  Habitacional: "#304854",
   "Comercial / Servicios": "#0891b2",
-  "Lote / Suelo": "#b8860b",
+  "Lote / Suelo": "#d0b685",
   "Sin clasificar": "#9ca3af",
 };
 
-const BRAND = "#757242";
-const BRAND_DEEP = "#5d5b35";
-const MUTED = "#c9cbb4";
+const BRAND = "#3d5b6a";
+const BRAND_DEEP = "#304854";
+const MUTED = "#dce7ed";
 const GRID = "rgba(0,0,0,0.06)";
 const INK_SOFT = "rgba(0,0,0,0.58)";
 const SURFACE = "#ffffff";
@@ -148,7 +148,7 @@ export function HorizontalBars({
           cursor={{ fill: "rgba(0,0,0,0.03)" }}
           content={<SimpleTooltip format={(v) => `${numberFormat.format(v)}${suffix}`} />}
         />
-        <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16}>
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16} isAnimationActive={false}>
           {data.map((entry) => (
             <Cell
               key={entry.name}
@@ -525,7 +525,7 @@ export function OpeningsChart({ data, height = 210 }: { data: { label: string; v
           cursor={{ fill: "rgba(0,0,0,0.03)" }}
           content={<SimpleTooltip format={(v) => `${numberFormat.format(v)} aperturas`} />}
         />
-        <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={26}>
+        <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false}>
           {data.map((entry) => (
             // El año pico se destaca; el resto queda en el tono recesivo
             <Cell key={entry.label} fill={entry.value === max ? BRAND_DEEP : "#b6b894"} />
@@ -580,6 +580,7 @@ export function PaymentsChart({ data }: { data: { label: string; count: number; 
           fill="url(#paymentsFill)"
           dot={false}
           activeDot={{ r: 4, strokeWidth: 2, stroke: SURFACE }}
+          isAnimationActive={false}
         />
       </AreaChart>
     </ResponsiveContainer>

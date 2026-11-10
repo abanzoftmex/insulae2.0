@@ -324,7 +324,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
         <section className="print-page-1 bg-white relative">
 
           {/* Top Navy Banner Header */}
-          <header className="relative bg-gradient-to-r from-[#111e38] via-[#15284f] to-[#1c3568] text-white pt-8 pb-14 px-8 overflow-hidden">
+          <header className="relative bg-[#304854] text-white pt-8 pb-14 px-8 overflow-hidden">
             {/* Subtle Crest Watermark Background */}
             <div className="absolute right-12 -bottom-10 opacity-[0.07] pointer-events-none select-none">
               <img
@@ -347,7 +347,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                 <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/90">
                   ADMINISTRADORA VALQUIRICO A.C.
                 </p>
-                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#dfb76c] mt-0.5">
+                <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#d0b685] mt-0.5">
                   CORTE AL {formattedCutDateUpper}
                 </p>
               </div>
@@ -356,17 +356,17 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
             {/* Middle row: Title & Área Privativa Badge Card */}
             <div className="flex justify-between items-end relative z-10">
               <div>
-                <p className="text-[9.5px] font-extrabold uppercase tracking-[0.22em] text-[#dfb76c] mb-1">
+                <p className="text-[9.5px] font-extrabold uppercase tracking-[0.22em] text-[#d0b685] mb-1">
                   SISTEMA CONDOMINAL · REPORTE EJECUTIVO
                 </p>
                 <h1 className="text-3xl sm:text-4xl font-serif text-white tracking-normal font-normal">
-                  Estado de cuenta
+                  Estado de <span className="italic text-[#d0b685]">cuenta</span>
                 </h1>
               </div>
 
               {/* Área Privativa Floating Top Badge */}
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2.5 text-right shadow-sm min-w-[170px]">
-                <p className="text-[8.5px] font-extrabold uppercase tracking-[0.16em] text-[#dfb76c]">
+              <div className="bg-white/10 backdrop-blur-md border border-[#d0b685]/30 rounded-xl px-4 py-2.5 text-right shadow-sm min-w-[170px]">
+                <p className="text-[8.5px] font-extrabold uppercase tracking-[0.16em] text-[#d0b685]">
                   ÁREA PRIVATIVA
                 </p>
                 <p className="text-xl sm:text-2xl font-black text-white tracking-tight mt-0.5 font-mono">
@@ -443,7 +443,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
             {/* Section 01: Datos de la propiedad */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-serif font-black text-[#b8860b]">01</span>
+                <span className="text-xs font-serif font-black text-[#d0b685]">01</span>
                 <h2 className="text-sm font-serif font-bold text-slate-900 tracking-wide">
                   Datos de la propiedad
                 </h2>
@@ -457,7 +457,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                     <p className="text-[9px] uppercase font-bold tracking-wider text-slate-500">
                       Área Privativa
                     </p>
-                    <p className="text-xs font-black text-slate-900 mt-0.5 border-b-2 border-[#b8860b] pb-0.5 inline-block">
+                    <p className="text-xs font-black text-slate-900 mt-0.5 border-b-2 border-[#d0b685] pb-0.5 inline-block">
                       {area.name}
                     </p>
                   </div>
@@ -536,7 +536,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
             {/* Section 02: Composición del saldo */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-serif font-black text-[#b8860b]">02</span>
+                <span className="text-xs font-serif font-black text-[#d0b685]">02</span>
                 <h2 className="text-sm font-serif font-bold text-slate-900 tracking-wide">
                   Composición del saldo
                 </h2>
@@ -648,17 +648,17 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
             {/* Section 03: Últimos pagos realizados */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-serif font-black text-[#b8860b]">03</span>
+                <span className="text-xs font-serif font-black text-[#d0b685]">03</span>
                 <h2 className="text-sm font-serif font-bold text-slate-900 tracking-wide">
                   Últimos pagos realizados
                 </h2>
                 <div className="flex-1 border-t border-[#e5dfd5]"></div>
               </div>
 
-              <div className="border border-[#15284f] rounded-xl overflow-hidden shadow-sm">
+              <div className="border border-[#304854] rounded-xl overflow-hidden shadow-sm">
                 <table className="w-full text-[10.5px] border-collapse">
                   <thead>
-                    <tr className="bg-[#15284f] text-white text-[9.5px] font-black uppercase tracking-wider">
+                    <tr className="bg-[#304854] text-white text-[9.5px] font-black uppercase tracking-wider">
                       <th className="py-2.5 px-3 text-left w-1/4">Folio</th>
                       <th className="py-2.5 px-3 text-left w-1/4">Pagado el</th>
                       <th className="py-2.5 px-3 text-left w-1/3">Proporción</th>
@@ -690,7 +690,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                             <td className="py-2 px-3">
                               <div className="w-full max-w-[200px] bg-[#e8e2d5] h-2 rounded-full overflow-hidden">
                                 <div
-                                  className="h-full rounded-full bg-[#c4a56a]"
+                                  className="h-full rounded-full bg-[#d0b685]"
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
@@ -715,7 +715,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
         <section className="bg-white relative border-t-2 border-dashed border-[#e6decb] print:border-none">
 
           {/* Page 2 Slim Navy Header */}
-          <header className="bg-gradient-to-r from-[#111e38] via-[#15284f] to-[#1c3568] text-white px-8 py-3.5 flex justify-between items-center">
+          <header className="bg-[#304854] text-white px-8 py-3.5 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <img
                 src="/brand/valquirico-logo-light.png"
@@ -724,7 +724,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
               />
             </div>
             <div className="text-right">
-              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#dfb76c]">
+              <p className="text-[9px] font-black uppercase tracking-[0.16em] text-[#d0b685]">
                 CORTE {formattedCutDateUpper}
               </p>
               <p className="text-xs font-serif text-white/95 font-medium mt-0.5">
@@ -738,17 +738,17 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
             {/* Section 04: Detalle de cuotas */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-serif font-black text-[#b8860b]">04</span>
+                <span className="text-xs font-serif font-black text-[#d0b685]">04</span>
                 <h2 className="text-sm font-serif font-bold text-slate-900 tracking-wide">
                   Detalle de cuotas
                 </h2>
                 <div className="flex-1 border-t border-[#e5dfd5]"></div>
               </div>
 
-              <div className="border border-[#15284f] rounded-xl overflow-hidden shadow-sm">
+              <div className="border border-[#304854] rounded-xl overflow-hidden shadow-sm">
                 <table className="w-full text-[10px] border-collapse">
                   <thead>
-                    <tr className="bg-[#15284f] text-white text-[8.5px] font-black uppercase tracking-wider">
+                    <tr className="bg-[#304854] text-white text-[8.5px] font-black uppercase tracking-wider">
                       <th className="py-2.5 px-2 text-left">Concepto</th>
                       <th className="py-2.5 px-2 text-left">Cobro</th>
                       <th className="py-2.5 px-2 text-left">Límite</th>
@@ -834,7 +834,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                 {/* Left Card: CONDICIONES */}
                 <div className="sm:col-span-7 bg-[#fbf9f5] border border-[#ece6db] rounded-xl p-4 text-[9.5px] text-slate-700 flex flex-col justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#b8860b] mb-2">
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#d0b685] mb-2">
                       CONDICIONES
                     </p>
                     <p className="leading-relaxed mb-2.5">
@@ -868,9 +868,9 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                 </div>
 
                 {/* Right Card: DATOS BANCARIOS */}
-                <div className="sm:col-span-5 bg-gradient-to-br from-[#111e38] to-[#15284f] text-white rounded-xl p-4 flex flex-col justify-between shadow-sm">
+                <div className="sm:col-span-5 bg-[#304854] text-white rounded-xl p-4 flex flex-col justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#dfb76c] mb-3">
+                    <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#d0b685] mb-3">
                       DATOS BANCARIOS
                     </p>
 
@@ -879,7 +879,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                       <p className="text-[8.5px] font-bold uppercase tracking-wider text-white/70">
                         BANCO: <span className="text-white font-black">INBURSA</span>
                       </p>
-                      <p className="text-[8px] uppercase tracking-wider text-[#dfb76c] font-bold mt-1">
+                      <p className="text-[8px] uppercase tracking-wider text-[#d0b685] font-bold mt-1">
                         CLABE INTERBANCARIA
                       </p>
                       <p className="text-xs font-mono font-black text-white tracking-widest mt-0.5 select-all">
@@ -892,7 +892,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                       <p className="text-[8.5px] font-bold uppercase tracking-wider text-white/70">
                         BANCO: <span className="text-white font-black">BANCO DEL BAJÍO</span>
                       </p>
-                      <p className="text-[8px] uppercase tracking-wider text-[#dfb76c] font-bold mt-1">
+                      <p className="text-[8px] uppercase tracking-wider text-[#d0b685] font-bold mt-1">
                         CLABE INTERBANCARIA
                       </p>
                       <p className="text-xs font-mono font-black text-white tracking-widest mt-0.5 select-all">
@@ -902,7 +902,7 @@ export default async function ImprimirEstadoCuentaPage({ searchParams }: PagePro
                   </div>
 
                   {/* Reference indicator badge */}
-                  <div className="mt-3 bg-[#dfb76c]/15 border border-[#dfb76c]/30 rounded-lg p-2 text-center text-[9px] text-[#dfb76c] font-bold">
+                  <div className="mt-3 bg-[#d0b685]/15 border border-[#d0b685]/30 rounded-lg p-2 text-center text-[9px] text-[#d0b685] font-bold">
                     Referencia obligatoria: {area.name} (número de propiedad)
                   </div>
                 </div>

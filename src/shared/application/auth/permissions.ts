@@ -11,7 +11,7 @@ import { cache } from "react";
 import { cookies } from "next/headers";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { ADMIN_SESSION_COOKIE, verifyAdminSession, type AdminSession } from "./admin-session";
-import type { ModuleName } from "./modules";
+import { MODULES, type ModuleName } from "./modules";
 export * from "./permission-utils";
 import type { PermissionAction, ModulePermissions, UserPermissions } from "./permission-utils";
 
@@ -44,6 +44,7 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
           role: {
             select: {
               id: true,
+              name: true,
               permissions: {
                 where: { isActive: true, module: { isActive: true } },
                 select: {
@@ -62,7 +63,14 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
   });
 
   if (!user || !user.isActive) return {};
-  if (user.userType === "ADMIN") return getFullPermissions();
+
+  const isMasterUser =
+    user.userRoles.some((ur) => ur.role.name?.trim().toLowerCase() === "master") ||
+    user.initialRole?.trim().toLowerCase() === "master";
+
+  if (user.userType === "ADMIN") {
+    return await getFullPermissions();
+  }
 
   let roles = user.userRoles.map((ur) => ur.role);
 
@@ -76,6 +84,7 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
       },
       select: {
         id: true,
+        name: true,
         permissions: {
           where: { isActive: true, module: { isActive: true } },
           select: {
@@ -118,6 +127,12 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
       if (perm.canDelete) current.canDelete = true;
     }
   }
+
+  // Restricción específica de negocio: El rol Master no puede editar convocatorias
+  if (isMasterUser && permissionsMap[MODULES.CONVOCATORIAS]) {
+    permissionsMap[MODULES.CONVOCATORIAS].canUpdate = false;
+  }
+
   return permissionsMap;
 }
 

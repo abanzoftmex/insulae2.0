@@ -64,8 +64,8 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 bg-gradient-to-r from-[#cba258] to-[#cba258] rounded-2xl flex items-center justify-center shadow-lg">
-              <Bell className="w-7 h-7 text-white" />
+            <div className="w-14 h-14 bg-[#304854] rounded-2xl flex items-center justify-center shadow-lg">
+              <Bell className="w-7 h-7 text-[#d0b685]" />
             </div>
             <div>
               <h1 className="text-3xl font-bold text-gray-900 ">Comunicados</h1>
@@ -81,7 +81,7 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
       <div className="mb-8">
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6">
           <div className="flex items-center space-x-3 mb-4">
-            <Filter className="w-5 h-5 text-[#cba258]" />
+            <Filter className="w-5 h-5 text-[#304854]" />
             <h3 className="text-lg font-semibold text-gray-900">Filtrar Comunicados</h3>
           </div>
 
@@ -89,7 +89,7 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
             <button
               onClick={() => setFiltro('todos')}
               className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 flex items-center space-x-2 ${filtro === 'todos'
-                ? 'bg-gradient-to-r from-[#cba258] to-[#cba258] text-white shadow-lg transform scale-105'
+                ? 'bg-[#304854] text-white shadow-lg transform scale-105'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-md'
                 }`}
             >
@@ -164,7 +164,7 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
                         {comunicado.tipo_fijo === 1 ? <Users className="w-5 h-5" /> : <Building className="w-5 h-5" />}
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#cba258] transition-colors duration-200">
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-[#304854] transition-colors duration-200">
                           {comunicado.nombre}
                         </h3>
                         <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium mb-4 ${comunicado.tipo_fijo === 1
@@ -288,7 +288,7 @@ export function ComunicadosView({ comunicados }: { comunicados: Comunicado[] }) 
             {filtro !== 'todos' && (
               <button
                 onClick={() => setFiltro('todos')}
-                className="bg-gradient-to-r from-[#cba258] to-[#cba258] hover:from-[#bca065] hover:to-[#bca065] text-white px-6 py-3 rounded-lg font-medium inline-flex items-center space-x-2 transition-all duration-200 hover:shadow-lg"
+                className="bg-[#d0b685] hover:bg-[#be9f6b] text-black font-semibold px-6 py-3 rounded-lg inline-flex items-center space-x-2 transition-all duration-200 hover:shadow-lg"
               >
                 <span>Ver todos los comunicados</span>
                 <Bell className="w-4 h-4" />

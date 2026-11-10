@@ -23,15 +23,21 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { sendAnnouncementInvitationAction, getAnnouncementWhatsAppTextAction } from "../[id]/asamblea/actions";
+import { isAsamblea, getMeetingNoun } from "@/app/(admin)/gobernanza/convocatorias/_lib/governance-terms";
 
 const WHATSAPP_NUMBER = "5212212721794";
 
 interface AnnouncementCardProps {
   announcement: Announcement;
   canManage?: boolean;
+  canEdit?: boolean;
 }
 
-export function AnnouncementCard({ announcement, canManage = false }: AnnouncementCardProps) {
+export function AnnouncementCard({
+  announcement,
+  canManage = false,
+  canEdit = true
+}: AnnouncementCardProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [isSending, startSendingTransition] = useTransition();
   const [isSendingWA, startSendingWATransition] = useTransition();
@@ -64,9 +70,12 @@ export function AnnouncementCard({ announcement, canManage = false }: Announceme
         const res = await sendAnnouncementInvitationAction(announcement.id);
         setDropdownOpen(false);
         if (res.success) {
-          alert(`Convocatoria enviada con éxito.\nTotal de correos enviados: ${res.sentCount}.\nFallidos: ${res.failedCount}.`);
+          alert(
+            res.message ||
+              `Convocatoria enviada con éxito.\nTotal de correos enviados: ${res.sentCount}.\nFallidos: ${res.failedCount}.`
+          );
         } else {
-          alert(`Error al enviar correos: ${res.error}`);
+          alert(`Error al enviar correos: ${res.error || res.message}`);
         }
       });
     }
@@ -74,98 +83,107 @@ export function AnnouncementCard({ announcement, canManage = false }: Announceme
 
   return (
     <>
-      <Card className="overflow-hidden flex flex-col hover:shadow-md transition-shadow relative">
-      {/* Brand accent bar */}
-      <div className="h-0.5 bg-brand w-full" />
-
-      <div className="p-5 flex flex-col gap-4 flex-1">
-        {/* Header */}
-        <div className="flex justify-between items-start gap-2">
-          <div className="flex flex-col gap-1.5 min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <Badge variant="brand">{announcement.type.name}</Badge>
-              <span className="text-[9px] font-bold uppercase tracking-widest text-ink-soft">
-                {announcement.subtype.name}
-              </span>
-            </div>
-            <h3 className="text-sm font-bold text-ink leading-tight line-clamp-2">
-              {announcement.name}
-            </h3>
-          </div>
-          <span className="shrink-0 text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded-sm bg-canvas border border-line text-ink-soft whitespace-nowrap">
-            {announcement.status.name}
-          </span>
+      <Card className="flex flex-col hover:shadow-md transition-shadow relative rounded-2xl border border-[#cbd5e1]/80 bg-white shadow-xs">
+        {/* Brand accent bar with gold accent */}
+        <div className="h-1 bg-[#304854] w-full relative rounded-t-2xl overflow-hidden">
+          <div className="absolute left-0 top-0 h-1 w-12 bg-[#d0b685]" />
         </div>
 
-        {/* Dates */}
-        <div className="space-y-2">
-          {announcement.dates.map((date) => (
-            <div key={date.id} className="flex items-start gap-3 p-3 rounded-card bg-canvas border border-line">
-              <div className="bg-brand text-white text-center rounded-sm min-w-11 py-1 shrink-0">
-                <div className="text-[9px] uppercase font-bold opacity-70 leading-none">
-                  {format(new Date(date.date), "MMM", { locale: es })}
-                </div>
-                <div className="text-base font-bold leading-tight">
-                  {format(new Date(date.date), "dd")}
-                </div>
+        <div className="p-5 flex flex-col gap-4 flex-1">
+          {/* Header */}
+          <div className="flex justify-between items-start gap-2">
+            <div className="flex flex-col gap-1.5 min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider bg-[#edf6f1] border border-[#c5e6d4] text-[#1b5e3f]">
+                  {announcement.type.name}
+                </span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-[#64748b]">
+                  {announcement.subtype.name}
+                </span>
               </div>
-              <div className="flex-1 space-y-1 min-w-0">
-                <div className="flex justify-between items-center gap-2">
-                  <span className="text-[10px] font-bold text-brand uppercase tracking-tight">{date.callType}</span>
-                  {date.time && (
-                    <span className="flex items-center gap-0.5 text-[9px] font-medium text-ink-soft shrink-0">
-                      <Clock className="h-2.5 w-2.5" />
-                      {date.time}
+              <h3 className="text-sm font-bold text-[#0f172a] leading-tight line-clamp-2">
+                {announcement.name}
+              </h3>
+            </div>
+            <span className="shrink-0 text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm bg-[#fcf8f0] border border-[#d0b685]/70 text-[#947133] whitespace-nowrap">
+              {announcement.status.name}
+            </span>
+          </div>
+
+          {/* Dates */}
+          <div className="space-y-2">
+            {announcement.dates.map((date) => (
+              <div
+                key={date.id}
+                className="flex items-start gap-3 p-3 rounded-xl bg-[#f8fafc] border border-[#e2e8f0]"
+              >
+                <div className="bg-[#304854] text-white text-center rounded-lg min-w-11 py-1 shrink-0 shadow-xs">
+                  <div className="text-[9px] uppercase font-bold opacity-80 leading-none">
+                    {format(new Date(date.date), "MMM", { locale: es })}
+                  </div>
+                  <div className="text-base font-extrabold leading-tight">
+                    {format(new Date(date.date), "dd")}
+                  </div>
+                </div>
+                <div className="flex-1 space-y-1 min-w-0">
+                  <div className="flex justify-between items-center gap-2">
+                    <span className="text-[10px] font-extrabold text-[#304854] uppercase tracking-tight">
+                      {date.callType}
                     </span>
+                    {date.time && (
+                      <span className="flex items-center gap-0.5 text-[9px] font-medium text-[#64748b] shrink-0">
+                        <Clock className="h-2.5 w-2.5 text-[#94a3b8]" />
+                        {date.time}
+                      </span>
+                    )}
+                  </div>
+                  {date.location && (
+                    <p className="flex items-center gap-0.5 text-[10px] text-[#64748b] truncate">
+                      <MapPin className="h-2.5 w-2.5 text-[#d0b685] shrink-0" />
+                      {date.location}
+                    </p>
                   )}
                 </div>
-                {date.location && (
-                  <p className="flex items-center gap-0.5 text-[10px] text-ink-soft truncate">
-                    <MapPin className="h-2.5 w-2.5 shrink-0" />
-                    {date.location}
-                  </p>
-                )}
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="mt-auto pt-3 flex items-center justify-between border-t border-line">
-          <div className="flex items-center gap-3 text-[10px] text-ink-soft font-bold uppercase tracking-tight">
-            <span>
-              <span className="text-brand">{announcement.topics.length}</span> Temas
-            </span>
-            {announcement.actualAttendance > 0 && (
-              <span className="flex items-center gap-1">
-                <Users className="h-2.5 w-2.5" />
-                <span className="text-brand">{announcement.attendancePercentage}%</span> Asist.
-              </span>
-            )}
+            ))}
           </div>
-          
-          <div className="flex gap-1.5 items-center relative">
-            {announcement.pdfUrl && (
-              <a
-                href={announcement.pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-7 h-7 rounded-sm bg-canvas border border-line text-ink-soft hover:bg-brand hover:text-white hover:border-brand transition-colors"
-                title="Ver PDF"
-              >
-                <FileText className="h-3.5 w-3.5" />
-              </a>
-            )}
 
-            {/* Action Dropdown Trigger */}
-            <div className="relative">
-              <button
-                onClick={() => setDropdownOpen(!dropdownOpen)}
-                className="flex items-center justify-center w-7 h-7 rounded-sm bg-canvas border border-line text-ink-soft hover:bg-brand hover:text-white hover:border-brand transition-colors"
-                title="Opciones"
-              >
-                <MoreVertical className="h-3.5 w-3.5" />
-              </button>
+          {/* Footer */}
+          <div className="mt-auto pt-3 flex items-center justify-between border-t border-[#e2e8f0]">
+            <div className="flex items-center gap-3 text-[10px] text-[#64748b] font-bold uppercase tracking-tight">
+              <span>
+                <span className="text-[#304854] font-extrabold">{announcement.topics.length}</span> Temas
+              </span>
+              {announcement.actualAttendance > 0 && (
+                <span className="flex items-center gap-1">
+                  <Users className="h-2.5 w-2.5" />
+                  <span className="text-[#304854] font-extrabold">{announcement.attendancePercentage}%</span> Asist.
+                </span>
+              )}
+            </div>
+
+            <div className="flex gap-1.5 items-center relative">
+              {announcement.pdfUrl && (
+                <a
+                  href={announcement.pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-[#e2e8f0] text-[#64748b] hover:bg-[#304854] hover:text-white hover:border-[#304854] transition-colors shadow-xs"
+                  title="Ver PDF"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                </a>
+              )}
+
+              {/* Action Dropdown Trigger */}
+              <div className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="flex items-center justify-center w-7 h-7 rounded-lg bg-white border border-[#e2e8f0] text-[#64748b] hover:bg-[#304854] hover:text-white hover:border-[#304854] transition-colors shadow-xs"
+                  title="Opciones"
+                >
+                  <MoreVertical className="h-3.5 w-3.5" />
+                </button>
 
               {/* Dropdown Menu options */}
               {dropdownOpen && (
@@ -188,22 +206,31 @@ export function AnnouncementCard({ announcement, canManage = false }: Announceme
 
                     {canManage && (
                       <>
-                        <Link
-                          href={`/gobernanza/convocatorias/${announcement.id}/editar`}
-                          onClick={() => setDropdownOpen(false)}
-                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
-                        >
-                          <Edit2 className="h-3.5 w-3.5 text-ink-soft" />
-                          Editar convocatoria
-                        </Link>
+                        {canEdit && (
+                          <Link
+                            href={`/gobernanza/convocatorias/${announcement.id}/editar`}
+                            onClick={() => setDropdownOpen(false)}
+                            className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
+                          >
+                            <Edit2 className="h-3.5 w-3.5 text-ink-soft" />
+                            Editar convocatoria
+                          </Link>
+                        )}
 
                         <Link
                           href={`/gobernanza/convocatorias/${announcement.id}/asamblea`}
                           onClick={() => setDropdownOpen(false)}
-                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-medium text-ink hover:bg-canvas transition-colors"
+                          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-[#304854] hover:bg-[#faf8f5] transition-colors"
                         >
-                          <Play className="h-3.5 w-3.5 text-ink-soft" />
-                          Iniciar asamblea
+                          <Play className="h-3.5 w-3.5 text-[#304854]" />
+                          {(() => {
+                            const isAsam = isAsamblea(announcement);
+                            const noun = getMeetingNoun(isAsam, { capitalized: false });
+                            const isLive =
+                              announcement.status.name === "En Proceso" ||
+                              announcement.status.name === "Iniciada";
+                            return isLive ? `Toma de ${noun}` : `Iniciar ${noun}`;
+                          })()}
                         </Link>
 
                         <button
@@ -235,13 +262,13 @@ export function AnnouncementCard({ announcement, canManage = false }: Announceme
                       </>
                     )}
 
-                    {isResidentView && (announcement.status.name === "En Proceso" || announcement.status.name === "Iniciada") && announcement.dates[0] && (
+                    {(announcement.status.name === "En Proceso" || announcement.status.name === "Iniciada") && announcement.dates[0] && (
                       <Link
                         href={`/gobernanza/convocatorias/${announcement.id}/asamblea/${announcement.dates[0].id}/participar`}
                         onClick={() => setDropdownOpen(false)}
-                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-brand hover:bg-brand/5 transition-colors"
+                        className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-bold text-[#304854] hover:bg-[#304854]/10 transition-colors"
                       >
-                        <Play className="h-3.5 w-3.5 text-brand fill-brand" />
+                        <Play className="h-3.5 w-3.5 text-[#304854] fill-[#304854]" />
                         Participar
                       </Link>
                     )}

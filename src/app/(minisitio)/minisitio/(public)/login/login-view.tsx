@@ -121,16 +121,16 @@ export function LoginView({ reason }: { reason?: string | null }) {
   }, [showForgotPassword]);
 
   return (
-    <div className="min-h-screen w-full bg-[#0e0e0a] font-sans overflow-hidden">
+    <div className="min-h-screen w-full bg-[#0a0f12] font-sans overflow-hidden">
       <div className="min-h-screen grid grid-cols-1 lg:grid-cols-[minmax(460px,40%)_1fr]">
         {/* Left: Login Column */}
-        <div className="relative flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 bg-gradient-to-br from-[#0e0e0a] via-[#242416] to-[#32321e]">
+        <div className="relative flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-16 bg-gradient-to-br from-[#0f171b] via-[#1b2b33] to-[#304854]">
           {/* Subtle ambient glows */}
           <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute -top-32 -left-32 h-[350px] w-[350px] rounded-full bg-[#5d5b35]/10 blur-[100px]" />
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-[#b58c42]/5 blur-[120px]" />
-            <div className="absolute -bottom-32 -right-32 h-[350px] w-[350px] rounded-full bg-[#5d5b35]/10 blur-[100px]" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(181,140,66,0.03),transparent_60%)]" />
+            <div className="absolute -top-32 -left-32 h-[350px] w-[350px] rounded-full bg-[#304854]/25 blur-[100px]" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-[#d0b685]/10 blur-[120px]" />
+            <div className="absolute -bottom-32 -right-32 h-[350px] w-[350px] rounded-full bg-[#304854]/25 blur-[100px]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(208,182,133,0.05),transparent_60%)]" />
           </div>
 
           <div className="relative mx-auto w-full max-w-[420px] flex flex-col justify-between min-h-[80vh]">
@@ -143,7 +143,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                 className="h-auto w-[180px] sm:w-[220px] object-contain brightness-110"
               />
               <div className="mt-4 flex items-center gap-2.5">
-                <span className="bg-[#b58c42] text-[#242416] text-[10px] font-black tracking-widest uppercase px-2.5 py-0.5 rounded-full shadow-xs">
+                <span className="bg-[#d0b685] text-black text-[10px] font-black tracking-widest uppercase px-2.5 py-0.5 rounded-full shadow-xs">
                   MINISITIO CONDÓMINOS
                 </span>
               </div>
@@ -217,7 +217,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                     placeholder="correo@ejemplo.com"
                     value={formData.username}
                     onChange={handleChange}
-                    className="w-full bg-white/[0.04] border border-white/10 focus:border-[#b58c42]/50 focus:ring-4 focus:ring-[#b58c42]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60"
+                    className="w-full bg-white/[0.04] border border-white/10 focus:border-[#d0b685]/60 focus:ring-4 focus:ring-[#d0b685]/10 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl disabled:opacity-60"
                   />
                 </div>
 
@@ -232,7 +232,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                     <button
                       type="button"
                       onClick={openForgotPassword}
-                      className="text-[11px] text-[#b58c42] hover:text-[#c99f52] font-semibold transition-standard"
+                      className="text-[11px] text-[#d0b685] hover:text-[#be9f6b] font-semibold transition-standard"
                     >
                       ¿Olvidaste tu contraseña?
                     </button>
@@ -248,7 +248,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                       placeholder="••••••••"
                       value={formData.password}
                       onChange={handleChange}
-                      className="w-full bg-white/[0.04] border border-white/10 focus:border-[#b58c42]/50 focus:ring-4 focus:ring-[#b58c42]/5 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 pl-4 pr-11 rounded-xl disabled:opacity-60"
+                      className="w-full bg-white/[0.04] border border-white/10 focus:border-[#d0b685]/60 focus:ring-4 focus:ring-[#d0b685]/10 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 pl-4 pr-11 rounded-xl disabled:opacity-60"
                     />
                     <button
                       type="button"
@@ -298,12 +298,12 @@ export function LoginView({ reason }: { reason?: string | null }) {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-4 bg-gradient-to-r from-[#b58c42] via-[#c99f52] to-[#b58c42] hover:brightness-110 text-[#242416] font-black text-[12px] tracking-[0.16em] h-12 rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2"
+                  className="w-full mt-4 bg-gradient-to-r from-[#d0b685] via-[#dfca9f] to-[#d0b685] hover:brightness-110 text-black font-black text-[12px] tracking-[0.16em] h-12 rounded-xl transition-all shadow-lg active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
                       <svg
-                        className="animate-spin h-4 w-4 text-[#242416]"
+                        className="animate-spin h-4 w-4 text-black"
                         fill="none"
                         viewBox="0 0 24 24"
                       >
@@ -344,7 +344,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
             onClick={closeForgotPassword}
           >
             <div
-              className="bg-[#181812] border border-white/15 rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden"
+              className="bg-[#121b20] border border-white/15 rounded-2xl shadow-2xl max-w-md w-full relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Header */}
@@ -370,7 +370,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                 </button>
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-xl mb-3 border border-white/15">
                   <svg
-                    className="w-6 h-6 text-[#b58c42]"
+                    className="w-6 h-6 text-[#d0b685]"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -407,7 +407,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                       placeholder="correo@ejemplo.com"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
-                      className="w-full bg-white/[0.04] border border-white/10 focus:border-[#b58c42]/50 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl"
+                      className="w-full bg-white/[0.04] border border-white/10 focus:border-[#d0b685]/60 focus:outline-none transition-standard text-white placeholder-white/20 text-[14px] font-semibold h-11 px-4 rounded-xl"
                     />
                   </div>
 
@@ -418,7 +418,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                   )}
 
                   {forgotMessage && (
-                    <div className="rounded-xl border border-brand/40 bg-brand-mint/20 px-3.5 py-3 text-[12px] font-semibold text-[#b58c42]">
+                    <div className="rounded-xl border border-brand/40 bg-brand-mint/20 px-3.5 py-3 text-[12px] font-semibold text-[#d0b685]">
                       {forgotMessage}
                     </div>
                   )}
@@ -426,7 +426,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                   <button
                     type="submit"
                     disabled={forgotLoading}
-                    className="w-full bg-gradient-to-r from-[#b58c42] to-[#c99f52] text-[#242416] font-black text-[12px] tracking-wider h-11 rounded-xl transition-all shadow-md uppercase disabled:opacity-70 flex items-center justify-center gap-2"
+                    className="w-full bg-gradient-to-r from-[#d0b685] to-[#dfca9f] text-black font-black text-[12px] tracking-wider h-11 rounded-xl transition-all shadow-md uppercase disabled:opacity-70 flex items-center justify-center gap-2"
                   >
                     {forgotLoading ? (
                       <span>ENVIANDO...</span>
@@ -439,7 +439,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
                 <div className="mt-4 text-center text-xs text-white/40">
                   <Link
                     href={msPath("/forgot-password")}
-                    className="text-[#b58c42] hover:underline"
+                    className="text-[#d0b685] hover:underline"
                   >
                     Abrir en página completa →
                   </Link>
@@ -460,7 +460,7 @@ export function LoginView({ reason }: { reason?: string | null }) {
           {/* Overlays */}
           <div className="absolute inset-0 bg-black/45" />
           <div className="absolute inset-0 bg-gradient-to-l from-black/40 via-black/25 to-black/10" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(181,140,66,0.15),transparent_55%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(208,182,133,0.15),transparent_55%)]" />
           <div className="absolute inset-y-0 left-0 w-px bg-white/10" />
 
           <div className="absolute inset-x-12 bottom-12 space-y-2">
