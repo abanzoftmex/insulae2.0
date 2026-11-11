@@ -2,7 +2,7 @@ import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.repository";
-import { GetRolesUseCase } from "@/modules/role/application/role.use-cases";
+import { GetModulesUseCase, GetRolesUseCase } from "@/modules/role/application/role.use-cases";
 import { RoleList } from "./components/role-list";
 import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
 import { redirect } from "next/navigation";
@@ -38,8 +38,12 @@ export default async function RolesPage() {
   }
 
   const repository = new PrismaRoleRepository(prisma);
-  const useCase = new GetRolesUseCase(repository);
-  const roles = await useCase.execute(condominium.id);
+  const rolesUseCase = new GetRolesUseCase(repository);
+  const modulesUseCase = new GetModulesUseCase(repository);
+  const [roles, modules] = await Promise.all([
+    rolesUseCase.execute(condominium.id),
+    modulesUseCase.execute(),
+  ]);
 
   return (
     <div className="space-y-4 animate-in fade-in duration-500">
@@ -57,6 +61,7 @@ export default async function RolesPage() {
       </div>
       <RoleList 
         roles={roles} 
+        modules={modules}
         condominiumId={condominium.id} 
         canCreate={canCreate}
         canUpdate={canUpdate}

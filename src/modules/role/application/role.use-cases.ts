@@ -38,7 +38,21 @@ export class UpdateRoleUseCase {
 
 export class DeleteRoleUseCase {
   constructor(private repository: IRoleRepository) {}
-  async execute(id: string, condominiumId: string) {
-    return this.repository.delete(id, condominiumId);
+  async execute(id: string, condominiumId: string, actingUserId?: string) {
+    return this.repository.delete(id, condominiumId, actingUserId);
+  }
+}
+
+export class GetRoleDeactivationImpactUseCase {
+  constructor(private repository: IRoleRepository) {}
+  async execute(id: string, condominiumId: string, actingUserId: string) {
+    return this.repository.getDeactivationImpact(id, condominiumId, actingUserId);
+  }
+}
+
+export class DeactivateRoleUseCase {
+  constructor(private repository: IRoleRepository) {}
+  async execute(id: string, condominiumId: string, actingUserId: string) {
+    return this.repository.deactivate(id, condominiumId, actingUserId);
   }
 }

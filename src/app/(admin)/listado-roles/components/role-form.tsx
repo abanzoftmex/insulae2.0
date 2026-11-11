@@ -1,7 +1,8 @@
 "use client";
 
 import { Role, ModuleCatalog } from "@/modules/role/domain/role.types";
-import { useState } from "react";
+import { summarizeRolePermissions } from "@/modules/role/domain/role-permissions-summary";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createRoleAction, updateRoleAction } from "../actions";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +41,22 @@ export function RoleForm({ initialData, modules, condominiumId, canUpdate = true
     });
     return state;
   });
+
+  const summary = useMemo(
+    () =>
+      summarizeRolePermissions(
+        modules.map((mod) => ({
+          moduleId: mod.id,
+          canRead: Boolean(permissions[mod.id]?.canRead),
+          canCreate: Boolean(permissions[mod.id]?.canCreate),
+          canUpdate: Boolean(permissions[mod.id]?.canUpdate),
+          canDelete: Boolean(permissions[mod.id]?.canDelete),
+        })),
+        modules,
+        true
+      ),
+    [modules, permissions]
+  );
 
   const handlePermissionChange = (moduleId: string, field: string, value: boolean) => {
     if (!canUpdate) return;
@@ -148,10 +165,18 @@ export function RoleForm({ initialData, modules, condominiumId, canUpdate = true
 
         {/* Permisos */}
         <div className="overflow-hidden rounded-card border border-line/40 bg-white shadow-sm">
-          <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
+          <div className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-wrap items-center justify-between gap-2">
             <p className="text-[10px] font-bold uppercase tracking-widest text-white">Permisos por Módulo</p>
+            <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold text-white/90">
+              <span className="rounded-full bg-white/15 px-2.5 py-1">
+                {summary.totalGranted} / {summary.maxPermissions} permisos
+              </span>
+              <span className="rounded-full bg-white/10 px-2.5 py-1">
+                {summary.modulesWithAccess} / {summary.totalModules} módulos · Leer {summary.readCount} · Crear {summary.createCount} · Editar {summary.updateCount} · Eliminar {summary.deleteCount}
+              </span>
+            </div>
           </div>
-          <div className="max-h-125 overflow-auto">
+          <div className="max-h-[420px] sm:max-h-112 overflow-auto">
             <table className="w-full text-left border-separate border-spacing-0">
               <thead className="sticky top-0 z-30">
                 <tr className="bg-canvas/95 backdrop-blur-sm border-b border-line">
@@ -216,13 +241,13 @@ export function RoleForm({ initialData, modules, condominiumId, canUpdate = true
           <div className="p-3 bg-success/5 border border-success/20 text-success rounded-md text-[11px] font-bold">Información guardada con éxito. Redirigiendo...</div>
         )}
 
-        <div className="flex justify-end gap-3 pt-1">
-          <Button variant="ghost" type="button" onClick={() => router.push("/listado-roles")} className="h-8 text-[10px] font-bold uppercase tracking-widest">
+        <div className="flex flex-wrap items-center justify-end gap-3 pt-2 pb-4 pr-16 sm:pr-44">
+          <Button variant="ghost" type="button" onClick={() => router.push("/listado-roles")} className="h-9 sm:h-8 text-[10px] font-bold uppercase tracking-widest">
             {canUpdate ? "Cancelar" : "Volver"}
           </Button>
           {canUpdate && (
-            <Button type="submit" disabled={loading || success} className="h-8 px-6 text-[10px] font-bold uppercase tracking-widest gap-2">
-              <Save className="h-3.5 w-3.5" />
+            <Button type="submit" disabled={loading || success} className="h-9 sm:h-8 px-6 text-[10px] font-bold uppercase tracking-widest gap-2">
+              <Save className="h-3.5 w-3.5" aria-hidden="true" />
               {loading ? "Guardando..." : "Guardar Rol"}
             </Button>
           )}

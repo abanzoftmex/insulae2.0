@@ -162,7 +162,7 @@ export function AppShell({
 
         <main
           className={cn(
-            "w-full flex-1 p-4 md:p-6 lg:px-10 lg:py-8",
+            "w-full flex-1 p-4 pb-24 md:p-6 md:pb-24 lg:px-10 lg:pt-8 lg:pb-28",
             !isFullWidthPage && "mx-auto max-w-[1440px]"
           )}
         >

@@ -124,6 +124,15 @@
   }
 }
 
+dialog:modal {
+  overscroll-behavior: contain;
+}
+
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+}
+
 /* Custom Utilities */
 @utility shadow-layered {
   shadow: var(--shadow-card);
