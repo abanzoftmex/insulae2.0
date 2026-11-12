@@ -202,7 +202,30 @@ export default async function DirectorioPage(props: PageProps) {
                            </div>
                            <div className="min-w-0">
                              <p className="text-base font-bold text-ink leading-tight">{person.legalNameLabel}</p>
-                             <p className="text-xs font-semibold text-ink-soft mt-0.5">{person.primaryRoleLabel}</p>
+                             <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                               {person.adminRoles.map((roleName) => (
+                                 <Badge
+                                   key={roleName}
+                                   variant="brand"
+                                   className="px-2 py-0.5 text-[9px] font-bold tracking-wider"
+                                 >
+                                   Panel: {roleName}
+                                 </Badge>
+                               ))}
+                               {person.patrimonialRolesLabel && (
+                                 <span className="text-[11px] font-semibold text-ink-soft">
+                                   Patrimonial: {person.patrimonialRolesLabel}
+                                 </span>
+                               )}
+                             </div>
+                             <p className="text-[11px] font-medium text-ink-soft/80 mt-0.5">
+                               Minisitio: {person.minisitioAccessLabel}
+                             </p>
+                             {person.initialRoleMismatchLabel && (
+                               <p className="text-[10px] font-semibold text-amber-700 mt-0.5">
+                                 {person.initialRoleMismatchLabel}
+                               </p>
+                             )}
                            </div>
                         </div>
                       </td>

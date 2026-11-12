@@ -735,12 +735,14 @@ export class PromoteFromStagingUseCase {
             data: {
               name: fixLatin1Mojibake(asString(payload.nombre)) ?? `Rol ${row.legacyId}`,
               description: fixLatin1Mojibake(asString(payload.descripcion)),
+              legacyIdGral: asInt(payload.idGral) ?? existing.legacyIdGral,
               isActive: asBoolean(payload.activo, true),
             },
           })
         : await prisma.role.create({
             data: {
               legacyId: row.legacyId,
+              legacyIdGral: asInt(payload.idGral) ?? 0,
               name: fixLatin1Mojibake(asString(payload.nombre)) ?? `Rol ${row.legacyId}`,
               description: fixLatin1Mojibake(asString(payload.descripcion)),
               isActive: asBoolean(payload.activo, true),
@@ -1731,7 +1733,7 @@ export class PromoteFromStagingUseCase {
       roleIds.length > 0
         ? prisma.role.findMany({
             where: { id: { in: roleIds } },
-            select: { id: true, name: true },
+            select: { id: true, name: true, legacyIdGral: true, isActive: true },
           })
         : Promise.resolve([]),
       privateAreaIds.length > 0
@@ -1742,7 +1744,7 @@ export class PromoteFromStagingUseCase {
         : Promise.resolve([]),
     ]);
 
-    const roleNameById = new Map(roles.map((role) => [role.id, role.name]));
+    const roleById = new Map(roles.map((role) => [role.id, role]));
     const condominiumByPrivateAreaId = new Map(
       privateAreas.map((privateArea) => [privateArea.id, privateArea.condominiumId]),
     );
@@ -1767,19 +1769,22 @@ export class PromoteFromStagingUseCase {
         continue;
       }
 
-      const userRole = await prisma.userRole.upsert({
-        where: {
-          userId_roleId: {
-            userId,
-            roleId,
-          },
-        },
-        create: {
-          userId,
-          roleId,
-        },
-        update: {},
-      });
+      const roleRecord = roleById.get(roleId);
+      if (!roleRecord) {
+        await markPromotionError(row.id, "Dependencia faltante (Role en catálogo)");
+        continue;
+      }
+
+      const startsAt = asDate(payload.created_at);
+      const endsAt = asDate(payload.deleted_at);
+      const isAssignmentActive = asBoolean(payload.activo, true) && endsAt === null;
+
+      // Clasificación explícita del rol origen (administrativo = 0, minisitio reservado = 5, patrimonial > 0).
+      const isAdminRole = roleRecord.legacyIdGral === 0;
+      const isMinisitioReservedRole = roleRecord.legacyIdGral === 5;
+      const isPatrimonialRole = roleRecord.legacyIdGral > 0 && !isMinisitioReservedRole;
+      void isAdminRole;
+      void isPatrimonialRole;
 
       if (privateAreaId) {
         const condominiumId = condominiumByPrivateAreaId.get(privateAreaId) ?? null;
@@ -1788,10 +1793,7 @@ export class PromoteFromStagingUseCase {
           continue;
         }
 
-        const roleName = roleNameById.get(roleId) ?? null;
-        const startsAt = asDate(payload.created_at);
-        const endsAt = asDate(payload.deleted_at);
-        const isActive = asBoolean(payload.activo, true);
+        const roleName = roleRecord.name;
 
         const existingAssignment = await prisma.residentAssignment.findFirst({
           where: {
@@ -1810,7 +1812,7 @@ export class PromoteFromStagingUseCase {
                 roleName,
                 startsAt,
                 endsAt,
-                isActive,
+                isActive: isAssignmentActive,
               },
             })
           : await prisma.residentAssignment.create({
@@ -1821,7 +1823,7 @@ export class PromoteFromStagingUseCase {
                 roleName,
                 startsAt,
                 endsAt,
-                isActive,
+                isActive: isAssignmentActive,
               },
             });
 
@@ -1834,13 +1836,31 @@ export class PromoteFromStagingUseCase {
         });
       }
 
-      await registerIdMap({
-        runId,
-        legacyTable: "DIRECTORIO_HAS_ASIGNACIONES",
-        legacyId: row.legacyId,
-        targetEntity: "UserRole",
-        targetId: userRole.id,
-      });
+      // UserRole no tiene bandera `isActive`: nunca promover vínculos desde filas legacy inactivas
+      // ni desde roles inactivos (evita reactivar Master u otros roles revocados con activo=0).
+      if (isAssignmentActive && roleRecord.isActive) {
+        const userRole = await prisma.userRole.upsert({
+          where: {
+            userId_roleId: {
+              userId,
+              roleId,
+            },
+          },
+          create: {
+            userId,
+            roleId,
+          },
+          update: {},
+        });
+
+        await registerIdMap({
+          runId,
+          legacyTable: "DIRECTORIO_HAS_ASIGNACIONES",
+          legacyId: row.legacyId,
+          targetEntity: "UserRole",
+          targetId: userRole.id,
+        });
+      }
 
       await markPromoted(row.id);
     }

@@ -1,4 +1,5 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { MINISITIO_ROLE } from "@/shared/application/auth/condomino-access";
 import { IRoleRepository } from "../domain/role.repository";
 import {
   Role,
@@ -13,6 +14,11 @@ import {
   type PolicyRoleRecord,
   type PolicyUserRecord,
 } from "../domain/role-deactivation.policy";
+import {
+  assertCanDeleteOrDeactivateRole,
+  assertValidRoleCreationName,
+  assertValidRoleUpdate,
+} from "../domain/role-protection";
 
 type PrismaDbClient = PrismaClient | Prisma.TransactionClient;
 
@@ -21,8 +27,11 @@ export class PrismaRoleRepository implements IRoleRepository {
 
   async findAll(condominiumId: string): Promise<Role[]> {
     return this.prisma.role.findMany({
-      where: { condominiumId, legacyIdGral: 0 },
-      orderBy: [{ isActive: "desc" }, { name: "asc" }],
+      where: {
+        condominiumId,
+        OR: [{ legacyIdGral: 0 }, { legacyIdGral: MINISITIO_ROLE.legacyIdGral }],
+      },
+      orderBy: [{ isActive: "desc" }, { legacyIdGral: "asc" }, { name: "asc" }],
       include: {
         permissions: {
           where: { isActive: true, module: { isActive: true } },
@@ -52,45 +61,63 @@ export class PrismaRoleRepository implements IRoleRepository {
   }
 
   async create(req: CreateRoleRequest): Promise<Role> {
-    const role = await this.prisma.role.create({
-      data: {
-        condominiumId: req.condominiumId,
-        name: req.name,
-        description: req.description,
-        permissions: {
-          create: req.permissions.map((p) => ({
-            moduleId: p.moduleId,
-            canCreate: p.canCreate,
-            canUpdate: p.canUpdate,
-            canRead: p.canRead,
-            canDelete: p.canDelete,
-          })),
+    return await this.prisma.$transaction(async (tx) => {
+      const existingRoles = await tx.role.findMany({
+        where: { condominiumId: req.condominiumId },
+        select: { id: true, name: true, legacyIdGral: true },
+      });
+
+      const validName = assertValidRoleCreationName(req.name, existingRoles);
+
+      const role = await tx.role.create({
+        data: {
+          condominiumId: req.condominiumId,
+          legacyIdGral: 0,
+          name: validName,
+          description: req.description?.trim() || null,
+          permissions: {
+            create: req.permissions.map((p) => ({
+              moduleId: p.moduleId,
+              canCreate: p.canCreate,
+              canUpdate: p.canUpdate,
+              canRead: p.canRead,
+              canDelete: p.canDelete,
+            })),
+          },
         },
-      },
-      include: {
-        permissions: {
-          include: { module: true },
+        include: {
+          permissions: {
+            include: { module: true },
+          },
         },
-      },
+      });
+      return role as unknown as Role;
     });
-    return role as unknown as Role;
   }
 
   async update(req: UpdateRoleRequest): Promise<Role> {
     return await this.prisma.$transaction(async (tx) => {
-      const existing = await tx.role.findUnique({
-        where: { id: req.id, condominiumId: req.condominiumId },
-        select: { isActive: true },
-      });
+      const [existing, condoRoles] = await Promise.all([
+        tx.role.findUnique({
+          where: { id: req.id, condominiumId: req.condominiumId },
+          select: { id: true, name: true, legacyIdGral: true, isActive: true },
+        }),
+        tx.role.findMany({
+          where: { condominiumId: req.condominiumId },
+          select: { id: true, name: true, legacyIdGral: true },
+        }),
+      ]);
 
-      if (!existing || !existing.isActive) {
-        throw new Error("El rol está desactivado o no existe y no puede modificarse.");
+      if (!existing) {
+        throw new Error("El rol no existe en este condominio.");
       }
+
+      const validName = assertValidRoleUpdate(existing, req.name, condoRoles);
 
       await tx.role.update({
         where: { id: req.id, condominiumId: req.condominiumId },
         data: {
-          name: req.name,
+          name: validName,
           description: req.description,
         },
       });
@@ -125,6 +152,17 @@ export class PrismaRoleRepository implements IRoleRepository {
 
   async delete(id: string, condominiumId: string, actingUserId?: string): Promise<void> {
     await this.prisma.$transaction(async (tx) => {
+      const target = await tx.role.findUnique({
+        where: { id, condominiumId },
+        select: { id: true, name: true, legacyIdGral: true, isActive: true },
+      });
+
+      if (!target || !target.isActive) {
+        throw new Error("El rol no existe o ya se encuentra inactivo.");
+      }
+
+      assertCanDeleteOrDeactivateRole(target);
+
       if (actingUserId) {
         const { roles, users } = await this.loadDeactivationPolicyInputs(
           tx,
@@ -286,6 +324,7 @@ export class PrismaRoleRepository implements IRoleRepository {
               id: true,
               name: true,
               isActive: true,
+              legacyIdGral: true,
             },
           },
         },

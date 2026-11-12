@@ -3,6 +3,7 @@ import {
   resolveUserEffectiveEmail,
   resolveUserEffectivePhone,
 } from "@/shared/utils/user-contact";
+import { isReservedSystemRole, normalizeRoleIdentityName } from "./role-protection";
 import type { AffectedRoleUser, RoleDeactivationImpact } from "./role.types";
 
 export interface PolicyRolePermission {
@@ -51,6 +52,7 @@ export interface PolicyUserRecord {
       id: string;
       name: string;
       isActive: boolean;
+      legacyIdGral?: number;
     };
   }>;
 }
@@ -156,10 +158,10 @@ export function resolveUserEffectiveActiveRoles(
     return fromUserRoles;
   }
 
-  const fallbackName = user.initialRole?.trim().toLowerCase();
-  if (fallbackName) {
+  const fallbackName = normalizeRoleIdentityName(user.initialRole);
+  if (fallbackName && fallbackName !== "master") {
     const fallbackRole = activeRolesByLowerName.get(fallbackName);
-    if (fallbackRole) {
+    if (fallbackRole && !isReservedSystemRole(fallbackRole)) {
       return [fallbackRole];
     }
   }
@@ -196,7 +198,7 @@ export function evaluateRoleDeactivationImpact(params: {
   const activeRolesByLowerName = new Map<string, PolicyRoleRecord>();
   for (const r of roles) {
     if (r.isActive) {
-      activeRolesByLowerName.set(r.name.trim().toLowerCase(), r);
+      activeRolesByLowerName.set(normalizeRoleIdentityName(r.name), r);
     }
   }
 
@@ -240,12 +242,12 @@ export function evaluateRoleDeactivationImpact(params: {
     };
   }
 
-  if (targetRole.legacyIdGral !== 0) {
+  if (isReservedSystemRole(targetRole)) {
     return {
       impact: {
         ...emptyImpactBase,
         canDeactivate: false,
-        blockReason: "Este rol reservado del sistema no puede desactivarse desde el catálogo.",
+        blockReason: "Este rol reservado del sistema está protegido y no puede desactivarse desde el catálogo.",
         assignedUsers: [],
         usersToDeactivateCount: 0,
         usersRetainedCount: 0,

@@ -16,6 +16,7 @@ export default async function DirectorioFormularioNuevoPage() {
   await requirePageAccess(MODULES.DIRECTORIO, "canCreate");
 
   const roles = await getDirectoryRolesUseCase.execute();
+  const adminRoleOptions = roles.filter((role) => role.legacyIdGral === 0);
 
   const backHref = "/directorio";
 
@@ -23,7 +24,7 @@ export default async function DirectorioFormularioNuevoPage() {
     <div className="animate-in fade-in duration-500">
       <CreateDirectoryForm 
         condominiumSlug={PROJECT_SCOPE.condominiumCode}
-        roleOptions={roles}
+        roleOptions={adminRoleOptions}
         backHref={backHref}
       />
     </div>

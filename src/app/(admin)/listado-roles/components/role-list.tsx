@@ -19,6 +19,7 @@ import type {
   RoleDeactivationImpact,
 } from "@/modules/role/domain/role.types";
 import { summarizeRolePermissions } from "@/modules/role/domain/role-permissions-summary";
+import { isReservedSystemRole } from "@/modules/role/domain/role-protection";
 import {
   deactivateRoleAction,
   deleteRoleAction,
@@ -94,7 +95,7 @@ export function RoleList({
   }, [roles, search, statusFilter]);
 
   const handleOpenDeactivateModal = (role: Role) => {
-    if (!canDeactivate || !role.isActive) return;
+    if (!canDeactivate || !role.isActive || isReservedSystemRole(role)) return;
     setTargetRole(role);
     setImpact(null);
     setModalError(null);
@@ -186,7 +187,7 @@ export function RoleList({
   };
 
   const handleDelete = (role: Role) => {
-    if (!canDelete || !role.isActive) return;
+    if (!canDelete || !role.isActive || isReservedSystemRole(role)) return;
     if (!confirm(`¿Eliminar el rol «${role.name}»?`)) return;
     startTransition(async () => {
       const res = await deleteRoleAction(role.id, condominiumId);
@@ -211,17 +212,23 @@ export function RoleList({
     {
       header: "Nombre del Rol",
       accessorKey: "name",
-      cell: (row) => (
-        <div className={row.isActive ? "flex items-center gap-2" : "flex items-center gap-2 opacity-60"}>
-          <Badge
-            variant={row.isActive ? "brand" : "outline"}
-            className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest shrink-0"
-          >
-            Rol
-          </Badge>
-          <span className="font-bold text-sm text-ink">{row.name}</span>
-        </div>
-      ),
+      cell: (row) => {
+        const isProtected = isReservedSystemRole(row);
+        return (
+          <div className={row.isActive ? "flex flex-wrap items-center gap-2" : "flex flex-wrap items-center gap-2 opacity-60"}>
+            <Badge
+              variant={isProtected ? "outline" : row.isActive ? "brand" : "outline"}
+              className={cn(
+                "rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest shrink-0",
+                isProtected && "bg-amber-50 text-amber-800 border-amber-300"
+              )}
+            >
+              {isProtected ? "Protegido" : "Rol"}
+            </Badge>
+            <span className="font-bold text-sm text-ink">{row.name}</span>
+          </div>
+        );
+      },
     },
     {
       header: "Descripción",
@@ -273,6 +280,27 @@ export function RoleList({
               >
                 Deshabilitados (0 / {summary.maxPermissions})
               </Badge>
+            </div>
+          );
+        }
+        if (isReservedSystemRole(row)) {
+          return (
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant="outline"
+                className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest bg-amber-50 text-amber-800 border-amber-300"
+              >
+                Solo Minisitio · Sin permisos de panel
+              </Badge>
+              <button
+                type="button"
+                onClick={() => setDetailRole(row)}
+                aria-label={`Ver detalle de permisos del rol ${row.name}`}
+                className="inline-flex min-h-6 items-center gap-1 rounded-full border border-line bg-canvas/60 px-2 py-0.5 text-[10px] font-semibold text-brand hover:bg-brand-mint/60 transition-colors"
+              >
+                <Eye className="h-3 w-3" aria-hidden="true" />
+                <span>Ver</span>
+              </button>
             </div>
           );
         }
@@ -347,10 +375,21 @@ export function RoleList({
       header: "Acción",
       accessorKey: "_actions",
       align: "right",
-      cell: (row) => (
+      cell: (row) => {
+        const isProtected = isReservedSystemRole(row);
+        return (
         <div className="flex items-center justify-end gap-1.5">
           {canUpdate &&
-            (row.isActive ? (
+            (isProtected ? (
+              <Link
+                href={`/listado-roles/${row.id}`}
+                title="Rol reservado del sistema (solo lectura)"
+                aria-label={`Ver rol protegido ${row.name}`}
+                className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
+              >
+                <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+              </Link>
+            ) : row.isActive ? (
               <Link
                 href={`/listado-roles/${row.id}`}
                 title="Editar rol"
@@ -373,11 +412,13 @@ export function RoleList({
             <button
               type="button"
               onClick={() => handleOpenDeactivateModal(row)}
-              disabled={!row.isActive || isPending || isDeactivating}
+              disabled={!row.isActive || isProtected || isPending || isDeactivating}
               title={
-                row.isActive
-                  ? "Bloquear / Desactivar rol"
-                  : "Este rol ya está desactivado"
+                isProtected
+                  ? "Rol reservado del sistema: no puede desactivarse"
+                  : row.isActive
+                    ? "Bloquear / Desactivar rol"
+                    : "Este rol ya está desactivado"
               }
               aria-label={`Bloquear / desactivar rol ${row.name}`}
               className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-amber-100 text-amber-800 border border-amber-200 hover:bg-amber-600 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
@@ -390,16 +431,23 @@ export function RoleList({
             <button
               type="button"
               onClick={() => handleDelete(row)}
-              disabled={!row.isActive || isPending || isDeactivating}
+              disabled={!row.isActive || isProtected || isPending || isDeactivating}
               className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              title={row.isActive ? "Eliminar rol" : "Este rol ya está inactivo"}
+              title={
+                isProtected
+                  ? "Rol reservado del sistema: no puede eliminarse"
+                  : row.isActive
+                    ? "Eliminar rol"
+                    : "Este rol ya está inactivo"
+              }
               aria-label={`Eliminar rol ${row.name}`}
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           )}
         </div>
-      ),
+        );
+      },
     },
   ];
 

@@ -107,13 +107,15 @@ export default async function DirectorioFormularioPage({ params, searchParams }:
     );
   }
 
+  const adminRoleOptions = roles.filter((role) => role.legacyIdGral === 0);
+
   return (
     <div className="animate-in fade-in duration-500">
       <DirectoryForm 
         reference={reference}
         condominiumSlug={PROJECT_SCOPE.condominiumCode}
         initialData={detail}
-        roleOptions={roles}
+        roleOptions={adminRoleOptions}
         contactOptions={availableContacts}
         backHref={backHref}
         canCreate={canCreate}

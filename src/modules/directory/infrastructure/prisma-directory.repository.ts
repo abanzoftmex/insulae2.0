@@ -2,13 +2,23 @@ import { Prisma } from "@prisma/client";
 
 import { toCanonicalAreaDisplayName } from "@/modules/private-areas";
 import { PROJECT_SCOPE } from "@/config/project-scope";
+import {
+  MINISITIO_ROLE,
+  activeRentalWhere,
+  isAdminPanelMinisitioRole,
+  minisitioOnlyRoleWhere,
+  normalizeRoleLabel,
+} from "@/shared/application/auth/condomino-access";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 
 import type {
   DirectoryContactParticipation,
+  DirectoryContactUpdatePayload,
   DirectoryFilters,
   DirectoryOverview,
   DirectoryPerson,
+  DirectoryRoleOption,
+  MinisitioAccessSummary,
   ParticipationBlock,
   ParticipationRow,
 } from "../domain/directory";
@@ -54,6 +64,107 @@ function uniqueSorted(values: string[]): string[] {
   return [...new Set(values.map((value) => value.trim()).filter((value) => value.length > 0))].sort((a, b) =>
     a.localeCompare(b, "es", { sensitivity: "base", numeric: true }),
   );
+}
+
+function isMinisitioOnlyRoleRecord(role: { legacyIdGral: number; name: string }): boolean {
+  return (
+    role.legacyIdGral === MINISITIO_ROLE.legacyIdGral ||
+    normalizeRoleLabel(role.name) === normalizeRoleLabel(MINISITIO_ROLE.name)
+  );
+}
+
+function classifyUserRolesAndMinisitioAccess(params: {
+  userType: string;
+  userRoles: Array<{ role: { id: string; name: string; legacyIdGral: number; isActive: boolean } }>;
+  activeAssignmentsCount: number;
+  activeRentalsCount: number;
+}): {
+  roles: string[];
+  adminRoles: Array<{ id: string; name: string }>;
+  patrimonialRoles: string[];
+  hasExplicitMinisitioRole: boolean;
+  minisitioAccess: MinisitioAccessSummary;
+} {
+  const activeRoleMap = new Map<string, { id: string; name: string; legacyIdGral: number }>();
+  for (const item of params.userRoles) {
+    if (!item.role.isActive) continue;
+    if (!activeRoleMap.has(item.role.id)) {
+      activeRoleMap.set(item.role.id, {
+        id: item.role.id,
+        name: item.role.name.trim(),
+        legacyIdGral: item.role.legacyIdGral,
+      });
+    }
+  }
+
+  const activeRoles = Array.from(activeRoleMap.values());
+  const roles = uniqueSorted(activeRoles.map((r) => r.name));
+
+  const adminRoles = activeRoles
+    .filter((r) => r.legacyIdGral === 0 && !isMinisitioOnlyRoleRecord(r))
+    .map((r) => ({ id: r.id, name: r.name }))
+    .sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }));
+
+  const hasExplicitMinisitioRole = activeRoles.some((r) => isMinisitioOnlyRoleRecord(r));
+
+  const patrimonialRoles = uniqueSorted(
+    activeRoles
+      .filter((r) => r.legacyIdGral !== 0 && !isMinisitioOnlyRoleRecord(r))
+      .map((r) => r.name),
+  );
+
+  const viaAdminRoleNames = uniqueSorted(
+    activeRoles
+      .filter((r) => isAdminPanelMinisitioRole(r.name, r.legacyIdGral))
+      .map((r) => r.name),
+  );
+
+  const viaLegacyRoleNames = uniqueSorted(
+    activeRoles
+      .filter(
+        (r) =>
+          !isMinisitioOnlyRoleRecord(r) &&
+          r.legacyIdGral !== 0 &&
+          normalizeRoleLabel(r.name) === "condomino",
+      )
+      .map((r) => r.name),
+  );
+
+  const ways: string[] = [];
+  if (hasExplicitMinisitioRole) {
+    ways.push("Rol explícito (Solo Minisitio)");
+  }
+  if (params.userType === "ADMIN") {
+    ways.push("Cuenta ADMIN");
+  }
+  if (viaAdminRoleNames.length > 0) {
+    ways.push(`Rol administrativo (${viaAdminRoleNames.join(", ")})`);
+  }
+  if (viaLegacyRoleNames.length > 0) {
+    ways.push(`Rol heredado (${viaLegacyRoleNames.join(", ")})`);
+  }
+  if (params.activeAssignmentsCount > 0) {
+    ways.push(`Asignación residencial (${params.activeAssignmentsCount})`);
+  }
+  if (params.activeRentalsCount > 0) {
+    ways.push(`Arrendamiento vigente (${params.activeRentalsCount})`);
+  }
+
+  return {
+    roles,
+    adminRoles,
+    patrimonialRoles,
+    hasExplicitMinisitioRole,
+    minisitioAccess: {
+      hasAccess: ways.length > 0,
+      hasExplicitRole: hasExplicitMinisitioRole,
+      viaAdminRoleNames,
+      viaLegacyRoleNames,
+      activeAssignmentsCount: params.activeAssignmentsCount,
+      activeRentalsCount: params.activeRentalsCount,
+      ways,
+    },
+  };
 }
 
 const legacyNameCollator = new Intl.Collator("es", {
@@ -588,11 +699,21 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           select: {
             role: {
               select: {
+                id: true,
                 name: true,
+                legacyIdGral: true,
                 isActive: true,
               },
             },
           },
+        },
+        rentalsAsAdministrativeContact: {
+          where: activeRentalWhere(condominium.id),
+          select: { id: true },
+        },
+        rentalsAsOperativeContact: {
+          where: activeRentalWhere(condominium.id),
+          select: { id: true },
         },
         assignments: {
           where: {
@@ -658,11 +779,16 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       .map<DirectoryPerson>((user) => {
         const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
         const displayName = displayNameFrom(user);
-        const roles = uniqueSorted(
-          user.userRoles
-            .filter((item) => item.role.isActive)
-            .map((item) => item.role.name),
-        );
+        const activeRentalIds = new Set([
+          ...user.rentalsAsAdministrativeContact.map((r) => r.id),
+          ...user.rentalsAsOperativeContact.map((r) => r.id),
+        ]);
+        const classified = classifyUserRolesAndMinisitioAccess({
+          userType: user.userType,
+          userRoles: user.userRoles,
+          activeAssignmentsCount: user.assignments.length,
+          activeRentalsCount: activeRentalIds.size,
+        });
         const assignmentRoles = uniqueSorted(
           user.assignments.map((assignment) => assignment.roleName ?? "").filter(Boolean),
         );
@@ -689,7 +815,11 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           email: (user.email && user.email.includes("@")) ? user.email : (user.personalEmail || user.businessEmail || user.email),
           phone: user.phone || user.personalPhone || user.businessPhone,
           initialRole: user.initialRole,
-          roles,
+          roles: classified.roles,
+          adminRoles: classified.adminRoles.map((r) => r.name),
+          patrimonialRoles: classified.patrimonialRoles,
+          hasExplicitMinisitioRole: classified.hasExplicitMinisitioRole,
+          minisitioAccess: classified.minisitioAccess,
           assignmentRoles,
           assignedAreas,
           assignmentCount: user.assignments.length,
@@ -853,11 +983,21 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           select: {
             role: {
               select: {
+                id: true,
                 name: true,
+                legacyIdGral: true,
                 isActive: true,
               },
             },
           },
+        },
+        rentalsAsAdministrativeContact: {
+          where: activeRentalWhere(condominium.id),
+          select: { id: true },
+        },
+        rentalsAsOperativeContact: {
+          where: activeRentalWhere(condominium.id),
+          select: { id: true },
         },
         assignments: {
           where: {
@@ -950,6 +1090,16 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
 
     const masterOrderMap = await getMasterAreaOrderMap(condominium.id);
     const activeParentIds = await getActiveParentIdsWithActiveChildren(condominium.id);
+    const activeRentalIds = new Set([
+      ...user.rentalsAsAdministrativeContact.map((r) => r.id),
+      ...user.rentalsAsOperativeContact.map((r) => r.id),
+    ]);
+    const classified = classifyUserRolesAndMinisitioAccess({
+      userType: user.userType,
+      userRoles: user.userRoles,
+      activeAssignmentsCount: user.assignments.length,
+      activeRentalsCount: activeRentalIds.size,
+    });
     const blocks = computeParticipationBlocks(
       user.assignments,
       totalM2Project,
@@ -989,11 +1139,11 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       registrationTypeCode: user.registrationTypeCode,
       registrationTypeDesc: user.registrationTypeDesc,
       idVq: user.idVq,
-      roles: uniqueSorted(
-        user.userRoles
-          .filter((item) => item.role.isActive)
-          .map((item) => item.role.name),
-      ),
+      roles: classified.roles,
+      adminRoles: classified.adminRoles,
+      patrimonialRoles: classified.patrimonialRoles,
+      hasExplicitMinisitioRole: classified.hasExplicitMinisitioRole,
+      minisitioAccess: classified.minisitioAccess,
       participationBlocks: blocks,
       linkedCommerces: user.commerces.map((c) => {
         const comm = c.commerce;
@@ -1046,16 +1196,31 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
     };
   }
 
-  async getRoles(): Promise<Array<{ id: string; name: string }>> {
+  async getRoles(): Promise<DirectoryRoleOption[]> {
+    const condominium =
+      (await prisma.condominium.findFirst({
+        where: { isActive: true, slug: PROJECT_SCOPE.condominiumCode },
+        select: { id: true },
+      })) ??
+      (await prisma.condominium.findFirst({
+        where: { isActive: true },
+        orderBy: { updatedAt: "desc" },
+        select: { id: true },
+      }));
+
+    if (!condominium) {
+      return [];
+    }
+
     const roles = await prisma.role.findMany({
-      where: { isActive: true },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
+      where: { condominiumId: condominium.id, isActive: true },
+      select: { id: true, name: true, legacyIdGral: true },
+      orderBy: [{ legacyIdGral: "asc" }, { name: "asc" }],
     });
     return roles;
   }
 
-  async updateContact(id: string, data: Partial<DirectoryContactParticipation>): Promise<{ idVq: string | null }> {
+  async updateContact(id: string, data: DirectoryContactUpdatePayload): Promise<{ idVq: string | null }> {
     let decoded = id.trim();
     try {
       decoded = decodeURIComponent(decoded);
@@ -1076,47 +1241,49 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         },
       });
 
-      let calculatedIdVq: string | null = currentUser?.idVq || null;
+      if (!currentUser) {
+        throw new Error("Contacto no encontrado.");
+      }
 
-      if (currentUser) {
-        if (!calculatedIdVq || !calculatedIdVq.startsWith("#")) {
-          const siblings = await tx.user.findMany({
-            where: {
-              condominiumId: currentUser.condominiumId,
-              isActive: true,
-              id: { not: id },
-              idVq: { startsWith: "#" },
-            },
-            select: { idVq: true },
-          });
+      let calculatedIdVq: string | null = currentUser.idVq || null;
 
-          const usedNumbers = new Set(
-            siblings
-              .map((s) => {
-                if (!s.idVq) return null;
-                const numStr = s.idVq.replace("#", "");
-                const val = parseInt(numStr, 10);
-                return isNaN(val) ? null : val;
-              })
-              .filter((val): val is number => val !== null)
-          );
+      if (!calculatedIdVq || !calculatedIdVq.startsWith("#")) {
+        const siblings = await tx.user.findMany({
+          where: {
+            condominiumId: currentUser.condominiumId,
+            isActive: true,
+            id: { not: targetId },
+            idVq: { startsWith: "#" },
+          },
+          select: { idVq: true },
+        });
 
-          let nextNum = 1;
-          while (usedNumbers.has(nextNum)) {
-            nextNum++;
-          }
+        const usedNumbers = new Set(
+          siblings
+            .map((s) => {
+              if (!s.idVq) return null;
+              const numStr = s.idVq.replace("#", "");
+              const val = parseInt(numStr, 10);
+              return isNaN(val) ? null : val;
+            })
+            .filter((val): val is number => val !== null)
+        );
 
-          calculatedIdVq = `#${String(nextNum).padStart(3, "0")}`;
+        let nextNum = 1;
+        while (usedNumbers.has(nextNum)) {
+          nextNum++;
         }
+
+        calculatedIdVq = `#${String(nextNum).padStart(3, "0")}`;
       }
 
       finalIdVq = calculatedIdVq;
 
-      const finalApol = (data.apolfap !== undefined ? data.apolfap : currentUser?.apolfap) || "";
-      const finalRegCode = (data.registrationTypeCode !== undefined ? data.registrationTypeCode : currentUser?.registrationTypeCode) || "";
+      const finalApol = (data.apolfap !== undefined ? data.apolfap : currentUser.apolfap) || "";
+      const finalRegCode = (data.registrationTypeCode !== undefined ? data.registrationTypeCode : currentUser.registrationTypeCode) || "";
       const finalIdVqVal = calculatedIdVq || "";
       
-      let computedEmail = currentUser?.email || null;
+      let computedEmail = currentUser.email || null;
       if (finalApol && finalIdVqVal && finalRegCode) {
         computedEmail = `ID-${finalApol.trim()}${finalIdVqVal.trim()}-${finalRegCode.trim()}`;
       }
@@ -1154,7 +1321,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       });
 
       // Update nested child users' idVq and email if parent's apolfap / idVq changed
-      if (currentUser && (data.apolfap !== undefined || calculatedIdVq !== currentUser.idVq)) {
+      if (data.apolfap !== undefined || calculatedIdVq !== currentUser.idVq) {
         const children = await tx.user.findMany({
           where: { parentId: targetId, isActive: true },
           select: { id: true, idVq: true, registrationTypeCode: true, email: true },
@@ -1189,29 +1356,96 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         }
       }
 
-      if (data.initialRole !== undefined) {
-        // Clear all existing UserRole links for this user
-        await tx.userRole.deleteMany({
-          where: { userId: id },
-        });
+      // Sincronización selectiva de roles: nunca borrar roles patrimoniales ni otros UserRole no solicitados.
+      if (data.roleSync?.adminRoleIds !== undefined) {
+        const requestedAdminIds = [...new Set(data.roleSync.adminRoleIds.map((r) => r.trim()).filter(Boolean))];
 
-        if (data.initialRole && data.initialRole.trim() !== "") {
-          const role = await tx.role.findFirst({
+        if (requestedAdminIds.length > 0) {
+          const validAdminRoles = await tx.role.findMany({
             where: {
+              id: { in: requestedAdminIds },
               condominiumId: updatedUser.condominiumId,
-              name: data.initialRole,
               isActive: true,
+              legacyIdGral: 0,
+              NOT: { name: { equals: "Solo Minisitio", mode: "insensitive" } },
             },
+            select: { id: true },
           });
 
-          if (role) {
-            await tx.userRole.create({
-              data: {
-                userId: id,
-                roleId: role.id,
-              },
-            });
+          if (validAdminRoles.length !== requestedAdminIds.length) {
+            throw new Error("Uno o más roles administrativos seleccionados no son válidos o corresponden a un rol reservado.");
           }
+        }
+
+        const existingAdminLinks = await tx.userRole.findMany({
+          where: {
+            userId: targetId,
+            role: {
+              condominiumId: updatedUser.condominiumId,
+              legacyIdGral: 0,
+              NOT: { name: { equals: "Solo Minisitio", mode: "insensitive" } },
+            },
+          },
+          select: { roleId: true },
+        });
+
+        const requestedSet = new Set(requestedAdminIds);
+        const existingSet = new Set(existingAdminLinks.map((l) => l.roleId));
+
+        const toRemove = existingAdminLinks
+          .map((l) => l.roleId)
+          .filter((roleId) => !requestedSet.has(roleId));
+
+        if (toRemove.length > 0) {
+          await tx.userRole.deleteMany({
+            where: {
+              userId: targetId,
+              roleId: { in: toRemove },
+            },
+          });
+        }
+
+        const toAdd = requestedAdminIds.filter((roleId) => !existingSet.has(roleId));
+        if (toAdd.length > 0) {
+          await tx.userRole.createMany({
+            data: toAdd.map((roleId) => ({ userId: targetId, roleId })),
+            skipDuplicates: true,
+          });
+        }
+      }
+
+      if (data.roleSync?.grantExplicitMinisitio !== undefined) {
+        if (data.roleSync.grantExplicitMinisitio) {
+          const soloMinisitioRole = await tx.role.findFirst({
+            where: minisitioOnlyRoleWhere(updatedUser.condominiumId),
+            orderBy: [{ legacyIdGral: "desc" }, { createdAt: "asc" }],
+            select: { id: true },
+          });
+
+          if (!soloMinisitioRole) {
+            throw new Error("No se encontró el rol reservado «Solo Minisitio» activo en el condominio.");
+          }
+
+          await tx.userRole.upsert({
+            where: {
+              userId_roleId: {
+                userId: targetId,
+                roleId: soloMinisitioRole.id,
+              },
+            },
+            create: {
+              userId: targetId,
+              roleId: soloMinisitioRole.id,
+            },
+            update: {},
+          });
+        } else {
+          await tx.userRole.deleteMany({
+            where: {
+              userId: targetId,
+              role: minisitioOnlyRoleWhere(updatedUser.condominiumId),
+            },
+          });
         }
       }
     });

@@ -7,11 +7,12 @@ import { Badge } from "@/components/ui/badge";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
 import { uploadCondominiumAsset } from "@/shared/infrastructure/storage/storage-client";
+import type { DirectoryRoleOption } from "@/modules/directory/domain/directory";
 import { createFullDirectoryContactAction } from "./actions";
 
 interface CreateDirectoryFormProps {
   condominiumSlug: string;
-  roleOptions: Array<{ id: string; name: string }>;
+  roleOptions: DirectoryRoleOption[];
   backHref: string;
 }
 
@@ -43,7 +44,8 @@ export function CreateDirectoryForm({
     businessEmail: "",
     taxAddress: "",
     taxStatusPdfUrl: "",
-    initialRole: "",
+    adminRoleId: "",
+    grantExplicitMinisitio: true,
     password: "",
     confirmPassword: "",
   });
@@ -217,18 +219,34 @@ export function CreateDirectoryForm({
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className={labelCls}>Rol inicial</label>
-                <select
-                  value={formData.initialRole}
-                  onChange={(e) => handleChange("initialRole", e.target.value)}
-                  className={fieldCls}
-                >
-                  <option value="">Seleccionar rol...</option>
-                  {roleOptions.map(role => (
-                    <option key={role.id} value={role.name}>{role.name}</option>
-                  ))}
-                </select>
+              <div className="space-y-2 sm:col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+                  <div className="space-y-1.5">
+                    <label className={labelCls}>Rol administrativo del panel (opcional)</label>
+                    <select
+                      value={formData.adminRoleId}
+                      onChange={(e) => handleChange("adminRoleId", e.target.value)}
+                      className={fieldCls}
+                    >
+                      <option value="">Sin rol administrativo...</option>
+                      {roleOptions.map(role => (
+                        <option key={role.id} value={role.id}>{role.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <label className="flex items-start gap-2.5 rounded-sm border border-line bg-canvas/25 px-3 py-2 text-xs cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.grantExplicitMinisitio}
+                      onChange={(e) => handleChange("grantExplicitMinisitio", e.target.checked)}
+                      className="mt-0.5 h-4 w-4 rounded border-line text-brand focus:ring-brand"
+                    />
+                    <div>
+                      <span className="font-bold text-ink block">Acceso explícito «Solo Minisitio»</span>
+                      <span className="text-[11px] text-ink-soft">Habilita el portal sin permisos administrativos.</span>
+                    </div>
+                  </label>
+                </div>
               </div>
 
               <div className="space-y-1.5">

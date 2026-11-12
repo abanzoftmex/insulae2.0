@@ -12,8 +12,21 @@ import { cookies } from "next/headers";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { ADMIN_SESSION_COOKIE, verifyAdminSession, type AdminSession } from "./admin-session";
 import { MODULES, type ModuleName } from "./modules";
+import { normalizeRoleLabel } from "./condomino-access";
 export * from "./permission-utils";
 import type { PermissionAction, ModulePermissions, UserPermissions } from "./permission-utils";
+
+const FORBIDDEN_AUTO_SYNC_ROLE_NAMES = new Set([
+  "master",
+  "solo minisitio",
+  "condomino",
+  "dominio pleno",
+  "dueno legal",
+  "dueno moral",
+  "arrendatario",
+  "ficha de contacto",
+  "administrador de subcondominio",
+]);
 
 /** Lee y verifica la cookie de sesión del panel. Devuelve null si no hay sesión válida. */
 export const readAdminSession = cache(async (): Promise<AdminSession | null> => {
@@ -27,8 +40,8 @@ export const readAdminSession = cache(async (): Promise<AdminSession | null> => 
 
 /**
  * Calcula los permisos efectivos de un usuario: unión de los permisos de todos sus
- * roles activos. Un usuario inactivo no tiene permisos. `userType = ADMIN` (la cuenta
- * `admin` del sistema) recibe todos los módulos.
+ * roles administrativos activos (`legacyIdGral === 0`). Un usuario inactivo no tiene
+ * permisos. `userType = ADMIN` (la cuenta `admin` del sistema) recibe todos los módulos.
  */
 export async function getPermissionsForUser(userId: string): Promise<UserPermissions> {
   const user = await prisma.user.findUnique({
@@ -38,6 +51,9 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
       userType: true,
       condominiumId: true,
       initialRole: true,
+      _count: {
+        select: { userRoles: true },
+      },
       userRoles: {
         where: { role: { isActive: true } },
         select: {
@@ -45,6 +61,7 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
             select: {
               id: true,
               name: true,
+              legacyIdGral: true,
               permissions: {
                 where: { isActive: true, module: { isActive: true } },
                 select: {
@@ -64,27 +81,46 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
 
   if (!user || !user.isActive) return {};
 
-  const isMasterUser =
-    user.userRoles.some((ur) => ur.role.name?.trim().toLowerCase() === "master") ||
-    user.initialRole?.trim().toLowerCase() === "master";
-
   if (user.userType === "ADMIN") {
     return await getFullPermissions();
   }
 
-  let roles = user.userRoles.map((ur) => ur.role);
+  // Solo roles administrativos reales (`legacyIdGral === 0`), nunca roles reservados/patrimoniales ni `initialRole`.
+  let adminRoles = user.userRoles
+    .map((ur) => ur.role)
+    .filter((role) => role.legacyIdGral === 0 && normalizeRoleLabel(role.name) !== "solo minisitio");
 
-  // Fallback auto-sanación: si el usuario no tiene UserRole pero tiene initialRole
-  if (roles.length === 0 && user.initialRole && user.initialRole.trim() !== "") {
+  // Auto-sanación acotada: únicamente cuando el usuario no tiene ningún vínculo en UserRole
+  // y su initialRole apunta a un rol administrativo ordinario explícito (nunca Master ni roles reservados/patrimoniales).
+  const initialRoleTrimmed = user.initialRole?.trim() ?? "";
+  const normalizedInitialRole = normalizeRoleLabel(initialRoleTrimmed);
+  if (
+    user._count.userRoles === 0 &&
+    initialRoleTrimmed !== "" &&
+    !FORBIDDEN_AUTO_SYNC_ROLE_NAMES.has(normalizedInitialRole)
+  ) {
     const fallbackRole = await prisma.role.findFirst({
       where: {
         condominiumId: user.condominiumId,
-        name: { equals: user.initialRole.trim(), mode: "insensitive" },
+        name: { equals: initialRoleTrimmed, mode: "insensitive" },
         isActive: true,
+        legacyIdGral: 0,
+        NOT: [
+          { name: { equals: "Master", mode: "insensitive" } },
+          { name: { equals: "Solo Minisitio", mode: "insensitive" } },
+        ],
+        permissions: {
+          some: {
+            isActive: true,
+            canRead: true,
+            module: { isActive: true },
+          },
+        },
       },
       select: {
         id: true,
         name: true,
+        legacyIdGral: true,
         permissions: {
           where: { isActive: true, module: { isActive: true } },
           select: {
@@ -99,8 +135,8 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
     });
 
     if (fallbackRole) {
-      roles = [fallbackRole];
-      // Persistir el vínculo en la base de datos de forma asíncrona
+      adminRoles = [fallbackRole];
+      // Persistir el vínculo administrativo validado en la base de datos de forma asíncrona
       prisma.userRole
         .upsert({
           where: { userId_roleId: { userId, roleId: fallbackRole.id } },
@@ -111,8 +147,10 @@ export async function getPermissionsForUser(userId: string): Promise<UserPermiss
     }
   }
 
+  const isMasterUser = adminRoles.some((role) => normalizeRoleLabel(role.name) === "master");
+
   const permissionsMap: UserPermissions = {};
-  for (const role of roles) {
+  for (const role of adminRoles) {
     for (const perm of role.permissions) {
       const modName = perm.module.name;
       const current = (permissionsMap[modName] ??= {

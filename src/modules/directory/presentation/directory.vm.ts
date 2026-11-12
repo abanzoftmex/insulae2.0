@@ -7,6 +7,12 @@ export interface DirectoryPersonVM {
   commerceLabel: string;
   legalNameLabel: string;
   primaryRoleLabel: string;
+  adminRoles: string[];
+  patrimonialRolesLabel: string;
+  minisitioAccessLabel: string;
+  hasMinisitioAccess: boolean;
+  hasExplicitMinisitioRole: boolean;
+  initialRoleMismatchLabel: string | null;
   requiresInvoiceLabel: string;
   initials: string;
   userTypeLabel: string;
@@ -68,9 +74,50 @@ function joinOrFallback(values: string[], fallback: string): string {
   return values.length > 0 ? values.join(" • ") : fallback;
 }
 
+function uniqueSortedLabels(values: string[]): string[] {
+  return [...new Set(values.map((v) => v.trim()).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b, "es", { sensitivity: "base", numeric: true }),
+  );
+}
+
+function normalizeComparableLabel(value: string | null | undefined): string {
+  return (value ?? "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
+  const patrimonialCombined = uniqueSortedLabels([
+    ...person.patrimonialRoles,
+    ...person.assignmentRoles,
+  ]);
+
   const primaryRole =
-    person.initialRole || person.roles[0] || person.assignmentRoles[0] || "Sin rol";
+    person.adminRoles.length > 0
+      ? person.adminRoles.join(" · ")
+      : patrimonialCombined.length > 0
+        ? patrimonialCombined.join(" · ")
+        : person.hasExplicitMinisitioRole
+          ? "Solo Minisitio"
+          : person.minisitioAccess.hasAccess
+            ? "Acceso automático al Minisitio"
+            : "Sin rol";
+
+  const minisitioAccessLabel =
+    person.minisitioAccess.ways.length > 0
+      ? person.minisitioAccess.ways.join(" + ")
+      : "Sin acceso al Minisitio";
+
+  const normalizedInitial = normalizeComparableLabel(person.initialRole);
+  const initialMatchesAdmin =
+    normalizedInitial.length > 0 &&
+    person.adminRoles.some((r) => normalizeComparableLabel(r) === normalizedInitial);
+  const initialRoleMismatchLabel =
+    person.adminRoles.length > 0 && normalizedInitial.length > 0 && !initialMatchesAdmin
+      ? `Rol inicial histórico: ${person.initialRole}`
+      : null;
 
   return {
     id: person.id,
@@ -79,6 +126,12 @@ function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
     commerceLabel: person.commerceName ?? "-",
     legalNameLabel: person.legalName,
     primaryRoleLabel: primaryRole,
+    adminRoles: person.adminRoles,
+    patrimonialRolesLabel: patrimonialCombined.join(" · "),
+    minisitioAccessLabel,
+    hasMinisitioAccess: person.minisitioAccess.hasAccess,
+    hasExplicitMinisitioRole: person.hasExplicitMinisitioRole,
+    initialRoleMismatchLabel,
     requiresInvoiceLabel: person.requiresInvoice === null ? "N/D" : person.requiresInvoice ? "Si" : "No",
     initials: initialsFrom(person.displayName),
     userTypeLabel: toUserTypeLabel(person.userType),

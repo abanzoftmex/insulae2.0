@@ -16,9 +16,10 @@ interface Props {
   modules: ModuleCatalog[];
   condominiumId: string;
   canUpdate?: boolean;
+  isProtectedRole?: boolean;
 }
 
-export function RoleForm({ initialData, modules, condominiumId, canUpdate = true }: Props) {
+export function RoleForm({ initialData, modules, condominiumId, canUpdate = true, isProtectedRole = false }: Props) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +120,11 @@ export function RoleForm({ initialData, modules, condominiumId, canUpdate = true
               <h1 className="text-3xl font-bold text-brand tracking-tighter uppercase">
                 {initialData ? (canUpdate ? "Editar Rol" : "Detalles del Rol") : "Nuevo Rol"}
               </h1>
-              {!canUpdate && (
+              {isProtectedRole ? (
+                <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-amber-50 text-amber-800 border-amber-300">
+                  Rol Protegido · Solo Minisitio
+                </Badge>
+              ) : !canUpdate && (
                 <Badge variant="outline" className="rounded-full px-3 py-1 text-[10px] font-bold tracking-widest bg-ink-soft/10 text-ink-soft border-line">
                   Modo Solo Lectura
                 </Badge>
@@ -129,13 +134,24 @@ export function RoleForm({ initialData, modules, condominiumId, canUpdate = true
               Control de Acceso
             </Badge>
             <p className="text-ink-soft/80 text-[11px] font-bold uppercase tracking-tight">
-              {initialData 
-                ? (canUpdate ? "Modifica nombre, descripción y permisos del rol" : "Visualización de permisos del rol") 
-                : "Define nombre y permisos para el nuevo rol"}
+              {isProtectedRole
+                ? "Rol reservado del sistema. Es de solo lectura y no puede renombrarse ni recibir permisos administrativos."
+                : initialData
+                  ? (canUpdate ? "Modifica nombre, descripción y permisos del rol" : "Visualización de permisos del rol")
+                  : "Define nombre y permisos para el nuevo rol"}
             </p>
           </div>
         </div>
       </div>
+
+      {isProtectedRole && (
+        <div className="rounded-card border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">
+          <p className="font-bold">Rol protegido por seguridad del sistema</p>
+          <p className="text-[11px] mt-0.5">
+            Los roles reservados (como «Solo Minisitio» o roles patrimoniales con legacyIdGral distinto de 0) no pueden renombrarse, desactivarse, eliminarse ni recibir permisos sobre módulos del panel administrativo.
+          </p>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
 

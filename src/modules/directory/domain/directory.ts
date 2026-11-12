@@ -13,6 +13,29 @@ export interface DirectoryPagination {
   hasNext: boolean;
 }
 
+export interface DirectoryRoleOption {
+  id: string;
+  name: string;
+  legacyIdGral: number;
+}
+
+export interface MinisitioAccessSummary {
+  hasAccess: boolean;
+  hasExplicitRole: boolean;
+  viaAdminRoleNames: string[];
+  viaLegacyRoleNames: string[];
+  activeAssignmentsCount: number;
+  activeRentalsCount: number;
+  ways: string[];
+}
+
+export interface DirectoryContactRoleUpdate {
+  /** Sincroniza únicamente los UserRole administrativos (`legacyIdGral === 0`). */
+  adminRoleIds?: string[];
+  /** Vincula o desvincula únicamente el rol explícito "Solo Minisitio" (`legacyIdGral === 5`). */
+  grantExplicitMinisitio?: boolean;
+}
+
 export interface DirectoryPerson {
   id: string;
   displayName: string;
@@ -24,6 +47,10 @@ export interface DirectoryPerson {
   phone: string | null;
   initialRole: string | null;
   roles: string[];
+  adminRoles: string[];
+  patrimonialRoles: string[];
+  hasExplicitMinisitioRole: boolean;
+  minisitioAccess: MinisitioAccessSummary;
   assignmentRoles: string[];
   assignedAreas: string[];
   assignmentCount: number;
@@ -111,6 +138,10 @@ export interface DirectoryContactParticipation {
   taxStatusPdfUrl: string | null;
   initialRole: string | null;
   roles: string[];
+  adminRoles: Array<{ id: string; name: string }>;
+  patrimonialRoles: string[];
+  hasExplicitMinisitioRole: boolean;
+  minisitioAccess: MinisitioAccessSummary;
   participationBlocks: ParticipationBlock[];
   linkedCommerces: LinkedCommerce[];
   assignments: DirectoryContactAssignment[];
@@ -123,6 +154,10 @@ export interface DirectoryContactParticipation {
   idVq: string | null;
   children: NestedUser[];
 }
+
+export type DirectoryContactUpdatePayload = Partial<DirectoryContactParticipation> & {
+  roleSync?: DirectoryContactRoleUpdate;
+};
 
 export interface DirectoryOverview {
   condominiumId: string;

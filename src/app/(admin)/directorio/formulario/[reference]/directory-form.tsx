@@ -36,13 +36,17 @@ import {
   unlinkCommerceFromPersonAction,
   saveCommerceForPersonAction,
 } from "./actions";
-import type { DirectoryContactParticipation, LinkedCommerce } from "@/modules/directory/domain/directory";
+import type {
+  DirectoryContactParticipation,
+  DirectoryRoleOption,
+  LinkedCommerce,
+} from "@/modules/directory/domain/directory";
 
 interface DirectoryFormProps {
   reference: string;
   condominiumSlug: string;
   initialData: DirectoryContactParticipation;
-  roleOptions: Array<{ id: string; name: string }>;
+  roleOptions: DirectoryRoleOption[];
   backHref: string;
   contactOptions?: Array<{ id: string; name: string }>;
   canCreate?: boolean;
@@ -234,7 +238,6 @@ export function DirectoryForm({
     businessEmail: initialData.businessEmail || "",
     taxAddress: initialData.taxAddress || "",
     taxStatusPdfUrl: initialData.taxStatusPdfUrl || "",
-    initialRole: initialData.initialRole || "",
     birthDate: initialData.birthDate || "",
     gender: initialData.gender || "",
     registrationTypeCode: initialData.registrationTypeCode || "8-01",
@@ -242,6 +245,18 @@ export function DirectoryForm({
     idVq: initialData.idVq || "",
     apolfap: initialData.apolfap || (uniqueAssignments.length > 0 ? uniqueAssignments[0].privateAreaName : ""),
   });
+
+  const [selectedAdminRoleIds, setSelectedAdminRoleIds] = useState<string[]>(() =>
+    initialData.adminRoles.map((r) => r.id),
+  );
+  const [grantExplicitMinisitio, setGrantExplicitMinisitio] = useState<boolean>(
+    initialData.hasExplicitMinisitioRole,
+  );
+
+  useEffect(() => {
+    setSelectedAdminRoleIds(initialData.adminRoles.map((r) => r.id));
+    setGrantExplicitMinisitio(initialData.hasExplicitMinisitioRole);
+  }, [initialData.adminRoles, initialData.hasExplicitMinisitioRole]);
 
   useEffect(() => {
     getRegistrationTypesAction(initialData.condominiumId).then((res) => {
@@ -306,10 +321,25 @@ export function DirectoryForm({
   const handleSave = () => {
     if (!canUpdate) return;
     setMessage(null);
+    const initialAdminSet = new Set(initialData.adminRoles.map((r) => r.id));
+    const currentAdminSet = new Set(selectedAdminRoleIds);
+    const adminChanged =
+      initialAdminSet.size !== currentAdminSet.size ||
+      [...initialAdminSet].some((id) => !currentAdminSet.has(id));
+    const minisitioChanged = grantExplicitMinisitio !== initialData.hasExplicitMinisitioRole;
+
     startTransition(async () => {
       const result = await saveDirectoryContactAction(reference, {
         ...formData,
         lastName: `${formData.lastNamePaterno} ${formData.lastNameMaterno}`.trim(),
+        ...(adminChanged || minisitioChanged
+          ? {
+              roleSync: {
+                ...(adminChanged ? { adminRoleIds: selectedAdminRoleIds } : {}),
+                ...(minisitioChanged ? { grantExplicitMinisitio } : {}),
+              },
+            }
+          : {}),
       } as any);
 
       if (result.ok) {
@@ -546,19 +576,150 @@ export function DirectoryForm({
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <label className={labelCls}>Rol inicial</label>
-                    <select
-                      value={formData.initialRole}
-                      disabled={!canUpdate}
-                      onChange={(e) => handleChange("initialRole", e.target.value)}
-                      className={fieldCls}
-                    >
-                      <option value="">Seleccionar rol...</option>
-                      {roleOptions.map(role => (
-                        <option key={role.id} value={role.name}>{role.name}</option>
-                      ))}
-                    </select>
+                  <div className="space-y-4 sm:col-span-2 rounded-lg border border-line/70 bg-canvas/25 p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <label className={labelCls}>Roles administrativos del panel (legacyIdGral = 0)</label>
+                          <span className="text-[10px] font-semibold text-ink-soft">
+                            {selectedAdminRoleIds.length} asignado{selectedAdminRoleIds.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {roleOptions.length === 0 ? (
+                            <span className="text-xs text-ink-soft">Sin roles administrativos activos.</span>
+                          ) : (
+                            roleOptions.map((role) => {
+                              const checked = selectedAdminRoleIds.includes(role.id);
+                              return (
+                                <label
+                                  key={role.id}
+                                  className={cn(
+                                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors",
+                                    checked
+                                      ? "border-brand bg-brand text-white"
+                                      : "border-line bg-white text-ink-soft hover:border-brand/50",
+                                    !canUpdate && "opacity-75 cursor-not-allowed",
+                                    canUpdate && "cursor-pointer",
+                                  )}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    className="sr-only"
+                                    disabled={!canUpdate}
+                                    checked={checked}
+                                    onChange={(e) => {
+                                      if (!canUpdate) return;
+                                      setSelectedAdminRoleIds((prev) =>
+                                        e.target.checked
+                                          ? [...prev, role.id]
+                                          : prev.filter((id) => id !== role.id),
+                                      );
+                                    }}
+                                  />
+                                  <span>{role.name}</span>
+                                </label>
+                              );
+                            })
+                          )}
+                        </div>
+                        <p className="text-[11px] text-ink-soft">
+                          Solo otorga módulos del panel administrativo. No sobrescribe relaciones patrimoniales.
+                        </p>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className={labelCls}>Acceso al Portal de Condóminos (Minisitio)</label>
+                        <label
+                          className={cn(
+                            "flex items-start gap-2.5 rounded-md border p-2.5 text-xs transition-colors",
+                            grantExplicitMinisitio
+                              ? "border-brand/40 bg-brand-mint/15 text-ink"
+                              : "border-line bg-white text-ink-soft",
+                            canUpdate ? "cursor-pointer" : "cursor-not-allowed opacity-75",
+                          )}
+                        >
+                          <input
+                            type="checkbox"
+                            disabled={!canUpdate}
+                            checked={grantExplicitMinisitio}
+                            onChange={(e) => canUpdate && setGrantExplicitMinisitio(e.target.checked)}
+                            className="mt-0.5 h-4 w-4 rounded border-line text-brand focus:ring-brand"
+                          />
+                          <div>
+                            <span className="font-bold block">Acceso explícito «Solo Minisitio»</span>
+                            <span className="text-[11px] text-ink-soft">
+                              Vínculo reservado del portal de condóminos (sin permisos de panel).
+                            </span>
+                          </div>
+                        </label>
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          {initialData.minisitioAccess.viaAdminRoleNames.length > 0 && (
+                            <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-800 border-blue-200">
+                              Automático por rol admin: {initialData.minisitioAccess.viaAdminRoleNames.join(", ")}
+                            </Badge>
+                          )}
+                          {initialData.minisitioAccess.activeAssignmentsCount > 0 && (
+                            <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-200">
+                              Automático por asignación residencial ({initialData.minisitioAccess.activeAssignmentsCount})
+                            </Badge>
+                          )}
+                          {initialData.minisitioAccess.activeRentalsCount > 0 && (
+                            <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-200">
+                              Automático por arrendamiento vigente ({initialData.minisitioAccess.activeRentalsCount})
+                            </Badge>
+                          )}
+                          {!grantExplicitMinisitio &&
+                            initialData.minisitioAccess.viaAdminRoleNames.length === 0 &&
+                            initialData.minisitioAccess.viaLegacyRoleNames.length === 0 &&
+                            initialData.minisitioAccess.activeAssignmentsCount === 0 &&
+                            initialData.minisitioAccess.activeRentalsCount === 0 && (
+                              <Badge variant="outline" className="text-[10px] text-ink-soft">
+                                Sin acceso activo al Minisitio
+                              </Badge>
+                            )}
+                        </div>
+                        {!grantExplicitMinisitio &&
+                          (initialData.minisitioAccess.viaAdminRoleNames.length > 0 ||
+                            initialData.minisitioAccess.viaLegacyRoleNames.length > 0 ||
+                            initialData.minisitioAccess.activeAssignmentsCount > 0 ||
+                            initialData.minisitioAccess.activeRentalsCount > 0) && (
+                            <p className="text-[11px] font-medium text-amber-700">
+                              Aunque se desactive «Solo Minisitio», conserva acceso automático al portal por sus relaciones vigentes o rol administrativo.
+                            </p>
+                          )}
+                      </div>
+                    </div>
+
+                    <div className="border-t border-line/60 pt-3 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className={cn(labelCls, "mr-1")}>Roles patrimoniales (solo lectura):</span>
+                        {(() => {
+                          const patrimonialLabels = Array.from(
+                            new Set([
+                              ...initialData.patrimonialRoles,
+                              ...initialData.assignments
+                                .map((a) => a.roleName)
+                                .filter((name) => name && name !== "Sin rol"),
+                            ]),
+                          );
+                          return patrimonialLabels.length > 0 ? (
+                            patrimonialLabels.map((name) => (
+                              <Badge key={name} variant="outline" className="text-[10px] bg-white text-ink">
+                                {name}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-ink-soft">Sin roles patrimoniales registrados</span>
+                          );
+                        })()}
+                      </div>
+                      {initialData.initialRole && (
+                        <span className="text-ink-soft">
+                          Rol inicial histórico: <strong>{initialData.initialRole}</strong>
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-1.5">

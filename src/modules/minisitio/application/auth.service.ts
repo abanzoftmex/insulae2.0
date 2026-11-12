@@ -11,6 +11,9 @@ import crypto from "crypto";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import {
   MINISITIO_ACCESS_DENIED_MESSAGE,
+  activeRentalWhere,
+  activeResidentAssignmentWhere,
+  minisitioEligibleUserWhere,
   minisitioOnlyRoleWhere,
   minisitioRoleWhere,
 } from "@/shared/application/auth/condomino-access";
@@ -35,6 +38,15 @@ function hashMD5(t: string) {
 }
 
 type AuthFailure = { ok: false; message: string };
+
+async function countActiveRentals(condominiumId: string, userId: string): Promise<number> {
+  return prisma.rental.count({
+    where: {
+      ...activeRentalWhere(condominiumId),
+      OR: [{ administrativeContactUserId: userId }, { operativeContactUserId: userId }],
+    },
+  });
+}
 
 async function countRentals(condominiumId: string, userId: string): Promise<number> {
   return prisma.rental.count({
@@ -105,7 +117,7 @@ export async function authenticateCondomino(
       personalEmail: true,
       businessEmail: true,
       userType: true,
-      assignments: { where: { isActive: true }, select: { id: true } },
+      assignments: { where: activeResidentAssignmentWhere(condo.id), select: { id: true } },
       // Solo el rol del minisitio: si viene vacío, el usuario no tiene ese rol.
       userRoles: { where: { role: minisitioRoleWhere(condo.id) }, select: { id: true }, take: 1 },
     },
@@ -128,12 +140,12 @@ export async function authenticateCondomino(
     };
   }
 
-  // Permitir si es ADMIN, tiene rol autorizado, o tiene áreas privativas activas (propietario)
+  // Permitir si es ADMIN, tiene rol autorizado, tiene áreas privativas activas, o contrato de arrendamiento vigente
   let user = matched.find((u) => u.userType === "ADMIN" || u.userRoles.length > 0 || u.assignments.length > 0);
   if (!user) {
-    // Sin asignaciones directas: ¿tiene contratos de arrendamiento en el condominio?
+    // Sin asignaciones directas: ¿tiene contratos de arrendamiento activos/vigentes en el condominio?
     for (const cand of matched) {
-      if ((await countRentals(condo.id, cand.id)) > 0) {
+      if ((await countActiveRentals(condo.id, cand.id)) > 0) {
         user = cand;
         break;
       }
@@ -141,13 +153,13 @@ export async function authenticateCondomino(
   }
   if (!user) return { ok: false, message: MINISITIO_ACCESS_DENIED_MESSAGE };
 
-  // Auto-sanación: acceso legítimo sin la fila en UserRole → se vincula "Solo Minisitio" (nunca
-  // el filtro amplio, que incluye Master).
-  if (user.userRoles.length === 0) {
+  // Auto-sanación: acceso legítimo sin la fila en UserRole → se vincula exclusivamente "Solo Minisitio"
+  // (nunca el filtro amplio que incluye Master ni otro rol sustituto).
+  if (user.userRoles.length === 0 && user.userType !== "ADMIN") {
     try {
       const minisitioRole = await prisma.role.findFirst({
         where: minisitioOnlyRoleWhere(condo.id),
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ legacyIdGral: "desc" }, { createdAt: "asc" }],
       });
       if (minisitioRole) {
         await prisma.userRole.upsert({
@@ -231,16 +243,26 @@ export async function requestPasswordReset(emailInput: string, origin: string): 
 
   const ids = await findUserIdsByEmail(email);
   if (ids.length === 0) return;
-  const user = await prisma.user.findFirst({
+  const candidates = await prisma.user.findMany({
     where: {
       id: { in: ids },
       condominiumId: condominium.id,
       isActive: true,
-      userRoles: { some: { role: minisitioRoleWhere(condominium.id) } },
+      ...minisitioEligibleUserWhere(condominium.id),
     },
+    orderBy: { createdAt: "asc" },
     select: { id: true, firstName: true, lastName: true, email: true, personalEmail: true, businessEmail: true, passwordHash: true },
   });
-  const to = user && storedEmailMatching(user, email);
+  let user: (typeof candidates)[number] | null = null;
+  let to: string | null = null;
+  for (const candidate of candidates) {
+    const matchedEmail = storedEmailMatching(candidate, email);
+    if (matchedEmail) {
+      user = candidate;
+      to = matchedEmail;
+      break;
+    }
+  }
   if (!user || !to) return;
 
   const loginEmail = user.email || user.personalEmail || user.businessEmail || to;

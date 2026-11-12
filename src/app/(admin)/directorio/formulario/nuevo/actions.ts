@@ -3,6 +3,7 @@ import { assertPermission } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
 
 import { revalidatePath } from "next/cache";
+import { minisitioOnlyRoleWhere } from "@/shared/application/auth/condomino-access";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import crypto from "crypto";
@@ -50,51 +51,93 @@ export async function createFullDirectoryContactAction(data: any) {
 
     const generatedIdVq = `#${String(nextNum).padStart(3, "0")}`;
 
-    const newUser = await prisma.user.create({
-      data: {
-        condominiumId: condominium.id,
-        idVq: generatedIdVq,
-        userType: data.userType,
-        requiresInvoice: data.requiresInvoice,
-        firstName: data.firstName || null,
-        lastName: data.lastName || null,
-        lastNamePaterno: data.lastNamePaterno || null,
-        lastNameMaterno: data.lastNameMaterno || null,
-        curp: data.curp || null,
-        personalPhone: data.personalPhone || null,
-        email: data.personalEmail || null,
-        personalEmail: data.personalEmail || null,
-        address: data.address || null,
-        commercialName: data.commercialName || null,
-        businessName: data.businessName || null,
-        rfc: data.rfc || null,
-        businessPhone: data.businessPhone || null,
-        businessEmail: data.businessEmail || null,
-        taxAddress: data.taxAddress || null,
-        taxStatusPdfUrl: data.taxStatusPdfUrl || null,
-        initialRole: data.initialRole || null,
-        passwordHash: data.password ? hashSHA256(data.password) : null,
-        isActive: true,
-      },
-    });
+    const adminRoleId = typeof data.adminRoleId === "string" ? data.adminRoleId.trim() : "";
+    const grantExplicitMinisitio = Boolean(data.grantExplicitMinisitio);
 
-    if (data.initialRole && data.initialRole.trim() !== "") {
-      const role = await prisma.role.findFirst({
+    let validatedAdminRole: { id: string; name: string } | null = null;
+    if (adminRoleId) {
+      validatedAdminRole = await prisma.role.findFirst({
         where: {
+          id: adminRoleId,
           condominiumId: condominium.id,
-          name: data.initialRole,
+          isActive: true,
+          legacyIdGral: 0,
+          NOT: { name: { equals: "Solo Minisitio", mode: "insensitive" } },
+        },
+        select: { id: true, name: true },
+      });
+      if (!validatedAdminRole) {
+        return {
+          ok: false,
+          message: "El rol seleccionado no es un rol administrativo válido del condominio.",
+        };
+      }
+    }
+
+    const soloMinisitioRole = grantExplicitMinisitio
+      ? await prisma.role.findFirst({
+          where: minisitioOnlyRoleWhere(condominium.id),
+          orderBy: [{ legacyIdGral: "desc" }, { createdAt: "asc" }],
+          select: { id: true, name: true },
+        })
+      : null;
+
+    if (grantExplicitMinisitio && !soloMinisitioRole) {
+      return {
+        ok: false,
+        message: "No se encontró el rol reservado «Solo Minisitio» activo en el condominio.",
+      };
+    }
+
+    const derivedInitialRole =
+      validatedAdminRole?.name ?? (soloMinisitioRole ? soloMinisitioRole.name : null);
+
+    const newUser = await prisma.$transaction(async (tx) => {
+      const created = await tx.user.create({
+        data: {
+          condominiumId: condominium.id,
+          idVq: generatedIdVq,
+          userType: data.userType,
+          requiresInvoice: data.requiresInvoice,
+          firstName: data.firstName || null,
+          lastName: data.lastName || null,
+          lastNamePaterno: data.lastNamePaterno || null,
+          lastNameMaterno: data.lastNameMaterno || null,
+          curp: data.curp || null,
+          personalPhone: data.personalPhone || null,
+          email: data.personalEmail || null,
+          personalEmail: data.personalEmail || null,
+          address: data.address || null,
+          commercialName: data.commercialName || null,
+          businessName: data.businessName || null,
+          rfc: data.rfc || null,
+          businessPhone: data.businessPhone || null,
+          businessEmail: data.businessEmail || null,
+          taxAddress: data.taxAddress || null,
+          taxStatusPdfUrl: data.taxStatusPdfUrl || null,
+          initialRole: derivedInitialRole,
+          passwordHash: data.password ? hashSHA256(data.password) : null,
           isActive: true,
         },
       });
-      if (role) {
-        await prisma.userRole.create({
-          data: {
-            userId: newUser.id,
-            roleId: role.id,
-          },
+
+      const roleIdsToAssign = [
+        ...(validatedAdminRole ? [validatedAdminRole.id] : []),
+        ...(soloMinisitioRole ? [soloMinisitioRole.id] : []),
+      ];
+
+      if (roleIdsToAssign.length > 0) {
+        await tx.userRole.createMany({
+          data: [...new Set(roleIdsToAssign)].map((roleId) => ({
+            userId: created.id,
+            roleId,
+          })),
+          skipDuplicates: true,
         });
       }
-    }
+
+      return created;
+    });
 
     revalidatePath("/directorio");
     return { ok: true, message: "Persona creada exitosamente.", id: newUser.id };

@@ -20,7 +20,7 @@ import {
   verifyCondominoToken,
   type CondominoTokenPayload,
 } from "./condomino-token";
-import { minisitioRoleWhere } from "./condomino-access";
+import { minisitioEligibleUserWhere } from "./condomino-access";
 
 export { CONDOMINO_SESSION_COOKIE, MINISITIO_BASE_PATH };
 
@@ -31,8 +31,8 @@ export const readCondominoSession = cache(async (): Promise<CondominoTokenPayloa
 });
 
 /**
- * ¿Sigue teniendo acceso al portal? Misma regla que el login: cuenta activa y (ADMIN, rol del
- * minisitio o al menos una asignación de área privativa activa).
+ * ¿Sigue teniendo acceso al portal? Criterio unificado con login y recuperación:
+ * cuenta activa en el condominio y elegible por ADMIN, rol admitido, asignación activa o renta activa.
  */
 async function hasPortalAccess(session: CondominoTokenPayload): Promise<boolean> {
   const allowed = await prisma.user.count({
@@ -40,11 +40,7 @@ async function hasPortalAccess(session: CondominoTokenPayload): Promise<boolean>
       id: session.userId,
       condominiumId: session.condominiumId,
       isActive: true,
-      OR: [
-        { userType: "ADMIN" },
-        { userRoles: { some: { role: minisitioRoleWhere(session.condominiumId) } } },
-        { assignments: { some: { isActive: true } } },
-      ],
+      ...minisitioEligibleUserWhere(session.condominiumId),
     },
   });
   return allowed > 0;

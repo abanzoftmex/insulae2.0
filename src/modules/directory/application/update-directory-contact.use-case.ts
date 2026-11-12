@@ -1,10 +1,10 @@
 import type { UseCase } from "@/shared/application/use-case";
-import type { DirectoryContactParticipation } from "../domain/directory";
+import type { DirectoryContactUpdatePayload } from "../domain/directory";
 import type { DirectoryRepository } from "../domain/directory.repository";
 
 export interface UpdateDirectoryContactInput {
   id: string;
-  data: Partial<DirectoryContactParticipation>;
+  data: DirectoryContactUpdatePayload;
 }
 
 export class UpdateDirectoryContactUseCase implements UseCase<UpdateDirectoryContactInput, { idVq: string | null }> {

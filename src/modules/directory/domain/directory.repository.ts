@@ -1,12 +1,14 @@
 import type {
   DirectoryContactParticipation,
+  DirectoryContactUpdatePayload,
   DirectoryFilters,
   DirectoryOverview,
+  DirectoryRoleOption,
 } from "./directory";
 
 export interface DirectoryRepository {
   getDirectory(filters: DirectoryFilters): Promise<DirectoryOverview | null>;
   getContactParticipation(reference: string): Promise<DirectoryContactParticipation | null>;
-  getRoles(): Promise<Array<{ id: string; name: string }>>;
-  updateContact(id: string, data: Partial<DirectoryContactParticipation>): Promise<{ idVq: string | null }>;
+  getRoles(): Promise<DirectoryRoleOption[]>;
+  updateContact(id: string, data: DirectoryContactUpdatePayload): Promise<{ idVq: string | null }>;
 }

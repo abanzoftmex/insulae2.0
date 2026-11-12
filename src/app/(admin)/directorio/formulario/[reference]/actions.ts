@@ -1,9 +1,10 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { assertPermission } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
 
 import { updateDirectoryContactUseCase } from "@/modules/directory";
-import type { DirectoryContactParticipation } from "@/modules/directory/domain/directory";
+import type { DirectoryContactUpdatePayload } from "@/modules/directory/domain/directory";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { appOrigin } from "@/shared/infrastructure/app-origin";
 import { buildProvisionalPasswordEmailHtml } from "@/shared/infrastructure/email/auth-email-templates";
@@ -23,15 +24,20 @@ function cleanUserId(id: string): string {
   return decoded.split(":")[0] ?? decoded;
 }
 
-export async function saveDirectoryContactAction(id: string, data: Partial<DirectoryContactParticipation>) {
+export async function saveDirectoryContactAction(id: string, data: DirectoryContactUpdatePayload) {
   try {
     await assertPermission(MODULES.DIRECTORIO, "canUpdate");
     const targetId = cleanUserId(id);
     const res = await updateDirectoryContactUseCase.execute({ id: targetId, data });
+    revalidatePath("/directorio");
+    revalidatePath(`/directorio/formulario/${encodeURIComponent(id)}`);
     return { ok: true, message: "Contacto actualizado correctamente.", idVq: res.idVq };
   } catch (error) {
     console.error("[saveDirectoryContactAction] failed", error);
-    return { ok: false, message: "No se pudo actualizar el contacto." };
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "No se pudo actualizar el contacto.",
+    };
   }
 }
 

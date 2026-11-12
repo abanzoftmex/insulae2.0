@@ -8,6 +8,7 @@ import {
   indexPermissionsByModuleId,
   summarizeRolePermissions,
 } from "@/modules/role/domain/role-permissions-summary";
+import { isReservedSystemRole } from "@/modules/role/domain/role-protection";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
@@ -285,7 +286,7 @@ export function RolePermissionsModal({
 
         {/* Footer */}
         <div className="flex flex-wrap items-center justify-end gap-2.5 border-t border-line bg-canvas/40 px-5 py-3.5">
-          {canUpdate && role?.isActive && (
+          {canUpdate && role?.isActive && !isReservedSystemRole(role) && (
             <Button variant="outline" asChild className="h-9 px-4 text-[11px] font-bold uppercase tracking-wider gap-1.5">
               <Link href={`/listado-roles/${role.id}`}>
                 <Edit2 className="h-3.5 w-3.5" aria-hidden="true" />

@@ -3,6 +3,7 @@ import { MODULES } from "@/shared/application/auth/modules";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.repository";
 import { GetRoleUseCase, GetModulesUseCase } from "@/modules/role/application/role.use-cases";
+import { isReservedSystemRole } from "@/modules/role/domain/role-protection";
 import { RoleForm } from "../components/role-form";
 import { notFound } from "next/navigation";
 import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
@@ -12,7 +13,7 @@ interface Props {
 }
 
 export default async function EditRolePage(props: Props) {
-  await requirePageAccess(MODULES.ROLES, "canUpdate");
+  await requirePageAccess(MODULES.ROLES);
 
   const permissions = await getUserPermissions();
   const canUpdate = hasPermission(permissions, MODULES.ROLES, "canUpdate");
@@ -39,5 +40,18 @@ export default async function EditRolePage(props: Props) {
     notFound();
   }
 
-  return <RoleForm initialData={role} modules={modules} condominiumId={condominium.id} canUpdate={canUpdate} />;
+  const isProtectedRole = isReservedSystemRole(role);
+  if (!canUpdate && !isProtectedRole) {
+    await requirePageAccess(MODULES.ROLES, "canUpdate");
+  }
+
+  return (
+    <RoleForm
+      initialData={role}
+      modules={modules}
+      condominiumId={condominium.id}
+      canUpdate={canUpdate && !isProtectedRole}
+      isProtectedRole={isProtectedRole}
+    />
+  );
 }
