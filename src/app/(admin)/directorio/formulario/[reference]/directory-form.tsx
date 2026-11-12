@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   FileText, 
@@ -16,6 +17,7 @@ import {
   Eye,
   EyeOff,
   Store,
+  KeyRound,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,7 @@ import type {
   DirectoryRoleOption,
   LinkedCommerce,
 } from "@/modules/directory/domain/directory";
+import { getRoleBadgeStyles } from "@/modules/role/domain/role-colors";
 
 interface DirectoryFormProps {
   reference: string;
@@ -591,13 +594,23 @@ export function DirectoryForm({
                           ) : (
                             roleOptions.map((role) => {
                               const checked = selectedAdminRoleIds.includes(role.id);
+                              const styles = getRoleBadgeStyles(role.color);
                               return (
                                 <label
                                   key={role.id}
+                                  style={
+                                    checked
+                                      ? {
+                                          color: styles.color,
+                                          backgroundColor: styles.backgroundColor,
+                                          borderColor: styles.borderColor,
+                                        }
+                                      : undefined
+                                  }
                                   className={cn(
                                     "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-semibold transition-colors",
                                     checked
-                                      ? "border-brand bg-brand text-white"
+                                      ? "ring-1 ring-brand/30 shadow-xs"
                                       : "border-line bg-white text-ink-soft hover:border-brand/50",
                                     !canUpdate && "opacity-75 cursor-not-allowed",
                                     canUpdate && "cursor-pointer",
@@ -616,6 +629,10 @@ export function DirectoryForm({
                                           : prev.filter((id) => id !== role.id),
                                       );
                                     }}
+                                  />
+                                  <span
+                                    className="h-2 w-2 rounded-full shrink-0"
+                                    style={{ backgroundColor: styles.dotColor }}
                                   />
                                   <span>{role.name}</span>
                                 </label>
@@ -661,7 +678,7 @@ export function DirectoryForm({
                           )}
                           {initialData.minisitioAccess.activeAssignmentsCount > 0 && (
                             <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-800 border-emerald-200">
-                              Automático por asignación residencial ({initialData.minisitioAccess.activeAssignmentsCount})
+                              Automático por participación en el condominio ({initialData.minisitioAccess.activeAssignmentsCount})
                             </Badge>
                           )}
                           {initialData.minisitioAccess.activeRentalsCount > 0 && (
@@ -693,26 +710,31 @@ export function DirectoryForm({
 
                     <div className="border-t border-line/60 pt-3 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className={cn(labelCls, "mr-1")}>Roles patrimoniales (solo lectura):</span>
-                        {(() => {
-                          const patrimonialLabels = Array.from(
-                            new Set([
-                              ...initialData.patrimonialRoles,
-                              ...initialData.assignments
-                                .map((a) => a.roleName)
-                                .filter((name) => name && name !== "Sin rol"),
-                            ]),
-                          );
-                          return patrimonialLabels.length > 0 ? (
-                            patrimonialLabels.map((name) => (
-                              <Badge key={name} variant="outline" className="text-[10px] bg-white text-ink">
-                                {name}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-ink-soft">Sin roles patrimoniales registrados</span>
-                          );
-                        })()}
+                        <span className={cn(labelCls, "mr-1")}>Tipo de condominio (solo lectura):</span>
+                        {initialData.patrimonialRoleItems.length > 0 ? (
+                          initialData.patrimonialRoleItems.map((item) => {
+                            const styles = getRoleBadgeStyles(item.color);
+                            return (
+                              <span
+                                key={item.name}
+                                className="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[10px] font-bold"
+                                style={{
+                                  color: styles.color,
+                                  backgroundColor: styles.backgroundColor,
+                                  borderColor: styles.borderColor,
+                                }}
+                              >
+                                <span
+                                  className="h-1.5 w-1.5 rounded-full shrink-0"
+                                  style={{ backgroundColor: styles.dotColor }}
+                                />
+                                {item.name}
+                              </span>
+                            );
+                          })
+                        ) : (
+                          <span className="text-ink-soft">Sin tipo de condominio registrado</span>
+                        )}
                       </div>
                       {initialData.initialRole && (
                         <span className="text-ink-soft">
@@ -1532,6 +1554,114 @@ export function DirectoryForm({
                 </div>
               );
             })}
+          </div>
+        )}
+      </div>
+
+
+      {/* Arrendamientos vigentes */}
+      <div className="space-y-4 pt-4">
+        <div className="pb-3 border-b border-line flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <KeyRound className="w-4 h-4 text-brand" />
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-brand">
+              Arrendamientos vigentes ({(initialData.activeRentals ?? []).length})
+            </h2>
+          </div>
+          <span className="text-[10px] text-ink-soft">
+            Contratos de renta activos donde esta persona figura como contacto administrativo u operativo
+          </span>
+        </div>
+
+        {(initialData.activeRentals ?? []).length === 0 ? (
+          <div className="p-6 rounded-xl border border-dashed border-line bg-canvas/30 text-center text-xs text-ink-soft">
+            Sin arrendamientos vigentes vinculados a este contacto.
+          </div>
+        ) : (
+          <div className={sectionCls}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-canvas border-b border-line">
+                    <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Área privativa</th>
+                    <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Arrendatario / Comercio</th>
+                    <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Vínculo</th>
+                    <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Vigencia</th>
+                    <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Estatus</th>
+                    <th className="px-4 py-2 text-[9px] font-bold uppercase tracking-widest text-ink-soft">Notas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-line">
+                  {(initialData.activeRentals ?? []).map((rental) => {
+                    const primaryLabel =
+                      rental.commerceName?.trim() || rental.tenantName?.trim() || "Sin especificar";
+                    const secondaryTenant =
+                      rental.commerceName?.trim() &&
+                      rental.tenantName?.trim() &&
+                      rental.commerceName.trim().toLowerCase() !== rental.tenantName.trim().toLowerCase()
+                        ? rental.tenantName.trim()
+                        : null;
+                    const validityLabel =
+                      rental.startsAt && rental.endsAt
+                        ? rental.startsAt === rental.endsAt
+                          ? rental.startsAt
+                          : `${rental.startsAt} — ${rental.endsAt}`
+                        : rental.startsAt || rental.endsAt || "Sin fechas";
+
+                    return (
+                      <tr key={rental.id} className="hover:bg-canvas/50 transition-colors">
+                        <td className="px-4 py-2.5 text-[12px] font-semibold text-ink whitespace-nowrap">
+                          <Link
+                            href={`/areas-privativas/listado-arrendamientos?id=${rental.privateAreaId}`}
+                            className="text-brand hover:underline"
+                            title="Ver arrendamientos de esta área privativa"
+                          >
+                            {rental.privateAreaName}
+                          </Link>
+                        </td>
+                        <td className="px-4 py-2.5 text-[12px] text-ink">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <span className="font-medium">{primaryLabel}</span>
+                            {rental.businessClass && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-line bg-canvas text-[10px] font-semibold text-ink-soft">
+                                Clase {rental.businessClass}
+                              </span>
+                            )}
+                          </div>
+                          {secondaryTenant && (
+                            <p className="text-[10px] text-ink-soft mt-0.5">{secondaryTenant}</p>
+                          )}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <div className="flex flex-wrap gap-1">
+                            {rental.contactRoles.map((role) => (
+                              <Badge
+                                key={role}
+                                variant="outline"
+                                className="rounded-full text-[10px] font-semibold text-ink border-line bg-canvas/50"
+                              >
+                                {role === "ADMIN" ? "Contacto administrativo" : "Contacto operativo"}
+                              </Badge>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 text-[11px] text-ink-soft tabular-nums whitespace-nowrap">
+                          {validityLabel}
+                        </td>
+                        <td className="px-4 py-2.5 whitespace-nowrap">
+                          <Badge variant="success" className="rounded-full text-[10px] font-semibold">
+                            {rental.status === "1" ? "Vigente" : rental.status || "Vigente"}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-2.5 text-[11px] text-ink-soft">
+                          {rental.notes?.trim() || "—"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

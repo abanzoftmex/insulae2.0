@@ -1,11 +1,12 @@
 import { requirePageAccess } from "@/shared/application/auth/guards";
 import { MODULES } from "@/shared/application/auth/modules";
 import { getUserPermissions, hasPermission } from "@/shared/application/auth/permissions";
-import React, { Fragment } from "react";
+import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getDirectoryUseCase } from "@/modules/directory";
 import { toDirectoryVM } from "@/modules/directory/presentation/directory.vm";
+import { getRoleBadgeStyles } from "@/modules/role/domain/role-colors";
 import { Badge } from "@/components/ui/badge";
 import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,7 @@ import {
   ChevronRight,
   Mail,
   Phone,
-  ArrowRight,
-  Briefcase
+  ArrowRight
 } from "lucide-react";
 import { ProvisionalPasswordButton } from "./provisional-password-button";
 import { DeletePersonButton } from "./delete-person-button";
@@ -178,8 +178,8 @@ export default async function DirectorioPage(props: PageProps) {
               <tr className="h-10 bg-canvas/30 border-b border-line text-[10px] font-bold uppercase tracking-widest text-ink-soft/80">
                 <th className="px-4">Nombre / Razón Social</th>
                 <th className="px-4 text-center">Total de Áreas Privativas</th>
-                <th className="px-4 text-right">Indiviso</th>
                 <th className="px-4">Contacto</th>
+                <th className="px-4 text-center">Total de comercios</th>
                 <th className="px-4">Requiere Factura</th>
                 <th className="px-4 text-right">Acción</th>
               </tr>
@@ -202,30 +202,88 @@ export default async function DirectorioPage(props: PageProps) {
                            </div>
                            <div className="min-w-0">
                              <p className="text-base font-bold text-ink leading-tight">{person.legalNameLabel}</p>
-                             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-                               {person.adminRoles.map((roleName) => (
-                                 <Badge
-                                   key={roleName}
-                                   variant="brand"
-                                   className="px-2 py-0.5 text-[9px] font-bold tracking-wider"
-                                 >
-                                   Panel: {roleName}
-                                 </Badge>
-                               ))}
-                               {person.patrimonialRolesLabel && (
-                                 <span className="text-[11px] font-semibold text-ink-soft">
-                                   Patrimonial: {person.patrimonialRolesLabel}
-                                 </span>
+                             <div className="mt-1 flex flex-col gap-1">
+                               {person.adminRoleItems.length > 0 && (
+                                 <div className="flex flex-wrap items-center gap-1">
+                                   <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">
+                                     Panel:
+                                   </span>
+                                   {person.adminRoleItems.map((role) => {
+                                     const styles = getRoleBadgeStyles(role.color);
+                                     return (
+                                       <span
+                                         key={role.name}
+                                         className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold tracking-wider"
+                                         style={{
+                                           color: styles.color,
+                                           backgroundColor: styles.backgroundColor,
+                                           borderColor: styles.borderColor,
+                                         }}
+                                       >
+                                         <span
+                                           className="h-1.5 w-1.5 rounded-full shrink-0"
+                                           style={{ backgroundColor: styles.dotColor }}
+                                         />
+                                         {role.name}
+                                       </span>
+                                     );
+                                   })}
+                                 </div>
+                               )}
+                               {person.patrimonialRoleItems.length > 0 && (
+                                 <div className="flex flex-wrap items-center gap-1">
+                                   <span className="text-[10px] font-bold uppercase tracking-wider text-ink-soft/70">
+                                     Patrimonial:
+                                   </span>
+                                   {person.patrimonialRoleItems.map((role) => {
+                                     const styles = getRoleBadgeStyles(role.color);
+                                     return (
+                                       <span
+                                         key={role.name}
+                                         className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold"
+                                         style={{
+                                           color: styles.color,
+                                           backgroundColor: styles.backgroundColor,
+                                           borderColor: styles.borderColor,
+                                         }}
+                                       >
+                                         <span
+                                           className="h-1.5 w-1.5 rounded-full shrink-0"
+                                           style={{ backgroundColor: styles.dotColor }}
+                                         />
+                                         {role.name}
+                                       </span>
+                                     );
+                                   })}
+                                 </div>
+                               )}
+                               {person.hasExplicitMinisitioRole && (
+                                 (() => {
+                                   const styles = getRoleBadgeStyles(person.soloMinisitioColor);
+                                   return (
+                                     <div className="flex flex-wrap items-center gap-1">
+                                       <span
+                                         className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold tracking-wider"
+                                         style={{
+                                           color: styles.color,
+                                           backgroundColor: styles.backgroundColor,
+                                           borderColor: styles.borderColor,
+                                         }}
+                                       >
+                                         <span
+                                           className="h-1.5 w-1.5 rounded-full shrink-0"
+                                           style={{ backgroundColor: styles.dotColor }}
+                                         />
+                                         {person.soloMinisitioName || "Solo Minisitio"}
+                                       </span>
+                                     </div>
+                                   );
+                                 })()
                                )}
                              </div>
                              <p className="text-[11px] font-medium text-ink-soft/80 mt-0.5">
                                Minisitio: {person.minisitioAccessLabel}
                              </p>
-                             {person.initialRoleMismatchLabel && (
-                               <p className="text-[10px] font-semibold text-amber-700 mt-0.5">
-                                 {person.initialRoleMismatchLabel}
-                               </p>
-                             )}
                            </div>
                         </div>
                       </td>
@@ -233,12 +291,6 @@ export default async function DirectorioPage(props: PageProps) {
                       <td className="px-4 py-3 text-center">
                         <span className="text-xs font-bold text-ink bg-canvas px-2.5 py-1 rounded-md border border-line/60 inline-block min-w-[36px]">
                           {person.totalPrivateAreasLabel}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3 text-right">
-                        <span className="text-xs font-mono font-bold text-brand-accent">
-                          {person.indivisoLabel}
                         </span>
                       </td>
 
@@ -257,6 +309,12 @@ export default async function DirectorioPage(props: PageProps) {
                              </div>
                            )}
                          </div>
+                      </td>
+
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-xs font-bold text-ink bg-canvas px-2.5 py-1 rounded-md border border-line/60 inline-block min-w-[36px] tabular-nums">
+                          {person.totalCommercesLabel}
+                        </span>
                       </td>
 
                       <td className="px-4 py-3">
@@ -324,8 +382,8 @@ export default async function DirectorioPage(props: PageProps) {
                           </div>
                         </td>
                         <td className="px-4 py-2 text-center text-xs text-ink-soft/40">-</td>
-                        <td className="px-4 py-2 text-right text-xs text-ink-soft/40">-</td>
                         <td className="px-4 py-2 text-xs text-ink-soft/60 italic">Usuario anidado</td>
+                        <td className="px-4 py-2 text-center text-xs text-ink-soft/40">-</td>
                         <td className="px-4 py-2"><Badge variant="outline" className="px-2 py-0.5 text-[8px] text-ink-soft/60">Anidado</Badge></td>
                         <td className="px-4 py-2 text-right">
                           <div className="flex items-center justify-end gap-2">

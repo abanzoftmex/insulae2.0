@@ -26,6 +26,33 @@ export function isReservedSystemRole(role: {
   return RESERVED_MINISITIO_NAMES.has(normalizeRoleIdentityName(role.name));
 }
 
+export type RoleVisualCategory = "ADMINISTRATIVO" | "PATRIMONIAL" | "MINISITIO";
+
+export function getRoleVisualCategory(role: {
+  legacyIdGral?: number | null;
+  name?: string | null;
+}): RoleVisualCategory {
+  const legacyId = role.legacyIdGral ?? 0;
+  if (legacyId === 5 || normalizeRoleIdentityName(role.name) === "solo minisitio") {
+    return "MINISITIO";
+  }
+  if (legacyId === 0) {
+    return "ADMINISTRATIVO";
+  }
+  return "PATRIMONIAL";
+}
+
+export function getRoleVisualCategoryLabel(category: RoleVisualCategory): string {
+  switch (category) {
+    case "ADMINISTRATIVO":
+      return "Administrativo";
+    case "PATRIMONIAL":
+      return "Patrimonial";
+    case "MINISITIO":
+      return "Minisitio";
+  }
+}
+
 export function assertValidRoleCreationName(
   rawName: string,
   existingRoles: RoleIdentityRecord[],

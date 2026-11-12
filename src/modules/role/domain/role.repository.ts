@@ -3,6 +3,7 @@ import {
   ModuleCatalog,
   CreateRoleRequest,
   UpdateRoleRequest,
+  UpdateRoleColorRequest,
   RoleDeactivationImpact,
   DeactivateRoleResult,
 } from "./role.types";
@@ -13,6 +14,7 @@ export interface IRoleRepository {
   findModules(): Promise<ModuleCatalog[]>;
   create(role: CreateRoleRequest): Promise<Role>;
   update(role: UpdateRoleRequest): Promise<Role>;
+  updateColor(req: UpdateRoleColorRequest): Promise<Role>;
   delete(id: string, condominiumId: string, actingUserId?: string): Promise<void>;
   getDeactivationImpact(
     id: string,

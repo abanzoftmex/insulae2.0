@@ -1,5 +1,5 @@
 import { IRoleRepository } from "../domain/role.repository";
-import { CreateRoleRequest, UpdateRoleRequest } from "../domain/role.types";
+import { CreateRoleRequest, UpdateRoleColorRequest, UpdateRoleRequest } from "../domain/role.types";
 
 export class GetRolesUseCase {
   constructor(private repository: IRoleRepository) {}
@@ -33,6 +33,13 @@ export class UpdateRoleUseCase {
   constructor(private repository: IRoleRepository) {}
   async execute(req: UpdateRoleRequest) {
     return this.repository.update(req);
+  }
+}
+
+export class UpdateRoleColorUseCase {
+  constructor(private repository: IRoleRepository) {}
+  async execute(req: UpdateRoleColorRequest) {
+    return this.repository.updateColor(req);
   }
 }
 

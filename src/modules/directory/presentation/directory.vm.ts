@@ -8,7 +8,11 @@ export interface DirectoryPersonVM {
   legalNameLabel: string;
   primaryRoleLabel: string;
   adminRoles: string[];
+  adminRoleItems: Array<{ name: string; color: string }>;
   patrimonialRolesLabel: string;
+  patrimonialRoleItems: Array<{ name: string; color: string }>;
+  soloMinisitioName: string;
+  soloMinisitioColor: string;
   minisitioAccessLabel: string;
   hasMinisitioAccess: boolean;
   hasExplicitMinisitioRole: boolean;
@@ -23,6 +27,7 @@ export interface DirectoryPersonVM {
   assignedAreasLabel: string;
   assignmentCount: string;
   totalPrivateAreasLabel: string;
+  totalCommercesLabel: string;
   indivisoLabel: string;
   children?: Array<{
     id: string;
@@ -80,19 +85,13 @@ function uniqueSortedLabels(values: string[]): string[] {
   );
 }
 
-function normalizeComparableLabel(value: string | null | undefined): string {
-  return (value ?? "")
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-}
-
 function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
   const patrimonialCombined = uniqueSortedLabels([
     ...person.patrimonialRoles,
     ...person.assignmentRoles,
   ]);
+
+  const soloMinisitioName = person.soloMinisitioName || "Solo Minisitio";
 
   const primaryRole =
     person.adminRoles.length > 0
@@ -100,24 +99,13 @@ function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
       : patrimonialCombined.length > 0
         ? patrimonialCombined.join(" · ")
         : person.hasExplicitMinisitioRole
-          ? "Solo Minisitio"
-          : person.minisitioAccess.hasAccess
-            ? "Acceso automático al Minisitio"
-            : "Sin rol";
+          ? soloMinisitioName
+          : "Sin rol";
 
   const minisitioAccessLabel =
     person.minisitioAccess.ways.length > 0
       ? person.minisitioAccess.ways.join(" + ")
       : "Sin acceso al Minisitio";
-
-  const normalizedInitial = normalizeComparableLabel(person.initialRole);
-  const initialMatchesAdmin =
-    normalizedInitial.length > 0 &&
-    person.adminRoles.some((r) => normalizeComparableLabel(r) === normalizedInitial);
-  const initialRoleMismatchLabel =
-    person.adminRoles.length > 0 && normalizedInitial.length > 0 && !initialMatchesAdmin
-      ? `Rol inicial histórico: ${person.initialRole}`
-      : null;
 
   return {
     id: person.id,
@@ -127,11 +115,15 @@ function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
     legalNameLabel: person.legalName,
     primaryRoleLabel: primaryRole,
     adminRoles: person.adminRoles,
+    adminRoleItems: person.adminRoleItems,
     patrimonialRolesLabel: patrimonialCombined.join(" · "),
+    patrimonialRoleItems: person.patrimonialRoleItems,
+    soloMinisitioName,
+    soloMinisitioColor: person.soloMinisitioColor,
     minisitioAccessLabel,
     hasMinisitioAccess: person.minisitioAccess.hasAccess,
     hasExplicitMinisitioRole: person.hasExplicitMinisitioRole,
-    initialRoleMismatchLabel,
+    initialRoleMismatchLabel: null,
     requiresInvoiceLabel: person.requiresInvoice === null ? "N/D" : person.requiresInvoice ? "Si" : "No",
     initials: initialsFrom(person.displayName),
     userTypeLabel: toUserTypeLabel(person.userType),
@@ -142,6 +134,7 @@ function toPersonVM(person: DirectoryPerson): DirectoryPersonVM {
     assignedAreasLabel: joinOrFallback(person.assignedAreas, "sin areas"),
     assignmentCount: person.assignmentCount.toLocaleString("es-MX"),
     totalPrivateAreasLabel: person.totalPrivateAreas.toString(),
+    totalCommercesLabel: person.totalCommerces.toLocaleString("es-MX"),
     indivisoLabel: `${person.indiviso.toFixed(4)}%`,
     children: person.children?.map((child) => ({
       id: child.id,

@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Edit2,
   Eye,
+  Palette,
   ShieldAlert,
   ShieldCheck,
   Trash2,
@@ -19,7 +20,13 @@ import type {
   RoleDeactivationImpact,
 } from "@/modules/role/domain/role.types";
 import { summarizeRolePermissions } from "@/modules/role/domain/role-permissions-summary";
-import { isReservedSystemRole } from "@/modules/role/domain/role-protection";
+import {
+  isReservedSystemRole,
+  getRoleVisualCategory,
+  getRoleVisualCategoryLabel,
+  type RoleVisualCategory,
+} from "@/modules/role/domain/role-protection";
+import { getRoleBadgeStyles, resolveRoleColor } from "@/modules/role/domain/role-colors";
 import {
   deactivateRoleAction,
   deleteRoleAction,
@@ -61,6 +68,7 @@ export function RoleList({
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<"all" | RoleVisualCategory>("all");
   const [notification, setNotification] = useState<NotificationState | null>(null);
   const [detailRole, setDetailRole] = useState<Role | null>(null);
 
@@ -74,25 +82,46 @@ export function RoleList({
 
   const canDeactivate = canUpdate && canDelete;
 
-  const activeRolesCount = useMemo(
-    () => roles.filter((r) => r.isActive).length,
-    [roles]
-  );
-  const inactiveRolesCount = roles.length - activeRolesCount;
+  const stats = useMemo(() => {
+    let admin = 0;
+    let patrimonial = 0;
+    let minisitio = 0;
+    let active = 0;
+    for (const r of roles) {
+      if (r.isActive) active++;
+      const cat = getRoleVisualCategory(r);
+      if (cat === "ADMINISTRATIVO") admin++;
+      else if (cat === "PATRIMONIAL") patrimonial++;
+      else if (cat === "MINISITIO") minisitio++;
+    }
+    return {
+      total: roles.length,
+      active,
+      inactive: roles.length - active,
+      admin,
+      patrimonial,
+      minisitio,
+    };
+  }, [roles]);
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase().trim();
     return roles.filter((r) => {
+      const cat = getRoleVisualCategory(r);
+      if (categoryFilter !== "all" && cat !== categoryFilter) return false;
       if (statusFilter === "active" && !r.isActive) return false;
       if (statusFilter === "inactive" && r.isActive) return false;
       return (
         !term ||
-        [r.name, r.description || "", r.isActive ? "activo" : "inactivo bloqueado"].some(
-          (f) => f.toLowerCase().includes(term)
-        )
+        [
+          r.name,
+          r.description || "",
+          getRoleVisualCategoryLabel(cat),
+          r.isActive ? "activo" : "inactivo bloqueado",
+        ].some((f) => f.toLowerCase().includes(term))
       );
     });
-  }, [roles, search, statusFilter]);
+  }, [roles, search, statusFilter, categoryFilter]);
 
   const handleOpenDeactivateModal = (role: Role) => {
     if (!canDeactivate || !role.isActive || isReservedSystemRole(role)) return;
@@ -214,18 +243,41 @@ export function RoleList({
       accessorKey: "name",
       cell: (row) => {
         const isProtected = isReservedSystemRole(row);
+        const resolvedColor = resolveRoleColor(row);
+        const styles = getRoleBadgeStyles(resolvedColor);
+        const category = getRoleVisualCategory(row);
+        const categoryLabel = getRoleVisualCategoryLabel(category);
         return (
           <div className={row.isActive ? "flex flex-wrap items-center gap-2" : "flex flex-wrap items-center gap-2 opacity-60"}>
-            <Badge
-              variant={isProtected ? "outline" : row.isActive ? "brand" : "outline"}
+            <span
               className={cn(
-                "rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest shrink-0",
-                isProtected && "bg-amber-50 text-amber-800 border-amber-300"
+                "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[9px] font-bold tracking-widest shrink-0",
+                category === "PATRIMONIAL"
+                  ? "border-emerald-300"
+                  : category === "MINISITIO"
+                    ? "border-amber-300"
+                    : isProtected
+                      ? "border-amber-300"
+                      : "border-line"
               )}
+              style={{
+                color: styles.color,
+                backgroundColor: styles.backgroundColor,
+                borderColor: styles.borderColor,
+              }}
             >
-              {isProtected ? "Protegido" : "Rol"}
-            </Badge>
-            <span className="font-bold text-sm text-ink">{row.name}</span>
+              <span
+                className="h-1.5 w-1.5 rounded-full shrink-0"
+                style={{ backgroundColor: styles.dotColor }}
+              />
+              {categoryLabel}
+            </span>
+            <span className="font-bold text-sm" style={{ color: styles.color }}>{row.name}</span>
+            {isProtected && category === "ADMINISTRATIVO" && (
+              <span className="text-[9px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5">
+                Protegido
+              </span>
+            )}
           </div>
         );
       },
@@ -271,6 +323,8 @@ export function RoleList({
           modules,
           row.isActive
         );
+        const category = getRoleVisualCategory(row);
+
         if (!row.isActive) {
           return (
             <div className="flex flex-wrap items-center gap-1.5">
@@ -283,14 +337,15 @@ export function RoleList({
             </div>
           );
         }
-        if (isReservedSystemRole(row)) {
+
+        if (category === "MINISITIO") {
           return (
             <div className="flex flex-wrap items-center gap-2">
               <Badge
                 variant="outline"
                 className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest bg-amber-50 text-amber-800 border-amber-300"
               >
-                Solo Minisitio · Sin permisos de panel
+                Solo Minisitio · Acceso exclusivo a portal condómino
               </Badge>
               <button
                 type="button"
@@ -304,6 +359,29 @@ export function RoleList({
             </div>
           );
         }
+
+        if (category === "PATRIMONIAL") {
+          return (
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant="outline"
+                className="rounded-full px-2.5 py-1 text-[9px] font-bold tracking-widest bg-emerald-50 text-emerald-800 border-emerald-300"
+              >
+                Rol Patrimonial · Participación en el condominio y de unidad
+              </Badge>
+              <button
+                type="button"
+                onClick={() => setDetailRole(row)}
+                aria-label={`Ver detalle del rol patrimonial ${row.name}`}
+                className="inline-flex min-h-6 items-center gap-1 rounded-full border border-line bg-canvas/60 px-2 py-0.5 text-[10px] font-semibold text-brand hover:bg-brand-mint/60 transition-colors"
+              >
+                <Eye className="h-3 w-3" aria-hidden="true" />
+                <span>Ver</span>
+              </button>
+            </div>
+          );
+        }
+
         if (summary.totalGranted === 0) {
           return (
             <div className="flex flex-wrap items-center gap-2">
@@ -377,17 +455,19 @@ export function RoleList({
       align: "right",
       cell: (row) => {
         const isProtected = isReservedSystemRole(row);
+        const category = getRoleVisualCategory(row);
+        const categoryLabel = getRoleVisualCategoryLabel(category);
         return (
         <div className="flex items-center justify-end gap-1.5">
           {canUpdate &&
             (isProtected ? (
               <Link
                 href={`/listado-roles/${row.id}`}
-                title="Rol reservado del sistema (solo lectura)"
-                aria-label={`Ver rol protegido ${row.name}`}
+                title={`Rol reservado del sistema (${categoryLabel}): personalizar color`}
+                aria-label={`Ver y personalizar color de rol ${categoryLabel.toLowerCase()} ${row.name}`}
                 className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100 transition-colors"
               >
-                <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                <Palette className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             ) : row.isActive ? (
               <Link
@@ -415,7 +495,7 @@ export function RoleList({
               disabled={!row.isActive || isProtected || isPending || isDeactivating}
               title={
                 isProtected
-                  ? "Rol reservado del sistema: no puede desactivarse"
+                  ? `Rol reservado (${categoryLabel}): no puede desactivarse`
                   : row.isActive
                     ? "Bloquear / Desactivar rol"
                     : "Este rol ya está desactivado"
@@ -435,7 +515,7 @@ export function RoleList({
               className="h-9 w-9 sm:h-8 sm:w-8 flex items-center justify-center rounded-full bg-danger/15 text-danger border border-danger/20 hover:bg-danger hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               title={
                 isProtected
-                  ? "Rol reservado del sistema: no puede eliminarse"
+                  ? `Rol reservado (${categoryLabel}): no puede eliminarse`
                   : row.isActive
                     ? "Eliminar rol"
                     : "Este rol ya está inactivo"
@@ -453,27 +533,70 @@ export function RoleList({
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-2">
-        <div className="w-full sm:max-w-xs">
-          <StatCard
-            accent="brand"
-            label="Roles Configurados"
-            value={activeRolesCount}
-            hint={
-              inactiveRolesCount > 0
-                ? `${inactiveRolesCount} inactivo${inactiveRolesCount !== 1 ? "s" : ""}`
-                : undefined
-            }
-            icon={<ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />}
-          />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+        <StatCard
+          accent="brand"
+          label="Total Roles"
+          value={stats.total}
+          hint={`${stats.active} activos · ${stats.inactive} inactivos`}
+          icon={<ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />}
+        />
+        <StatCard
+          accent="cyan"
+          label="Administrativos"
+          value={stats.admin}
+          hint="Panel y módulos"
+          icon={<ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />}
+        />
+        <StatCard
+          accent="lime"
+          label="Patrimoniales"
+          value={stats.patrimonial}
+          hint="Condómino y residencial"
+          icon={<Palette className="h-3.5 w-3.5" aria-hidden="true" />}
+        />
+        <StatCard
+          accent="gold"
+          label="Solo Minisitio"
+          value={stats.minisitio}
+          hint="Portal condómino"
+          icon={<Eye className="h-3.5 w-3.5" aria-hidden="true" />}
+        />
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+        <div className="inline-flex flex-wrap items-center gap-1 rounded-full border border-line bg-white p-1 shadow-xs" role="group" aria-label="Filtrar roles por categoría">
+          {(
+            [
+              { id: "all", label: `Todos (${stats.total})` },
+              { id: "ADMINISTRATIVO", label: `Administrativos (${stats.admin})` },
+              { id: "PATRIMONIAL", label: `Patrimoniales (${stats.patrimonial})` },
+              { id: "MINISITIO", label: `Minisitio (${stats.minisitio})` },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setCategoryFilter(tab.id)}
+              aria-pressed={categoryFilter === tab.id}
+              className={cn(
+                "min-h-8 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors",
+                categoryFilter === tab.id
+                  ? "bg-brand text-white shadow-xs"
+                  : "text-ink-soft hover:bg-canvas hover:text-ink"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         <div className="inline-flex flex-wrap items-center gap-1 rounded-full border border-line bg-white p-1 shadow-xs self-start sm:self-end" role="group" aria-label="Filtrar roles por estado">
           {(
             [
-              { id: "all", label: `Todos (${roles.length})` },
-              { id: "active", label: `Activos (${activeRolesCount})` },
-              { id: "inactive", label: `Inactivos (${inactiveRolesCount})` },
+              { id: "all", label: `Todos (${stats.total})` },
+              { id: "active", label: `Activos (${stats.active})` },
+              { id: "inactive", label: `Inactivos (${stats.inactive})` },
             ] as const
           ).map((tab) => (
             <button

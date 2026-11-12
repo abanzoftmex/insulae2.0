@@ -3,6 +3,7 @@ import { MODULES } from "@/shared/application/auth/modules";
 import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.repository";
 import { GetModulesUseCase } from "@/modules/role/application/role.use-cases";
+import { pickSuggestedRoleColor } from "@/modules/role/domain/role-colors";
 import { RoleForm } from "../components/role-form";
 
 export default async function NewRolePage() {
@@ -18,7 +19,21 @@ export default async function NewRolePage() {
 
   const repository = new PrismaRoleRepository(prisma);
   const useCase = new GetModulesUseCase(repository);
-  const modules = await useCase.execute();
+  const [modules, existingRoles] = await Promise.all([
+    useCase.execute(),
+    prisma.role.findMany({
+      where: { condominiumId: condominium.id, isActive: true },
+      select: { color: true },
+    }),
+  ]);
 
-  return <RoleForm modules={modules} condominiumId={condominium.id} />;
+  const suggestedColor = pickSuggestedRoleColor(existingRoles.map((r) => r.color));
+
+  return (
+    <RoleForm
+      modules={modules}
+      condominiumId={condominium.id}
+      suggestedColor={suggestedColor}
+    />
+  );
 }

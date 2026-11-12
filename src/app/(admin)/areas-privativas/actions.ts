@@ -89,8 +89,11 @@ function parsePrivateAreaStatus(formData: FormData): PrivateAreaStatus | undefin
   return undefined;
 }
 
-async function revalidatePrivateAreaFormPath(privateAreaId: string): Promise<void> {
+async function revalidatePrivateAreaFormPath(privateAreaId?: string): Promise<void> {
   revalidatePath("/areas-privativas/formulario-apol");
+  if (privateAreaId) {
+    revalidatePath(`/areas-privativas/formulario-apol?id=${privateAreaId}`);
+  }
 }
 
 export async function updatePrivateAreaSnapshotAction(formData: FormData): Promise<void> {
@@ -360,8 +363,9 @@ export async function updateOrdinaryAreaChargeAction(formData: FormData): Promis
 }
 
 export async function createPrivateAreaRentalAction(formData: FormData): Promise<void> {
-    await assertPermission(MODULES.AREAS_PRIVATIVAS, "canCreate");
+  await assertPermission(MODULES.AREAS_PRIVATIVAS, "canCreate");
   const privateAreaId = toString(formData.get("privateAreaId"));
+  const rentalId = toString(formData.get("rentalId"));
   const tenantName = toString(formData.get("tenantName"));
   const status = toString(formData.get("status"));
   const notes = toString(formData.get("notes"));
@@ -384,20 +388,93 @@ export async function createPrivateAreaRentalAction(formData: FormData): Promise
     return;
   }
 
-  await prisma.rental.create({
-    data: {
+  const existingRental = rentalId
+    ? await prisma.rental.findFirst({
+        where: { id: rentalId, privateAreaId: area.id },
+      })
+    : null;
+
+  if (existingRental) {
+    await prisma.rental.update({
+      where: { id: existingRental.id },
+      data: {
+        tenantName: tenantName.length > 0 ? tenantName : null,
+        startsAt,
+        endsAt,
+        status: status.length > 0 ? status : null,
+        notes: notes.length > 0 ? notes : null,
+      },
+    });
+  } else {
+    await prisma.rental.create({
+      data: {
+        condominiumId: area.condominiumId,
+        privateAreaId: area.id,
+        tenantName: tenantName.length > 0 ? tenantName : null,
+        startsAt,
+        endsAt,
+        status: status.length > 0 ? status : (tenantName.length > 0 ? "1" : null),
+        notes: notes.length > 0 ? notes : null,
+      },
+    });
+  }
+
+  // Sincronizar asignaciones de Arrendatario en ResidentAssignment para mantener paridad con el Directorio
+  await prisma.residentAssignment.updateMany({
+    where: {
       condominiumId: area.condominiumId,
       privateAreaId: area.id,
-      tenantName: tenantName.length > 0 ? tenantName : null,
-      startsAt,
-      endsAt,
-      status: status.length > 0 ? status : null,
-      notes: notes.length > 0 ? notes : null,
+      isActive: true,
+      roleName: {
+        contains: "arrendatario",
+        mode: "insensitive",
+      },
+    },
+    data: {
+      isActive: false,
+      endsAt: new Date(),
     },
   });
 
+  if (tenantName.trim().length > 0) {
+    const candidateUsers = await prisma.user.findMany({
+      where: {
+        condominiumId: area.condominiumId,
+        isActive: true,
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        businessName: true,
+      },
+    });
+
+    const target = tenantName.normalize("NFKD").toLowerCase().trim();
+    const matchingUser = candidateUsers.find((u) => {
+      const b = (u.businessName || "").normalize("NFKD").toLowerCase().trim();
+      const fn = `${u.firstName || ""} ${u.lastName || ""}`.normalize("NFKD").toLowerCase().trim();
+      return b === target || fn === target;
+    });
+
+    if (matchingUser) {
+      await prisma.residentAssignment.create({
+        data: {
+          condominiumId: area.condominiumId,
+          privateAreaId: area.id,
+          userId: matchingUser.id,
+          roleName: "Arrendatario",
+          startsAt: new Date(),
+          isActive: true,
+        },
+      });
+    }
+  }
+
   revalidatePath("/areas-privativas");
   revalidatePath("/areas-privativas/listado-arrendamientos");
+  revalidatePath("/directorio");
+  await revalidatePrivateAreaFormPath(privateAreaId);
 }
 
 export async function deletePrivateAreaRentalAction(formData: FormData): Promise<void> {
@@ -415,6 +492,7 @@ export async function deletePrivateAreaRentalAction(formData: FormData): Promise
 
   revalidatePath("/areas-privativas");
   revalidatePath("/areas-privativas/listado-arrendamientos");
+  revalidatePath("/directorio");
   await revalidatePrivateAreaFormPath(privateAreaId);
 }
 
@@ -608,14 +686,22 @@ export async function setPrivateAreaRentalTenantAction(formData: FormData): Prom
       condominiumId: area.condominiumId,
     },
     orderBy: [{ startsAt: "desc" }, { id: "desc" }],
-    select: { id: true },
+    select: { id: true, status: true },
   });
 
   if (latestRental) {
+    const currentStatus = (latestRental.status ?? "").trim();
+    const isAlreadyActive =
+      currentStatus === "1" ||
+      currentStatus === "2" ||
+      currentStatus === "3" ||
+      currentStatus === "4";
+
     await prisma.rental.update({
       where: { id: latestRental.id },
       data: {
         tenantName: tenantName.length > 0 ? tenantName : null,
+        ...(!isAlreadyActive && tenantName.length > 0 ? { status: "1" } : {}),
       },
     });
   } else if (tenantName.length > 0) {
@@ -624,6 +710,7 @@ export async function setPrivateAreaRentalTenantAction(formData: FormData): Prom
         condominiumId: area.condominiumId,
         privateAreaId: area.id,
         tenantName,
+        status: "1",
       },
     });
   }

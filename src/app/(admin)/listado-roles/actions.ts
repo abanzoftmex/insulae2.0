@@ -9,6 +9,7 @@ import { PrismaRoleRepository } from "@/modules/role/infrastructure/prisma-role.
 import {
   CreateRoleUseCase,
   UpdateRoleUseCase,
+  UpdateRoleColorUseCase,
   DeleteRoleUseCase,
   GetRoleDeactivationImpactUseCase,
   DeactivateRoleUseCase,
@@ -16,6 +17,7 @@ import {
 import type {
   CreateRoleRequest,
   UpdateRoleRequest,
+  UpdateRoleColorRequest,
   RoleDeactivationImpact,
   DeactivateRoleResult,
 } from "@/modules/role/domain/role.types";
@@ -28,6 +30,7 @@ export async function createRoleAction(req: CreateRoleRequest) {
     const useCase = new CreateRoleUseCase(repository);
     await useCase.execute(req);
     revalidatePath("/listado-roles");
+    revalidatePath("/directorio");
     return { success: true };
   } catch (error: unknown) {
     return {
@@ -44,11 +47,29 @@ export async function updateRoleAction(req: UpdateRoleRequest) {
     await useCase.execute(req);
     revalidatePath("/listado-roles");
     revalidatePath(`/listado-roles/${req.id}`);
+    revalidatePath("/directorio");
     return { success: true };
   } catch (error: unknown) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Ocurrió un error al actualizar el rol.",
+    };
+  }
+}
+
+export async function updateRoleColorAction(req: UpdateRoleColorRequest) {
+  try {
+    await assertPermission(MODULES.ROLES, "canUpdate");
+    const useCase = new UpdateRoleColorUseCase(repository);
+    await useCase.execute(req);
+    revalidatePath("/listado-roles");
+    revalidatePath(`/listado-roles/${req.id}`);
+    revalidatePath("/directorio");
+    return { success: true };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Ocurrió un error al actualizar el color del rol.",
     };
   }
 }

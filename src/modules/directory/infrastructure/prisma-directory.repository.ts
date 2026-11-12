@@ -10,21 +10,29 @@ import {
   normalizeRoleLabel,
 } from "@/shared/application/auth/condomino-access";
 import { prisma } from "@/shared/infrastructure/db/prisma";
+import {
+  normalizeComparableRoleName,
+  resolveRoleColor,
+} from "@/modules/role/domain/role-colors";
 
 import type {
   DirectoryContactParticipation,
+  DirectoryContactRental,
   DirectoryContactUpdatePayload,
   DirectoryFilters,
   DirectoryOverview,
   DirectoryPerson,
+  DirectoryRoleBadgeItem,
   DirectoryRoleOption,
   MinisitioAccessSummary,
   ParticipationBlock,
   ParticipationRow,
+  RentalContactRole,
 } from "../domain/directory";
 import type { DirectoryRepository } from "../domain/directory.repository";
 
-function normalizeText(value: string): string {
+function normalizeText(value?: string | null): string {
+  if (!value) return "";
   return value
     .trim()
     .toLowerCase()
@@ -75,93 +83,201 @@ function isMinisitioOnlyRoleRecord(role: { legacyIdGral: number; name: string })
 
 function classifyUserRolesAndMinisitioAccess(params: {
   userType: string;
-  userRoles: Array<{ role: { id: string; name: string; legacyIdGral: number; isActive: boolean } }>;
-  activeAssignmentsCount: number;
+  userRoles: Array<{
+    role: {
+      id: string;
+      name: string;
+      legacyIdGral: number;
+      isActive: boolean;
+      color?: string | null;
+    };
+  }>;
+  assignments: Array<{
+    roleName: string | null;
+    privateArea?: { name: string } | null;
+  }>;
   activeRentalsCount: number;
+  condoRoles: Array<{
+    id: string;
+    name: string;
+    legacyIdGral: number;
+    color?: string | null;
+    isActive: boolean;
+  }>;
 }): {
   roles: string[];
-  adminRoles: Array<{ id: string; name: string }>;
+  adminRoles: string[];
+  adminRoleItems: Array<{ id: string; name: string; color: string }>;
   patrimonialRoles: string[];
+  patrimonialRoleItems: DirectoryRoleBadgeItem[];
   hasExplicitMinisitioRole: boolean;
+  soloMinisitioName: string;
+  soloMinisitioColor: string;
+  assignmentRoles: string[];
+  assignedAreas: string[];
   minisitioAccess: MinisitioAccessSummary;
 } {
-  const activeRoleMap = new Map<string, { id: string; name: string; legacyIdGral: number }>();
-  for (const item of params.userRoles) {
-    if (!item.role.isActive) continue;
-    if (!activeRoleMap.has(item.role.id)) {
-      activeRoleMap.set(item.role.id, {
-        id: item.role.id,
-        name: item.role.name.trim(),
-        legacyIdGral: item.role.legacyIdGral,
+  const { userType, userRoles, assignments, activeRentalsCount, condoRoles } = params;
+
+  // Mapa del catálogo oficial de roles por nombre normalizado
+  const roleCatalogByNormalizedName = new Map<
+    string,
+    { id: string; name: string; legacyIdGral: number; color: string; isActive: boolean }
+  >();
+  for (const r of condoRoles) {
+    roleCatalogByNormalizedName.set(normalizeComparableRoleName(r.name), {
+      id: r.id,
+      name: r.name,
+      legacyIdGral: r.legacyIdGral,
+      color: resolveRoleColor(r),
+      isActive: r.isActive,
+    });
+  }
+
+  // Rol Solo Minisitio desde catálogo oficial
+  const soloMinisitioRole = condoRoles.find(
+    (r) => r.legacyIdGral === 5 || normalizeComparableRoleName(r.name) === "solo minisitio"
+  );
+  const soloMinisitioName = soloMinisitioRole?.name ?? "Solo Minisitio";
+  const soloMinisitioColor = soloMinisitioRole
+    ? resolveRoleColor(soloMinisitioRole)
+    : resolveRoleColor({ name: "Solo Minisitio" });
+
+  const adminBadgeMap = new Map<string, { id: string; name: string; color: string }>();
+  const patrimonialBadgeMap = new Map<string, DirectoryRoleBadgeItem>();
+  let hasExplicitMinisitioRole = false;
+
+  const viaAdminRoleNames: string[] = [];
+  const viaLegacyRoleNames: string[] = [];
+
+  // 1. Procesar UserRoles activos
+  for (const ur of userRoles) {
+    if (!ur.role.isActive) continue;
+
+    // Resolver con el catálogo para obtener nombre y color registrados oficialmente
+    const catalogRole =
+      roleCatalogByNormalizedName.get(normalizeComparableRoleName(ur.role.name)) ?? {
+        id: ur.role.id,
+        name: ur.role.name.trim(),
+        legacyIdGral: ur.role.legacyIdGral,
+        color: resolveRoleColor(ur.role),
+        isActive: ur.role.isActive,
+      };
+
+    if (isMinisitioOnlyRoleRecord(catalogRole)) {
+      hasExplicitMinisitioRole = true;
+      continue;
+    }
+
+    if (catalogRole.legacyIdGral === 0) {
+      // Rol Administrativo de Panel
+      const key = normalizeComparableRoleName(catalogRole.name);
+      if (!adminBadgeMap.has(key)) {
+        adminBadgeMap.set(key, {
+          id: catalogRole.id,
+          name: catalogRole.name,
+          color: catalogRole.color,
+        });
+      }
+      if (isAdminPanelMinisitioRole(catalogRole.name, catalogRole.legacyIdGral)) {
+        viaAdminRoleNames.push(catalogRole.name);
+      }
+    } else {
+      // Rol Patrimonial de UserRole
+      const key = normalizeComparableRoleName(catalogRole.name);
+      if (!patrimonialBadgeMap.has(key)) {
+        patrimonialBadgeMap.set(key, {
+          name: catalogRole.name,
+          color: catalogRole.color,
+        });
+      }
+      if (normalizeRoleLabel(catalogRole.name) === "condomino") {
+        viaLegacyRoleNames.push(catalogRole.name);
+      }
+    }
+  }
+
+  // 2. Procesar ResidentAssignment
+  const rawAssignmentRoles: string[] = [];
+  const rawAssignedAreas: string[] = [];
+  for (const a of assignments) {
+    if (a.privateArea?.name) {
+      rawAssignedAreas.push(a.privateArea.name);
+    }
+    if (!a.roleName) continue;
+    rawAssignmentRoles.push(a.roleName);
+
+    // Resolver contra el catálogo oficial de roles
+    const catalogRole = roleCatalogByNormalizedName.get(normalizeComparableRoleName(a.roleName));
+    const roleName = catalogRole?.name ?? a.roleName.trim();
+    const roleColor = catalogRole ? catalogRole.color : resolveRoleColor({ name: a.roleName });
+    const key = normalizeComparableRoleName(roleName);
+
+    if (!patrimonialBadgeMap.has(key)) {
+      patrimonialBadgeMap.set(key, {
+        name: roleName,
+        color: roleColor,
       });
     }
   }
 
-  const activeRoles = Array.from(activeRoleMap.values());
-  const roles = uniqueSorted(activeRoles.map((r) => r.name));
-
-  const adminRoles = activeRoles
-    .filter((r) => r.legacyIdGral === 0 && !isMinisitioOnlyRoleRecord(r))
-    .map((r) => ({ id: r.id, name: r.name }))
-    .sort((a, b) => a.name.localeCompare(b.name, "es", { sensitivity: "base" }));
-
-  const hasExplicitMinisitioRole = activeRoles.some((r) => isMinisitioOnlyRoleRecord(r));
-
-  const patrimonialRoles = uniqueSorted(
-    activeRoles
-      .filter((r) => r.legacyIdGral !== 0 && !isMinisitioOnlyRoleRecord(r))
-      .map((r) => r.name),
+  const adminRoleItems = Array.from(adminBadgeMap.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+  );
+  const patrimonialRoleItems = Array.from(patrimonialBadgeMap.values()).sort((a, b) =>
+    a.name.localeCompare(b.name, "es", { sensitivity: "base" })
   );
 
-  const viaAdminRoleNames = uniqueSorted(
-    activeRoles
-      .filter((r) => isAdminPanelMinisitioRole(r.name, r.legacyIdGral))
-      .map((r) => r.name),
-  );
+  const adminRoles = adminRoleItems.map((r) => r.name);
+  const patrimonialRoles = patrimonialRoleItems.map((r) => r.name);
+  const assignmentRoles = uniqueSorted(rawAssignmentRoles);
+  const assignedAreas = uniqueSorted(rawAssignedAreas);
 
-  const viaLegacyRoleNames = uniqueSorted(
-    activeRoles
-      .filter(
-        (r) =>
-          !isMinisitioOnlyRoleRecord(r) &&
-          r.legacyIdGral !== 0 &&
-          normalizeRoleLabel(r.name) === "condomino",
-      )
-      .map((r) => r.name),
-  );
+  const allRoleNames = [
+    ...adminRoles,
+    ...patrimonialRoles,
+    ...(hasExplicitMinisitioRole ? [soloMinisitioName] : []),
+  ];
 
+  // 3. Vías de acceso al minisitio
   const ways: string[] = [];
   if (hasExplicitMinisitioRole) {
-    ways.push("Rol explícito (Solo Minisitio)");
+    ways.push("Rol explícito");
   }
-  if (params.userType === "ADMIN") {
+  if (userType === "ADMIN") {
     ways.push("Cuenta ADMIN");
   }
   if (viaAdminRoleNames.length > 0) {
-    ways.push(`Rol administrativo (${viaAdminRoleNames.join(", ")})`);
+    ways.push(`Rol administrativo (${uniqueSorted(viaAdminRoleNames).join(", ")})`);
   }
   if (viaLegacyRoleNames.length > 0) {
-    ways.push(`Rol heredado (${viaLegacyRoleNames.join(", ")})`);
+    ways.push(`Rol heredado (${uniqueSorted(viaLegacyRoleNames).join(", ")})`);
   }
-  if (params.activeAssignmentsCount > 0) {
-    ways.push(`Asignación residencial (${params.activeAssignmentsCount})`);
+  if (assignments.length > 0) {
+    ways.push(`Participación en el condominio (${assignments.length})`);
   }
-  if (params.activeRentalsCount > 0) {
-    ways.push(`Arrendamiento vigente (${params.activeRentalsCount})`);
+  if (activeRentalsCount > 0) {
+    ways.push(`Arrendamiento vigente (${activeRentalsCount})`);
   }
 
   return {
-    roles,
+    roles: uniqueSorted(allRoleNames),
     adminRoles,
+    adminRoleItems,
     patrimonialRoles,
+    patrimonialRoleItems,
     hasExplicitMinisitioRole,
+    soloMinisitioName,
+    soloMinisitioColor,
+    assignmentRoles,
+    assignedAreas,
     minisitioAccess: {
       hasAccess: ways.length > 0,
       hasExplicitRole: hasExplicitMinisitioRole,
-      viaAdminRoleNames,
-      viaLegacyRoleNames,
-      activeAssignmentsCount: params.activeAssignmentsCount,
-      activeRentalsCount: params.activeRentalsCount,
+      viaAdminRoleNames: uniqueSorted(viaAdminRoleNames),
+      viaLegacyRoleNames: uniqueSorted(viaLegacyRoleNames),
+      activeAssignmentsCount: assignments.length,
+      activeRentalsCount,
       ways,
     },
   };
@@ -313,22 +429,6 @@ function computeParticipationBlocks(
       })
       .map((a) => a.privateArea.name)
   );
-  const plenoNames = new Set(
-    assignments
-      .filter((a) => {
-        const r = (a.roleName || "").toLowerCase();
-        return ["pleno", "dominio actual", "dominio pleno", "dominio"].some((keyword) => r.includes(keyword));
-      })
-      .map((a) => a.privateArea.name)
-  );
-  const arrendNames = new Set(
-    assignments
-      .filter((a) => {
-        const r = (a.roleName || "").toLowerCase();
-        return ["arrendatario", "arrend", "arrendamiento"].some((keyword) => r.includes(keyword));
-      })
-      .map((a) => a.privateArea.name)
-  );
 
   const sortedAssignments = [...assignments].sort((a, b) => {
     if (masterOrderMap) {
@@ -463,6 +563,103 @@ function computeParticipationSummary(
     totalPrivateAreas: 0,
     indiviso: 0,
   };
+}
+
+const ACTIVE_RENTAL_DETAIL_SELECT = {
+  id: true,
+  privateAreaId: true,
+  commerceId: true,
+  tenantName: true,
+  startsAt: true,
+  endsAt: true,
+  status: true,
+  businessClass: true,
+  notes: true,
+  privateArea: {
+    select: {
+      id: true,
+      name: true,
+      sortOrder: true,
+    },
+  },
+  commerce: {
+    select: {
+      id: true,
+      name: true,
+    },
+  },
+} satisfies Prisma.RentalSelect;
+
+type RepositoryRentalDetail = Prisma.RentalGetPayload<{
+  select: typeof ACTIVE_RENTAL_DETAIL_SELECT;
+}>;
+
+/** Combina y deduplica contratos de renta vigentes donde el usuario figura como contacto administrativo y/u operativo. */
+function buildContactActiveRentals(
+  adminRentals: RepositoryRentalDetail[],
+  operativeRentals: RepositoryRentalDetail[],
+  masterOrderMap?: Map<string, number>,
+): DirectoryContactRental[] {
+  const byId = new Map<
+    string,
+    {
+      rental: RepositoryRentalDetail;
+      contactRoles: Set<RentalContactRole>;
+    }
+  >();
+
+  const register = (rows: RepositoryRentalDetail[], role: RentalContactRole): void => {
+    for (const row of rows) {
+      const existing = byId.get(row.id);
+      if (existing) {
+        existing.contactRoles.add(role);
+      } else {
+        byId.set(row.id, {
+          rental: row,
+          contactRoles: new Set<RentalContactRole>([role]),
+        });
+      }
+    }
+  };
+
+  register(adminRentals, "ADMIN");
+  register(operativeRentals, "OPERATIVE");
+
+  return Array.from(byId.values())
+    .sort((a, b) => {
+      if (masterOrderMap) {
+        const idxA = masterOrderMap.get(a.rental.privateArea.id) ?? 999999;
+        const idxB = masterOrderMap.get(b.rental.privateArea.id) ?? 999999;
+        if (idxA !== idxB) {
+          return idxA - idxB;
+        }
+      }
+      const byArea = compareAreasByLegacyOrder(a.rental.privateArea, b.rental.privateArea);
+      if (byArea !== 0) {
+        return byArea;
+      }
+      const labelA = (a.rental.commerce?.name ?? a.rental.tenantName ?? "").trim();
+      const labelB = (b.rental.commerce?.name ?? b.rental.tenantName ?? "").trim();
+      const byLabel = labelA.localeCompare(labelB, "es", { sensitivity: "base" });
+      if (byLabel !== 0) {
+        return byLabel;
+      }
+      return a.rental.id.localeCompare(b.rental.id);
+    })
+    .map(({ rental, contactRoles }) => ({
+      id: rental.id,
+      privateAreaId: rental.privateAreaId,
+      privateAreaName: rental.privateArea.name,
+      commerceId: rental.commerceId,
+      commerceName: rental.commerce?.name ?? null,
+      tenantName: rental.tenantName,
+      contactRoles: Array.from(contactRoles),
+      startsAt: rental.startsAt ? rental.startsAt.toISOString().split("T")[0] : null,
+      endsAt: rental.endsAt ? rental.endsAt.toISOString().split("T")[0] : null,
+      status: rental.status,
+      businessClass: rental.businessClass,
+      notes: rental.notes,
+    }));
 }
 
 function resolveReferenceWhere(reference: string): Prisma.UserWhereInput | null {
@@ -703,17 +900,18 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
                 name: true,
                 legacyIdGral: true,
                 isActive: true,
+                color: true,
               },
             },
           },
         },
         rentalsAsAdministrativeContact: {
           where: activeRentalWhere(condominium.id),
-          select: { id: true },
+          select: ACTIVE_RENTAL_DETAIL_SELECT,
         },
         rentalsAsOperativeContact: {
           where: activeRentalWhere(condominium.id),
-          select: { id: true },
+          select: ACTIVE_RENTAL_DETAIL_SELECT,
         },
         assignments: {
           where: {
@@ -775,6 +973,12 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
     const activeParentIds = await getActiveParentIdsWithActiveChildren(condominium.id);
     const requiresInvoiceByUserId = await this.getRequiresInvoiceByUserId(users.map((user) => user.id));
     const commercesByUserId = await this.getCommerceRowsByUserId(users.map((user) => user.id));
+
+    const condoRoles = await prisma.role.findMany({
+      where: { condominiumId: condominium.id },
+      select: { id: true, name: true, legacyIdGral: true, color: true, isActive: true },
+    });
+
     const peopleExpanded = users
       .map<DirectoryPerson>((user) => {
         const fullName = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim();
@@ -786,15 +990,10 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
         const classified = classifyUserRolesAndMinisitioAccess({
           userType: user.userType,
           userRoles: user.userRoles,
-          activeAssignmentsCount: user.assignments.length,
+          assignments: user.assignments,
           activeRentalsCount: activeRentalIds.size,
+          condoRoles,
         });
-        const assignmentRoles = uniqueSorted(
-          user.assignments.map((assignment) => assignment.roleName ?? "").filter(Boolean),
-        );
-        const assignedAreas = uniqueSorted(
-          user.assignments.map((assignment) => assignment.privateArea.name),
-        );
         const commerces = commercesByUserId.get(user.id) ?? [];
         const userCommercesForSummary = commerces.map((c) => ({ commerceName: c.commerceName }));
         const blocks = computeParticipationBlocks(
@@ -816,14 +1015,19 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
           phone: user.phone || user.personalPhone || user.businessPhone,
           initialRole: user.initialRole,
           roles: classified.roles,
-          adminRoles: classified.adminRoles.map((r) => r.name),
+          adminRoles: classified.adminRoles,
+          adminRoleItems: classified.adminRoleItems,
           patrimonialRoles: classified.patrimonialRoles,
+          patrimonialRoleItems: classified.patrimonialRoleItems,
           hasExplicitMinisitioRole: classified.hasExplicitMinisitioRole,
+          soloMinisitioName: classified.soloMinisitioName,
+          soloMinisitioColor: classified.soloMinisitioColor,
           minisitioAccess: classified.minisitioAccess,
-          assignmentRoles,
-          assignedAreas,
+          assignmentRoles: classified.assignmentRoles,
+          assignedAreas: classified.assignedAreas,
           assignmentCount: user.assignments.length,
           totalPrivateAreas,
+          totalCommerces: commerces.length,
           indiviso,
           children: user.children.map((c) => ({
             id: c.id,
@@ -987,17 +1191,18 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
                 name: true,
                 legacyIdGral: true,
                 isActive: true,
+                color: true,
               },
             },
           },
         },
         rentalsAsAdministrativeContact: {
           where: activeRentalWhere(condominium.id),
-          select: { id: true },
+          select: ACTIVE_RENTAL_DETAIL_SELECT,
         },
         rentalsAsOperativeContact: {
           where: activeRentalWhere(condominium.id),
-          select: { id: true },
+          select: ACTIVE_RENTAL_DETAIL_SELECT,
         },
         assignments: {
           where: {
@@ -1090,15 +1295,22 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
 
     const masterOrderMap = await getMasterAreaOrderMap(condominium.id);
     const activeParentIds = await getActiveParentIdsWithActiveChildren(condominium.id);
-    const activeRentalIds = new Set([
-      ...user.rentalsAsAdministrativeContact.map((r) => r.id),
-      ...user.rentalsAsOperativeContact.map((r) => r.id),
-    ]);
+    const activeRentals = buildContactActiveRentals(
+      user.rentalsAsAdministrativeContact,
+      user.rentalsAsOperativeContact,
+      masterOrderMap,
+    );
+    const condoRoles = await prisma.role.findMany({
+      where: { condominiumId: condominium.id },
+      select: { id: true, name: true, legacyIdGral: true, color: true, isActive: true },
+    });
+
     const classified = classifyUserRolesAndMinisitioAccess({
       userType: user.userType,
       userRoles: user.userRoles,
-      activeAssignmentsCount: user.assignments.length,
-      activeRentalsCount: activeRentalIds.size,
+      assignments: user.assignments,
+      activeRentalsCount: activeRentals.length,
+      condoRoles,
     });
     const blocks = computeParticipationBlocks(
       user.assignments,
@@ -1140,9 +1352,12 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
       registrationTypeDesc: user.registrationTypeDesc,
       idVq: user.idVq,
       roles: classified.roles,
-      adminRoles: classified.adminRoles,
+      adminRoles: classified.adminRoleItems,
       patrimonialRoles: classified.patrimonialRoles,
+      patrimonialRoleItems: classified.patrimonialRoleItems,
       hasExplicitMinisitioRole: classified.hasExplicitMinisitioRole,
+      soloMinisitioName: classified.soloMinisitioName,
+      soloMinisitioColor: classified.soloMinisitioColor,
       minisitioAccess: classified.minisitioAccess,
       participationBlocks: blocks,
       linkedCommerces: user.commerces.map((c) => {
@@ -1172,6 +1387,7 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
             : null,
         };
       }),
+      activeRentals,
       assignments: user.assignments.map((assignment) => ({
         privateAreaId: assignment.privateArea.id,
         privateAreaName: assignment.privateArea.name,
@@ -1214,10 +1430,15 @@ export class PrismaDirectoryRepository implements DirectoryRepository {
 
     const roles = await prisma.role.findMany({
       where: { condominiumId: condominium.id, isActive: true },
-      select: { id: true, name: true, legacyIdGral: true },
+      select: { id: true, name: true, legacyIdGral: true, color: true },
       orderBy: [{ legacyIdGral: "asc" }, { name: "asc" }],
     });
-    return roles;
+    return roles.map((r) => ({
+      id: r.id,
+      name: r.name,
+      legacyIdGral: r.legacyIdGral,
+      color: resolveRoleColor(r),
+    }));
   }
 
   async updateContact(id: string, data: DirectoryContactUpdatePayload): Promise<{ idVq: string | null }> {

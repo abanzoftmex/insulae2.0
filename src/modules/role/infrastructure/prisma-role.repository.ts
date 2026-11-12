@@ -1,14 +1,18 @@
 import { Prisma, PrismaClient } from "@prisma/client";
-import { MINISITIO_ROLE } from "@/shared/application/auth/condomino-access";
 import { IRoleRepository } from "../domain/role.repository";
 import {
   Role,
   ModuleCatalog,
   CreateRoleRequest,
   UpdateRoleRequest,
+  UpdateRoleColorRequest,
   RoleDeactivationImpact,
   DeactivateRoleResult,
 } from "../domain/role.types";
+import {
+  assertValidRoleHexColor,
+  pickSuggestedRoleColor,
+} from "../domain/role-colors";
 import {
   evaluateRoleDeactivationImpact,
   type PolicyRoleRecord,
@@ -29,7 +33,6 @@ export class PrismaRoleRepository implements IRoleRepository {
     return this.prisma.role.findMany({
       where: {
         condominiumId,
-        OR: [{ legacyIdGral: 0 }, { legacyIdGral: MINISITIO_ROLE.legacyIdGral }],
       },
       orderBy: [{ isActive: "desc" }, { legacyIdGral: "asc" }, { name: "asc" }],
       include: {
@@ -64,10 +67,13 @@ export class PrismaRoleRepository implements IRoleRepository {
     return await this.prisma.$transaction(async (tx) => {
       const existingRoles = await tx.role.findMany({
         where: { condominiumId: req.condominiumId },
-        select: { id: true, name: true, legacyIdGral: true },
+        select: { id: true, name: true, legacyIdGral: true, color: true },
       });
 
       const validName = assertValidRoleCreationName(req.name, existingRoles);
+      const validColor = req.color
+        ? assertValidRoleHexColor(req.color)
+        : pickSuggestedRoleColor(existingRoles.map((r) => r.color));
 
       const role = await tx.role.create({
         data: {
@@ -75,6 +81,7 @@ export class PrismaRoleRepository implements IRoleRepository {
           legacyIdGral: 0,
           name: validName,
           description: req.description?.trim() || null,
+          color: validColor,
           permissions: {
             create: req.permissions.map((p) => ({
               moduleId: p.moduleId,
@@ -100,7 +107,7 @@ export class PrismaRoleRepository implements IRoleRepository {
       const [existing, condoRoles] = await Promise.all([
         tx.role.findUnique({
           where: { id: req.id, condominiumId: req.condominiumId },
-          select: { id: true, name: true, legacyIdGral: true, isActive: true },
+          select: { id: true, name: true, legacyIdGral: true, isActive: true, color: true },
         }),
         tx.role.findMany({
           where: { condominiumId: req.condominiumId },
@@ -113,12 +120,16 @@ export class PrismaRoleRepository implements IRoleRepository {
       }
 
       const validName = assertValidRoleUpdate(existing, req.name, condoRoles);
+      const validColor = req.color !== undefined && req.color !== null
+        ? assertValidRoleHexColor(req.color)
+        : existing.color;
 
       await tx.role.update({
         where: { id: req.id, condominiumId: req.condominiumId },
         data: {
           name: validName,
           description: req.description,
+          ...(validColor !== undefined ? { color: validColor } : {}),
         },
       });
 
@@ -148,6 +159,33 @@ export class PrismaRoleRepository implements IRoleRepository {
 
       return updatedRole as unknown as Role;
     });
+  }
+
+  async updateColor(req: UpdateRoleColorRequest): Promise<Role> {
+    const validColor = assertValidRoleHexColor(req.color);
+    const existing = await this.prisma.role.findUnique({
+      where: { id: req.id, condominiumId: req.condominiumId },
+      select: { id: true, name: true, legacyIdGral: true, isActive: true },
+    });
+
+    if (!existing || !existing.isActive) {
+      throw new Error("El rol no existe o se encuentra inactivo.");
+    }
+
+    // Actualiza EXCLUSIVAMENTE el color del rol.
+    // Nombre, descripción, legacyIdGral, estado y permisos permanecen intactos.
+    const updated = await this.prisma.role.update({
+      where: { id: req.id, condominiumId: req.condominiumId },
+      data: { color: validColor },
+      include: {
+        permissions: {
+          where: { isActive: true, module: { isActive: true } },
+          include: { module: true },
+        },
+      },
+    });
+
+    return updated as unknown as Role;
   }
 
   async delete(id: string, condominiumId: string, actingUserId?: string): Promise<void> {

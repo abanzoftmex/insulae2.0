@@ -39,6 +39,44 @@ function isRentalActive(
   return true;
 }
 
+function isActiveRentalStatus(status: string | null): boolean {
+  const normalized = (status ?? "").trim().toLowerCase();
+
+  if (/^\d+$/.test(normalized)) {
+    return normalized === "1" || normalized === "2" || normalized === "3" || normalized === "4";
+  }
+
+  if (
+    normalized === "0" ||
+    normalized === "finalizada" ||
+    normalized === "finalizado" ||
+    normalized === "cancelada" ||
+    normalized === "cancelado" ||
+    normalized === "vencido" ||
+    normalized === "vencida" ||
+    normalized === "inactivo"
+  ) {
+    return false;
+  }
+
+  if (normalized === "") {
+    return false;
+  }
+
+  return true;
+}
+
+function formatInputDate(date: Date | null): string {
+  if (!date) {
+    return "";
+  }
+  const d = new Date(date);
+  if (isNaN(d.getTime())) {
+    return "";
+  }
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function ListadoArrendamientosPage({ searchParams }: PageProps) {
   await requirePageAccess(MODULES.AREAS_PRIVATIVAS, "canUpdate");
   const permissions = await getUserPermissions();
@@ -94,8 +132,16 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
   const { area } = pageData;
   const now = new Date();
 
+  const latestRental = area.rentals[0] ?? null;
+  const activeRental =
+    area.rentals.find((rental) => isActiveRentalStatus(rental.status)) ?? latestRental;
+  const currentTenantName =
+    activeRental?.tenantName?.trim() || area.currentTenantName?.trim() || "";
+  const currentTenantStatus =
+    activeRental?.status ?? (currentTenantName.length > 0 ? "Activo" : "Sin estatus");
+
   const activeRentals = area.rentals.filter((rental) =>
-    isRentalActive(rental.startsAt, rental.endsAt, now),
+    isActiveRentalStatus(rental.status) || isRentalActive(rental.startsAt, rental.endsAt, now),
   );
   const finishedCount = Math.max(0, area.rentals.length - activeRentals.length);
 
@@ -143,7 +189,9 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
                     </tr>
                   ) : (
                     area.rentals.map((rental) => {
-                      const active = isRentalActive(rental.startsAt, rental.endsAt, now);
+                      const active =
+                        isActiveRentalStatus(rental.status) ||
+                        isRentalActive(rental.startsAt, rental.endsAt, now);
                       return (
                         <tr key={rental.id} className="hover:bg-canvas/60 transition-colors">
                           <td className="border-b border-line/40 px-3 py-2 font-bold text-ink">
@@ -192,29 +240,61 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
           </CardContent>
         </Card>
 
-        {/* New rental form */}
+        {/* Formulario de arrendatario o usuario */}
         {canCreate && (
           <Card className="border-transparent shadow-layered">
             <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card">
               <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">
-                Nuevo Arrendatario o Usuario
+                {currentTenantName ? "Arrendatario o Usuario" : "Nuevo Arrendatario o Usuario"}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 space-y-3">
               <p className="text-[11px] text-ink-soft">
-                Alta rápida para registrar movimientos operativos de la unidad.
+                {currentTenantName
+                  ? "Gestión y actualización del arrendatario o usuario asociado a la unidad."
+                  : "Alta rápida para registrar movimientos operativos de la unidad."}
               </p>
 
               <form action={createPrivateAreaRentalAction} className="space-y-3">
                 <input type="hidden" name="privateAreaId" value={area.privateAreaId} />
+                {activeRental && <input type="hidden" name="rentalId" value={activeRental.id} />}
 
-                <Input label="Arrendatario o Usuario" type="text" name="tenantName" required />
+                <Input
+                  label="Arrendatario o Usuario"
+                  type="text"
+                  name="tenantName"
+                  defaultValue={currentTenantName}
+                  placeholder="Nombre del arrendatario o usuario"
+                  list="tenant-options"
+                  required
+                />
+                <datalist id="tenant-options">
+                  {area.tenantOptions.map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
 
-                <Input label="Estatus" type="text" name="status" placeholder="Activo" />
+                <Input
+                  label="Estatus"
+                  type="text"
+                  name="status"
+                  defaultValue={activeRental?.status ?? (currentTenantName ? "Activo" : "")}
+                  placeholder="Activo"
+                />
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Input label="Inicio" type="date" name="startsAt" />
-                  <Input label="Fin" type="date" name="endsAt" />
+                  <Input
+                    label="Inicio"
+                    type="date"
+                    name="startsAt"
+                    defaultValue={formatInputDate(activeRental?.startsAt ?? null)}
+                  />
+                  <Input
+                    label="Fin"
+                    type="date"
+                    name="endsAt"
+                    defaultValue={formatInputDate(activeRental?.endsAt ?? null)}
+                  />
                 </div>
 
                 <div className="flex flex-col gap-1.5">
@@ -224,9 +304,24 @@ export default async function ListadoArrendamientosPage({ searchParams }: PagePr
                   <textarea
                     name="notes"
                     rows={4}
+                    defaultValue={activeRental?.notes ?? ""}
+                    placeholder="Notas o comentarios..."
                     className="w-full rounded-md border border-line bg-card px-3 py-2 text-[13px] font-medium text-ink transition-standard resize-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-accent/30 focus-visible:border-brand-accent"
                   />
                 </div>
+
+                {currentTenantName ? (
+                  <div className="space-y-1 rounded bg-canvas border border-line/50 px-3 py-2 text-[12px] text-ink-soft">
+                    <p className="flex items-center justify-between">
+                      <span className="font-medium">Nombre actual</span>
+                      <strong className="text-ink">{currentTenantName}</strong>
+                    </p>
+                    <p className="flex items-center justify-between">
+                      <span className="font-medium">Estatus</span>
+                      <strong className="text-ink">{currentTenantStatus}</strong>
+                    </p>
+                  </div>
+                ) : null}
 
                 <Button type="submit" variant="dark" size="md" className="w-full font-bold uppercase tracking-widest text-[11px]">
                   Guardar Arrendatario o Usuario

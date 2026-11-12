@@ -289,9 +289,6 @@ export async function getPersonRelationsForDeletionAction(
     }));
 
     const roles = user.userRoles.map((ur) => ur.role.name);
-    if (user.initialRole && !roles.includes(user.initialRole)) {
-      roles.push(user.initialRole);
-    }
 
     const hasRelations =
       privateAreas.length > 0 ||

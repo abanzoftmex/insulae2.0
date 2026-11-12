@@ -13,10 +13,16 @@ export interface DirectoryPagination {
   hasNext: boolean;
 }
 
+export interface DirectoryRoleBadgeItem {
+  name: string;
+  color: string;
+}
+
 export interface DirectoryRoleOption {
   id: string;
   name: string;
   legacyIdGral: number;
+  color: string;
 }
 
 export interface MinisitioAccessSummary {
@@ -48,13 +54,18 @@ export interface DirectoryPerson {
   initialRole: string | null;
   roles: string[];
   adminRoles: string[];
+  adminRoleItems: DirectoryRoleBadgeItem[];
   patrimonialRoles: string[];
+  patrimonialRoleItems: DirectoryRoleBadgeItem[];
   hasExplicitMinisitioRole: boolean;
+  soloMinisitioName: string;
+  soloMinisitioColor: string;
   minisitioAccess: MinisitioAccessSummary;
   assignmentRoles: string[];
   assignedAreas: string[];
   assignmentCount: number;
   totalPrivateAreas: number;
+  totalCommerces: number;
   indiviso: number;
   children?: NestedUser[];
 }
@@ -95,6 +106,23 @@ export interface LinkedCommerce {
   email?: string | null;
   administrativeContact?: LinkedCommerceContact | null;
   operativeContact?: LinkedCommerceContact | null;
+}
+
+export type RentalContactRole = "ADMIN" | "OPERATIVE";
+
+export interface DirectoryContactRental {
+  id: string;
+  privateAreaId: string;
+  privateAreaName: string;
+  commerceId: string | null;
+  commerceName: string | null;
+  tenantName: string | null;
+  contactRoles: RentalContactRole[];
+  startsAt: string | null;
+  endsAt: string | null;
+  status: string | null;
+  businessClass: string | null;
+  notes: string | null;
 }
 
 export interface NestedUser {
@@ -138,12 +166,16 @@ export interface DirectoryContactParticipation {
   taxStatusPdfUrl: string | null;
   initialRole: string | null;
   roles: string[];
-  adminRoles: Array<{ id: string; name: string }>;
+  adminRoles: Array<{ id: string; name: string; color: string }>;
   patrimonialRoles: string[];
+  patrimonialRoleItems: DirectoryRoleBadgeItem[];
   hasExplicitMinisitioRole: boolean;
+  soloMinisitioName: string;
+  soloMinisitioColor: string;
   minisitioAccess: MinisitioAccessSummary;
   participationBlocks: ParticipationBlock[];
   linkedCommerces: LinkedCommerce[];
+  activeRentals: DirectoryContactRental[];
   assignments: DirectoryContactAssignment[];
   condominiumId: string;
   birthDate: string | null;

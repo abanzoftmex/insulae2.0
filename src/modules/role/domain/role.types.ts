@@ -5,6 +5,7 @@ export interface Role {
   legacyIdGral?: number;
   name: string;
   description: string | null;
+  color: string | null;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -34,6 +35,7 @@ export interface CreateRoleRequest {
   condominiumId: string;
   name: string;
   description?: string;
+  color?: string | null;
   permissions: {
     moduleId: string;
     canCreate: boolean;
@@ -45,6 +47,12 @@ export interface CreateRoleRequest {
 
 export interface UpdateRoleRequest extends CreateRoleRequest {
   id: string;
+}
+
+export interface UpdateRoleColorRequest {
+  id: string;
+  condominiumId: string;
+  color: string;
 }
 
 export interface AffectedRoleUser {

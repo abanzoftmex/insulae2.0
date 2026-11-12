@@ -51,6 +51,7 @@ export default async function EditRolePage(props: Props) {
       modules={modules}
       condominiumId={condominium.id}
       canUpdate={canUpdate && !isProtectedRole}
+      canEditColor={canUpdate}
       isProtectedRole={isProtectedRole}
     />
   );
