@@ -12,11 +12,14 @@ import {
 } from "./stats-charts";
 
 const numberFormat = new Intl.NumberFormat("es-MX");
-const decimalFormat = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
-const CATEGORICAL = ["#8a8619", "#0891b2", "#b5451f", "#b8860b", "#2563eb", "#b0509f"];
+const decimalFormat = new Intl.NumberFormat("es-MX", {
+  minimumFractionDigits: 4,
+  maximumFractionDigits: 4,
+});
+const CATEGORICAL = ["#0891b2", "#b5451f", "#b8860b", "#2563eb", "#b0509f", "#8a8619"];
 const SURFACE = "#ffffff";
 const BRAND_DEEP = "#304854";
-const MUTED = "#dce7ed";
+const MUTED = "#cad7de";
 
 /**
  * Color de cada porción según el papel que juega:
@@ -24,16 +27,22 @@ const MUTED = "#dce7ed";
  * (sequential), o identidad genérica (category).
  */
 function sliceColor(chart: KpiDetailChart, name: string, index: number, total: number): string {
+  if (name.toLowerCase().includes("sin uso") || name.toLowerCase().includes("sin clasificar")) {
+    return "#94a3b8";
+  }
   if (chart.palette === "business") return giroColor(name, index);
   if (chart.palette === "category") {
     return CATEGORY_COLORS[name] ?? CATEGORICAL[index % CATEGORICAL.length];
   }
   if (chart.palette === "sequential") {
-    // Con tres o más clases hay escala real (menos → más) y la rampa avanza de
-    // claro a oscuro. Con dos no hay orden que mostrar: el primero es el dato
-    // protagonista, así que se lleva el tono fuerte y el segundo el apagado.
-    if (total <= 2) return index === 0 ? SEQUENTIAL[4] : SEQUENTIAL[0];
-    const step = Math.min(SEQUENTIAL.length - 1, Math.round((index / Math.max(1, total - 1)) * (SEQUENTIAL.length - 1)));
+    // Si la última categoría es neutral ("sin uso..."), calculamos la rampa secuencial sobre las funcionales
+    const hasNeutral = chart.data.some((d) => d.name.toLowerCase().includes("sin uso"));
+    const effectiveTotal = hasNeutral && total > 1 ? total - 1 : total;
+    if (effectiveTotal <= 2) return index === 0 ? SEQUENTIAL[4] : SEQUENTIAL[0];
+    const step = Math.min(
+      SEQUENTIAL.length - 1,
+      Math.round((index / Math.max(1, effectiveTotal - 1)) * (SEQUENTIAL.length - 1)),
+    );
     return SEQUENTIAL[step];
   }
   return CATEGORICAL[index % CATEGORICAL.length];
@@ -64,7 +73,7 @@ function DetailTooltip({
 
 /** Dona con leyenda tabulada a la derecha */
 function DetailDonut({ chart }: { chart: KpiDetailChart }) {
-  const total = chart.data.reduce((sum, row) => sum + row.value, 0);
+  const total = chart.total ?? chart.data.reduce((sum, row) => sum + row.value, 0);
   const rows = chart.data.map((row, index) => ({
     ...row,
     share: total > 0 ? (row.value / total) * 100 : 0,
@@ -111,7 +120,7 @@ function DetailDonut({ chart }: { chart: KpiDetailChart }) {
             <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: row.color }} />
             <span className="text-ink font-medium flex-1 truncate">{row.name}</span>
             <span className="text-ink font-semibold tabular-nums">{numberFormat.format(row.value)}</span>
-            <span className="text-ink-soft/70 tabular-nums w-10 text-right">{decimalFormat.format(row.share)}%</span>
+            <span className="text-ink-soft/70 tabular-nums w-20 text-right shrink-0">{decimalFormat.format(row.share)}%</span>
           </li>
         ))}
       </ul>
@@ -132,7 +141,7 @@ function DetailProgress({ chart }: { chart: KpiDetailChart }) {
               style={{ width: `${Math.min(100, row.value)}%`, backgroundColor: BRAND_DEEP }}
             />
           </div>
-          <span className="text-[11px] font-semibold text-ink tabular-nums w-[52px] text-right">
+          <span className="text-[11px] font-semibold text-ink tabular-nums w-[72px] text-right shrink-0">
             {decimalFormat.format(row.value)}%
           </span>
         </div>
@@ -151,8 +160,9 @@ export function DetailChart({ chart }: { chart: KpiDetailChart }) {
     case "progress":
       return <DetailProgress chart={chart} />;
     case "columns":
-      return <OpeningsChart data={chart.data.map((row) => ({ label: row.name, value: row.value }))} height={220} />;
+      return <OpeningsChart data={chart.data.map((d) => ({ label: d.name, value: d.value }))} />;
+    case "bars":
     default:
-      return <HorizontalBars data={chart.data} suffix={chart.suffix ?? ""} labelWidth={chart.wide ? 170 : 138} />;
+      return <HorizontalBars data={chart.data} suffix={chart.suffix} labelWidth={120} fill />;
   }
 }

@@ -73,17 +73,24 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
     },
     {
       key: "areas",
-      label: "Áreas privativas",
+      label: "Inmuebles activos en predios",
       value: formatInt(vm.totalPrivateAreas),
       hint: `${formatInt(vm.parentPrivateAreas)} predios · ${formatInt(vm.childPrivateAreas)} unidades`,
       accent: "cyan",
     },
     {
       key: "businesses",
-      label: "Negocios activos",
+      label: "Actividad Comercial",
       value: formatInt(vm.activeBusinesses),
-      hint: `${formatInt(vm.totalBusinesses)} registrados`,
+      hint: `${formatInt(vm.activeBusinesses)} activos · ${formatInt(vm.totalBusinesses)} registrados`,
       accent: "gold",
+      colSpan: 2,
+      secondary: {
+        key: "commercial",
+        label: "Locales y servicios",
+        value: formatInt(vm.commercialAreas),
+        hint: `${formatInt(vm.commercialAreas)} ${vm.commercialAreas === 1 ? "unidad comercial" : "unidades comerciales"}`,
+      },
     },
     {
       key: "occupancy",
@@ -99,12 +106,6 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
       hint: "Lofts, deptos. y casas",
     },
     {
-      key: "commercial",
-      label: "Locales y servicios",
-      value: formatInt(vm.commercialAreas),
-      hint: "Incluye hotelería",
-    },
-    {
       key: "land",
       label: "Apoles",
       value: formatInt(vm.landAreas),
@@ -114,7 +115,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
       key: "built",
       label: "Con construcción",
       value: formatInt(vm.builtAreas),
-      hint: `${formatInt(vm.unbuiltAreas)} sin construir`,
+      hint: `${formatInt(vm.builtAreas)} unidades · ${formatInt(vm.totalBuiltM2)} m²`,
     },
   ];
 
@@ -129,7 +130,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
         rows: (vm.businessesByLine ?? []).map((row) => ({
           Giro: row.name,
           Negocios: row.businesses,
-          "Participación %": Number(row.share.toFixed(1)),
+          "Participación %": Number(row.share.toFixed(4)),
         })),
       },
       {
@@ -145,28 +146,46 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
         rows: vm.businessOpeningsByYear.map((row) => ({ Año: row.year, Aperturas: row.value })),
       },
       {
-        name: "Áreas por barrio",
-        rows: vm.areasByZone.map((row) => ({ Barrio: row.name, Áreas: row.value })),
+        name: "Inmuebles por barrio",
+        rows: vm.areasByZone.map((row) => ({ Barrio: row.name, Inmuebles: row.value })),
       },
       {
         name: "Usos de suelo",
-        rows: vm.areasByUseType.map((row) => ({ "Uso de suelo": row.name, Áreas: row.value })),
+        rows: vm.areasByUseType.map((row) => ({ "Uso de suelo": row.name, Inmuebles: row.value })),
       },
       {
         name: "Clasificación",
-        rows: vm.areasByCategory.map((row) => ({ Categoría: row.name, Áreas: row.value })),
+        rows: vm.areasByCategory.map((row) => ({ Categoría: row.name, Inmuebles: row.value })),
       },
       {
         name: "Tipos de propiedad",
         rows: vm.ownershipByRole.map((row) => ({ Rol: row.name, Asignaciones: row.value })),
       },
       {
-        name: "Propietarios por áreas",
+        name: "Propietarios por inmuebles",
         rows: vm.ownersByAreaCount.map((row) => ({ Rango: row.name, Propietarios: row.value })),
       },
       {
+        name: "Ocupación por barrio",
+        rows: vm.occupancyByZone.map((row) => ({
+          Barrio: row.zone,
+          Ocupados: row.occupied,
+          "Sin ocupar": row.vacant,
+          Total: row.total,
+          "Tasa %": Number(row.rate.toFixed(4)),
+        })),
+      },
+      {
+        name: "Superficie construida",
+        rows: vm.builtM2ByZone.map((row) => ({ Barrio: row.name, "m²": row.value })),
+      },
+      {
         name: "Pagos por mes",
-        rows: vm.paymentsByMonth.map((row) => ({ Mes: row.month, Pagos: row.count, "Monto MXN": row.amount })),
+        rows: vm.paymentsByMonth.map((row) => ({
+          Mes: row.month,
+          Operaciones: row.count,
+          Monto: row.amount,
+        })),
       },
       {
         name: "Pagos por método",
@@ -180,7 +199,6 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
     caveats: vm.caveats,
   };
 
-
   const totalClassified = vm.areasByCategory.reduce((sum, row) => sum + row.value, 0);
   const emailPct = (vm.contactCoverage.withEmail / Math.max(1, vm.contactCoverage.totalActiveUsers)) * 100;
   const phonePct = (vm.contactCoverage.withPhone / Math.max(1, vm.contactCoverage.totalActiveUsers)) * 100;
@@ -188,21 +206,6 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
     vm.classifiedBusinesses !== null && vm.activeBusinesses > 0
       ? (vm.classifiedBusinesses / vm.activeBusinesses) * 100
       : null;
-  // La dona admite ~7 clases de color: los seis usos mayores y el resto agrupado
-  const TOP_USE_TYPES = 6;
-  const rankedUseTypes = vm.areasByUseTypeCategorized;
-  const useTypeSlices = [
-    ...rankedUseTypes.slice(0, TOP_USE_TYPES),
-    ...(rankedUseTypes.length > TOP_USE_TYPES
-      ? [
-          {
-            name: "Otros usos",
-            value: rankedUseTypes.slice(TOP_USE_TYPES).reduce((sum, row) => sum + row.value, 0),
-            category: "Sin clasificar",
-          },
-        ]
-      : []),
-  ];
 
   const sections: SectionLink[] = [
     { id: "panorama", label: "Panorama", accent: "#304854" },
@@ -219,14 +222,14 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
   );
 
   return (
-    <div className="-mx-4 md:-mx-6 lg:-mx-10 -my-4 md:-my-6 lg:-my-8 px-4 md:px-6 lg:px-10 py-4 md:py-6 lg:py-8 bg-[#faf9f6] min-h-screen">
+    <div className="-mx-4 md:-mx-6 lg:-mx-10 -my-4 md:-my-6 lg:-my-8 px-4 md:px-6 lg:px-10 py-4 md:py-6 lg:py-8 bg-[#f4f6f8] min-h-screen">
       <div className="space-y-7">
         {/* ── Encabezado ─────────────────────────────────────────────── */}
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <PageBackBadge className="mt-2 shrink-0 print:hidden" />
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand-accent mb-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-brand mb-1">
                 {vm.condominiumName}
               </p>
               <h1 className="text-[26px] font-bold text-ink leading-none tracking-tight">Estadísticas</h1>
@@ -241,7 +244,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
         </header>
 
         {/* ── Navegación + filtros (siempre visibles en pantalla) ─────── */}
-        <div className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-[#faf9f6]/92 backdrop-blur-sm print:hidden">
+        <div className="sticky top-0 z-30 -mx-1 px-1 py-2 bg-[#f4f6f8]/92 backdrop-blur-sm print:hidden">
           <div className="bg-card rounded-card border border-line/80 shadow-[0_1px_3px_rgba(0,0,0,0.06)] px-3 py-2 flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3 min-w-0">
             <SectionNav sections={sections} />
             <div className="lg:ml-auto lg:border-l lg:border-line lg:pl-3 shrink-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -270,19 +273,18 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
         <section id="patrimonio" className="space-y-3 scroll-mt-24">
           <SectionHeader
             eyebrow="Patrimonio"
-            title="Composición de las Áreas privativas"
+            title="Composición del inmobiliario"
             description="Cómo se reparten los inmuebles entre barrios, clasificaciones y usos de suelo."
             accent="#0891b2"
           />
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard
-              title="Clasificación de áreas"
-              subtitle="Derivada del uso de suelo registrado"
+              title="Inventario general"
               className="lg:col-span-2"
               bodyClassName="justify-between gap-4"
             >
-              <CompositionDonut data={vm.areasByCategory} totalLabel="Áreas" />
-              <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2.5">
+              <CompositionDonut data={vm.areasByCategory} totalLabel="Actualidad de las áreas" />
+              <div className="grid grid-cols-3 gap-2.5">
                 <MiniStat label="Predios" value={formatInt(vm.parentPrivateAreas)} />
                 <MiniStat label="Unidades" value={formatInt(vm.childPrivateAreas)} />
                 <MiniStat label="Construidos" value={formatInt(vm.builtAreas)} />
@@ -300,10 +302,10 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             <ChartCard
               title="Usos de suelo"
-              subtitle="Participación de cada uso sobre el total de inmuebles"
+              subtitle="Participación por vocación de inmuebles"
               className="lg:col-span-2"
             >
-              <UseTypeDonut data={useTypeSlices} />
+              <UseTypeDonut data={vm.areasByUseTypeCategorized} />
             </ChartCard>
             <ChartCard
               title="Superficie construida"
@@ -313,7 +315,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
               bodyClassName="justify-between gap-4"
             >
               <HorizontalBars data={vm.builtM2ByZone} suffix=" m²" labelWidth={118} />
-              <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2.5">
+              <div className="grid grid-cols-3 gap-2.5">
                 <MiniStat
                   label="Promedio construido"
                   value={`${formatInt(vm.builtAreas ? vm.totalBuiltM2 / vm.builtAreas : 0)} m²`}
@@ -323,7 +325,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
                   label="Concentración"
                   value={
                     vm.builtM2ByZone.length && vm.totalBuiltM2
-                      ? formatPct((vm.builtM2ByZone[0].value / vm.totalBuiltM2) * 100, 0)
+                      ? formatPct((vm.builtM2ByZone[0].value / vm.totalBuiltM2) * 100)
                       : "—"
                   }
                   hint={vm.builtM2ByZone.length ? `en ${vm.builtM2ByZone[0].name}` : undefined}
@@ -366,7 +368,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
                   hint="Sin residente ni negocio"
                 />
                 <MiniStat
-                  label="Barrios al 100%"
+                  label="Barrios al 100.0000%"
                   value={formatInt(vm.occupancyByZone.filter((z) => z.rate >= 100).length)}
                   hint={`de ${formatInt(vm.occupancyByZone.length)} barrios`}
                 />
@@ -394,13 +396,13 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
             <ChartCard
               title="Distribución por giro"
               subtitle="Participación de cada giro sobre los negocios clasificados"
-              hint={businessCoverage !== null ? `${businessCoverage.toFixed(0)}% clasificados` : undefined}
+              hint={businessCoverage !== null ? `${formatPct(businessCoverage)} clasificados` : undefined}
               bodyClassName="justify-between"
             >
               {vm.businessesByLine && vm.businessesByLine.length > 0 ? (
                 <>
                   <BusinessLineDonut data={vm.businessesByLine} total={vm.classifiedBusinesses ?? 0} />
-                  <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2.5 mt-4">
+                  <div className="grid grid-cols-3 gap-2.5 mt-4">
                     <MiniStat label="Giros" value={formatInt(vm.businessLinesCount ?? 0)} hint="En el catálogo" />
                     <MiniStat
                       label="Clasificados"
@@ -483,7 +485,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
                 <div>
                   <div className="flex items-baseline justify-between mb-1.5">
                     <span className="text-[12px] text-ink font-medium">Con correo</span>
-                    <span className="text-[15px] font-bold text-ink tabular-nums">{formatPct(emailPct, 0)}</span>
+                    <span className="text-[15px] font-bold text-ink tabular-nums">{formatPct(emailPct)}</span>
                   </div>
                   <ShareBar value={vm.contactCoverage.withEmail} total={vm.contactCoverage.totalActiveUsers} />
                   <p className="text-[10.5px] text-ink-soft/75 mt-1">
@@ -494,7 +496,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
                 <div>
                   <div className="flex items-baseline justify-between mb-1.5">
                     <span className="text-[12px] text-ink font-medium">Con teléfono</span>
-                    <span className="text-[15px] font-bold text-ink tabular-nums">{formatPct(phonePct, 0)}</span>
+                    <span className="text-[15px] font-bold text-ink tabular-nums">{formatPct(phonePct)}</span>
                   </div>
                   <ShareBar
                     value={vm.contactCoverage.withPhone}
@@ -557,7 +559,7 @@ export default async function EstadisticasPage({ searchParams }: PageProps) {
         {vm.caveats.length > 0 && (
           <section className="rounded-card border border-gold/25 bg-gold-soft px-4 py-3.5">
             <div className="flex items-start gap-2.5">
-              <Info className="w-4 h-4 shrink-0 mt-0.5 text-brand-accent" />
+              <Info className="w-4 h-4 shrink-0 mt-0.5 text-brand" />
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-ink-soft/80 mb-1.5">
                   Cómo leer estas cifras

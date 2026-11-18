@@ -9,12 +9,27 @@ const currencyFormatter = new Intl.NumberFormat("es-MX", {
 
 const MONTH_LABELS = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
 
+const pctFormatter = new Intl.NumberFormat("es-MX", {
+  minimumFractionDigits: 4,
+  maximumFractionDigits: 4,
+});
+
 export function formatInt(value: number): string {
   return numberFormatter.format(Math.round(value));
 }
 
-export function formatPct(value: number, decimals = 1): string {
-  return `${value.toFixed(decimals)}%`;
+/**
+ * Formatea un porcentaje con exactamente cuatro decimales por defecto (p. ej. 69.1000%, 5.2288%).
+ * Estandarizado para todas las estadísticas de SASSI y Val'Quirico.
+ */
+export function formatPct(value: number, decimals = 4): string {
+  if (decimals === 4) {
+    return `${pctFormatter.format(value)}%`;
+  }
+  return `${value.toLocaleString("es-MX", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  })}%`;
 }
 
 export function formatMonthLabel(month: string): string {

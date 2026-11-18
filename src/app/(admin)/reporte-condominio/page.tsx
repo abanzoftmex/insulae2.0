@@ -7,21 +7,16 @@ import { prisma } from "@/shared/infrastructure/db/prisma";
 import { PROJECT_SCOPE } from "@/config/project-scope";
 import { toCondominiumReportVM } from "@/modules/condominium-report/presentation/condominium-report.vm";
 import { Badge } from "@/components/ui/badge";
-import { StatCard } from "@/components/ui/stat-card";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageBackBadge } from "@/components/ui/page-back-badge";
 import { cn } from "@/shared/utils/cn";
 import {
-  Sun,
-  Moon,
-  Layers,
   Info,
   ArrowRight,
   Database,
   FileText,
   Activity,
-  Building2,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -159,115 +154,6 @@ export default async function ReporteCondominioPage() {
           <Button variant="dark" size="sm" asChild className="h-8 gap-2 px-4 text-[10px] font-bold uppercase rounded-full shadow-md shadow-brand-deep/25">
             <Link href="/condominio"><ArrowRight className="h-3.5 w-3.5 shrink-0" aria-hidden /> Configuración</Link>
           </Button>
-        </div>
-      </div>
-
-      {/* Soles / Sombras Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="lg:col-span-2 overflow-hidden border-transparent shadow-layered">
-          <CardHeader className="px-4 py-3 border-b border-brand/40 bg-brand rounded-t-card flex flex-row flex-wrap items-center justify-between gap-2">
-            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-white">Distribución Soles / Sombras</CardTitle>
-            <span className="text-[10px] font-bold text-white/70">Base: {vm.classificationBaseLabel}</span>
-          </CardHeader>
-          <CardContent className="p-4 space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="p-4 rounded-xl bg-[linear-gradient(135deg,#fff8e1_0%,#fff1b8_100%)] border border-yellow-200/50 flex flex-col justify-between min-h-25">
-                <div className="flex justify-between items-start">
-                  <span className="text-[9px] font-bold uppercase text-yellow-700 tracking-widest">Soles</span>
-                  <span className="flex items-center justify-center h-7 w-7 rounded-lg bg-yellow-900/80">
-                    <Sun className="h-3.5 w-3.5 text-yellow-200" />
-                  </span>
-                </div>
-                <div>
-                  <p className="text-3xl sm:text-4xl font-bold text-yellow-900 leading-none">{vm.availableAreas}</p>
-                  <p className="text-[10px] font-bold text-yellow-800/60 uppercase mt-1.5">{vm.availableRatio} del total</p>
-                </div>
-                <div className="mt-3 pt-2.5 border-t border-yellow-800/10 flex justify-between items-center text-[10px]">
-                  <span className="font-semibold text-yellow-800/70 uppercase">APOLes Totales:</span>
-                  <span className="font-extrabold text-yellow-900 bg-yellow-900/10 rounded px-1.5 py-0.5">{vm.apolCount}</span>
-                </div>
-              </div>
-
-              <div className="p-4 rounded-xl bg-[linear-gradient(135deg,#e3f2fd_0%,#bbdefb_100%)] border border-blue-200/50 flex flex-col justify-between min-h-25">
-                <div className="flex justify-between items-start">
-                  <span className="text-[9px] font-bold uppercase text-blue-700 tracking-widest">Sombras</span>
-                  <span className="flex items-center justify-center h-7 w-7 rounded-lg bg-blue-900/80">
-                    <Moon className="h-3.5 w-3.5 text-blue-200" />
-                  </span>
-                </div>
-                <div>
-                  <p className="text-3xl sm:text-4xl font-bold text-blue-900 leading-none">{vm.builtAreas}</p>
-                  <p className="text-[10px] font-bold text-blue-800/60 uppercase mt-1.5">{vm.builtRatio} del total</p>
-                </div>
-                <div className="mt-3 pt-2.5 border-t border-blue-800/10 flex justify-between items-center text-[10px]">
-                  <span className="font-semibold text-blue-800/70 uppercase">Fracciones de APOLes:</span>
-                  <span className="font-extrabold text-blue-900 bg-blue-900/10 rounded px-1.5 py-0.5">{vm.activeChildrenOfApolAreas}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <div className="h-2 w-full bg-canvas rounded-full overflow-hidden flex">
-                <div className="h-full bg-yellow-400" style={{ width: `${vm.availableRatioValue}%` }} />
-                <div className="h-full bg-blue-400" style={{ width: `${vm.builtRatioValue}%` }} />
-              </div>
-              <div className="flex justify-between text-[9px] font-bold uppercase text-ink-soft/70">
-                <span>Total Base: {vm.classificationBaseTotal}</span>
-                <span>{vm.classificationModeLabel}</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <div className="grid grid-cols-1 gap-3">
-          <div
-            className="p-4 rounded-xl flex flex-col justify-between min-h-25 border border-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.05)]"
-            style={{ backgroundColor: "#f0fbfd" }}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-[#52525b]">
-                Áreas privativas
-              </p>
-              <span className="p-1.5 rounded-md shrink-0 bg-[#083344] text-[#f0fbfd]">
-                <Building2 className="w-4 h-4" />
-              </span>
-            </div>
-            <div className="flex items-end justify-between gap-2 mt-2">
-              <span className="text-2xl font-bold leading-none text-[#09090b]">
-                {vm.validAreasCount}
-              </span>
-              <span className="text-[10px] font-semibold text-ink-soft/70 text-right leading-tight max-w-[58%]">
-                {vm.validParentAreasCount} predios · {vm.validChildAreasCount} unidades
-              </span>
-            </div>
-          </div>
-
-          <Card className="p-4 flex flex-col justify-between min-h-25 shadow-sm bg-lime-50/70 border-lime-200/60">
-            <div className="flex items-start justify-between">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-lime-700">
-                FAPAs (Hijos)
-              </p>
-              <div className="p-1.5 rounded-md bg-lime-900 text-lime-200">
-                <Layers className="h-3.5 w-3.5" />
-              </div>
-            </div>
-            <div className="mt-2 flex items-end justify-between gap-2">
-              <div>
-                <h3 className="text-xl font-bold leading-none text-lime-700">
-                  {vm.validChildAreasCount}
-                </h3>
-                <p className="text-[10px] font-bold text-lime-600/60 uppercase mt-1">Unidades / Fracciones</p>
-              </div>
-              <div className="text-right">
-                <span className="text-xs font-bold text-lime-800">{vm.validParentAreasCount}</span>
-                <p className="text-[9px] font-semibold text-lime-700/70 uppercase">Predios padres</p>
-              </div>
-            </div>
-            <div className="mt-3 pt-2.5 border-t border-lime-600/10 flex justify-between items-center text-[10px]">
-              <span className="font-semibold text-lime-600/70 uppercase">Total con uso de suelo:</span>
-              <span className="font-extrabold text-lime-700 bg-lime-900/10 rounded px-1.5 py-0.5">{vm.validAreasCount}</span>
-            </div>
-          </Card>
         </div>
       </div>
 

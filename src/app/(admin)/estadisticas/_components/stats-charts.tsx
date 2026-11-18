@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
+import { cn } from "@/shared/utils/cn";
 import {
   Area,
   AreaChart,
@@ -23,14 +24,15 @@ import {
 // los seis checks de CVD y la rampa las cuatro comprobaciones ordinales.
 
 export const GIRO_COLORS: Record<string, string> = {
-  "Alimento & Bebidas": "#8a8619",
-  Educación: "#0891b2",
-  Experiencia: "#b5451f",
-  Hospedaje: "#b8860b",
-  Servicios: "#2563eb",
-  Tiendas: "#b0509f",
+  "Alimento & Bebidas": "#0891b2",
+  Educación: "#b5451f",
+  Experiencia: "#b8860b",
+  Hospedaje: "#2563eb",
+  Servicios: "#b0509f",
+  Tiendas: "#8a8619",
 };
-const CATEGORICAL_ORDER = ["#304854", "#0891b2", "#b5451f", "#d0b685", "#2563eb", "#b0509f"];
+// Orden fijo con contraste y armonía institucional.
+const CATEGORICAL_ORDER = ["#0891b2", "#b5451f", "#d0b685", "#2563eb", "#b0509f", "#304854"];
 
 /** Rampa secuencial de marca azul: light→dark */
 export const SEQUENTIAL = ["#96b2be", "#7b9caa", "#618797", "#4c7282", "#3a5d6c", "#304854"];
@@ -40,12 +42,13 @@ export const CATEGORY_COLORS: Record<string, string> = {
   Habitacional: "#304854",
   "Comercial / Servicios": "#0891b2",
   "Lote / Suelo": "#d0b685",
+  "Área común": "#3d5b6a",
   "Sin clasificar": "#9ca3af",
 };
 
 const BRAND = "#3d5b6a";
 const BRAND_DEEP = "#304854";
-const MUTED = "#dce7ed";
+const MUTED = "#cad7de";
 const GRID = "rgba(0,0,0,0.06)";
 const INK_SOFT = "rgba(0,0,0,0.58)";
 const SURFACE = "#ffffff";
@@ -61,14 +64,17 @@ export function giroColor(name: string, index: number): string {
  * cuadrada reparte los pasos de forma perceptualmente útil.
  */
 export function rampStep(value: number, max: number): string {
-  if (max <= 0 || value <= 0) return "#eef0e4";
+  if (max <= 0 || value <= 0) return "#e9f2ef";
   const ratio = Math.sqrt(value / max);
   const index = Math.min(SEQUENTIAL.length - 1, Math.floor(ratio * SEQUENTIAL.length));
   return SEQUENTIAL[index];
 }
 
 const numberFormat = new Intl.NumberFormat("es-MX");
-const decimalFormat = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
+const decimalFormat = new Intl.NumberFormat("es-MX", {
+  minimumFractionDigits: 4,
+  maximumFractionDigits: 4,
+});
 
 // ─── Tooltip común ────────────────────────────────────────────────────────────
 
@@ -130,42 +136,26 @@ export function HorizontalBars({
   useRamp?: boolean;
   fill?: boolean;
 }) {
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(max-width: 639px)");
-    const update = () => setIsMobile(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
-
-  const effectiveLabelWidth = isMobile ? Math.min(labelWidth, 98) : labelWidth;
   const chartHeight = height ?? Math.max(110, data.length * 32 + 16);
   const max = Math.max(...data.map((d) => d.value), 0);
   return (
     <ResponsiveContainer width="100%" height={fill ? "100%" : chartHeight} minHeight={fill ? chartHeight : undefined}>
-      <BarChart data={data} layout="vertical" margin={{ top: 0, right: isMobile ? 42 : 48, bottom: 0, left: 4 }} barCategoryGap="26%">
+      <BarChart data={data} layout="vertical" margin={{ top: 0, right: 48, bottom: 0, left: 4 }} barCategoryGap="26%">
         <CartesianGrid horizontal={false} stroke={GRID} strokeWidth={1} />
         <XAxis type="number" hide />
         <YAxis
           type="category"
           dataKey="name"
-          width={effectiveLabelWidth}
+          width={labelWidth}
           tickLine={false}
           axisLine={false}
-          tick={{ fill: INK_SOFT, fontSize: isMobile ? 10 : 11 }}
-          tickFormatter={
-            isMobile
-              ? (val: string) => (typeof val === "string" && val.length > 14 ? `${val.slice(0, 13)}…` : val)
-              : undefined
-          }
+          tick={{ fill: INK_SOFT, fontSize: 11 }}
         />
         <Tooltip
           cursor={{ fill: "rgba(0,0,0,0.03)" }}
           content={<SimpleTooltip format={(v) => `${numberFormat.format(v)}${suffix}`} />}
         />
-        <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16} isAnimationActive={false}>
+        <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={16}>
           {data.map((entry) => (
             <Cell
               key={entry.name}
@@ -242,7 +232,7 @@ export function BusinessLineDonut({
               />
               <span className="text-ink font-medium flex-1 truncate">{entry.name}</span>
               <span className="text-ink tabular-nums font-semibold">{numberFormat.format(entry.value)}</span>
-              <span className="text-ink-soft/70 tabular-nums w-11 text-right">
+              <span className="text-ink-soft/70 tabular-nums w-20 text-right shrink-0">
                 {decimalFormat.format(entry.share)}%
               </span>
             </div>
@@ -264,7 +254,7 @@ export function BusinessLineDonut({
 export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; totalLabel: string }) {
   const total = data.reduce((sum, row) => sum + row.value, 0);
   return (
-    <div className="flex flex-col sm:flex-row items-center gap-5">
+    <div className="flex items-center gap-5">
       <div className="relative w-[236px] h-[236px] shrink-0">
         <PieChart width={236} height={236}>
           <Pie
@@ -292,12 +282,14 @@ export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; tota
             }
           />
         </PieChart>
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
           <span className="text-[30px] font-bold text-ink leading-none">{numberFormat.format(total)}</span>
-          <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70 mt-1">{totalLabel}</span>
+          <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70 mt-1 max-w-[125px] leading-tight px-1">
+            {totalLabel}
+          </span>
         </div>
       </div>
-      <ul className="w-full sm:w-auto sm:flex-1 space-y-3.5">
+      <ul className="flex-1 space-y-3.5">
         {data.map((entry, index) => (
           <li key={entry.name} className="flex items-baseline gap-2 text-[12px]">
             <span
@@ -306,7 +298,7 @@ export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; tota
             />
             <span className="text-ink font-medium flex-1">{entry.name}</span>
             <span className="text-ink font-bold tabular-nums">{numberFormat.format(entry.value)}</span>
-            <span className="text-ink-soft/70 tabular-nums text-[11px] w-11 text-right">
+            <span className="text-ink-soft/70 tabular-nums text-[11px] w-20 text-right shrink-0">
               {decimalFormat.format((entry.value / total) * 100)}%
             </span>
           </li>
@@ -318,75 +310,200 @@ export function CompositionDonut({ data, totalLabel }: { data: NameValue[]; tota
 
 // ─── Dona de usos de suelo ────────────────────────────────────────────────────
 
-/** Acorta el nombre del catálogo: quita la coletilla entre paréntesis y la clave final */
+const USE_TYPE_EXTENDED_PALETTE = [
+  "#0891b2", // cyan
+  "#b8860b", // gold
+  "#2563eb", // blue
+  "#b5451f", // terracotta
+  "#0d9488", // teal
+  "#8a8619", // olive
+  "#7c3aed", // violet
+  "#d97706", // amber
+  "#059669", // emerald
+  "#b0509f", // magenta
+  "#475569", // slate
+  "#ea580c", // orange
+  "#4f46e5", // indigo
+  "#64748b", // slate-500
+];
+
+/** Acorta el nombre del catálogo: quita la coletilla entre paréntesis y la clave final si no forma parte de la identidad del área */
 export function shortUseType(name: string): string {
   const withoutParens = name.replace(/\s*\([^)]*\)\s*/g, " ").trim();
   const withoutCode = withoutParens.replace(/\s+[A-Z]{1,2}[0-9-]*$/, "").trim();
-  const clean = (withoutCode || withoutParens || name).replace(/\s{2,}/g, " ");
+  // Evitar dejar etiquetas genéricas ambiguas (p. ej. "Área común SV001" no debe convertirse en "Área común")
+  const shouldUseWithoutCode =
+    withoutCode.length > 0 &&
+    !/^(área común|area comun|lote)$/i.test(withoutCode);
+
+  const clean = (shouldUseWithoutCode ? withoutCode : withoutParens || name).replace(/\s{2,}/g, " ");
   return clean.length > 30 ? `${clean.slice(0, 29)}…` : clean;
 }
 
 export function UseTypeDonut({
   data,
-  totalLabel = "inmuebles",
 }: {
   data: { name: string; value: number; category: string }[];
-  totalLabel?: string;
 }) {
-  const total = data.reduce((sum, row) => sum + row.value, 0);
-  const rows = data.map((row, index) => ({
-    ...row,
-    label: row.name === "Otros usos" ? row.name : shortUseType(row.name),
-    color: row.name === "Otros usos" ? "#9ca3af" : CATEGORICAL_ORDER[index % CATEGORICAL_ORDER.length],
-    share: total > 0 ? (row.value / total) * 100 : 0,
-  }));
+  const [activeTab, setActiveTab] = useState<"privativas" | "comunes" | "todos">("privativas");
+
+  const privativasCount = useMemo(
+    () => data.filter((d) => d.category !== "Área común").reduce((sum, d) => sum + d.value, 0),
+    [data],
+  );
+  const comunesCount = useMemo(
+    () => data.filter((d) => d.category === "Área común").reduce((sum, d) => sum + d.value, 0),
+    [data],
+  );
+  const totalAll = useMemo(() => data.reduce((sum, d) => sum + d.value, 0), [data]);
+
+  const filteredData = useMemo(() => {
+    if (comunesCount === 0) return data;
+    if (activeTab === "privativas") {
+      return data.filter((d) => d.category !== "Área común");
+    }
+    if (activeTab === "comunes") {
+      return data.filter((d) => d.category === "Área común");
+    }
+    return data;
+  }, [data, activeTab, comunesCount]);
+
+  const total = useMemo(() => filteredData.reduce((sum, row) => sum + row.value, 0), [filteredData]);
+
+  const totalLabel =
+    comunesCount > 0
+      ? activeTab === "privativas"
+        ? "privativos"
+        : activeTab === "comunes"
+        ? "comunes"
+        : "inmuebles"
+      : "inmuebles";
+
+  const rows = useMemo(() => {
+    return filteredData.map((row, index) => ({
+      ...row,
+      label: shortUseType(row.name),
+      color: USE_TYPE_EXTENDED_PALETTE[index % USE_TYPE_EXTENDED_PALETTE.length],
+      share: total > 0 ? (row.value / total) * 100 : 0,
+    }));
+  }, [filteredData, total]);
 
   return (
-    <div className="flex flex-col items-center gap-4 h-full justify-center">
-      <div className="relative w-[188px] h-[188px] shrink-0">
-        <PieChart width={188} height={188}>
-          <Pie
-            data={rows}
-            dataKey="value"
-            nameKey="label"
-            cx={93}
-            cy={93}
-            innerRadius={56}
-            outerRadius={90}
-            paddingAngle={2}
-            stroke={SURFACE}
-            strokeWidth={2}
-            isAnimationActive={false}
+    <div className="flex flex-col gap-3.5 h-full">
+      {/* Pestañas de separación solo si existen áreas comunes en el conjunto */}
+      {comunesCount > 0 && (
+        <div className="inline-flex items-center rounded-lg bg-canvas-2 p-0.5 text-[11px] border border-line/40 self-start">
+          <button
+            type="button"
+            onClick={() => setActiveTab("privativas")}
+            className={cn(
+              "px-2.5 py-1 rounded-md font-semibold transition-all duration-150 flex items-center gap-1.5",
+              activeTab === "privativas"
+                ? "bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
+                : "text-ink-soft hover:text-ink hover:bg-canvas",
+            )}
           >
-            {rows.map((row) => (
-              <Cell key={row.name} fill={row.color} />
-            ))}
-          </Pie>
-          <Tooltip
-            content={
-              <SimpleTooltip
-                format={(v, row) =>
-                  `${numberFormat.format(v)} inmuebles · ${decimalFormat.format((row?.share as number) ?? 0)}%`
-                }
-              />
-            }
-          />
-        </PieChart>
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-[30px] font-bold text-ink leading-none">{numberFormat.format(total)}</span>
-          <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70 mt-1">{totalLabel}</span>
+            <span>Áreas privativas</span>
+            <span
+              className={cn(
+                "text-[10px] px-1.5 py-0.2 rounded-full font-bold",
+                activeTab === "privativas" ? "bg-cyan-100 text-cyan-900" : "bg-black/5 text-ink-soft",
+              )}
+            >
+              {numberFormat.format(privativasCount)}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("comunes")}
+            className={cn(
+              "px-2.5 py-1 rounded-md font-semibold transition-all duration-150 flex items-center gap-1.5",
+              activeTab === "comunes"
+                ? "bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
+                : "text-ink-soft hover:text-ink hover:bg-canvas",
+            )}
+          >
+            <span>Áreas comunes</span>
+            <span
+              className={cn(
+                "text-[10px] px-1.5 py-0.2 rounded-full font-bold",
+                activeTab === "comunes" ? "bg-teal-100 text-teal-900" : "bg-black/5 text-ink-soft",
+              )}
+            >
+              {numberFormat.format(comunesCount)}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("todos")}
+            className={cn(
+              "px-2.5 py-1 rounded-md font-semibold transition-all duration-150 flex items-center gap-1.5",
+              activeTab === "todos"
+                ? "bg-card text-ink shadow-[0_1px_2px_rgba(0,0,0,0.06)]"
+                : "text-ink-soft hover:text-ink hover:bg-canvas",
+            )}
+          >
+            <span>Todo</span>
+            <span
+              className={cn(
+                "text-[10px] px-1.5 py-0.2 rounded-full font-bold",
+                activeTab === "todos" ? "bg-amber-100 text-amber-900" : "bg-black/5 text-ink-soft",
+              )}
+            >
+              {numberFormat.format(totalAll)}
+            </span>
+          </button>
         </div>
+      )}
+
+      <div className="flex flex-col items-center gap-4 flex-1 justify-center">
+        <div className="relative w-[188px] h-[188px] shrink-0">
+          <PieChart width={188} height={188}>
+            <Pie
+              data={rows}
+              dataKey="value"
+              nameKey="label"
+              cx={93}
+              cy={93}
+              innerRadius={56}
+              outerRadius={90}
+              paddingAngle={2}
+              stroke={SURFACE}
+              strokeWidth={2}
+              isAnimationActive={false}
+            >
+              {rows.map((row) => (
+                <Cell key={row.name} fill={row.color} />
+              ))}
+            </Pie>
+            <Tooltip
+              content={
+                <SimpleTooltip
+                  format={(v, row) =>
+                    `${numberFormat.format(v)} inmuebles · ${decimalFormat.format((row?.share as number) ?? 0)}%`
+                  }
+                />
+              }
+            />
+          </PieChart>
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <span className="text-[28px] font-bold text-ink leading-none">{numberFormat.format(total)}</span>
+            <span className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70 mt-1">
+              {totalLabel}
+            </span>
+          </div>
+        </div>
+        <ul className="w-full max-h-[190px] overflow-y-auto pr-1 space-y-1.5 scrollbar-thin">
+          {rows.map((row) => (
+            <li key={row.name} className="flex items-center gap-2 text-[11.5px]" title={row.name}>
+              <span className="inline-block w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: row.color }} />
+              <span className="text-ink font-medium flex-1 truncate">{row.label}</span>
+              <span className="text-ink font-semibold tabular-nums">{numberFormat.format(row.value)}</span>
+              <span className="text-ink-soft/70 tabular-nums w-20 text-right shrink-0">{decimalFormat.format(row.share)}%</span>
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className="w-full space-y-1.5">
-        {rows.map((row) => (
-          <li key={row.name} className="flex items-center gap-2 text-[11.5px]" title={row.name}>
-            <span className="inline-block w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: row.color }} />
-            <span className="text-ink font-medium flex-1 truncate">{row.label}</span>
-            <span className="text-ink font-semibold tabular-nums">{numberFormat.format(row.value)}</span>
-            <span className="text-ink-soft/70 tabular-nums w-10 text-right">{decimalFormat.format(row.share)}%</span>
-          </li>
-        ))}
-      </ul>
     </div>
   );
 }
@@ -453,7 +570,7 @@ export function ZoneCategoryHeatmap({
           ))}
         </tbody>
       </table>
-      <div className="flex items-center gap-2 mt-3 pl-0 sm:pl-[120px]">
+      <div className="flex items-center gap-2 mt-3 pl-[120px]">
         <span className="text-[10px] text-ink-soft/70 font-medium">Menos</span>
         <div className="flex gap-0.5">
           {SEQUENTIAL.map((step) => (
@@ -488,10 +605,10 @@ export function OccupancyStackedBars({
         </span>
       </div>
       {rows.map((row) => (
-        <div key={row.zone} className="flex items-center gap-2 sm:gap-3 group">
-          <span className="text-[11px] text-ink-soft w-[76px] sm:w-[104px] shrink-0 truncate text-right">{row.zone}</span>
+        <div key={row.zone} className="flex items-center gap-3 group">
+          <span className="text-[11px] text-ink-soft w-[104px] shrink-0 truncate text-right">{row.zone}</span>
           <div
-            className="flex-1 flex gap-[2px] h-5 items-center min-w-[40px]"
+            className="flex-1 flex gap-[2px] h-5 items-center"
             title={`${row.zone}: ${numberFormat.format(row.occupied)} ocupados de ${numberFormat.format(row.total)} (${decimalFormat.format(row.rate)}%)`}
           >
             <div
@@ -510,10 +627,10 @@ export function OccupancyStackedBars({
               />
             )}
           </div>
-          <span className="text-[11px] font-semibold text-ink tabular-nums w-[40px] sm:w-[46px] text-right shrink-0">
+          <span className="text-[11px] font-semibold text-ink tabular-nums w-[72px] text-right shrink-0">
             {decimalFormat.format(row.rate)}%
           </span>
-          <span className="text-[10px] sm:text-[10.5px] text-ink-soft/70 tabular-nums min-w-[54px] sm:min-w-0 sm:w-[68px] text-right shrink-0">
+          <span className="text-[10.5px] text-ink-soft/70 tabular-nums w-[68px] text-right">
             {numberFormat.format(row.occupied)}/{numberFormat.format(row.total)}
           </span>
         </div>
@@ -542,10 +659,10 @@ export function OpeningsChart({ data, height = 210 }: { data: { label: string; v
           cursor={{ fill: "rgba(0,0,0,0.03)" }}
           content={<SimpleTooltip format={(v) => `${numberFormat.format(v)} aperturas`} />}
         />
-        <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={26} isAnimationActive={false}>
+        <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={26}>
           {data.map((entry) => (
             // El año pico se destaca; el resto queda en el tono recesivo
-            <Cell key={entry.label} fill={entry.value === max ? BRAND_DEEP : "#b6b894"} />
+            <Cell key={entry.label} fill={entry.value === max ? BRAND_DEEP : "#d0b685"} />
           ))}
           <LabelList
             dataKey="value"
@@ -597,7 +714,6 @@ export function PaymentsChart({ data }: { data: { label: string; count: number; 
           fill="url(#paymentsFill)"
           dot={false}
           activeDot={{ r: 4, strokeWidth: 2, stroke: SURFACE }}
-          isAnimationActive={false}
         />
       </AreaChart>
     </ResponsiveContainer>

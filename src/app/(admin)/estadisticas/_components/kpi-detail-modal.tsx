@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
-import type { KpiDetail, KpiDetailRow } from "@/modules/statistics";
+import type { KpiDetail, KpiDetailRow, KpiKey } from "@/modules/statistics";
 import { cn } from "@/shared/utils/cn";
 import { DetailChart } from "./detail-charts";
 import { ACCENT_STYLES, KPI_ICONS, type KpiCardData } from "./kpi-grid";
@@ -30,14 +30,19 @@ function cellText(value: string | number | undefined): string {
 
 export function KpiDetailModal({
   kpi,
+  initialTab,
   filters,
   onClose,
 }: {
   kpi: KpiCardData;
+  initialTab?: KpiKey;
   filters: { zone: string | null; useType: string | null };
   onClose: () => void;
 }) {
-  const [detail, setDetail] = useState<KpiDetail | null>(null);
+  const isGrouped = Boolean(kpi.secondary);
+  const [activeTabKey, setActiveTabKey] = useState<KpiKey>(initialTab ?? kpi.key);
+  const [detailCache, setDetailCache] = useState<Partial<Record<KpiKey, KpiDetail>>>({});
+  const [loadingKey, setLoadingKey] = useState<KpiKey | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -45,16 +50,21 @@ export function KpiDetailModal({
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const reduceMotion = useReducedMotion();
 
-  const Icon = KPI_ICONS[kpi.key];
+  const ActiveIcon = KPI_ICONS[activeTabKey] ?? KPI_ICONS[kpi.key];
   const tone = ACCENT_STYLES[kpi.accent ?? "plain"];
 
+  // Fetch detail for activeTabKey if not in cache
   useEffect(() => {
+    if (detailCache[activeTabKey]) {
+      return;
+    }
+
     const controller = new AbortController();
-    const params = new URLSearchParams({ kpi: kpi.key });
+    const params = new URLSearchParams({ kpi: activeTabKey });
     if (filters.zone) params.set("zona", filters.zone);
     if (filters.useType) params.set("uso", filters.useType);
 
-    setDetail(null);
+    setLoadingKey(activeTabKey);
     setError(null);
 
     fetch(`/api/estadisticas/detalle?${params.toString()}`, { signal: controller.signal })
@@ -65,13 +75,27 @@ export function KpiDetailModal({
         }
         return response.json() as Promise<KpiDetail>;
       })
-      .then(setDetail)
+      .then((data) => {
+        setDetailCache((prev) => ({ ...prev, [activeTabKey]: data }));
+      })
       .catch((err: Error) => {
         if (err.name !== "AbortError") setError(err.message);
+      })
+      .finally(() => {
+        setLoadingKey(null);
       });
 
     return () => controller.abort();
-  }, [kpi.key, filters.zone, filters.useType]);
+  }, [activeTabKey, detailCache, filters.zone, filters.useType]);
+
+  const detail = detailCache[activeTabKey] ?? null;
+
+  const handleTabSwitch = useCallback((newKey: KpiKey) => {
+    setActiveTabKey(newKey);
+    setQuery("");
+    setPage(1);
+    setSort(null);
+  }, []);
 
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -129,7 +153,13 @@ export function KpiDetailModal({
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, detail.tableTitle.slice(0, 31));
     const stamp = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(workbook, `${detail.tableTitle.replace(/[^\w]+/g, "_")}_${stamp}.xlsx`);
+    const safeTitle = detail.tableTitle
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+    XLSX.writeFile(workbook, `${safeTitle}_${stamp}.xlsx`);
   }, [detail, filteredRows]);
 
   // El contenido entra cuando el panel ya casi terminó de expandirse, para que
@@ -169,12 +199,25 @@ export function KpiDetailModal({
         <header className="shrink-0 border-b border-line px-4 sm:px-6 py-3.5 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3.5 min-w-0">
             <motion.span
+              key={activeTabKey}
               className="p-2.5 rounded-xl shrink-0"
-              style={{ backgroundColor: tone.icon }}
+              style={{
+                backgroundColor:
+                  activeTabKey === "commercial"
+                    ? "#304854"
+                    : activeTabKey === "businesses"
+                    ? tone.icon
+                    : tone.icon,
+              }}
               initial={reduceMotion ? undefined : { opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1, transition: { delay: 0.08, duration: 0.2 } }}
+              animate={{ opacity: 1, scale: 1, transition: { duration: 0.18 } }}
             >
-              <Icon className="w-5 h-5" style={{ color: tone.card }} />
+              <ActiveIcon
+                className="w-5 h-5"
+                style={{
+                  color: activeTabKey === "commercial" ? "#ffffff" : tone.card,
+                }}
+              />
             </motion.span>
             <div className="min-w-0">
               <motion.p
@@ -183,19 +226,28 @@ export function KpiDetailModal({
                 initial={reduceMotion ? undefined : { opacity: 0 }}
                 animate={{ opacity: 1, transition: { delay: 0.1, duration: 0.18 } }}
               >
-                {kpi.label}
+                {isGrouped
+                  ? activeTabKey === "businesses"
+                    ? `${kpi.label} · Negocios activos`
+                    : `${kpi.label} · ${kpi.secondary?.label ?? "Locales y servicios"}`
+                  : kpi.label}
               </motion.p>
-              <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5 mt-0.5">
+              <div className="flex items-baseline gap-2.5 mt-0.5">
                 <motion.span
+                  key={`val-${activeTabKey}`}
                   className="text-[26px] font-bold leading-none tracking-tight"
-                  style={{ color: tone.value }}
+                  style={{
+                    color: activeTabKey === "commercial" ? "#304854" : tone.value,
+                  }}
                   initial={reduceMotion ? undefined : { opacity: 0 }}
-                  animate={{ opacity: 1, transition: { delay: 0.1, duration: 0.18 } }}
+                  animate={{ opacity: 1, transition: { duration: 0.18 } }}
                 >
-                  {kpi.value}
+                  {activeTabKey === "commercial" && kpi.secondary
+                    ? kpi.secondary.value
+                    : (detail?.headline?.[0]?.value ?? kpi.value)}
                 </motion.span>
                 <motion.h2 {...contentMotion} className="text-[13px] text-ink-soft truncate">
-                  {detail?.subtitle ?? "Cargando detalle…"}
+                  {detail?.subtitle ?? (loadingKey ? "Cargando detalle…" : "")}
                 </motion.h2>
               </div>
             </div>
@@ -223,7 +275,60 @@ export function KpiDetailModal({
           </motion.div>
         </header>
 
-        <motion.div {...contentMotion} className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 bg-[#faf9f6]">
+        {isGrouped && (
+          <div className="shrink-0 px-4 sm:px-6 py-2.5 bg-canvas border-b border-line flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5 p-1 bg-canvas-2 rounded-xl border border-line">
+              <button
+                type="button"
+                onClick={() => handleTabSwitch(kpi.key)}
+                className={cn(
+                  "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all focus:outline-none",
+                  activeTabKey === kpi.key
+                    ? "bg-white text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-black/[0.04]"
+                    : "text-ink-soft hover:text-ink hover:bg-black/[0.02]",
+                )}
+              >
+                <span className="w-2 h-2 rounded-full bg-amber-600" />
+                <KPI_ICONS.businesses className="w-3.5 h-3.5 text-amber-800" />
+                <span>Negocios activos</span>
+                <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-900 font-bold">
+                  {kpi.value}
+                </span>
+              </button>
+
+              {kpi.secondary && (
+                <button
+                  type="button"
+                  onClick={() => handleTabSwitch(kpi.secondary!.key)}
+                  className={cn(
+                    "flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all focus:outline-none",
+                    activeTabKey === kpi.secondary.key
+                      ? "bg-white text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-black/[0.04]"
+                      : "text-ink-soft hover:text-ink hover:bg-black/[0.02]",
+                  )}
+                >
+                  <span className="w-2 h-2 rounded-full bg-emerald-700" />
+                  <KPI_ICONS.commercial className="w-3.5 h-3.5 text-emerald-800" />
+                  <span>{kpi.secondary.label}</span>
+                  <span className="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-900 font-bold">
+                    {kpi.secondary.value}
+                  </span>
+                </button>
+              )}
+            </div>
+
+            <div className="hidden sm:flex items-center gap-2 text-[11px] text-ink-soft">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-brand" />
+              <span>
+                {activeTabKey === "businesses"
+                  ? "Censo y operación comercial registrada"
+                  : "Predios y unidades con vocación comercial"}
+              </span>
+            </div>
+          </div>
+        )}
+
+        <motion.div {...contentMotion} className="flex-1 overflow-y-auto px-4 sm:px-6 py-5 bg-[#f4f6f8]">
           {!detail && !error && (
             <div className="h-full min-h-[320px] flex flex-col items-center justify-center gap-3 text-ink-soft">
               <Loader2 className="w-6 h-6 animate-spin text-brand" />
@@ -233,7 +338,7 @@ export function KpiDetailModal({
 
           {error && (
             <div className="h-full min-h-[320px] flex flex-col items-center justify-center gap-3">
-              <AlertCircle className="w-7 h-7 text-terracotta" />
+              <AlertCircle className="w-7 h-7 text-danger" />
               <p className="text-[13px] text-ink font-semibold">{error}</p>
               <p className="text-[12px] text-ink-soft">Cierra el detalle e inténtalo de nuevo.</p>
             </div>
@@ -242,25 +347,28 @@ export function KpiDetailModal({
           {detail && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-                {detail.headline.map((stat, index) => (
-                  <div
-                    key={stat.label}
-                    className="rounded-xl border border-line/80 bg-card px-3.5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] relative overflow-hidden"
-                  >
-                    {/* El primer dato es el que da nombre al panel: se marca con el acento del KPI */}
-                    {index === 0 && (
-                      <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: tone.value }} />
-                    )}
-                    <p className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70">{stat.label}</p>
-                    <p
-                      className="text-[23px] font-bold leading-none mt-1.5 tracking-tight"
-                      style={{ color: index === 0 ? tone.value : "rgba(0,0,0,0.87)" }}
+                {detail.headline.map((stat, index) => {
+                  const primaryColor = activeTabKey === "commercial" ? "#304854" : tone.value;
+                  return (
+                    <div
+                      key={stat.label}
+                      className="rounded-xl border border-line/80 bg-card px-3.5 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] relative overflow-hidden"
                     >
-                      {stat.value}
-                    </p>
-                    {stat.hint && <p className="text-[10.5px] text-ink-soft/80 mt-1 leading-tight">{stat.hint}</p>}
-                  </div>
-                ))}
+                      {/* El primer dato es el que da nombre al panel: se marca con el acento del KPI */}
+                      {index === 0 && (
+                        <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ backgroundColor: primaryColor }} />
+                      )}
+                      <p className="text-[9.5px] font-bold uppercase tracking-wider text-ink-soft/70">{stat.label}</p>
+                      <p
+                        className="text-[23px] font-bold leading-none mt-1.5 tracking-tight"
+                        style={{ color: index === 0 ? primaryColor : "rgba(0,0,0,0.87)" }}
+                      >
+                        {stat.value}
+                      </p>
+                      {stat.hint && <p className="text-[10.5px] text-ink-soft/80 mt-1 leading-tight">{stat.hint}</p>}
+                    </div>
+                  );
+                })}
               </div>
 
               {detail.charts.length > 0 && (
@@ -298,7 +406,7 @@ export function KpiDetailModal({
                       registros
                     </p>
                   </div>
-                  <div className="relative w-full sm:w-auto">
+                  <div className="relative">
                     <Search className="w-3.5 h-3.5 text-ink-soft/60 absolute left-2.5 top-1/2 -translate-y-1/2" />
                     <input
                       type="search"
@@ -308,7 +416,7 @@ export function KpiDetailModal({
                         setPage(1);
                       }}
                       placeholder="Buscar en la tabla…"
-                      className="h-9 w-full sm:w-[220px] max-w-full rounded-lg border border-line bg-card pl-8 pr-3 text-[12px] text-ink placeholder:text-ink-soft/50 focus:outline-none focus:ring-2 focus:ring-brand/30"
+                      className="h-9 w-[220px] max-w-full rounded-lg border border-line bg-card pl-8 pr-3 text-[12px] text-ink placeholder:text-ink-soft/50 focus:outline-none focus:ring-2 focus:ring-brand/30"
                     />
                   </div>
                 </div>

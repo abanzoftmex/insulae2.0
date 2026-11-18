@@ -188,6 +188,8 @@ export interface KpiDetailChart {
   subtitle?: string;
   /** Etiqueta del centro de la dona */
   centerLabel?: string;
+  /** Denominador base para el cálculo de participaciones y centro de la dona */
+  total?: number;
 }
 
 export type KpiDetailRow = Record<string, string | number>;
